@@ -68,7 +68,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
   };
 
   const isUserEligible = () => {
-    return user && (user.role !== 'student' || hasActiveMembership());
+    return user && (user.role !== 'STUDENT' || hasActiveMembership());
   };
 
   return (
@@ -215,7 +215,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
           )}
 
           {/* Membership Benefits Notice */}
-          {user?.role === 'student' && hasActiveMembership() && (
+          {user?.role === 'STUDENT' && hasActiveMembership() && (
             <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center text-green-800">
                 <SafeIcon icon={FiCheck} size={16} className="mr-2" />
@@ -254,8 +254,8 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
             whileTap={isUserEligible() ? { scale: 0.98 } : {}}
           >
             {!user 
-              ? '請先登入以完成預約' 
-              : user.role === 'student' && !hasActiveMembership()
+              ? '請先登入以完成預約'
+              : user.role === 'STUDENT' && !hasActiveMembership()
                 ? '需要會員資格才能預約'
                 : `確認預約 ${selectedCourses.length} 堂課程`
             }
