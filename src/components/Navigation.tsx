@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { FiMenu, FiX, FiUser, FiLogOut, FiBook, FiUsers, FiSettings, FiBookOpen, FiUserPlus, FiShare2, FiBriefcase } from 'react-icons/fi';
+import { FiMenu, FiX, FiUser, FiLogOut, FiBook, FiUsers, FiSettings, FiBookOpen, FiUserPlus, FiShare2, FiBriefcase, FiClock, FiCalendar } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
 
@@ -18,7 +18,10 @@ const Navigation: React.FC = () => {
     { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['student', 'instructor', 'consultant', 'admin'] },
     { name: '用戶管理', href: '/user-management', icon: FiUsers, roles: ['admin'] },
     { name: '課程預約', href: '/', icon: FiBook, roles: ['guest', 'student'] },
+    { name: '我的預約', href: '/my-bookings', icon: FiCalendar, roles: ['student', 'instructor'] },
     { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['instructor', 'admin'] },
+    { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['admin'] },
+    { name: '我的請假記錄', href: '/my-leave-requests', icon: FiClock, roles: ['instructor'] },
     { name: '會員方案', href: '/membership', icon: FiUsers, roles: ['guest', 'student'] },
     { name: '會員方案管理', href: '/membership-management', icon: FiSettings, roles: ['admin'] },
     { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['admin'] },

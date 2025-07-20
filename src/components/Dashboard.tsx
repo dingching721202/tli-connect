@@ -52,9 +52,13 @@ const Dashboard = () => {
   const router = useRouter();
   const [courseTab, setCourseTab] = useState('upcoming'); // 'upcoming' or 'completed'
   const [isReferralOpen, setIsReferralOpen] = useState(false);
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [leaveForm, setLeaveForm] = useState({
+    reason: '',
+    note: ''
+  });
 
-  // 追蹤哪個功能面板被點擊
-  const [activePanel, setActivePanel] = useState<string | null>(null);
 
   const getDashboardCards = () => {
     const baseCards = [
@@ -516,9 +520,49 @@ const Dashboard = () => {
   };
 
   const handleRequestLeave = (courseId: number, courseName: string) => {
-    if (confirm(`確定要為「${courseName}」申請請假嗎？`)) {
-      alert('✅ 請假申請已提交！\n\n系統管理員將安排代課老師。');
-      // Here you would update the course status or create a leave request
+    const course = allInstructorCourses.find(c => c.id === courseId);
+    if (course) {
+      setSelectedCourse(course);
+      setShowLeaveModal(true);
+    }
+  };
+
+  const handleSubmitLeave = () => {
+    if (!leaveForm.reason.trim()) {
+      alert('請填寫請假原因');
+      return;
+    }
+
+    if (selectedCourse) {
+      // Create leave request data
+      const leaveRequest = {
+        id: Date.now().toString(),
+        teacherName: user?.name || '未知教師',
+        teacherEmail: user?.email || '',
+        courseName: selectedCourse.title || '未知課程',
+        courseDate: selectedCourse.date,
+        courseTime: selectedCourse.time,
+        leaveReason: leaveForm.reason,
+        requestDate: new Date().toISOString().split('T')[0],
+        status: 'pending' as const,
+        studentCount: parseInt(selectedCourse.students?.split(' ')[0] || '0'),
+        classroom: selectedCourse.classroom,
+        note: leaveForm.note
+      };
+
+      alert(`✅ 請假申請已提交！
+      
+課程：${selectedCourse.title}
+時間：${selectedCourse.date} ${selectedCourse.time}
+原因：${leaveForm.reason}
+
+系統管理員將會審核您的申請，並安排代課老師。
+您可以在「我的請假記錄」中查看申請狀態。`);
+
+      // Reset form and close modal
+      setLeaveForm({ reason: '', note: '' });
+      setShowLeaveModal(false);
+      setSelectedCourse(null);
     }
   };
 
@@ -549,27 +593,7 @@ const Dashboard = () => {
     }
   };
 
-  // 處理功能面板點擊
-  const handlePanelClick = (card: { id: string; link: string; action?: string }) => {
-    setActivePanel(card.id);
-    
-    // 如果是推薦系統，打開推薦彈窗
-    if (card.action === 'openReferral') {
-      setTimeout(() => {
-        setIsReferralOpen(true);
-        setActivePanel(null);
-      }, 150);
-      return;
-    }
-    
-    // 其他卡片正常導航
-    setTimeout(() => {
-      router.push(card.link);
-      setActivePanel(null); // 重置狀態
-    }, 150);
-  };
 
-  const dashboardCards = getDashboardCards();
   const quickStats = getQuickStats();
   const allBookedCourses = user?.role === 'student' ? getBookedCourses() : [];
   const allInstructorCourses = user?.role === 'instructor' ? getInstructorCourses() : [];
@@ -705,46 +729,6 @@ const Dashboard = () => {
         </motion.div>
       )}
 
-      {/* Main Actions - 功能面板 手機優化 */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="mb-6 sm:mb-8"
-      >
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">功能面板</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {dashboardCards.map((card) => (
-            <motion.div
-              key={card.id}
-              whileHover={{ scale: 1.02, y: -4 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handlePanelClick(card)}
-              className={`cursor-pointer bg-white rounded-xl p-4 sm:p-6 shadow-lg border transition-all duration-300 hover:shadow-xl ${
-                activePanel === card.id
-                  ? 'border-blue-500 shadow-blue-500/20 bg-blue-50'
-                  : 'border-gray-100/60'
-              }`}
-            >
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br ${card.color} rounded-lg flex items-center justify-center mb-3 sm:mb-4 ${
-                activePanel === card.id ? 'shadow-lg' : ''
-              }`}>
-                <SafeIcon icon={card.icon} className="text-white text-lg sm:text-xl" />
-              </div>
-              <h3 className={`text-base sm:text-lg font-semibold mb-2 ${
-                activePanel === card.id ? 'text-blue-800' : 'text-gray-900'
-              }`}>
-                {card.title}
-              </h3>
-              <p className={`text-sm ${
-                activePanel === card.id ? 'text-blue-700' : 'text-gray-600'
-              }`}>
-                {card.description}
-              </p>
-            </motion.div>
-          ))}
-        </div>
-      </motion.div>
 
       {/* Course Bookings Dashboard - 手機優化 */}
       {(user?.role === 'student' || user?.role === 'instructor' || user?.role === 'admin') && (
@@ -984,6 +968,93 @@ const Dashboard = () => {
         isOpen={isReferralOpen} 
         onClose={() => setIsReferralOpen(false)} 
       />
+
+      {/* Leave Request Modal */}
+      {showLeaveModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowLeaveModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold">申請請假</h3>
+              <button
+                onClick={() => setShowLeaveModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <SafeIcon icon={FiX} className="text-xl" />
+              </button>
+            </div>
+
+            {selectedCourse && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-medium mb-2">課程資訊</h4>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <div>課程：{selectedCourse.title}</div>
+                  <div>時間：{formatDate(selectedCourse.date)} {selectedCourse.time}</div>
+                  <div>學生：{selectedCourse.students}</div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  請假原因 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={leaveForm.reason}
+                  onChange={(e) => setLeaveForm({...leaveForm, reason: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="">請選擇請假原因</option>
+                  <option value="身體不適">身體不適</option>
+                  <option value="家庭緊急事務">家庭緊急事務</option>
+                  <option value="參加學術會議">參加學術會議</option>
+                  <option value="參加研習課程">參加研習課程</option>
+                  <option value="個人事務">個人事務</option>
+                  <option value="其他">其他</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  詳細說明
+                </label>
+                <textarea
+                  value={leaveForm.note}
+                  onChange={(e) => setLeaveForm({...leaveForm, note: e.target.value})}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="請詳細說明請假原因..."
+                />
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={handleSubmitLeave}
+                className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                提交申請
+              </button>
+              <button
+                onClick={() => setShowLeaveModal(false)}
+                className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+              >
+                取消
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 };

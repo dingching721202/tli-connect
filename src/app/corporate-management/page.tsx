@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiUsers, FiUserPlus, FiEdit2, FiX, FiBriefcase, FiBook, FiCalendar, FiTrendingUp, FiUserCheck, FiUserX, FiAward, FiShield, FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
+import { FiUsers, FiUserPlus, FiEdit2, FiX, FiBriefcase, FiBook, FiCalendar, FiTrendingUp, FiUserCheck, FiUserX, FiAward, FiShield, FiMail, FiPhone, FiMapPin, FiUser, FiExternalLink } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
@@ -36,6 +36,21 @@ interface CorporateUser {
     lastActivity: string;
     completionRate: number;
   };
+}
+
+interface UserBooking {
+  id: string;
+  courseName: string;
+  courseDate: string;
+  courseTime: string;
+  instructorName: string;
+  status: 'upcoming' | 'completed' | 'cancelled';
+  classroom?: string;
+  materials?: string;
+  bookingDate: string;
+  cancelReason?: string;
+  cancelNote?: string;
+  cancelDate?: string;
 }
 
 interface CorporatePlan {
@@ -75,6 +90,7 @@ export default function CorporateManagementPage() {
   const [editingUser, setEditingUser] = useState<CorporateUser | null>(null);
   const [selectedPlanForNewUser, setSelectedPlanForNewUser] = useState<string | null>(null);
   const [editingCompanyInfo, setEditingCompanyInfo] = useState(false);
+  const [selectedUserForBookings, setSelectedUserForBookings] = useState<CorporateUser | null>(null);
   
 
   // 處理編輯會員基本資訊
@@ -941,7 +957,7 @@ export default function CorporateManagementPage() {
                         <th className="text-left py-3 px-4 font-medium text-gray-700">剩餘天數</th>
                         <th className="text-left py-3 px-4 font-medium text-gray-700">學習進度</th>
                         <th className="text-left py-3 px-4 font-medium text-gray-700">狀態</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-700">操作</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-700">預約/操作</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1002,6 +1018,15 @@ export default function CorporateManagementPage() {
                           </td>
                           <td className="py-4 px-4">
                             <div className="flex space-x-2">
+                              {/* 查看預約按鈕 */}
+                              <button 
+                                onClick={() => setSelectedUserForBookings(user)}
+                                className="text-sm text-purple-600 hover:text-purple-800 transition-colors"
+                                title="查看預約記錄"
+                              >
+                                <SafeIcon icon={FiBook} className="w-4 h-4" />
+                              </button>
+                              
                               {/* 編輯按鈕 - 已過期不可編輯 */}
                               <button 
                                 onClick={() => setEditingUser(user)}
@@ -1148,6 +1173,14 @@ export default function CorporateManagementPage() {
           companyInfo={corporateMembership}
           onSave={handleEditCompanyInfo} 
           onClose={() => setEditingCompanyInfo(false)} 
+        />
+      )}
+
+      {/* 會員預約查看模態框 */}
+      {selectedUserForBookings && (
+        <UserBookingsModal 
+          user={selectedUserForBookings}
+          onClose={() => setSelectedUserForBookings(null)} 
         />
       )}
     </div>
@@ -1555,5 +1588,382 @@ function EditCompanyInfoModal({
         </form>
       </motion.div>
     </div>
+  );
+}
+
+// 會員預約查看模態框元件
+function UserBookingsModal({ 
+  user, 
+  onClose 
+}: { 
+  user: CorporateUser; 
+  onClose: () => void; 
+}) {
+  // Mock 預約數據 - 根據用戶生成
+  const getUserBookings = (userId: number): UserBooking[] => {
+    // 模擬不同用戶的預約記錄
+    const allBookings: Record<number, UserBooking[]> = {
+      1: [ // 張小明
+        {
+          id: 'booking_001',
+          courseName: '商務華語會話',
+          courseDate: '2024-12-25',
+          courseTime: '09:00-10:30',
+          instructorName: '張老師',
+          status: 'upcoming',
+          classroom: 'https://meet.google.com/abc-def-ghi',
+          materials: 'https://drive.google.com/file/d/example1',
+          bookingDate: '2024-12-20'
+        },
+        {
+          id: 'booking_002',
+          courseName: '華語文法精修',
+          courseDate: '2024-12-20',
+          courseTime: '14:00-15:30',
+          instructorName: '王老師',
+          status: 'completed',
+          classroom: 'https://meet.google.com/def-ghi-jkl',
+          materials: 'https://drive.google.com/file/d/example2',
+          bookingDate: '2024-12-15'
+        },
+        {
+          id: 'booking_003',
+          courseName: '日常華語對話',
+          courseDate: '2024-12-18',
+          courseTime: '10:00-11:30',
+          instructorName: '李老師',
+          status: 'cancelled',
+          bookingDate: '2024-12-10',
+          cancelReason: '臨時有事',
+          cancelNote: '公司緊急會議',
+          cancelDate: '2024-12-17'
+        }
+      ],
+      2: [ // 李小華
+        {
+          id: 'booking_004',
+          courseName: '商務華語會話',
+          courseDate: '2024-12-28',
+          courseTime: '15:00-16:30',
+          instructorName: '陳老師',
+          status: 'upcoming',
+          classroom: 'https://meet.google.com/ghi-jkl-mno',
+          bookingDate: '2024-12-22'
+        },
+        {
+          id: 'booking_005',
+          courseName: '華語聽力強化',
+          courseDate: '2024-12-15',
+          courseTime: '11:00-12:30',
+          instructorName: '黃老師',
+          status: 'completed',
+          classroom: 'https://meet.google.com/jkl-mno-pqr',
+          bookingDate: '2024-12-10'
+        }
+      ],
+      4: [ // 陳工程師
+        {
+          id: 'booking_006',
+          courseName: '商務華語會話',
+          courseDate: '2025-01-02',
+          courseTime: '09:00-10:30',
+          instructorName: '張老師',
+          status: 'upcoming',
+          classroom: 'https://meet.google.com/abc-def-ghi',
+          materials: 'https://drive.google.com/file/d/example3',
+          bookingDate: '2024-12-23'
+        },
+        {
+          id: 'booking_007',
+          courseName: '華語文法精修',
+          courseDate: '2024-12-19',
+          courseTime: '14:00-15:30',
+          instructorName: '王老師',
+          status: 'completed',
+          classroom: 'https://meet.google.com/def-ghi-jkl',
+          bookingDate: '2024-12-14'
+        },
+        {
+          id: 'booking_008',
+          courseName: '商務華語會話',
+          courseDate: '2024-12-21',
+          courseTime: '16:00-17:30',
+          instructorName: '李老師',
+          status: 'completed',
+          bookingDate: '2024-12-16'
+        },
+        {
+          id: 'booking_009',
+          courseName: '華語聽力強化',
+          courseDate: '2024-12-23',
+          courseTime: '11:00-12:30',
+          instructorName: '陳老師',
+          status: 'completed',
+          bookingDate: '2024-12-18'
+        }
+      ],
+      5: [ // 林設計師
+        {
+          id: 'booking_010',
+          courseName: '日常華語對話',
+          courseDate: '2025-01-05',
+          courseTime: '13:00-14:30',
+          instructorName: '張老師',
+          status: 'upcoming',
+          classroom: 'https://meet.google.com/mno-pqr-stu',
+          bookingDate: '2024-12-24'
+        },
+        {
+          id: 'booking_011',
+          courseName: '華語文法精修',
+          courseDate: '2024-12-22',
+          courseTime: '10:00-11:30',
+          instructorName: '王老師',
+          status: 'completed',
+          bookingDate: '2024-12-17'
+        },
+        {
+          id: 'booking_012',
+          courseName: '商務華語會話',
+          courseDate: '2024-12-24',
+          courseTime: '15:00-16:30',
+          instructorName: '黃老師',
+          status: 'completed',
+          bookingDate: '2024-12-19'
+        }
+      ]
+    };
+    
+    return allBookings[userId] || [];
+  };
+
+  const userBookings = getUserBookings(user.id);
+  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed' | 'cancelled' | 'all'>('all');
+
+  const filteredBookings = userBookings.filter(booking => {
+    if (selectedTab === 'all') return true;
+    return booking.status === selectedTab;
+  });
+
+  const formatDate = (dateString: string): string => {
+    return new Date(dateString).toLocaleDateString('zh-TW', {
+      month: 'short',
+      day: 'numeric',
+      weekday: 'short'
+    });
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'upcoming': return 'text-blue-700 bg-blue-50 border-blue-200';
+      case 'completed': return 'text-green-700 bg-green-50 border-green-200';
+      case 'cancelled': return 'text-red-700 bg-red-50 border-red-200';
+      default: return 'text-gray-700 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'upcoming': return '即將開始';
+      case 'completed': return '已完成';
+      case 'cancelled': return '已取消';
+      default: return '未知';
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="bg-white rounded-2xl p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-xl font-bold text-gray-900">會員預約記錄</h3>
+            <p className="text-gray-600">{user.name} ({user.department} - {user.position})</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <SafeIcon icon={FiX} className="text-xl" />
+          </button>
+        </div>
+
+        {/* 統計資訊 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          {[
+            { 
+              label: '即將開始', 
+              count: userBookings.filter(b => b.status === 'upcoming').length,
+              color: 'text-blue-600 bg-blue-50 border-blue-200',
+              icon: FiCalendar
+            },
+            { 
+              label: '已完成', 
+              count: userBookings.filter(b => b.status === 'completed').length,
+              color: 'text-green-600 bg-green-50 border-green-200',
+              icon: FiUserCheck
+            },
+            { 
+              label: '已取消', 
+              count: userBookings.filter(b => b.status === 'cancelled').length,
+              color: 'text-red-600 bg-red-50 border-red-200',
+              icon: FiUserX
+            },
+            { 
+              label: '總計', 
+              count: userBookings.length,
+              color: 'text-purple-600 bg-purple-50 border-purple-200',
+              icon: FiBook
+            }
+          ].map((stat) => (
+            <div
+              key={stat.label}
+              className={`p-4 rounded-xl border ${stat.color}`}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-2xl font-bold">{stat.count}</div>
+                  <div className="text-sm font-medium">{stat.label}</div>
+                </div>
+                <SafeIcon icon={stat.icon} className="text-2xl" />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Tab 導航 */}
+        <div className="mb-6">
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            {[
+              { key: 'all', label: '全部', count: userBookings.length },
+              { key: 'upcoming', label: '即將開始', count: userBookings.filter(b => b.status === 'upcoming').length },
+              { key: 'completed', label: '已完成', count: userBookings.filter(b => b.status === 'completed').length },
+              { key: 'cancelled', label: '已取消', count: userBookings.filter(b => b.status === 'cancelled').length }
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setSelectedTab(tab.key as 'upcoming' | 'completed' | 'cancelled' | 'all')}
+                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  selectedTab === tab.key
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-blue-600'
+                }`}
+              >
+                {tab.label} ({tab.count})
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 預約列表 */}
+        <div className="space-y-4">
+          {filteredBookings.length > 0 ? (
+            filteredBookings.map((booking) => (
+              <div
+                key={booking.id}
+                className="bg-gray-50 rounded-xl border border-gray-200 p-4"
+              >
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-3 lg:space-y-0">
+                  {/* 左側 - 課程資訊 */}
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900">
+                          {booking.courseName}
+                        </h4>
+                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                          <div className="flex items-center space-x-1">
+                            <SafeIcon icon={FiCalendar} className="text-xs" />
+                            <span>{formatDate(booking.courseDate)} {booking.courseTime}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <SafeIcon icon={FiUser} className="text-xs" />
+                            <span>教師：{booking.instructorName}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <SafeIcon icon={FiBook} className="text-xs" />
+                            <span>預約日期：{formatDate(booking.bookingDate)}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(booking.status)}`}>
+                        {getStatusText(booking.status)}
+                      </span>
+                    </div>
+
+                    {/* 取消原因 */}
+                    {booking.status === 'cancelled' && booking.cancelReason && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-3">
+                        <div className="text-red-800">
+                          <div className="font-medium">取消原因：{booking.cancelReason}</div>
+                          {booking.cancelNote && (
+                            <div className="text-sm mt-1">詳細說明：{booking.cancelNote}</div>
+                          )}
+                          {booking.cancelDate && (
+                            <div className="text-xs mt-1">取消日期：{formatDate(booking.cancelDate)}</div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 操作按鈕 */}
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {booking.classroom && (
+                        <button
+                          onClick={() => window.open(booking.classroom, '_blank')}
+                          className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
+                        >
+                          <SafeIcon icon={FiExternalLink} className="text-xs" />
+                          <span>線上教室</span>
+                        </button>
+                      )}
+                      {booking.materials && (
+                        <button
+                          onClick={() => window.open(booking.materials, '_blank')}
+                          className="flex items-center space-x-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+                        >
+                          <SafeIcon icon={FiBook} className="text-xs" />
+                          <span>教材</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-center py-8">
+              <SafeIcon icon={FiCalendar} className="text-6xl text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {selectedTab === 'upcoming' ? '無即將開始的預約' : 
+                 selectedTab === 'completed' ? '無已完成的預約' :
+                 selectedTab === 'cancelled' ? '無已取消的預約' : '無預約記錄'}
+              </h3>
+              <p className="text-gray-600">
+                此會員目前沒有相關的預約記錄
+              </p>
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button
+            onClick={onClose}
+            className="bg-gray-600 text-white py-2 px-6 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            關閉
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -5,7 +5,8 @@
       "Bash(npx next dev:*)",
       "Bash(taskkill:*)",
       "Bash(cmd //c:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(rm:*)"
     ],
     "deny": []
   }
