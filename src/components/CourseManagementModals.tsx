@@ -173,7 +173,6 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
               onChange={(e) => {
                 const updatedCourse = { ...newCourse, startDate: e.target.value };
                 setNewCourse(updatedCourse);
-                setTimeout(() => calculateEndDate(updatedCourse), 0);
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
             />

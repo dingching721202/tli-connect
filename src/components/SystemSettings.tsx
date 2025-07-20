@@ -1,14 +1,12 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
 
 const {
-  FiSettings, FiSave, FiRotateCcw, FiClock, FiCalendar, FiUser, FiUserCheck, FiShield,
-  FiAlertTriangle, FiCheck, FiEdit2, FiTrash2, FiPlus, FiX, FiInfo, FiBell, FiMail,
-  FiMessageSquare, FiToggleLeft, FiToggleRight, FiRefreshCw, FiCopy, FiDownload, FiUpload
+  FiSettings, FiSave, FiRotateCcw, FiUser, FiShield,
+  FiBell, FiToggleLeft, FiToggleRight
 } = FiIcons;
 
 const SystemSettings = () => {
@@ -46,11 +44,11 @@ const SystemSettings = () => {
     }
   });
 
-  const updateSetting = (category: string, key: string, value: any) => {
+  const updateSetting = (category: string, key: string, value: string | number | boolean) => {
     setSettings(prev => ({
       ...prev,
       [category]: {
-        ...prev[category as keyof typeof prev],
+        ...(prev[category as keyof typeof prev] as Record<string, string | number | boolean>),
         [key]: value
       }
     }));

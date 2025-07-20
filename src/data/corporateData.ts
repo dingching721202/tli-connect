@@ -614,7 +614,6 @@ export const deleteCompany = (companyId: number): boolean => {
   if (index === -1) return false;
   
   // 同時刪除相關的企業用戶
-  const userIndices = [];
   for (let i = corporateUsers.length - 1; i >= 0; i--) {
     if (corporateUsers[i].companyId === companyId) {
       corporateUsers.splice(i, 1);

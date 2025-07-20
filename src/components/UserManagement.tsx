@@ -128,10 +128,6 @@ const UserManagement: React.FC = () => {
   const [companies, setCompanies] = useState(getCompanies());
   const [expandedCompanies, setExpandedCompanies] = useState<Set<number>>(new Set());
   const [expandedPlans, setExpandedPlans] = useState<Set<number>>(new Set());
-  const [showAddPlanUserModal, setShowAddPlanUserModal] = useState(false);
-  const [showEditPlanUserModal, setShowEditPlanUserModal] = useState(false);
-  const [selectedPlanId, setSelectedPlanId] = useState<number | null>(null);
-  const [editingPlanUser, setEditingPlanUser] = useState<any>(null);
   
   // 企業CRUD相關狀態
   const [showAddCompanyModal, setShowAddCompanyModal] = useState(false);
@@ -856,25 +852,25 @@ const UserManagement: React.FC = () => {
         // 講師特有欄位
         expertise: user.expertise || '',
         experience: user.experience || '',
-        qualification: (user as any).qualification || '',
-        bio: (user as any).bio || '',
+        qualification: (user as User & { qualification?: string }).qualification || '',
+        bio: (user as User & { bio?: string }).bio || '',
         
         // 管理員特有欄位
-        position: (user as any).position || '',
-        permissions: (user as any).permissions || [],
-        accessLevel: (user as any).accessLevel || 'admin',
+        position: (user as User & { position?: string }).position || '',
+        permissions: (user as User & { permissions?: string[] }).permissions || [],
+        accessLevel: (user as User & { accessLevel?: 'admin' | 'super_admin' | 'moderator' }).accessLevel || 'admin',
         
         // 顧問特有欄位
-        consultantArea: (user as any).consultantArea || '',
-        commissionRate: (user as any).commissionRate || 0,
-        clientManagementExperience: (user as any).clientManagementExperience || '',
-        salesTarget: (user as any).salesTarget || 0,
+        consultantArea: (user as User & { consultantArea?: string }).consultantArea || '',
+        commissionRate: (user as User & { commissionRate?: number }).commissionRate || 0,
+        clientManagementExperience: (user as User & { clientManagementExperience?: string }).clientManagementExperience || '',
+        salesTarget: (user as User & { salesTarget?: number }).salesTarget || 0,
         
         // 企業窗口特有欄位
-        companyRole: (user as any).companyRole || '',
-        managedUsers: (user as any).managedUsers || 0,
-        corporateLevel: (user as any).corporateLevel || 'secondary',
-        contractAuthority: (user as any).contractAuthority || false,
+        companyRole: (user as User & { companyRole?: string }).companyRole || '',
+        managedUsers: (user as User & { managedUsers?: number }).managedUsers || 0,
+        corporateLevel: (user as User & { corporateLevel?: 'primary' | 'hr' | 'secondary' }).corporateLevel || 'secondary',
+        contractAuthority: (user as User & { contractAuthority?: boolean }).contractAuthority || false,
         
         membershipStatus: user.membershipStatus || 'active',
         password: '',
@@ -1096,7 +1092,7 @@ const UserManagement: React.FC = () => {
       });
       setShowAddCompanyModal(false);
       alert('✅ 企業新增成功！已自動選中該企業');
-    } catch (error) {
+    } catch {
       alert('❌ 企業新增失敗！');
     }
   };
@@ -1138,7 +1134,7 @@ const UserManagement: React.FC = () => {
       } else {
         alert('❌ 企業資料更新失敗！');
       }
-    } catch (error) {
+    } catch {
       alert('❌ 企業資料更新失敗！');
     }
   };
@@ -1152,7 +1148,7 @@ const UserManagement: React.FC = () => {
         } else {
           alert('❌ 企業刪除失敗！');
         }
-      } catch (error) {
+      } catch {
         alert('❌ 企業刪除失敗！');
       }
     }
@@ -1218,7 +1214,7 @@ const UserManagement: React.FC = () => {
       setShowAddPlanModal(false);
       setSelectedCompanyId(null);
       alert('✅ 方案新增成功！');
-    } catch (error) {
+    } catch {
       alert('❌ 方案新增失敗！');
     }
   };
@@ -1251,7 +1247,7 @@ const UserManagement: React.FC = () => {
       setShowEditPlanModal(false);
       setEditingPlan(null);
       alert('✅ 方案更新成功！');
-    } catch (error) {
+    } catch {
       alert('❌ 方案更新失敗！');
     }
   };
@@ -1267,7 +1263,7 @@ const UserManagement: React.FC = () => {
         ));
         
         alert('✅ 方案刪除成功！');
-      } catch (error) {
+      } catch {
         alert('❌ 方案刪除失敗！');
       }
     }
@@ -1737,16 +1733,6 @@ const UserManagement: React.FC = () => {
                                                 {/* 會員表格 */}
                                                 <div className="flex justify-between items-center mb-3">
                                                   <h5 className="text-sm font-semibold text-gray-900">方案會員管理</h5>
-                                                  <button
-                                                    onClick={() => {
-                                                      setSelectedPlanId(plan.id);
-                                                      setShowAddPlanUserModal(true);
-                                                    }}
-                                                    className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1"
-                                                  >
-                                                    <SafeIcon icon={FiUserPlus} className="w-3 h-3" />
-                                                    <span>新增會員</span>
-                                                  </button>
                                                 </div>
                                                 
                                                 {planUsers.length > 0 ? (
@@ -1823,17 +1809,6 @@ const UserManagement: React.FC = () => {
                                                             </td>
                                                             <td className="px-3 py-2">
                                                               <div className="flex items-center space-x-2">
-                                                                <button
-                                                                  onClick={() => {
-                                                                    setEditingPlanUser(user);
-                                                                    setSelectedPlanId(plan.id);
-                                                                    setShowEditPlanUserModal(true);
-                                                                  }}
-                                                                  className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                                                                  title="編輯"
-                                                                >
-                                                                  <SafeIcon icon={FiEdit2} className="w-3 h-3" />
-                                                                </button>
                                                                 <button
                                                                   onClick={() => {
                                                                     if (window.confirm(`確定要從此方案中移除 ${user.name} 嗎？`)) {
@@ -2979,7 +2954,7 @@ const UserManagement: React.FC = () => {
       )}
 
       {/* 新增方案用戶 Modal */}
-      {showAddPlanUserModal && (
+      {false && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -2989,7 +2964,7 @@ const UserManagement: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900">新增方案會員</h3>
               <button
-                onClick={() => setShowAddPlanUserModal(false)}
+                onClick={() => {}}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <SafeIcon icon={FiX} className="w-6 h-6" />
@@ -3000,7 +2975,7 @@ const UserManagement: React.FC = () => {
               e.preventDefault();
               // 這裡添加新增用戶到方案的邏輯
               alert('新增用戶到方案功能開發中...');
-              setShowAddPlanUserModal(false);
+              // setShowAddPlanUserModal(false);
             }}>
               <div className="space-y-4">
                 <div>
@@ -3058,7 +3033,7 @@ const UserManagement: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowAddPlanUserModal(false)}
+                  onClick={() => {}}
                   className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                 >
                   取消
@@ -3069,106 +3044,6 @@ const UserManagement: React.FC = () => {
         </div>
       )}
 
-      {/* 編輯方案用戶 Modal */}
-      {showEditPlanUserModal && editingPlanUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-xl p-6 w-full max-w-md mx-4"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">編輯會員資料</h3>
-              <button
-                onClick={() => setShowEditPlanUserModal(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <SafeIcon icon={FiX} className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              // 這裡添加編輯用戶的邏輯
-              alert('編輯用戶功能開發中...');
-              setShowEditPlanUserModal(false);
-            }}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">姓名</label>
-                  <input
-                    type="text"
-                    defaultValue={editingPlanUser.name}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">電子郵件</label>
-                  <input
-                    type="email"
-                    defaultValue={editingPlanUser.email}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">部門</label>
-                  <input
-                    type="text"
-                    defaultValue={editingPlanUser.department}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">職位</label>
-                  <input
-                    type="text"
-                    defaultValue={editingPlanUser.position}
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">手機號碼</label>
-                  <input
-                    type="tel"
-                    defaultValue={editingPlanUser.phone}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">帳號狀態</label>
-                  <select
-                    defaultValue={editingPlanUser.status}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="active">啟用</option>
-                    <option value="inactive">未啟用</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="flex space-x-3 mt-6">
-                <button
-                  type="submit"
-                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  更新資料
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowEditPlanUserModal(false)}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                >
-                  取消
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
 
       {/* 新增企業 Modal */}
       {showAddCompanyModal && (
@@ -3322,7 +3197,7 @@ const UserManagement: React.FC = () => {
                   <input
                     type="text"
                     value={editingCompany.name}
-                    onChange={(e) => setEditingCompany((prev: any) => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) => setEditingCompany((prev: Company | null) => prev ? { ...prev, name: e.target.value } : null)}
                     required
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                   />

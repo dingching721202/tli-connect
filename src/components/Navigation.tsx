@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { FiMenu, FiX, FiUser, FiLogOut, FiBook, FiUsers, FiSettings, FiUserCheck, FiBookOpen, FiUserPlus, FiTrendingUp, FiShare2, FiBriefcase } from 'react-icons/fi';
+import { FiMenu, FiX, FiUser, FiLogOut, FiBook, FiUsers, FiSettings, FiBookOpen, FiUserPlus, FiShare2, FiBriefcase } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
 

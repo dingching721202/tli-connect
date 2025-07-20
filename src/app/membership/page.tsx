@@ -11,8 +11,8 @@ import { getPublishedMembershipPlans, MembershipPlan } from '@/data/membershipPl
 import { getReferralCodeByCode, recordReferralPurchase } from '@/data/referralData';
 
 const {
-  FiCreditCard, FiCheck, FiUsers, FiBuilding, FiStar, FiCalendar, FiVideo, FiUserCheck, FiAward,
-  FiTrendingUp, FiX, FiMail, FiPhone
+  FiCreditCard, FiCheck, FiUsers, FiStar, FiCalendar, FiVideo, FiAward,
+  FiTrendingUp, FiX, FiMail
 } = FiIcons;
 
 export default function MembershipPage() {
@@ -22,7 +22,7 @@ export default function MembershipPage() {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [planType, setPlanType] = useState<'individual' | 'corporate'>('individual');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentData, setPaymentData] = useState<any>(null);
+  const [paymentData, setPaymentData] = useState<{ name: string; price: number; duration: number; referralCode: string | null; referrerInfo: {name: string, code: string} | null } | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [individualPlans, setIndividualPlans] = useState<MembershipPlan[]>([]);
   const [corporatePlans, setCorporatePlans] = useState<MembershipPlan[]>([]);
@@ -155,7 +155,7 @@ export default function MembershipPage() {
           <button
             onClick={() => {
               // 處理推薦記錄
-              let successMessage = `🎉 購買成功！\n\n方案：${paymentData?.name}\n金額：${formatPrice(paymentData?.price)}`;
+              let successMessage = `🎉 購買成功！\n\n方案：${paymentData?.name}\n金額：${formatPrice(paymentData?.price || 0)}`;
               
               if (paymentData?.referrerInfo && paymentData?.referralCode && user) {
                 successMessage += `\n\n✨ 感謝 ${paymentData.referrerInfo.name} 的推薦！`;
@@ -382,7 +382,7 @@ export default function MembershipPage() {
                   : 'text-gray-600 hover:text-blue-600'
               }`}
             >
-              <SafeIcon icon={FiBuilding} className="inline mr-2" />
+              <SafeIcon icon={FiUsers} className="inline mr-2" />
               企業方案
             </button>
           </div>
@@ -478,7 +478,7 @@ export default function MembershipPage() {
           >
             <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
               <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-8 text-center">
-                <SafeIcon icon={FiBuilding} className="text-4xl mx-auto mb-4" />
+                <SafeIcon icon={FiUsers} className="text-4xl mx-auto mb-4" />
                 <h3 className="text-3xl font-bold mb-2">企業會員方案</h3>
                 <p className="text-purple-100">為您的企業提供完整的學習解決方案</p>
               </div>

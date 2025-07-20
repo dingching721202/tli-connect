@@ -2,9 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiCopy, FiCheck, FiExternalLink, FiTrendingUp, FiUsers, FiDollarSign, FiCalendar, FiEye, FiX } from 'react-icons/fi';
+import { FiCopy, FiCheck, FiExternalLink, FiTrendingUp, FiUsers, FiDollarSign, FiCalendar, FiX } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
-import { getReferralCodesByUser, getAllReferralCodes, ReferralCode } from '@/data/referralData';
+import { getReferralCodesByUser, ReferralCode } from '@/data/referralData';
 
 interface ReferralSystemProps {
   isOpen: boolean;
@@ -12,7 +12,7 @@ interface ReferralSystemProps {
 }
 
 const ReferralSystem: React.FC<ReferralSystemProps> = ({ isOpen, onClose }) => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
   const [referralCodes, setReferralCodes] = useState<ReferralCode[]>([]);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'codes' | 'stats'>('codes');

@@ -80,8 +80,7 @@ const Dashboard = () => {
           link: '#',
           color: 'from-blue-500 to-blue-600',
           permission: 'manage_referrals',
-          id: 'referrals',
-          action: 'openReferral'
+          id: 'referrals'
         },
         {
           title: '課程瀏覽',

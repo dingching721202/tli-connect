@@ -9,14 +9,12 @@ import CourseManagementModals from './CourseManagementModals';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   ManagedCourse,
-  Instructor,
   getManagedCourses,
   getInstructors,
   addManagedCourse,
   updateManagedCourse,
   deleteManagedCourse,
-  addInstructor,
-  regenerateAllCourseSessions
+  addInstructor
 } from '@/data/courseData';
 
 const {
@@ -555,9 +553,9 @@ const CourseManagement = () => {
     }
     
     // 更新課程對象
-    const courseUpdates = {
+    const courseUpdates: Partial<ManagedCourse> = {
       ...newCourse,
-      status: isDraft ? 'draft' : 'active'
+      status: (isDraft ? 'draft' : 'active') as 'draft' | 'active'
     };
     
     // 使用數據管理系統更新課程
@@ -727,7 +725,7 @@ const CourseManagement = () => {
     }));
 
     // 準備課程排程工作表
-    const scheduleData: any[] = [];
+    const scheduleData: Record<string, string | number>[] = [];
     filteredCourses.forEach(course => {
       course.globalSchedules.forEach((schedule, index) => {
         const instructor = instructors.find(i => i.id === parseInt(schedule.instructorId.toString()));
@@ -745,7 +743,7 @@ const CourseManagement = () => {
     });
 
     // 準備課程內容工作表
-    const sessionData: any[] = [];
+    const sessionData: Record<string, string | number>[] = [];
     filteredCourses.forEach(course => {
       course.sessions.forEach((session, index) => {
         sessionData.push({
@@ -760,7 +758,7 @@ const CourseManagement = () => {
     });
 
     // 準備已生成課程時段工作表
-    const generatedSessionData: any[] = [];
+    const generatedSessionData: Record<string, string | number>[] = [];
     filteredCourses.forEach(course => {
       course.generatedSessions.forEach((session, index) => {
         generatedSessionData.push({
@@ -789,7 +787,7 @@ const CourseManagement = () => {
     const generatedSheet = XLSX.utils.json_to_sheet(generatedSessionData);
     
     // 設定欄位寬度
-    const setColumnWidths = (sheet: any) => {
+    const setColumnWidths = (sheet: XLSX.WorkSheet) => {
       const cols = [
         { wch: 10 }, // 課程ID
         { wch: 25 }, // 課程標題

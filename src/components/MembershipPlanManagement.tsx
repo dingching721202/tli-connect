@@ -14,9 +14,9 @@ import {
 } from '@/data/membershipPlans';
 
 const {
-  FiPlus, FiEdit2, FiTrash2, FiSave, FiX, FiEye, FiEyeOff, FiCopy,
-  FiCheck, FiAlertTriangle, FiInfo, FiDollarSign, FiCalendar,
-  FiUsers, FiBuilding, FiStar, FiToggleLeft, FiToggleRight
+  FiPlus, FiEdit2, FiTrash2, FiSave, FiX, FiCopy,
+  FiCheck, FiInfo, FiCalendar,
+  FiUsers, FiStar
 } = FiIcons;
 
 
@@ -189,7 +189,7 @@ const MembershipPlanManagement = () => {
           <label className="text-sm font-medium text-gray-700">方案類型：</label>
           <select
             value={filter}
-            onChange={(e) => setFilter(e.target.value as any)}
+            onChange={(e) => setFilter(e.target.value as 'all' | 'individual' | 'corporate')}
             className="border border-gray-300 rounded-lg px-3 py-1 text-sm"
           >
             <option value="all">全部</option>
@@ -201,7 +201,7 @@ const MembershipPlanManagement = () => {
           <label className="text-sm font-medium text-gray-700">狀態：</label>
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
+            onChange={(e) => setStatusFilter(e.target.value as 'all' | 'draft' | 'published')}
             className="border border-gray-300 rounded-lg px-3 py-1 text-sm"
           >
             <option value="all">全部</option>
@@ -245,7 +245,7 @@ const MembershipPlanManagement = () => {
             {/* Plan Info */}
             <div className="mt-8">
               <div className="flex items-center space-x-2 mb-2">
-                <SafeIcon icon={plan.type === 'individual' ? FiUsers : FiBuilding} className="text-gray-600" />
+                <SafeIcon icon={FiUsers} className="text-gray-600" />
                 <span className="text-sm text-gray-600">
                   {plan.type === 'individual' ? '個人方案' : '企業方案'}
                 </span>
@@ -387,7 +387,7 @@ const MembershipPlanManagement = () => {
                     </label>
                     <select
                       value={formData.type || 'individual'}
-                      onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as any }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as 'individual' | 'corporate' }))}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       <option value="individual">個人方案</option>
@@ -453,7 +453,7 @@ const MembershipPlanManagement = () => {
                     <label className="text-sm font-medium text-gray-700">狀態：</label>
                     <select
                       value={formData.status || 'draft'}
-                      onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
+                      onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as 'draft' | 'published' }))}
                       className="border border-gray-300 rounded-lg px-3 py-1 text-sm"
                     >
                       <option value="draft">草稿</option>

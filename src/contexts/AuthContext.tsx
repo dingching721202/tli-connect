@@ -50,6 +50,7 @@ interface AuthContextType {
   isInstructor: boolean;
   isConsultant: boolean;
   isAdmin: boolean;
+  isCorporateContact: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

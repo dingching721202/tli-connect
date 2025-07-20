@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const {
   FiUsers, FiSettings, FiUserPlus, FiEdit2, FiTrash2, FiSearch, 
-  FiDownload, FiX, FiBuilding, FiEye, FiMessageSquare, 
+  FiDownload, FiX, FiEye, FiMessageSquare, 
   FiUserCheck, FiExternalLink, FiLink, FiUser, 
   FiCopy, FiTrendingUp, FiAward, FiPercent, 
   FiBriefcase, FiDollarSign
@@ -185,7 +185,7 @@ const AgentManagement: React.FC = () => {
       name: '張老師',
       email: 'zhang.teacher@example.com',
       phone: '0912-345-678',
-      agentType: 'agent-teacher',
+      agentType: 'teacher',
       roleId: 1,
       roleName: '資深代理',
       rolePercentage: 15,
@@ -359,7 +359,7 @@ const AgentManagement: React.FC = () => {
       name: '創新科技有限公司',
       email: 'contact@innovation.com',
       phone: '02-1234-5678',
-      agentType: 'agent-teacher',
+      agentType: 'teacher',
       roleId: 2,
       roleName: '新手代理',
       rolePercentage: 10,
@@ -1019,7 +1019,7 @@ const AgentManagement: React.FC = () => {
                   <td className="px-4 py-4">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-full flex items-center justify-center">
-                        <SafeIcon icon={agent.isCompany ? FiBuilding : FiUser} className="text-white text-sm" />
+                        <SafeIcon icon={agent.isCompany ? FiBriefcase : FiUser} className="text-white text-sm" />
                       </div>
                       <div>
                         <div className="font-medium text-gray-900">{agent.name}</div>

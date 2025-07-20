@@ -2,17 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiUsers, FiSettings, FiUserPlus, FiEdit2, FiTrash2, FiSearch, FiDownload, FiX, FiBriefcase, FiEye, FiBook, FiCalendar, FiTrendingUp, FiUserCheck, FiUserX, FiAward, FiShield, FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
+import { FiUsers, FiUserPlus, FiEdit2, FiX, FiBriefcase, FiBook, FiCalendar, FiTrendingUp, FiUserCheck, FiUserX, FiAward, FiShield, FiMail, FiPhone, FiMapPin } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import SafeIcon from '@/components/common/SafeIcon';
 import { 
-  isCorporatePlanExpired, 
-  canAddNewMember, 
-  addCorporateUserWithValidation,
-  updateUserMembershipStatus,
-  deleteCorporateUserWithValidation,
   calculateMembershipPeriod
 } from '@/data/corporateData';
 
@@ -81,35 +76,6 @@ export default function CorporateManagementPage() {
   const [selectedPlanForNewUser, setSelectedPlanForNewUser] = useState<string | null>(null);
   const [editingCompanyInfo, setEditingCompanyInfo] = useState(false);
   
-  // 企業方案狀態檢查
-  const companyId = 1; // 假設當前企業ID為1
-  const isPlanExpired = isCorporatePlanExpired(companyId);
-  const addMemberValidation = canAddNewMember(companyId);
-
-  // 處理刪除會員
-  const handleDeleteUser = (userId: number) => {
-    if (confirm('確定要刪除這個會員嗎？')) {
-      // 找到要刪除的用戶
-      const userToDelete = corporateUsers.find(user => user.id === userId);
-      if (!userToDelete) return;
-
-      // 更新用戶列表
-      setCorporateUsers(prev => prev.filter(user => user.id !== userId));
-      
-      // 更新方案使用數量
-      setCorporateMembership(prev => ({
-        ...prev,
-        plans: prev.plans.map(plan => 
-          plan.id === userToDelete.planId 
-            ? { ...plan, usedSlots: Math.max(0, plan.usedSlots - 1) }
-            : plan
-        ),
-        usedSlots: Math.max(0, prev.usedSlots - 1)
-      }));
-      
-      alert('會員刪除成功');
-    }
-  };
 
   // 處理編輯會員基本資訊
   const handleEditUser = (userId: number, updatedInfo: { name: string; email: string; phone: string; department: string; position: string }) => {
@@ -432,6 +398,7 @@ export default function CorporateManagementPage() {
     },
     {
       id: 4,
+      planId: 'plan_002',
       name: '陳工程師',
       email: 'chen@taiwantech.com',
       phone: '0945-678-901',
@@ -440,7 +407,6 @@ export default function CorporateManagementPage() {
       joinDate: '2024-11-01',
       membershipStartDate: '2024-11-01',
       membershipEndDate: '2025-02-01',
-      planType: 'quarterly',
       status: 'active',
       isAccountHolder: false,
       membershipStatus: {
@@ -458,6 +424,7 @@ export default function CorporateManagementPage() {
     },
     {
       id: 5,
+      planId: 'plan_002',
       name: '林設計師',
       email: 'lin@taiwantech.com',
       phone: '0956-789-012',
@@ -466,7 +433,6 @@ export default function CorporateManagementPage() {
       joinDate: '2024-06-01', // 在企業方案開始前就加入
       membershipStartDate: '2024-06-01',
       membershipEndDate: '2025-06-01', // 個人年方案，期限到2025-06-01
-      planType: 'yearly',
       status: 'active',
       isAccountHolder: false,
       membershipStatus: {
@@ -484,6 +450,7 @@ export default function CorporateManagementPage() {
     },
     {
       id: 6,
+      planId: 'plan_002',
       name: '黃經理',
       email: 'huang@taiwantech.com',
       phone: '0967-890-123',
@@ -492,7 +459,6 @@ export default function CorporateManagementPage() {
       joinDate: '2024-05-01', // 企業方案開始前加入
       membershipStartDate: '2024-05-01',
       membershipEndDate: '2025-05-01', // 個人年方案，期限超過企業方案期限
-      planType: 'yearly',
       status: 'active',
       isAccountHolder: false,
       membershipStatus: {
@@ -562,29 +528,10 @@ export default function CorporateManagementPage() {
     });
   };
 
-  const getStatusColor = (status: string): string => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'inactive': return 'bg-gray-100 text-gray-600';
-      case 'expired': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusName = (status: string): string => {
-    switch (status) {
-      case 'active': return '啟用';
-      case 'inactive': return '停用';
-      case 'expired': return '過期';
-      default: return '未知';
-    }
-  };
 
 
 
   const renderMembershipTab = () => {
-    const totalDays = Math.ceil((new Date(corporateMembership.endDate).getTime() - new Date(corporateMembership.startDate).getTime()) / (1000 * 60 * 60 * 24));
-    const progressPercentage = Math.max(0, Math.min(100, (corporateMembership.remainingDays / totalDays) * 100));
     const usagePercentage = (corporateMembership.usedSlots / corporateMembership.totalSlots) * 100;
     
     return (
@@ -605,10 +552,6 @@ export default function CorporateManagementPage() {
                 <h2 className="text-2xl font-bold text-gray-900">{corporateMembership.companyName}</h2>
                 <p className="text-gray-600">產業類別：{corporateMembership.industry}</p>
                 <div className="flex items-center space-x-4 mt-2">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(corporateMembership.status)}`}>
-                    <SafeIcon icon={FiShield} className="w-3 h-3 mr-1" />
-                    {getStatusName(corporateMembership.status)}
-                  </span>
                   <span className="text-sm text-gray-500">
                     員工人數：{corporateMembership.employeeCount} 人
                   </span>
@@ -1190,7 +1133,6 @@ export default function CorporateManagementPage() {
       {/* 新增使用者模態框 */}
       {showAddUserModal && selectedPlanForNewUser && (
         <AddUserModal 
-          planId={selectedPlanForNewUser}
           planInfo={corporateMembership.plans.find(p => p.id === selectedPlanForNewUser)!}
           onSave={handleAddNewUser} 
           onClose={() => {
@@ -1331,12 +1273,10 @@ function EditUserModal({
 
 // 新增使用者模態框元件
 function AddUserModal({ 
-  planId,
   planInfo,
   onSave, 
   onClose 
 }: { 
-  planId: string;
   planInfo: CorporatePlan;
   onSave: (userInfo: { name: string; email: string; phone: string; department: string; position: string }) => void; 
   onClose: () => void; 
