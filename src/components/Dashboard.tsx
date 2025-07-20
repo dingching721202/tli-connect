@@ -47,7 +47,7 @@ interface Course {
 }
 
 const Dashboard = () => {
-  const { user, hasActiveMembership } = useAuth();
+  const { user } = useAuth();
   const [dashboardData, setDashboardData] = useState<{
     membership: Membership | null;
     upcomingClasses: {
@@ -103,6 +103,7 @@ const Dashboard = () => {
           { label: '會員狀態', value: '-', icon: FiTrendingUp }
         ];
       }
+      const { hasActiveMembership } = useAuth();
 
       const allCourses = getBookedCourses();
       const upcomingCourses = allCourses.filter(c => c.status === 'upcoming');
@@ -123,7 +124,7 @@ const Dashboard = () => {
         { label: '已預約課程', value: upcomingCourses.length.toString(), icon: FiBook },
         { label: '本月課程', value: thisMonthCourses.length.toString(), icon: FiCalendar },
         { label: '學習時數', value: `${totalHours}h`, icon: FiClock },
-        { label: '會員狀態', value: dashboardData.membership ? '已啟用' : '未啟用', icon: FiTrendingUp }
+        { label: '會員狀態', value: hasActiveMembership() ? '已啟用' : '未啟用', icon: FiTrendingUp }
       ];
     }
 

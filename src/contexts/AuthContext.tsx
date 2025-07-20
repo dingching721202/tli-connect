@@ -9,7 +9,7 @@ interface User {
   email: string;
   name: string;
   phone: string;
-  role: 'STUDENT' | 'TEACHER' | 'OPS';
+  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT';
   membership?: Membership | null;
   avatar?: string;
 }
