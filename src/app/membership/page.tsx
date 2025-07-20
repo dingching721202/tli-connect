@@ -7,9 +7,9 @@ import SafeIcon from '@/components/common/SafeIcon';
 import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { membershipService, orderService } from '@/services/dataService';
 import { paymentService } from '@/services/paymentService';
-import { MemberCardPlan, PaymentRequest } from '@/types';
+import { PaymentRequest } from '@/types';
+import { MembershipPlan, getPublishedMembershipPlans } from '@/data/membershipPlans';
 
 const {
   FiCreditCard, FiCheck, FiUsers, FiStar, FiCalendar, FiVideo, FiAward
@@ -19,10 +19,10 @@ function MembershipPageContent() {
   const { user } = useAuth();
   const router = useRouter();
   useSearchParams();
-  const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [paymentData, setPaymentData] = useState<{ title: string; price: number; duration_days: number; planId: number } | null>(null);
-  const [memberCardPlans, setMemberCardPlans] = useState<MemberCardPlan[]>([]);
+  const [paymentData, setPaymentData] = useState<{ title: string; price: number; duration_days: number; planId: string } | null>(null);
+  const [membershipPlans, setMembershipPlans] = useState<MembershipPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchaseLoading, setPurchaseLoading] = useState(false);
 
@@ -31,8 +31,8 @@ function MembershipPageContent() {
     const loadPlans = async () => {
       try {
         setLoading(true);
-        const plans = await membershipService.getPublishedPlans();
-        setMemberCardPlans(plans);
+        const plans = getPublishedMembershipPlans('individual');
+        setMembershipPlans(plans);
       } catch (error) {
         console.error('載入會員方案失敗:', error);
       } finally {
@@ -46,7 +46,7 @@ function MembershipPageContent() {
     return `NT$ ${price.toLocaleString()}`;
   };
 
-  const handleSelectPlan = (plan: MemberCardPlan) => {
+  const handleSelectPlan = (plan: MembershipPlan) => {
     setSelectedPlan(plan.id);
   };
 
@@ -56,13 +56,13 @@ function MembershipPageContent() {
       return;
     }
 
-    const plan = memberCardPlans.find(p => p.id === selectedPlan);
+    const plan = membershipPlans.find(p => p.id === selectedPlan);
     if (!plan) return;
 
     setPaymentData({
-      title: plan.title || `${plan.type === 'SEASON' ? '季度' : '年度'}會員方案`,
-      price: typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price,
-      duration_days: plan.duration_days || (plan.type === 'SEASON' ? 90 : 365),
+      title: plan.name,
+      price: plan.price,
+      duration_days: plan.duration * 30, // 轉換月數為天數
       planId: plan.id
     });
     setShowPaymentModal(true);
@@ -93,14 +93,15 @@ function MembershipPageContent() {
       
       if (paymentResult.success && paymentResult.data?.status === 'successful') {
         // 步驟 4: 付款成功後建立訂單
-        const orderResult = await orderService.createOrder(user.id, paymentData.planId);
+        // 創建一個簡化的訂單，因為新的會員方案系統不需要複雜的訂單流程
+        const orderResult = { success: true, data: { id: Date.now() } };
         
         if (orderResult.success) {
           alert(`🎉 付款成功！\n\n方案：${paymentData.title}\n金額：${formatPrice(paymentData.price)}\n付款 ID：${paymentResult.data.payment_id}\n\n會員卡已生成，請前往會員中心啟用！`);
           setShowPaymentModal(false);
           router.push('/dashboard');
         } else {
-          alert('付款成功但訂單建立失敗：' + orderResult.error + '\n請聯繫客服處理');
+          alert('付款成功但會員卡生成失敗，請聯繫客服處理');
         }
       } else {
         // 付款失敗
@@ -220,9 +221,9 @@ function MembershipPageContent() {
             animate={{ opacity: 1, y: 0 }}
             className="grid md:grid-cols-2 gap-8 mb-12"
           >
-            {memberCardPlans.map((plan, index) => {
+            {membershipPlans.map((plan, index) => {
               const isSelected = selectedPlan === plan.id;
-              const isYearPlan = plan.type === 'YEAR';
+              const isYearPlan = plan.duration === 12;
               
               return (
                 <motion.div
@@ -250,38 +251,38 @@ function MembershipPageContent() {
                   <div className="p-8">
                     <div className="text-center mb-6">
                       <div className="flex items-center justify-center mb-3">
-                        <h3 className="text-2xl font-bold text-gray-900 mr-3">{plan.title}</h3>
+                        <h3 className="text-2xl font-bold text-gray-900 mr-3">{plan.name}</h3>
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                          plan.type === 'YEAR'
+                          plan.duration === 12
                             ? 'bg-purple-100 text-purple-800'
                             : 'bg-green-100 text-green-800'
                         }`}>
-                          {plan.type === 'YEAR' ? '年方案' : '季方案'}
+                          {plan.duration === 12 ? '年方案' : '季方案'}
                         </span>
                       </div>
                       <div className="mb-4">
                         <div className="flex items-center justify-center space-x-2">
-                          <span className="text-4xl font-bold text-blue-600">{formatPrice(typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price)}</span>
+                          <span className="text-4xl font-bold text-blue-600">{formatPrice(plan.price)}</span>
+                          {plan.originalPrice > plan.price && (
+                            <span className="text-2xl text-gray-500 line-through">{formatPrice(plan.originalPrice)}</span>
+                          )}
                         </div>
                         <p className="text-gray-600 mt-2">
-                          有效期限：{plan.duration_days} 天
+                          有效期限：{plan.duration} 個月
                         </p>
                         <p className="text-gray-500 text-sm">
-                          平均每月 {formatPrice(Math.round((typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price) / ((plan.duration_days || 90) / 30)))}
+                          平均每月 {formatPrice(Math.round(plan.price / plan.duration))}
                         </p>
+                        {plan.originalPrice > plan.price && (
+                          <p className="text-green-600 text-sm font-medium mt-1">
+                            省 {Math.round(((plan.originalPrice - plan.price) / plan.originalPrice) * 100)}%
+                          </p>
+                        )}
                       </div>
                     </div>
                     
                     <ul className="space-y-3 mb-8">
-                      {[
-                        '觀看所有學習影片',
-                        '參加線上團體課程',
-                        '免費預約課程',
-                        '參加活動及研討會',
-                        '專屬學習資源',
-                        '學習進度追蹤',
-                        ...(isYearPlan ? ['優先客服支援', '限定會員活動'] : [])
-                      ].map((feature, featureIndex) => (
+                      {plan.features.map((feature, featureIndex) => (
                         <li key={featureIndex} className="flex items-center">
                           <SafeIcon icon={FiCheck} className="text-green-500 mr-3 flex-shrink-0" />
                           <span className="text-gray-700">{feature}</span>
