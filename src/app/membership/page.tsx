@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
@@ -15,7 +15,7 @@ const {
   FiTrendingUp, FiX, FiMail
 } = FiIcons;
 
-export default function MembershipPage() {
+function MembershipPageContent() {
   const { user } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -604,5 +604,18 @@ export default function MembershipPage() {
         {showContactModal && <ContactModal />}
       </div>
     </div>
+  );
+}
+
+export default function MembershipPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">載入中...</p>
+      </div>
+    </div>}>
+      <MembershipPageContent />
+    </Suspense>
   );
 }
