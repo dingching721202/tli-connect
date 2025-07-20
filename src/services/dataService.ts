@@ -17,19 +17,19 @@ import classTimeslotsData from '@/data/class_timeslots.json';
 import classAppointmentsData from '@/data/class_appointments.json';
 
 // 模擬資料庫
-let users: User[] = [...usersData];
-let courses: Course[] = [...coursesData];
-let classes: Class[] = [...classesData];
-let lessons: Lesson[] = [...lessonsData];
-let memberCards: MemberCard[] = [...memberCardsData];
-let memberCardPlans: MemberCardPlan[] = [...memberCardPlansData];
-let memberships: Membership[] = [...membershipsData];
-let orders: Order[] = [...ordersData];
-let classTimeslots: ClassTimeslot[] = [...classTimeslotsData];
-let classAppointments: ClassAppointment[] = [...classAppointmentsData];
+const users: User[] = [...usersData] as any as User[];
+const courses: Course[] = [...coursesData] as any as Course[];
+const classes: Class[] = [...classesData] as any as Class[];
+// let lessons: Lesson[] = [...lessonsData]; // Unused
+// let memberCards: MemberCard[] = [...memberCardsData]; // Unused
+const memberCardPlans: MemberCardPlan[] = [...memberCardPlansData] as any as MemberCardPlan[];
+const memberships: Membership[] = [...membershipsData] as any as Membership[];
+const orders: Order[] = [...ordersData] as any as Order[];
+const classTimeslots: ClassTimeslot[] = [...classTimeslotsData] as any as ClassTimeslot[];
+const classAppointments: ClassAppointment[] = [...classAppointmentsData] as any as ClassAppointment[];
 
 // 輔助函數
-const generateId = (array: any[]): number => {
+const generateId = (array: { id: number }[]): number => {
   return Math.max(0, ...array.map(item => item.id)) + 1;
 };
 

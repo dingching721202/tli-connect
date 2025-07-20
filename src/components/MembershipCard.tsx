@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiCreditCard, FiCalendar, FiCheck, FiX, FiLoader, FiAlertCircle } from 'react-icons/fi';
+import { FiCreditCard, FiLoader, FiAlertCircle } from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
-import { memberCardService, dashboardService, membershipService } from '@/services/dataService';
+import { memberCardService, membershipService } from '@/services/dataService';
 import { Membership, MemberCardPlan } from '@/types';
 
 interface MembershipCardProps {

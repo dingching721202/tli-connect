@@ -24,19 +24,12 @@ const TimeslotManagement: React.FC = () => {
   const [selectedTimeslot, setSelectedTimeslot] = useState<TimeslotWithDetails | null>(null);
   const [cancelling, setCancelling] = useState(false);
 
-  // 檢查用戶權限
-  if (!user || user.role !== 'OPS') {
-    return (
-      <div className="text-center py-12">
-        <SafeIcon icon={FiAlertTriangle} className="text-6xl text-red-400 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">權限不足</h3>
-        <p className="text-gray-600">此功能僅限課務人員使用</p>
-      </div>
-    );
-  }
-
   // 載入課程時段資料
   useEffect(() => {
+    if (!user || user.role !== 'OPS') {
+      setLoading(false);
+      return;
+    }
     const loadTimeslots = async () => {
       try {
         setLoading(true);
@@ -64,7 +57,18 @@ const TimeslotManagement: React.FC = () => {
     };
 
     loadTimeslots();
-  }, []);
+  }, [user]);
+
+  // 檢查用戶權限
+  if (!user || user.role !== 'OPS') {
+    return (
+      <div className="text-center py-12">
+        <SafeIcon icon={FiAlertTriangle} className="text-6xl text-red-400 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-gray-900 mb-2">權限不足</h3>
+        <p className="text-gray-600">此功能僅限課務人員使用</p>
+      </div>
+    );
+  }
 
   // 過濾時段
   const filteredTimeslots = timeslots.filter(timeslot => {

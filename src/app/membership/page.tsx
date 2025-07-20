@@ -11,14 +11,13 @@ import { membershipService, orderService } from '@/services/dataService';
 import { MemberCardPlan } from '@/types';
 
 const {
-  FiCreditCard, FiCheck, FiUsers, FiStar, FiCalendar, FiVideo, FiAward,
-  FiTrendingUp, FiX, FiMail
+  FiCreditCard, FiCheck, FiUsers, FiStar, FiCalendar, FiVideo, FiAward
 } = FiIcons;
 
 function MembershipPageContent() {
   const { user } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  useSearchParams();
   const [selectedPlan, setSelectedPlan] = useState<number | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentData, setPaymentData] = useState<{ title: string; price: number; duration_days: number; planId: number } | null>(null);

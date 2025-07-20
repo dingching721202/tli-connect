@@ -22,9 +22,9 @@ const BookingSystem: React.FC = () => {
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
-  const [classTimeslots, setClassTimeslots] = useState<ClassTimeslot[]>([]);
+  useState<ClassTimeslot[]>([]);
   const [loading, setLoading] = useState(true);
-  const [bookingLoading, setBookingLoading] = useState(false);
+  useState(false);
 
   // 載入課程時段資料 (US05)
   useEffect(() => {
@@ -32,7 +32,6 @@ const BookingSystem: React.FC = () => {
       try {
         setLoading(true);
         const timeslots = await timeslotService.getAllTimeslots();
-        setClassTimeslots(timeslots);
         
         // 轉換為現有的 Course 格式以保持相容性
         const courses = await convertTimeslotsToCourses(timeslots);
@@ -151,7 +150,6 @@ const BookingSystem: React.FC = () => {
     }
 
     try {
-      setBookingLoading(true);
       
       // 提取 timeslot IDs (US06.1)
       const timeslotIds = selectedCourses.map(course => {
@@ -211,7 +209,6 @@ const BookingSystem: React.FC = () => {
       
       // 重新載入時段資料以更新狀態
       const timeslots = await timeslotService.getAllTimeslots();
-      setClassTimeslots(timeslots);
       const courses = await convertTimeslotsToCourses(timeslots);
       setAllCourses(courses);
 
@@ -219,7 +216,6 @@ const BookingSystem: React.FC = () => {
       console.error('預約失敗:', error);
       alert('預約過程中發生錯誤，請稍後再試');
     } finally {
-      setBookingLoading(false);
     }
   };
 
@@ -369,7 +365,7 @@ const BookingSystem: React.FC = () => {
       )}
 
       {/* Student without membership notice */}
-      {user?.role === 'student' && !hasActiveMembership() && (
+      {user?.role === 'STUDENT' && !hasActiveMembership() && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

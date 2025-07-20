@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
@@ -10,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ReferralSystem from './ReferralSystem';
 import MembershipCard from './MembershipCard';
 import { dashboardService } from '@/services/dataService';
-import { MemberCard } from '@/types';
+import { Membership, ClassAppointment, ClassTimeslot, Class, Course as CourseType } from '@/types';
 
 const {
   FiCalendar,
@@ -53,8 +52,13 @@ interface Course {
 const Dashboard = () => {
   const { user, hasActiveMembership } = useAuth();
   const [dashboardData, setDashboardData] = useState<{
-    membership: MemberCard | null;
-    upcomingClasses: any[];
+    membership: Membership | null;
+    upcomingClasses: {
+      appointment: ClassAppointment;
+      timeslot: ClassTimeslot;
+      class: Class | undefined;
+      course: CourseType | undefined;
+    }[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -98,7 +102,6 @@ const Dashboard = () => {
     
     return false;
   };
-  const router = useRouter();
   const [courseTab, setCourseTab] = useState('upcoming'); // 'upcoming' or 'completed'
   const [isReferralOpen, setIsReferralOpen] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
@@ -109,110 +112,6 @@ const Dashboard = () => {
   });
 
 
-  const getDashboardCards = () => {
-    const baseCards = [
-      {
-        title: '課程預約',
-        description: '瀏覽並預約您感興趣的課程',
-        icon: FiCalendar,
-        link: '/booking',
-        color: 'from-blue-500 to-blue-600',
-        permission: 'book_courses',
-        id: 'booking'
-      }
-    ];
-
-    // Add role-specific cards for consultant
-    if (user?.role === 'consultant') {
-      baseCards.length = 0; // Clear the base cards for consultant
-      baseCards.push(
-        {
-          title: '推薦系統',
-          description: '管理推薦代碼與查看收益統計',
-          icon: FiUserCheck,
-          link: '#',
-          color: 'from-blue-500 to-blue-600',
-          permission: 'manage_referrals',
-          id: 'referrals'
-        },
-        {
-          title: '課程瀏覽',
-          description: '瀏覽課程資訊以便向客戶推薦',
-          icon: FiBookOpen,
-          link: '/',
-          color: 'from-indigo-500 to-indigo-600',
-          permission: 'view_courses',
-          id: 'courses'
-        }
-      );
-    }
-
-    // Add role-specific cards for admin
-    if (hasPermission('admin_access')) {
-      baseCards.length = 0; // Clear the base cards for admin
-      baseCards.push(
-        {
-          title: '用戶管理面板',
-          description: '管理學生、教師和管理員帳戶',
-          icon: FiUsers,
-          link: '/admin?tab=users',
-          color: 'from-blue-500 to-blue-600',
-          permission: 'admin_access',
-          id: 'users'
-        },
-        {
-          title: '課程管理面板',
-          description: '管理所有課程，新增、編輯和刪除課程',
-          icon: FiBookOpen,
-          link: '/admin?tab=courses',
-          color: 'from-green-500 to-green-600',
-          permission: 'admin_access',
-          id: 'courses'
-        },
-        {
-          title: '請假管理面板',
-          description: '處理教師請假申請和安排代課',
-          icon: FiClock,
-          link: '/admin?tab=leave',
-          color: 'from-yellow-500 to-orange-600',
-          permission: 'admin_access',
-          id: 'leave'
-        },
-        {
-          title: '代理管理面板',
-          description: '管理代理夥伴、分紅設定與銷售追蹤',
-          icon: FiTrendingUp,
-          link: '/admin?tab=agents',
-          color: 'from-purple-500 to-indigo-600',
-          permission: 'admin_access',
-          id: 'agents'
-        },
-        {
-          title: '系統設定面板',
-          description: '配置系統參數和會員設定',
-          icon: FiSettings,
-          link: '/admin?tab=settings',
-          color: 'from-red-500 to-red-600',
-          permission: 'admin_access',
-          id: 'settings'
-        }
-      );
-    }
-
-    if (hasPermission('manage_courses') && !hasPermission('admin_access')) {
-      baseCards.push({
-        title: '課程管理面板',
-        description: '管理您的課程與學生',
-        icon: FiBookOpen,
-        link: '/instructor',
-        color: 'from-green-500 to-green-600',
-        permission: 'manage_courses',
-        id: 'instructor'
-      });
-    }
-
-    return baseCards.filter(card => !card.permission || hasPermission(card.permission));
-  };
 
   const getQuickStats = () => {
     if (user?.role === 'STUDENT') {
@@ -257,14 +156,6 @@ const Dashboard = () => {
       ];
     }
 
-    if (user?.role === 'consultant') {
-      return [
-        { label: '本月推薦', value: '8', icon: FiUserCheck },
-        { label: '總推薦數', value: '45', icon: FiUsers },
-        { label: '本月佣金', value: 'NT$12,500', icon: FiCreditCard },
-        { label: '成功率', value: '78%', icon: FiTrendingUp }
-      ];
-    }
 
     if (user?.role === 'OPS') {
       return [
@@ -290,10 +181,9 @@ const Dashboard = () => {
 
   const getRoleDescription = () => {
     switch (user?.role) {
-      case 'student': return '歡迎使用 TLI Connect 課程預約系統，開始您的學習之旅！';
-      case 'instructor': return '歡迎回到教師管理面板，管理您的課程與學生。';
-      case 'consultant': return '歡迎使用顧問管理面板，管理您的推薦業務與佣金收益。';
-      case 'admin': return '歡迎使用管理員面板，管理系統設定與用戶。';
+      case 'STUDENT': return '歡迎使用 TLI Connect 課程預約系統，開始您的學習之旅！';
+      case 'TEACHER': return '歡迎回到教師管理面板，管理您的課程與學生。';
+      case 'OPS': return '歡迎使用管理員面板，管理系統設定與用戶。';
       default: return '歡迎使用 TLI Connect 系統！';
     }
   };
@@ -564,7 +454,7 @@ const Dashboard = () => {
     }
   };
 
-  const handleRequestLeave = (courseId: number, courseName: string) => {
+  const handleRequestLeave = (courseId: number) => {
     const course = allInstructorCourses.find(c => c.id === courseId);
     if (course) {
       setSelectedCourse(course);
@@ -594,6 +484,7 @@ const Dashboard = () => {
         classroom: selectedCourse.classroom,
         note: leaveForm.note
       };
+      console.log('Leave request submitted:', leaveRequest);
 
       alert(`✅ 請假申請已提交！
       
@@ -704,7 +595,7 @@ const Dashboard = () => {
             <div className="w-full sm:w-auto text-left sm:text-right bg-green-50 border border-green-200 rounded-lg p-3 sm:p-0 sm:bg-transparent sm:border-none">
               <div className="text-sm text-gray-600">會員到期日</div>
               <div className="text-base sm:text-lg font-bold text-green-600">
-                {new Date(dashboardData.membership.expire_time).toLocaleDateString('zh-TW')}
+                {dashboardData.membership.expire_time ? new Date(dashboardData.membership.expire_time).toLocaleDateString('zh-TW') : 'N/A'}
               </div>
               <div className="text-xs sm:text-sm text-gray-600">
                 狀態：{dashboardData.membership.status === 'ACTIVE' ? '已啟用' : '未啟用'}
@@ -911,7 +802,7 @@ const Dashboard = () => {
                             <motion.button
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.95 }}
-                              onClick={() => handleRequestLeave(course.id, course.title || course.courseName || '未知課程')}
+                              onClick={() => handleRequestLeave(course.id)}
                               className="flex items-center space-x-1 px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-xs font-medium"
                               title="申請請假"
                             >

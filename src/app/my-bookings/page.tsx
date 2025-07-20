@@ -7,7 +7,7 @@ import SafeIcon from '@/components/common/SafeIcon';
 import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { bookingService, timeslotService } from '@/services/dataService';
-import { ClassAppointment, ClassTimeslot } from '@/types';
+import { } from '@/types';
 
 const {
   FiCalendar, FiClock, FiUser, FiUsers, FiMapPin, FiExternalLink,
@@ -203,7 +203,7 @@ export default function MyBookingsPage() {
     }
   };
 
-  const handleCancelBooking = (bookingId: string, courseName: string) => {
+  const handleCancelBooking = (bookingId: string) => {
     const booking = bookings.find(b => b.id === bookingId);
     if (booking) {
       const bookingWithExtras = booking as Booking & { canCancel: boolean; appointmentId: number };
@@ -767,7 +767,7 @@ export default function MyBookingsPage() {
                               <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => handleCancelBooking(booking.id, booking.courseName)}
+                                onClick={() => handleCancelBooking(booking.id)}
                                 className="flex items-center space-x-1 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
                               >
                                 <SafeIcon icon={FiX} className="text-xs" />

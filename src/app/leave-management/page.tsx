@@ -55,7 +55,7 @@ interface StudentCancellation {
 }
 
 export default function LeaveManagementPage() {
-  const { user, hasPermission } = useAuth();
+  const { user, isOps } = useAuth();
   const [selectedTab, setSelectedTab] = useState<'pending' | 'approved' | 'cancelled' | 'all'>('pending');
   const [showSubstituteModal, setShowSubstituteModal] = useState(false);
   const [selectedLeaveRequest, setSelectedLeaveRequest] = useState<LeaveRequest | null>(null);
@@ -181,7 +181,7 @@ export default function LeaveManagementPage() {
   ];
 
   // Check if user has admin permission
-  if (!user || !hasPermission('admin_access')) {
+  if (!user || !isOps) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />
@@ -250,7 +250,7 @@ export default function LeaveManagementPage() {
     setShowSubstituteModal(true);
   };
 
-  const handleRejectLeave = (_leaveId: string) => {
+  const handleRejectLeave = () => {
     if (confirm('確定要拒絕這個請假申請嗎？')) {
       alert('✅ 請假申請已拒絕');
       // Here you would update the request status
@@ -586,7 +586,7 @@ export default function LeaveManagementPage() {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => handleRejectLeave(record.id)}
+                        onClick={() => handleRejectLeave()}
                         className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                       >
                         <SafeIcon icon={FiX} className="text-sm" />
