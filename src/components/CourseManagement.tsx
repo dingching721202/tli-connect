@@ -74,7 +74,7 @@ interface NewInstructor {
 
 const CourseManagement = () => {
   const { user } = useAuth();
-  const isInstructor = user?.role === 'instructor';
+  const isInstructor = user?.role === 'TEACHER';
   
   // 主要狀態
   const [courses, setCourses] = useState<Course[]>([]);

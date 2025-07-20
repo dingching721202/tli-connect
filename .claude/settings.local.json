@@ -6,7 +6,8 @@
       "Bash(taskkill:*)",
       "Bash(cmd //c:*)",
       "Bash(npm run build:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "mcp__ide__getDiagnostics"
     ],
     "deny": []
   }

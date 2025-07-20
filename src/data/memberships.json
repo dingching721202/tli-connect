@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "member_card_id": 1,
+    "user_id": 1,
+    "duration_in_days": 365,
+    "start_time": "2024-11-01T00:00:00Z",
+    "expire_time": "2025-11-01T00:00:00Z",
+    "status": "ACTIVE",
+    "activated": true,
+    "activate_expire_time": "2025-01-01T00:00:00Z",
+    "created_at": "2024-11-01T08:00:00Z"
+  }
+]

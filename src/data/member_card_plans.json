@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "member_card_id": 1,
+    "title": "季度會員方案",
+    "type": "SEASON",
+    "duration_days": 90,
+    "price": 10800,
+    "status": "PUBLISHED",
+    "created_at": "2024-01-01T08:00:00Z"
+  },
+  {
+    "id": 2,
+    "member_card_id": 1,
+    "title": "年度會員方案",
+    "type": "YEAR",
+    "duration_days": 365,
+    "price": 36000,
+    "status": "PUBLISHED",
+    "created_at": "2024-01-01T08:00:00Z"
+  },
+  {
+    "id": 3,
+    "member_card_id": 2,
+    "title": "進階季度會員方案",
+    "type": "SEASON",
+    "duration_days": 90,
+    "price": 15800,
+    "status": "PUBLISHED",
+    "created_at": "2024-01-01T08:00:00Z"
+  },
+  {
+    "id": 4,
+    "member_card_id": 2,
+    "title": "進階年度會員方案",
+    "type": "YEAR",
+    "duration_days": 365,
+    "price": 48000,
+    "status": "PUBLISHED",
+    "created_at": "2024-01-01T08:00:00Z"
+  }
+]

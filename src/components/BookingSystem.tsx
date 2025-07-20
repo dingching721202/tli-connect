@@ -1,38 +1,99 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import Calendar from './Calendar';
 import CourseSelection from './CourseSelection';
 import SelectedCourses from './SelectedCourses';
 import { Course } from '@/data/mockCourses';
-import { convertToBookingCourses, getCoursesByDate } from '@/data/courseData';
+import { timeslotService, bookingService } from '@/services/dataService';
+import { ClassTimeslot } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
+import SafeIcon from './common/SafeIcon';
+import { FiLoader } from 'react-icons/fi';
 
 const BookingSystem: React.FC = () => {
   const { user, hasActiveMembership } = useAuth();
   const router = useRouter();
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 5, 1)); // June 2025
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // July 2025
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedCourses, setSelectedCourses] = useState<Course[]>([]);
   const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [classTimeslots, setClassTimeslots] = useState<ClassTimeslot[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [bookingLoading, setBookingLoading] = useState(false);
 
-  // 載入課程數據
-  React.useEffect(() => {
-    const loadCourses = () => {
-      const courses = convertToBookingCourses();
-      setAllCourses(courses);
+  // 載入課程時段資料 (US05)
+  useEffect(() => {
+    const loadTimeslots = async () => {
+      try {
+        setLoading(true);
+        const timeslots = await timeslotService.getAllTimeslots();
+        setClassTimeslots(timeslots);
+        
+        // 轉換為現有的 Course 格式以保持相容性
+        const courses = await convertTimeslotsToCourses(timeslots);
+        setAllCourses(courses);
+      } catch (error) {
+        console.error('載入課程時段失敗:', error);
+      } finally {
+        setLoading(false);
+      }
     };
-    loadCourses();
+
+    loadTimeslots();
   }, []);
+
+  // 將 ClassTimeslot 轉換為 Course 格式
+  const convertTimeslotsToCourses = async (timeslots: ClassTimeslot[]): Promise<Course[]> => {
+    return timeslots.map(timeslot => {
+      const startTime = new Date(timeslot.start_time);
+      const endTime = new Date(timeslot.end_time);
+      
+      return {
+        id: timeslot.id,
+        title: `課程 ${timeslot.id}`, // 可以後續從關聯的課程資料取得
+        date: startTime.toISOString().split('T')[0],
+        timeSlot: `${startTime.toTimeString().slice(0, 5)}-${endTime.toTimeString().slice(0, 5)}`,
+        instructor: '老師', // 可以後續從關聯的課程資料取得
+        price: 0,
+        description: `課程時段 ${timeslot.id}`,
+        // 新增時段狀態資訊
+        capacity: timeslot.capacity,
+        reserved_count: timeslot.reserved_count,
+        status: timeslot.status,
+        timeslot_id: timeslot.id
+      } as Course & { capacity: number; reserved_count: number; status: string; timeslot_id: number };
+    });
+  };
 
   const handleDateSelect = (date: Date, specificCourse?: Course) => {
     setSelectedDate(date);
     const dateStr = date.toISOString().split('T')[0];
-    const coursesForDate = getCoursesByDate(dateStr);
+    
+    // 篩選該日期的可預約課程時段 (US05)
+    const coursesForDate = allCourses.filter(course => {
+      if (course.date !== dateStr) return false;
+      
+      const courseWithStatus = course as Course & { capacity: number; reserved_count: number; status: string; timeslot_id: number };
+      
+      // 檢查時段狀態和容量 (US05.1)
+      if (courseWithStatus.status !== 'CREATED') return false;
+      if (courseWithStatus.reserved_count >= courseWithStatus.capacity) return false;
+      
+      // 檢查是否在24小時內 (US05.3)
+      const courseDateTime = new Date(`${course.date} ${course.timeSlot.split('-')[0]}`);
+      const now = new Date();
+      const twentyFourHours = 24 * 60 * 60 * 1000;
+      
+      if (courseDateTime.getTime() - now.getTime() <= twentyFourHours) return false;
+      
+      return true;
+    });
+    
     setAvailableCourses(coursesForDate);
     setShowCourseSelection(coursesForDate.length > 0);
 
@@ -68,7 +129,8 @@ const BookingSystem: React.FC = () => {
     setSelectedCourses(prev => prev.filter(c => `${c.id}-${c.timeSlot}` !== courseKey));
   };
 
-  const handleConfirmBooking = () => {
+  // 批量預約功能 (US06)
+  const handleConfirmBooking = async () => {
     // Check if user is logged in
     if (!user) {
       alert('請先登入才能預約課程！');
@@ -76,17 +138,89 @@ const BookingSystem: React.FC = () => {
       return;
     }
 
-    // Check if user has membership for booking
-    if (user.role === 'student' && !hasActiveMembership()) {
+    // Check if user has membership for booking (US06.2)
+    if (user.role === 'STUDENT' && !hasActiveMembership()) {
       alert('您需要有效的會員資格才能預約課程！\n\n即將跳轉到會員方案頁面...');
       router.push('/membership');
       return;
     }
 
-    // Proceed with booking
-    alert(`🎉 已成功預約 ${selectedCourses.length} 門課程！\n\n📚 感謝您的選擇，期待與您在課堂上見面！`);
-    setSelectedCourses([]);
-    setShowCourseSelection(false);
+    if (selectedCourses.length === 0) {
+      alert('請選擇要預約的課程！');
+      return;
+    }
+
+    try {
+      setBookingLoading(true);
+      
+      // 提取 timeslot IDs (US06.1)
+      const timeslotIds = selectedCourses.map(course => {
+        const courseWithStatus = course as Course & { timeslot_id: number };
+        return courseWithStatus.timeslot_id;
+      });
+
+      // 呼叫批量預約 API (US06)
+      const result = await bookingService.batchBooking(user.id, timeslotIds);
+      
+      // 顯示預約結果 (US06.6)
+      let resultMessage = '';
+      
+      if (result.success.length > 0) {
+        resultMessage += `🎉 成功預約 ${result.success.length} 堂課程：\n`;
+        result.success.forEach(booking => {
+          const course = selectedCourses.find(c => {
+            const courseWithStatus = c as Course & { timeslot_id: number };
+            return courseWithStatus.timeslot_id === booking.timeslot_id;
+          });
+          if (course) {
+            resultMessage += `✅ ${course.title} (${course.timeSlot})\n`;
+          }
+        });
+      }
+
+      if (result.failed.length > 0) {
+        resultMessage += `\n❌ 無法預約 ${result.failed.length} 堂課程：\n`;
+        result.failed.forEach(failure => {
+          const course = selectedCourses.find(c => {
+            const courseWithStatus = c as Course & { timeslot_id: number };
+            return courseWithStatus.timeslot_id === failure.timeslot_id;
+          });
+          if (course) {
+            let reason = '';
+            switch (failure.reason) {
+              case 'FULL':
+                reason = '已額滿';
+                break;
+              case 'WITHIN_24H':
+                reason = '距開課少於24小時';
+                break;
+              case 'MEMBERSHIP_EXPIRED':
+                reason = '會員資格已過期';
+                break;
+            }
+            resultMessage += `❌ ${course.title} (${course.timeSlot}) - ${reason}\n`;
+          }
+        });
+      }
+
+      alert(resultMessage);
+
+      // 清空已選課程並重新載入資料
+      setSelectedCourses([]);
+      setShowCourseSelection(false);
+      
+      // 重新載入時段資料以更新狀態
+      const timeslots = await timeslotService.getAllTimeslots();
+      setClassTimeslots(timeslots);
+      const courses = await convertTimeslotsToCourses(timeslots);
+      setAllCourses(courses);
+
+    } catch (error) {
+      console.error('預約失敗:', error);
+      alert('預約過程中發生錯誤，請稍後再試');
+    } finally {
+      setBookingLoading(false);
+    }
   };
 
   const handleCloseCourseSelection = () => {
@@ -120,7 +254,7 @@ const BookingSystem: React.FC = () => {
         </motion.p>
 
         {/* Membership Status */}
-        {user?.role === 'student' && (
+        {user?.role === 'STUDENT' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -161,19 +295,26 @@ const BookingSystem: React.FC = () => {
         )}
       </motion.div>
 
-      {/* Main Content */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-        {/* Calendar - Takes 2 columns on xl screens */}
-        <div className="xl:col-span-2">
-          <Calendar
-            currentDate={currentDate}
-            onDateChange={setCurrentDate}
-            onDateSelect={handleDateSelect}
-            courses={allCourses}
-            selectedCourses={selectedCourses}
-            onCourseToggle={handleCourseToggle}
-          />
+      {/* Loading State */}
+      {loading ? (
+        <div className="text-center py-12">
+          <SafeIcon icon={FiLoader} className="animate-spin text-blue-600 text-4xl mx-auto mb-4" />
+          <p className="text-gray-600">載入課程時段中...</p>
         </div>
+      ) : (
+        /* Main Content */
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+          {/* Calendar - Takes 2 columns on xl screens */}
+          <div className="xl:col-span-2">
+            <Calendar
+              currentDate={currentDate}
+              onDateChange={setCurrentDate}
+              onDateSelect={handleDateSelect}
+              courses={allCourses}
+              selectedCourses={selectedCourses}
+              onCourseToggle={handleCourseToggle}
+            />
+          </div>
 
         {/* Right Panel - Takes 1 column on xl screens */}
         <div className="space-y-6">
@@ -197,6 +338,7 @@ const BookingSystem: React.FC = () => {
           />
         </div>
       </div>
+      )}
 
       {/* Non-member Notice */}
       {!user && (
