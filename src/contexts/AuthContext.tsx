@@ -99,7 +99,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email: 'instructor@example.com',
       name: '張老師',
       role: 'instructor',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face',
       membershipType: null,
       membershipStatus: 'active', // Instructors are always active
       membership: null,
@@ -172,7 +172,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email: 'corporate.contact@taiwantech.com',
       name: '王企業窗口',
       role: 'corporate_contact',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop&crop=face',
       membershipType: 'corporate',
       membershipStatus: 'active',
       companyName: '台灣科技股份有限公司',
@@ -201,7 +201,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser) as User;
+        // Check if the user exists in mockUsers and update if necessary
+        // This ensures the data is fresh, especially for mock avatars
+        if (mockUsers[parsedUser.email]) {
+          const freshUserData = mockUsers[parsedUser.email];
+          setUser(freshUserData);
+          localStorage.setItem('currentUser', JSON.stringify(freshUserData));
+        } else {
+          setUser(parsedUser);
+        }
       } catch (error) {
         console.error('Error parsing saved user data:', error);
         // Clear corrupted data

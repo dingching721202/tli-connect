@@ -9,7 +9,8 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const {
   FiCalendar, FiClock, FiUser, FiUsers, FiMapPin, FiExternalLink,
-  FiX, FiEye, FiCheckCircle, FiAlertCircle, FiBook, FiMail, FiBriefcase
+  FiX, FiEye, FiCheckCircle, FiAlertCircle, FiBook, FiMail, FiBriefcase,
+  FiUserCheck, FiMessageSquare
 } = FiIcons;
 
 interface Booking {
@@ -17,7 +18,7 @@ interface Booking {
   courseName: string;
   courseDate: string;
   courseTime: string;
-  status: 'upcoming' | 'completed' | 'cancelled';
+  status: 'upcoming' | 'completed' | 'cancelled' | 'pending' | 'approved' | 'rejected'; // Added leave request statuses
   classroom: string;
   materials?: string;
   // For students
@@ -33,11 +34,19 @@ interface Booking {
   daysFromNow: number;
   bookingDate: string;
   note?: string;
+  // For leave requests
+  leaveReason?: string;
+  requestDate?: string;
+  substituteTeacher?: {
+    name: string;
+    email: string;
+  } | null;
+  adminNote?: string;
 }
 
 export default function MyBookingsPage() {
   const { user } = useAuth();
-  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed' | 'cancelled' | 'all'>('upcoming');
+  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed' | 'cancelled' | 'all' | 'pending' | 'approved' | 'rejected'>('upcoming');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -105,7 +114,7 @@ export default function MyBookingsPage() {
     }
   ];
 
-  // Mock data for teachers (courses booked by students)
+  // Mock data for teachers (courses booked by students and leave requests)
   const teacherBookings: Booking[] = [
     {
       id: '1',
@@ -167,11 +176,78 @@ export default function MyBookingsPage() {
       membershipType: 'individual',
       daysFromNow: -5,
       bookingDate: '2025-01-15'
+    },
+    // Leave requests for teachers
+    {
+      id: 'leave-1',
+      courseName: '商務華語會話',
+      courseDate: '2025-01-25',
+      courseTime: '09:00-10:30',
+      leaveReason: '身體不適',
+      note: '突然發燒，不適宜上課',
+      requestDate: '2025-01-20',
+      status: 'pending',
+      studentCount: 12,
+      classroom: 'https://meet.google.com/abc-def-ghi',
+      daysFromNow: 2,
+      bookingDate: '2025-01-20' // Using bookingDate for consistency, though it's requestDate for leave
+    },
+    {
+      id: 'leave-2',
+      courseName: '華語文法精修',
+      courseDate: '2025-01-28',
+      courseTime: '14:00-15:30',
+      leaveReason: '參加學術會議',
+      note: '參加台灣華語教學研討會',
+      requestDate: '2025-01-18',
+      status: 'approved',
+      studentCount: 8,
+      classroom: 'https://meet.google.com/def-ghi-jkl',
+      substituteTeacher: {
+        name: '陳老師',
+        email: 'teacher.chen@tli.com'
+      },
+      adminNote: '已安排陳老師代課，請提前準備教材交接。',
+      daysFromNow: 5,
+      bookingDate: '2025-01-18'
+    },
+    {
+      id: 'leave-3',
+      courseName: '華語聽力強化',
+      courseDate: '2025-01-22',
+      courseTime: '10:00-11:30',
+      leaveReason: '家庭緊急事務',
+      note: '家人住院需要照顧',
+      requestDate: '2025-01-19',
+      status: 'rejected',
+      studentCount: 15,
+      classroom: 'https://meet.google.com/ghi-jkl-mno',
+      adminNote: '此時段無可用代課老師，建議調整課程時間或提前安排。',
+      daysFromNow: -1,
+      bookingDate: '2025-01-19'
+    },
+    {
+      id: 'leave-4',
+      courseName: '商務華語寫作',
+      courseDate: '2025-01-15',
+      courseTime: '15:00-16:30',
+      leaveReason: '個人事務',
+      note: '需要處理重要個人事務',
+      requestDate: '2025-01-10',
+      status: 'approved',
+      studentCount: 10,
+      classroom: 'https://meet.google.com/jkl-mno-pqr',
+      substituteTeacher: {
+        name: '劉老師',
+        email: 'teacher.liu@tli.com'
+      },
+      daysFromNow: -8,
+      bookingDate: '2025-01-10'
     }
   ];
 
   // Use appropriate data based on user role
-  const bookings = user.role === 'student' ? studentBookings : teacherBookings;
+  const bookings = user?.role === 'student' ? studentBookings : teacherBookings;
 
   const filteredBookings = bookings.filter(booking => {
     if (selectedTab === 'all') return true;
@@ -192,6 +268,9 @@ export default function MyBookingsPage() {
       case 'upcoming': return 'text-blue-700 bg-blue-50 border-blue-200';
       case 'completed': return 'text-green-700 bg-green-50 border-green-200';
       case 'cancelled': return 'text-red-700 bg-red-50 border-red-200';
+      case 'pending': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
+      case 'approved': return 'text-green-700 bg-green-50 border-green-200';
+      case 'rejected': return 'text-red-700 bg-red-50 border-red-200';
       default: return 'text-gray-700 bg-gray-50 border-gray-200';
     }
   };
@@ -201,10 +280,34 @@ export default function MyBookingsPage() {
       case 'upcoming': return '即將開始';
       case 'completed': return '已完成';
       case 'cancelled': return '已取消';
+      case 'pending': return '待審核';
+      case 'approved': return '已批准';
+      case 'rejected': return '已拒絕';
       default: return '未知';
     }
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending': return FiClock;
+      case 'approved': return FiCheckCircle;
+      case 'rejected': return FiX;
+      case 'cancelled': return FiX;
+      case 'upcoming': return FiClock;
+      case 'completed': return FiCheckCircle;
+      default: return FiAlertCircle;
+    }
+  };
+
+  const handleCancelRequest = (requestId: string, courseName: string) => {
+    const request = bookings.find(req => req.id === requestId);
+    if (request && request.status === 'pending') {
+      if (confirm(`確定要取消「${courseName}」的請假申請嗎？`)) {
+        alert('✅ 請假申請已取消');
+        // Here you would update the request status
+      }
+    }
+  };
 
   const handleCancelBooking = (bookingId: string, courseName: string) => {
     const booking = bookings.find(b => b.id === bookingId);
@@ -239,7 +342,7 @@ export default function MyBookingsPage() {
       };
 
       alert(`✅ 預約已取消！
-      
+
 課程：${selectedBooking.courseName}
 時間：${selectedBooking.courseDate} ${selectedBooking.courseTime}
 取消原因：${cancelForm.reason}
@@ -267,7 +370,7 @@ export default function MyBookingsPage() {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold">預約詳情</h3>
+          <h3 className="text-xl font-bold">{selectedBooking?.leaveReason ? '請假申請詳情' : '預約詳情'}</h3>
           <button
             onClick={() => setShowDetailModal(false)}
             className="text-gray-500 hover:text-gray-700"
@@ -290,91 +393,175 @@ export default function MyBookingsPage() {
                   <span className="text-gray-600">上課時間：</span>
                   <span>{formatDate(selectedBooking.courseDate)} {selectedBooking.courseTime}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">預約日期：</span>
-                  <span>{formatDate(selectedBooking.bookingDate)}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 人員資訊 */}
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-medium mb-3 text-blue-900">
-                {user?.role === 'student' ? '教師資訊' : '學生資訊'}
-              </h4>
-              <div className="space-y-2 text-sm">
-                {user?.role === 'student' ? (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-blue-600">教師姓名：</span>
-                      <span className="font-medium">{selectedBooking.instructorName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-blue-600">聯絡信箱：</span>
-                      <span>{selectedBooking.instructorEmail}</span>
-                    </div>
-                  </>
+                {selectedBooking.leaveReason ? (
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">學生人數：</span>
+                    <span>{selectedBooking.studentCount} 位</span>
+                  </div>
                 ) : (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-blue-600">學生姓名：</span>
-                      <span className="font-medium">{selectedBooking.studentName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-blue-600">聯絡信箱：</span>
-                      <span>{selectedBooking.studentEmail}</span>
-                    </div>
-                    {selectedBooking.studentPhone && (
-                      <div className="flex justify-between">
-                        <span className="text-blue-600">聯絡電話：</span>
-                        <span>{selectedBooking.studentPhone}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-blue-600">會員類型：</span>
-                      <span>{selectedBooking.membershipType === 'corporate' ? '企業會員' : '個人會員'}</span>
-                    </div>
-                    {selectedBooking.companyName && (
-                      <div className="flex justify-between">
-                        <span className="text-blue-600">公司名稱：</span>
-                        <span>{selectedBooking.companyName}</span>
-                      </div>
-                    )}
-                  </>
-                )}
-                {selectedBooking.note && (
-                  <div className="mt-3">
-                    <div className="text-blue-600 mb-1">備註：</div>
-                    <div className="text-gray-700 bg-white p-2 rounded border">
-                      {selectedBooking.note}
-                    </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">預約日期：</span>
+                    <span>{formatDate(selectedBooking.bookingDate)}</span>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* 課程連結 */}
-            <div className="p-4 bg-green-50 rounded-lg">
-              <h4 className="font-medium mb-3 text-green-900">課程連結</h4>
-              <div className="space-y-3">
-                <button
-                  onClick={() => window.open(selectedBooking.classroom, '_blank')}
-                  className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
-                >
-                  <SafeIcon icon={FiExternalLink} />
-                  <span>進入線上教室</span>
-                </button>
-                {selectedBooking.materials && (
-                  <button
-                    onClick={() => window.open(selectedBooking.materials, '_blank')}
-                    className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <SafeIcon icon={FiEye} />
-                    <span>查看課程教材</span>
-                  </button>
+            {/* 人員資訊 / 請假資訊 */}
+            {selectedBooking.leaveReason ? (
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-medium mb-3 text-blue-900">請假資訊</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-blue-600">申請日期：</span>
+                    <span>{formatDate(selectedBooking.requestDate!)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-blue-600">請假原因：</span>
+                    <span className="font-medium">{selectedBooking.leaveReason}</span>
+                  </div>
+                  {selectedBooking.note && (
+                    <div className="mt-2">
+                      <div className="text-blue-600 mb-1">詳細說明：</div>
+                      <div className="text-gray-700 bg-white p-2 rounded border">
+                        {selectedBooking.note}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-medium mb-3 text-blue-900">
+                  {user?.role === 'student' ? '教師資訊' : '學生資訊'}
+                </h4>
+                <div className="space-y-2 text-sm">
+                  {user?.role === 'student' ? (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-blue-600">教師姓名：</span>
+                        <span className="font-medium">{selectedBooking.instructorName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-blue-600">聯絡信箱：</span>
+                        <span>{selectedBooking.instructorEmail}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-blue-600">學生姓名：</span>
+                        <span className="font-medium">{selectedBooking.studentName}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-blue-600">聯絡信箱：</span>
+                        <span>{selectedBooking.studentEmail}</span>
+                      </div>
+                      {selectedBooking.studentPhone && (
+                        <div className="flex justify-between">
+                          <span className="text-blue-600">聯絡電話：</span>
+                          <span>{selectedBooking.studentPhone}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-blue-600">會員類型：</span>
+                        <span>{selectedBooking.membershipType === 'corporate' ? '企業會員' : '個人會員'}</span>
+                      </div>
+                      {selectedBooking.companyName && (
+                        <div className="flex justify-between">
+                          <span className="text-blue-600">公司名稱：</span>
+                          <span>{selectedBooking.companyName}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  {selectedBooking.note && !selectedBooking.leaveReason && (
+                    <div className="mt-3">
+                      <div className="text-blue-600 mb-1">備註：</div>
+                      <div className="text-gray-700 bg-white p-2 rounded border">
+                        {selectedBooking.note}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 審核狀態 (for leave requests) */}
+            {selectedBooking.leaveReason && (
+              <div className={`p-4 rounded-lg ${
+                selectedBooking.status === 'approved' ? 'bg-green-50' :
+                selectedBooking.status === 'rejected' ? 'bg-red-50' : 'bg-yellow-50'
+              }`}>
+                <div className="flex items-center space-x-2 mb-3">
+                  <SafeIcon 
+                    icon={getStatusIcon(selectedBooking.status)} 
+                    className={`text-lg ${
+                      selectedBooking.status === 'approved' ? 'text-green-600' :
+                      selectedBooking.status === 'rejected' ? 'text-red-600' : 'text-yellow-600'
+                    }`} 
+                  />
+                  <h4 className={`font-medium ${
+                    selectedBooking.status === 'approved' ? 'text-green-900' :
+                    selectedBooking.status === 'rejected' ? 'text-red-900' : 'text-yellow-900'
+                  }`}>
+                    審核狀態：{getStatusText(selectedBooking.status)}
+                  </h4>
+                </div>
+                
+                {selectedBooking.status === 'approved' && selectedBooking.substituteTeacher && (
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-green-600">代課老師：</span>
+                      <span className="font-medium">{selectedBooking.substituteTeacher.name}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-green-600">聯絡信箱：</span>
+                      <span>{selectedBooking.substituteTeacher.email}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {selectedBooking.adminNote && (
+                  <div className="mt-3">
+                    <div className={`mb-1 font-medium ${
+                      selectedBooking.status === 'approved' ? 'text-green-600' :
+                      selectedBooking.status === 'rejected' ? 'text-red-600' : 'text-yellow-600'
+                    }`}>
+                      管理員備註：
+                    </div>
+                    <div className="text-gray-700 bg-white p-2 rounded border">
+                      {selectedBooking.adminNote}
+                    </div>
+                  </div>
                 )}
               </div>
-            </div>
+            )}
+
+            {/* 課程連結 (for non-leave requests) */}
+            {!selectedBooking.leaveReason && (
+              <div className="p-4 bg-green-50 rounded-lg">
+                <h4 className="font-medium mb-3 text-green-900">課程連結</h4>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => window.open(selectedBooking.classroom, '_blank')}
+                    className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                  >
+                    <SafeIcon icon={FiExternalLink} />
+                    <span>進入線上教室</span>
+                  </button>
+                  {selectedBooking.materials && (
+                    <button
+                      onClick={() => window.open(selectedBooking.materials, '_blank')}
+                      className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <SafeIcon icon={FiEye} />
+                      <span>查看課程教材</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
 
             <button
               onClick={() => setShowDetailModal(false)}
@@ -399,11 +586,11 @@ export default function MyBookingsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">我的預約</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">我的預約與請假</h1>
           <p className="text-gray-600">
             {user?.role === 'student' 
               ? '查看您預約的課程和上課詳情' 
-              : '查看學生預約您的課程情況'}
+              : '查看學生預約您的課程情況與您的請假記錄'}
           </p>
         </motion.div>
 
@@ -416,27 +603,27 @@ export default function MyBookingsPage() {
           {[
             { 
               label: '即將開始', 
-              count: bookings.filter(b => b.status === 'upcoming').length,
+              count: bookings.filter(b => b.status === 'upcoming' && !b.leaveReason).length,
               color: 'text-blue-600 bg-blue-50 border-blue-200',
               icon: FiClock
             },
             { 
               label: '已完成', 
-              count: bookings.filter(b => b.status === 'completed').length,
+              count: bookings.filter(b => b.status === 'completed' && !b.leaveReason).length,
               color: 'text-green-600 bg-green-50 border-green-200',
               icon: FiCheckCircle
             },
             { 
               label: '已取消', 
-              count: bookings.filter(b => b.status === 'cancelled').length,
+              count: bookings.filter(b => b.status === 'cancelled' && !b.leaveReason).length,
               color: 'text-red-600 bg-red-50 border-red-200',
               icon: FiX
             },
             { 
-              label: '總計', 
-              count: bookings.length,
-              color: 'text-purple-600 bg-purple-50 border-purple-200',
-              icon: FiBook
+              label: '待審核請假', 
+              count: bookings.filter(b => b.status === 'pending' && b.leaveReason).length,
+              color: 'text-yellow-600 bg-yellow-50 border-yellow-200',
+              icon: FiMessageSquare
             }
           ].map((stat) => (
             <motion.div
@@ -462,26 +649,51 @@ export default function MyBookingsPage() {
           className="mb-6"
         >
           <div className="flex bg-white rounded-lg shadow-sm border border-gray-200 p-1">
-            {[
-              { key: 'upcoming', label: '即將開始', count: bookings.filter(b => b.status === 'upcoming').length },
-              { key: 'completed', label: '已完成', count: bookings.filter(b => b.status === 'completed').length },
-              { key: 'cancelled', label: '已取消', count: bookings.filter(b => b.status === 'cancelled').length },
-              { key: 'all', label: '全部', count: bookings.length }
-            ].map((tab) => (
-              <motion.button
-                key={tab.key}
-                onClick={() => setSelectedTab(tab.key as 'upcoming' | 'completed' | 'cancelled' | 'all')}
-                className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                  selectedTab === tab.key
-                    ? 'bg-blue-600 text-white shadow-sm'
-                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
-                }`}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                {tab.label} ({tab.count})
-              </motion.button>
-            ))}
+            {user?.role === 'student' ? (
+              [
+                { key: 'upcoming', label: '即將開始', count: bookings.filter(b => b.status === 'upcoming').length },
+                { key: 'completed', label: '已完成', count: bookings.filter(b => b.status === 'completed').length },
+                { key: 'cancelled', label: '已取消', count: bookings.filter(b => b.status === 'cancelled').length },
+                { key: 'all', label: '全部', count: bookings.length }
+              ].map((tab) => (
+                <motion.button
+                  key={tab.key}
+                  onClick={() => setSelectedTab(tab.key as 'upcoming' | 'completed' | 'cancelled' | 'all')}
+                  className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    selectedTab === tab.key
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {tab.label} ({tab.count})
+                </motion.button>
+              ))
+            ) : (
+              [
+                { key: 'upcoming', label: '即將開課', count: bookings.filter(b => b.status === 'upcoming' && !b.leaveReason).length },
+                { key: 'completed', label: '已完成課程', count: bookings.filter(b => b.status === 'completed' && !b.leaveReason).length },
+                { key: 'pending', label: '待審核請假', count: bookings.filter(b => b.status === 'pending' && b.leaveReason).length },
+                { key: 'approved', label: '已批准請假', count: bookings.filter(b => b.status === 'approved' && b.leaveReason).length },
+                { key: 'rejected', label: '已拒絕請假', count: bookings.filter(b => b.status === 'rejected' && b.leaveReason).length },
+                { key: 'all', label: '全部', count: bookings.length }
+              ].map((tab) => (
+                <motion.button
+                  key={tab.key}
+                  onClick={() => setSelectedTab(tab.key as 'upcoming' | 'completed' | 'cancelled' | 'all' | 'pending' | 'approved' | 'rejected')}
+                  className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    selectedTab === tab.key
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {tab.label} ({tab.count})
+                </motion.button>
+              ))
+            )}
           </div>
         </motion.div>
 
@@ -514,17 +726,23 @@ export default function MyBookingsPage() {
                             <span>{formatDate(booking.courseDate)} {booking.courseTime}</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <SafeIcon icon={user?.role === 'student' ? FiUser : FiUsers} className="text-xs" />
+                            <SafeIcon icon={user?.role === 'student' ? FiUser : (booking.leaveReason ? FiUserCheck : FiUsers)} className="text-xs" />
                             <span>
                               {user?.role === 'student' 
                                 ? booking.instructorName 
-                                : booking.studentName}
+                                : (booking.leaveReason ? `${booking.studentCount} 位學生` : booking.studentName)}
                             </span>
                           </div>
-                          {user?.role === 'instructor' && booking.membershipType && (
+                          {user?.role === 'instructor' && !booking.leaveReason && booking.membershipType && (
                             <div className="flex items-center space-x-1">
                               <SafeIcon icon={FiMapPin} className="text-xs" />
                               <span>{booking.membershipType === 'corporate' ? '企業會員' : '個人會員'}</span>
+                            </div>
+                          )}
+                          {user?.role === 'instructor' && booking.leaveReason && (
+                            <div className="flex items-center space-x-1">
+                              <SafeIcon icon={FiMessageSquare} className="text-xs" />
+                              <span>{booking.leaveReason}</span>
                             </div>
                           )}
                         </div>
@@ -535,11 +753,21 @@ export default function MyBookingsPage() {
                     </div>
 
                     {/* Company Info for Corporate Members */}
-                    {user?.role === 'instructor' && booking.companyName && (
+                    {user?.role === 'instructor' && !booking.leaveReason && booking.companyName && (
                       <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-3">
                         <div className="flex items-center space-x-2 text-purple-800">
                           <SafeIcon icon={FiBriefcase} className="text-sm" />
                           <span className="font-medium">企業：{booking.companyName}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Substitute Teacher Info */}
+                    {user?.role === 'instructor' && booking.leaveReason && booking.substituteTeacher && (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+                        <div className="flex items-center space-x-2 text-green-800">
+                          <SafeIcon icon={FiUserCheck} className="text-sm" />
+                          <span className="font-medium">代課老師：{booking.substituteTeacher.name}</span>
                         </div>
                       </div>
                     )}
@@ -558,7 +786,7 @@ export default function MyBookingsPage() {
                         <span>查看詳情</span>
                       </motion.button>
                       
-                      {booking.status === 'upcoming' && (
+                      {booking.status === 'upcoming' && !booking.leaveReason && (
                         <>
                           <motion.button
                             whileHover={{ scale: 1.05 }}
@@ -595,6 +823,18 @@ export default function MyBookingsPage() {
                           )}
                         </>
                       )}
+
+                      {user?.role === 'instructor' && booking.status === 'pending' && booking.leaveReason && (
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => handleCancelRequest(booking.id, booking.courseName)}
+                          className="flex items-center space-x-1 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                        >
+                          <SafeIcon icon={FiX} className="text-xs" />
+                          <span>取消申請</span>
+                        </motion.button>
+                      )}
                       
                       {booking.materials && (
                         <motion.button
@@ -618,12 +858,15 @@ export default function MyBookingsPage() {
               <h3 className="text-lg font-medium text-gray-900 mb-2">
                 {selectedTab === 'upcoming' ? '暫無即將開始的預約' : 
                  selectedTab === 'completed' ? '暫無已完成的預約' :
-                 selectedTab === 'cancelled' ? '暫無已取消的預約' : '暫無預約記錄'}
+                 selectedTab === 'cancelled' ? '暫無已取消的預約' : 
+                 selectedTab === 'pending' ? '暫無待審核申請' :
+                 selectedTab === 'approved' ? '暫無已批准申請' :
+                 selectedTab === 'rejected' ? '暫無已拒絕申請' : '暫無記錄'}
               </h3>
               <p className="text-gray-600">
                 {user?.role === 'student' 
                   ? '您的課程預約記錄會顯示在這裡' 
-                  : '學生的課程預約記錄會顯示在這裡'}
+                  : '學生的課程預約記錄與您的請假記錄會顯示在這裡'}
               </p>
             </div>
           )}

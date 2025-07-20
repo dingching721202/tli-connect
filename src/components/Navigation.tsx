@@ -21,7 +21,6 @@ const Navigation: React.FC = () => {
     { name: '我的預約', href: '/my-bookings', icon: FiCalendar, roles: ['student', 'instructor'] },
     { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['instructor', 'admin'] },
     { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['admin'] },
-    { name: '我的請假記錄', href: '/my-leave-requests', icon: FiClock, roles: ['instructor'] },
     { name: '會員方案', href: '/membership', icon: FiUsers, roles: ['guest', 'student'] },
     { name: '會員方案管理', href: '/membership-management', icon: FiSettings, roles: ['admin'] },
     { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['admin'] },
@@ -119,7 +118,7 @@ const Navigation: React.FC = () => {
                 >
                   <Image
                     className="h-8 w-8 rounded-full object-cover"
-                    src={user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=32&h=32&fit=crop&crop=face'}
+                    src={user?.avatar || 'https://www.gravatar.com/avatar/?d=mp&s=32'}
                     alt={user?.name || 'User'}
                     width={32}
                     height={32}
@@ -225,7 +224,7 @@ const Navigation: React.FC = () => {
                     >
                       <Image
                         className="h-10 w-10 rounded-full object-cover"
-                        src={user?.avatar || 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face'}
+                        src={user?.avatar || 'https://www.gravatar.com/avatar/?d=mp&s=40'}
                         alt={user?.name || 'User'}
                         width={40}
                         height={40}
