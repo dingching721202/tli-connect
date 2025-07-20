@@ -1,5 +1,5 @@
 import { 
-  User, Course, Class, Lesson, MemberCard, MemberCardPlan, 
+  User, Course, Class, MemberCardPlan,
   Membership, Order, ClassTimeslot, ClassAppointment,
   ApiResponse, LoginResponse, BatchBookingResponse
 } from '@/types';
@@ -8,8 +8,6 @@ import {
 import usersData from '@/data/users.json';
 import coursesData from '@/data/courses.json';
 import classesData from '@/data/classes.json';
-import lessonsData from '@/data/lessons.json';
-import memberCardsData from '@/data/member_cards.json';
 import memberCardPlansData from '@/data/member_card_plans.json';
 import membershipsData from '@/data/memberships.json';
 import ordersData from '@/data/orders.json';
@@ -17,16 +15,14 @@ import classTimeslotsData from '@/data/class_timeslots.json';
 import classAppointmentsData from '@/data/class_appointments.json';
 
 // 模擬資料庫
-const users: User[] = [...usersData] as any as User[];
-const courses: Course[] = [...coursesData] as any as Course[];
-const classes: Class[] = [...classesData] as any as Class[];
-// let lessons: Lesson[] = [...lessonsData]; // Unused
-// let memberCards: MemberCard[] = [...memberCardsData]; // Unused
-const memberCardPlans: MemberCardPlan[] = [...memberCardPlansData] as any as MemberCardPlan[];
-const memberships: Membership[] = [...membershipsData] as any as Membership[];
-const orders: Order[] = [...ordersData] as any as Order[];
-const classTimeslots: ClassTimeslot[] = [...classTimeslotsData] as any as ClassTimeslot[];
-const classAppointments: ClassAppointment[] = [...classAppointmentsData] as any as ClassAppointment[];
+const users: User[] = [...usersData] as User[];
+const courses: Course[] = [...coursesData] as Course[];
+const classes: Class[] = [...classesData] as Class[];
+const memberCardPlans: MemberCardPlan[] = [...memberCardPlansData] as MemberCardPlan[];
+const memberships: Membership[] = [...membershipsData] as Membership[];
+const orders: Order[] = [...ordersData] as Order[];
+const classTimeslots: ClassTimeslot[] = [...classTimeslotsData] as ClassTimeslot[];
+const classAppointments: ClassAppointment[] = [...classAppointmentsData] as ClassAppointment[];
 
 // 輔助函數
 const generateId = (array: { id: number }[]): number => {

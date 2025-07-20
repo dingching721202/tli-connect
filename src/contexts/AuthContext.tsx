@@ -1,8 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService, memberCardService, dashboardService } from '@/services/dataService';
-import { User as DataUser, Membership, LoginResponse } from '@/types';
+import { authService, memberCardService } from '@/services/dataService';
+import { User as DataUser, Membership } from '@/types';
 
 interface User {
   id: number;

@@ -13,14 +13,11 @@ import { Membership, ClassAppointment, ClassTimeslot, Class, Course as CourseTyp
 
 const {
   FiCalendar,
-  FiSettings,
   FiTrendingUp,
   FiClock,
   FiUsers,
   FiBarChart,
-  FiBookOpen,
   FiAward,
-  FiCreditCard,
   FiExternalLink,
   FiEye,
   FiX,
@@ -85,23 +82,6 @@ const Dashboard = () => {
   }, [user]);
   
   // 權限檢查函數
-  const hasPermission = (permission: string) => {
-    if (!user) return false;
-    
-    if (permission === 'admin_access') {
-      return user.role === 'OPS';
-    }
-    
-    if (permission === 'manage_courses') {
-      return user.role === 'TEACHER';
-    }
-    
-    if (permission === 'book_courses' || permission === 'view_courses') {
-      return user.role === 'STUDENT' && hasActiveMembership();
-    }
-    
-    return false;
-  };
   const [courseTab, setCourseTab] = useState('upcoming'); // 'upcoming' or 'completed'
   const [isReferralOpen, setIsReferralOpen] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
