@@ -47,7 +47,7 @@ interface Course {
 }
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, hasActiveMembership } = useAuth();
   const [dashboardData, setDashboardData] = useState<{
     membership: Membership | null;
     upcomingClasses: {
@@ -103,8 +103,6 @@ const Dashboard = () => {
           { label: '會員狀態', value: '-', icon: FiTrendingUp }
         ];
       }
-      const { hasActiveMembership } = useAuth();
-
       const allCourses = getBookedCourses();
       const upcomingCourses = allCourses.filter(c => c.status === 'upcoming');
       const completedCourses = allCourses.filter(c => c.status === 'completed');
