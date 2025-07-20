@@ -23,6 +23,20 @@ interface EditData {
   permissions?: string[];
 }
 
+// Extended user type with additional properties
+interface ExtendedUser {
+  level?: string;
+  expertise?: string;
+  experience?: string;
+  joinDate?: string;
+  department?: string;
+  permissions?: string[];
+  planName?: string;
+  price?: number;
+  type?: 'individual' | 'corporate';
+  autoRenewal?: boolean;
+}
+
 
 const UserProfile = () => {
   const { user, updateProfile } = useAuth();
@@ -30,12 +44,12 @@ const UserProfile = () => {
   const [editData, setEditData] = useState<EditData>({
     name: user?.name || '',
     phone: user?.phone || '',
-    level: (user as any)?.level || '', // Assuming level, expertise, experience are directly on User if needed
-    expertise: (user as any)?.expertise || '',
-    experience: (user as any)?.experience || '',
-    joinDate: (user as any)?.joinDate || '',
-    department: (user as any)?.department || '',
-    permissions: (user as any)?.permissions || []
+    level: (user as ExtendedUser)?.level || '',
+    expertise: (user as ExtendedUser)?.expertise || '',
+    experience: (user as ExtendedUser)?.experience || '',
+    joinDate: (user as ExtendedUser)?.joinDate || '',
+    department: (user as ExtendedUser)?.department || '',
+    permissions: (user as ExtendedUser)?.permissions || []
   });
 
   const handleSave = () => {
@@ -60,12 +74,12 @@ const UserProfile = () => {
     setEditData({
       name: user?.name || '',
       phone: user?.phone || '',
-      level: (user as any)?.level || '',
-      expertise: (user as any)?.expertise || '',
-      experience: (user as any)?.experience || '',
-      joinDate: (user as any)?.joinDate || '',
-      department: (user as any)?.department || '',
-      permissions: (user as any)?.permissions || []
+      level: (user as ExtendedUser)?.level || '',
+      expertise: (user as ExtendedUser)?.expertise || '',
+      experience: (user as ExtendedUser)?.experience || '',
+      joinDate: (user as ExtendedUser)?.joinDate || '',
+      department: (user as ExtendedUser)?.department || '',
+      permissions: (user as ExtendedUser)?.permissions || []
     });
     setIsEditing(false);
   };
@@ -166,6 +180,7 @@ const UserProfile = () => {
   // 使用從 AuthContext 獲取的真實會員資料
   const membership = user?.membership;
 
+
   // 輔助函數，用於模擬 Membership 介面中缺少的屬性
   const getMembershipDisplayData = (mem: typeof membership) => {
     if (!mem) return null;
@@ -196,6 +211,7 @@ const UserProfile = () => {
 
   const displayMembership = getMembershipDisplayData(membership);
 
+
   return (
     <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 max-w-4xl">
       <motion.div
@@ -222,11 +238,11 @@ const UserProfile = () => {
                   <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(user?.role || '')}`}>
                     {getRoleName(user?.role || '')}
                   </span>
-                  {membership && (
+                  {displayMembership && (
                     <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                      membership.type === 'corporate' ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'
+                      displayMembership.type === 'corporate' ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'
                     }`}>
-                      {membership.type === 'corporate' ? '企業會員' : '個人會員'}
+                      {displayMembership.type === 'corporate' ? '企業會員' : '個人會員'}
                     </span>
                   )}
                 </div>
@@ -245,13 +261,13 @@ const UserProfile = () => {
 
         <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
           {/* Membership Status - Only for students - 手機優化 */}
-          {user?.role === 'student' && (
+          {user?.role === 'STUDENT' && (
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <SafeIcon icon={FiAward} className="mr-2 text-blue-600" />
                 會員資格
               </h3>
-              {membership ? (
+              {displayMembership ? (
                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border border-blue-200">
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     <div>
@@ -259,8 +275,8 @@ const UserProfile = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">會員方案</label>
                         <div className="bg-white rounded-lg p-3 border border-blue-200">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-1 sm:space-y-0">
-                            <span className="font-semibold text-blue-800">{membership.planName}</span>
-                            <span className="text-sm text-blue-600">{formatPrice(membership.price)}</span>
+                            <span className="font-semibold text-blue-800">{displayMembership.planName}</span>
+                            <span className="text-sm text-blue-600">{formatPrice(displayMembership.price || 0)}</span>
                           </div>
                         </div>
                       </div>
@@ -268,15 +284,15 @@ const UserProfile = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">會員狀態</label>
                         <div className="bg-white rounded-lg p-3 border border-blue-200">
                           <div className="flex items-center space-x-2">
-                            <span className={`font-medium ${getMembershipStatusColor(membership.status)}`}>
-                              {getMembershipStatusName(membership.status)}
+                            <span className={`font-medium ${getMembershipStatusColor(displayMembership.status || '')}`}>
+                              {getMembershipStatusName(displayMembership.status || '')}
                             </span>
-                            {membership.status === 'expiring_soon' && (
+                            {displayMembership.status === 'expiring_soon' && (
                               <SafeIcon icon={FiAlertTriangle} className="text-yellow-500" />
                             )}
                           </div>
-                          <div className={`text-sm mt-1 ${getMembershipStatusColor(membership.status)}`}>
-                            {getDaysRemainingText(membership.daysRemaining)}
+                          <div className={`text-sm mt-1 ${getMembershipStatusColor(displayMembership.status || '')}`}>
+                            {getDaysRemainingText(displayMembership.daysRemaining || 0)}
                           </div>
                         </div>
                       </div>
@@ -286,8 +302,8 @@ const UserProfile = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">有效期間</label>
                         <div className="bg-white rounded-lg p-3 border border-blue-200">
                           <div className="text-sm space-y-1">
-                            <div>開始：{formatDate(membership.startDate)}</div>
-                            <div>到期：{formatDate(membership.endDate)}</div>
+                            <div>開始：{formatDate(displayMembership.startDate || '')}</div>
+                            <div>到期：{formatDate(displayMembership.endDate || '')}</div>
                           </div>
                         </div>
                       </div>
@@ -296,9 +312,9 @@ const UserProfile = () => {
                         <div className="bg-white rounded-lg p-3 border border-blue-200">
                           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
                             <div className="flex items-center space-x-2">
-                              <SafeIcon icon={membership.autoRenewal ? FiRefreshCw : FiX} className={membership.autoRenewal ? 'text-green-600' : 'text-gray-600'} />
-                              <span className={membership.autoRenewal ? 'text-green-600' : 'text-gray-600'}>
-                                {membership.autoRenewal ? '已啟用' : '未啟用'}
+                              <SafeIcon icon={displayMembership.autoRenewal ? FiRefreshCw : FiX} className={displayMembership.autoRenewal ? 'text-green-600' : 'text-gray-600'} />
+                              <span className={displayMembership.autoRenewal ? 'text-green-600' : 'text-gray-600'}>
+                                {displayMembership.autoRenewal ? '已啟用' : '未啟用'}
                               </span>
                             </div>
                             <button
@@ -337,7 +353,7 @@ const UserProfile = () => {
                   </div>
 
                   {/* Expiring Soon Warning */}
-                  {membership.isExpiringSoon && (
+                  {displayMembership.isExpiringSoon && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -348,7 +364,7 @@ const UserProfile = () => {
                         <span className="font-medium text-yellow-800">會員即將到期提醒</span>
                       </div>
                       <p className="text-yellow-700 text-sm mt-1">
-                        您的會員資格將在 {membership.daysRemaining} 天後到期，請及時續約以繼續享受會員權益。
+                        您的會員資格將在 {displayMembership.daysRemaining} 天後到期，請及時續約以繼續享受會員權益。
                       </p>
                     </motion.div>
                   )}
@@ -419,7 +435,7 @@ const UserProfile = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-1">加入日期</label>
                 <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg flex items-center">
                   <SafeIcon icon={FiCalendar} className="mr-2 text-gray-400" />
-                  {(user as any)?.joinDate || '未知'}
+                  {(user as ExtendedUser)?.joinDate || '未知'}
                 </p>
               </div>
             </div>
@@ -448,7 +464,7 @@ const UserProfile = () => {
                     </select>
                   ) : (
                     <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                      {(user as any)?.level || '未設定'}
+                      {(user as ExtendedUser)?.level || '未設定'}
                     </p>
                   )}
                 </div>
@@ -474,7 +490,7 @@ const UserProfile = () => {
                     />
                   ) : (
                     <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                      {(user as any)?.expertise || '未設定'}
+                      {(user as ExtendedUser)?.expertise || '未設定'}
                     </p>
                   )}
                 </div>
@@ -489,7 +505,7 @@ const UserProfile = () => {
                     />
                   ) : (
                     <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                      {(user as any)?.experience || '未設定'}
+                      {(user as ExtendedUser)?.experience || '未設定'}
                     </p>
                   )}
                 </div>

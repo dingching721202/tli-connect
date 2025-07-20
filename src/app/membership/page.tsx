@@ -8,7 +8,8 @@ import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { membershipService, orderService } from '@/services/dataService';
-import { MemberCardPlan } from '@/types';
+import { paymentService } from '@/services/paymentService';
+import { MemberCardPlan, PaymentRequest } from '@/types';
 
 const {
   FiCreditCard, FiCheck, FiUsers, FiStar, FiCalendar, FiVideo, FiAward
@@ -59,9 +60,9 @@ function MembershipPageContent() {
     if (!plan) return;
 
     setPaymentData({
-      title: plan.title,
-      price: plan.price,
-      duration_days: plan.duration_days,
+      title: plan.title || `${plan.type === 'SEASON' ? '季度' : '年度'}會員方案`,
+      price: typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price,
+      duration_days: plan.duration_days || (plan.type === 'SEASON' ? 90 : 365),
       planId: plan.id
     });
     setShowPaymentModal(true);
@@ -73,14 +74,38 @@ function MembershipPageContent() {
 
     try {
       setPurchaseLoading(true);
-      const result = await orderService.createOrder(user.id, paymentData.planId);
       
-      if (result.success) {
-        alert(`🎉 購買成功！\n\n方案：${paymentData.title}\n金額：${formatPrice(paymentData.price)}\n\n會員卡已生成，請前往會員中心啟用！`);
-        setShowPaymentModal(false);
-        router.push('/dashboard');
+      // 步驟 1: 生成訂單 ID
+      const orderId = paymentService.generateOrderId('ord');
+      
+      // 步驟 2: 建立付款請求
+      const paymentRequest: PaymentRequest = {
+        order_id: orderId,
+        amount: paymentData.price,
+        description: `${paymentData.title} - 會員方案`,
+        return_url: `${window.location.origin}/payment-result`
+      };
+
+      console.log('正在處理付款...', paymentRequest);
+      
+      // 步驟 3: 呼叫付款服務
+      const paymentResult = await paymentService.createPayment(paymentRequest);
+      
+      if (paymentResult.success && paymentResult.data?.status === 'successful') {
+        // 步驟 4: 付款成功後建立訂單
+        const orderResult = await orderService.createOrder(user.id, paymentData.planId);
+        
+        if (orderResult.success) {
+          alert(`🎉 付款成功！\n\n方案：${paymentData.title}\n金額：${formatPrice(paymentData.price)}\n付款 ID：${paymentResult.data.payment_id}\n\n會員卡已生成，請前往會員中心啟用！`);
+          setShowPaymentModal(false);
+          router.push('/dashboard');
+        } else {
+          alert('付款成功但訂單建立失敗：' + orderResult.error + '\n請聯繫客服處理');
+        }
       } else {
-        alert('購買失敗：' + result.error);
+        // 付款失敗
+        const errorMessage = paymentResult.error || '付款處理失敗';
+        alert(`❌ 付款失敗\n\n${errorMessage}\n\n請檢查付款資訊後重試`);
       }
     } catch (error) {
       console.error('購買失敗:', error);
@@ -104,19 +129,38 @@ function MembershipPageContent() {
         className="bg-white rounded-2xl p-6 max-w-md w-full"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-xl font-bold mb-4">確認購買</h3>
-        <div className="space-y-3 mb-6">
-          <div className="flex justify-between">
-            <span>方案：</span>
-            <span className="font-medium">{paymentData?.title}</span>
+        <div className="flex items-center mb-4">
+          <SafeIcon icon={FiCreditCard} className="text-blue-600 mr-2" />
+          <h3 className="text-xl font-bold">確認付款</h3>
+        </div>
+        
+        <div className="bg-gray-50 rounded-lg p-4 mb-6">
+          <h4 className="font-medium text-gray-800 mb-3">訂單詳情</h4>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">方案：</span>
+              <span className="font-medium">{paymentData?.title}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">有效期限：</span>
+              <span className="font-medium">{paymentData?.duration_days} 天</span>
+            </div>
+            <div className="border-t pt-2 mt-2">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">付款金額：</span>
+                <span className="font-bold text-lg text-blue-600">{formatPrice(paymentData?.price || 0)}</span>
+              </div>
+            </div>
           </div>
-          <div className="flex justify-between">
-            <span>有效期限：</span>
-            <span className="font-medium">{paymentData?.duration_days} 天</span>
-          </div>
-          <div className="flex justify-between">
-            <span>金額：</span>
-            <span className="font-medium text-blue-600">{formatPrice(paymentData?.price || 0)}</span>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+          <div className="flex items-start">
+            <SafeIcon icon={FiCheck} className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+            <div className="text-sm text-blue-800">
+              <p className="font-medium mb-1">安全付款保障</p>
+              <p>本系統使用安全的付款處理服務，您的付款資訊將被加密保護。</p>
+            </div>
           </div>
         </div>
         <div className="flex space-x-3">
@@ -129,7 +173,7 @@ function MembershipPageContent() {
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
-            {purchaseLoading ? '處理中...' : '確認購買'}
+{purchaseLoading ? '付款處理中...' : '確認付款'}
           </button>
           <button
             onClick={() => setShowPaymentModal(false)}
@@ -217,13 +261,13 @@ function MembershipPageContent() {
                       </div>
                       <div className="mb-4">
                         <div className="flex items-center justify-center space-x-2">
-                          <span className="text-4xl font-bold text-blue-600">{formatPrice(plan.price)}</span>
+                          <span className="text-4xl font-bold text-blue-600">{formatPrice(typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price)}</span>
                         </div>
                         <p className="text-gray-600 mt-2">
                           有效期限：{plan.duration_days} 天
                         </p>
                         <p className="text-gray-500 text-sm">
-                          平均每月 {formatPrice(Math.round(plan.price / (plan.duration_days / 30)))}
+                          平均每月 {formatPrice(Math.round((typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price) / ((plan.duration_days || 90) / 30)))}
                         </p>
                       </div>
                     </div>

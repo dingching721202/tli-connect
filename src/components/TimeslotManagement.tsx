@@ -43,7 +43,7 @@ const TimeslotManagement: React.FC = () => {
           
           return {
             ...timeslot,
-            bookingCount: timeslot.reserved_count,
+            bookingCount: timeslot.reserved_count || 0,
             canCancel
           };
         });
@@ -129,7 +129,7 @@ const TimeslotManagement: React.FC = () => {
           
           return {
             ...timeslot,
-            bookingCount: timeslot.reserved_count,
+            bookingCount: timeslot.reserved_count || 0,
             canCancel
           };
         });

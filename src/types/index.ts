@@ -5,7 +5,7 @@ export interface User {
   email: string;
   phone: string;
   password: string;
-  role: 'STUDENT' | 'TEACHER' | 'OPS';
+  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT';
   created_at: string;
 }
 
@@ -35,6 +35,22 @@ export interface Lesson {
   created_at: string;
 }
 
+export interface LessonAttachment {
+  id: number;
+  lesson_id: number;
+  video_duration_in_seconds: number;
+  video_url: string;
+  created_at: string;
+}
+
+export interface LessonAttachmentRecord {
+  id: number;
+  lesson_attachment_id: number;
+  progress: number;
+  user_id: number;
+  created_at: string;
+}
+
 // 會員制度相關類型
 export interface MemberCard {
   id: number;
@@ -46,11 +62,11 @@ export interface MemberCard {
 export interface MemberCardPlan {
   id: number;
   member_card_id: number;
-  title: string;
+  title?: string;
   type: 'SEASON' | 'YEAR';
-  duration_days: number;
-  price: number;
-  status: 'DRAFT' | 'PUBLISHED';
+  duration_days?: number;
+  price: number | string;
+  status?: 'DRAFT' | 'PUBLISHED';
   created_at: string;
 }
 
@@ -71,7 +87,7 @@ export interface Order {
   id: number;
   member_card_plan_id: number;
   user_id: number;
-  price: number;
+  price: number | string;
   status: 'CREATED' | 'COMPLETED' | 'CANCELED';
   created_at: string;
 }
@@ -82,9 +98,9 @@ export interface ClassTimeslot {
   class_id: number;
   start_time: string;
   end_time: string;
-  capacity: number;
-  reserved_count: number;
-  status: 'CREATED' | 'CANCELED';
+  capacity?: number;
+  reserved_count?: number;
+  status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
   created_at: string;
 }
 
@@ -94,6 +110,40 @@ export interface ClassAppointment {
   user_id: number;
   status: 'CONFIRMED' | 'CANCELED';
   created_at: string;
+}
+
+export interface TeacherLeaveRecord {
+  id: number;
+  class_timeslot_id: number;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  created_at: string;
+}
+
+export interface Todo {
+  id: number;
+  name: string;
+  due_date: string;
+  is_completed: boolean;
+  created_at: string;
+}
+
+// 付款相關類型
+export interface PaymentRequest {
+  order_id: string;
+  amount: number;
+  description: string;
+  return_url: string;
+}
+
+export interface PaymentResponse {
+  payment_id: string;
+  status: 'successful' | 'failed';
+}
+
+export interface PaymentResult {
+  success: boolean;
+  data?: PaymentResponse;
+  error?: string;
 }
 
 // API 響應類型

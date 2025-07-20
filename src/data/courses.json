@@ -1,29 +1,26 @@
 [
   {
     "id": 1,
-    "title": "商務華語會話",
-    "description": "提升商務溝通技巧，學習專業商務用語及會議表達",
-    "cover_image_url": "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400",
-    "categories": ["商務華語", "會話課程"],
-    "language": "中文",
-    "created_at": "2024-01-01T08:00:00Z"
+    "created_at": "2025-07-14T12:00:00+00:00",
+    "title": "基礎英文",
+    "description": "實用英文課程，適合初學者",
+    "cover_image_url": "https://example.com/esl.jpg",
+    "categories": [
+      "語言學習",
+      "英文"
+    ],
+    "language": "english"
   },
   {
     "id": 2,
-    "title": "華語文法精修",
-    "description": "系統性學習華語文法結構與語法應用",
-    "cover_image_url": "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400",
-    "categories": ["華語文法", "基礎課程"],
-    "language": "中文",
-    "created_at": "2024-01-01T08:00:00Z"
-  },
-  {
-    "id": 3,
-    "title": "基礎華語入門",
-    "description": "零基礎華語學習，從發音開始系統學習",
-    "cover_image_url": "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=400",
-    "categories": ["基礎華語", "發音課程"],
-    "language": "中文",
-    "created_at": "2024-01-01T08:00:00Z"
+    "created_at": "2025-07-14T12:00:00+00:00",
+    "title": "基礎中文",
+    "description": "中文課程，包含聽說讀寫",
+    "cover_image_url": "https://example.com/chinese.jpg",
+    "categories": [
+      "語言學習",
+      "中文"
+    ],
+    "language": "chinese"
   }
 ]

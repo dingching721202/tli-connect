@@ -131,7 +131,7 @@ export const orderService = {
         id: generateId(memberships),
         member_card_id: plan.member_card_id,
         user_id: userId,
-        duration_in_days: plan.duration_days,
+        duration_in_days: plan.duration_days || (plan.type === 'SEASON' ? 90 : 365),
         start_time: null,
         expire_time: null,
         status: 'PURCHASED',
@@ -199,7 +199,7 @@ export const timeslotService = {
     return classTimeslots.filter(slot => {
       const slotStart = new Date(slot.start_time);
       return slot.status === 'CREATED' && 
-             slot.reserved_count < slot.capacity &&
+             (slot.reserved_count || 0) < (slot.capacity || 20) &&
              slotStart > twentyFourHoursLater;
     });
   },
@@ -245,7 +245,7 @@ export const bookingService = {
       }
       
       // 檢查是否額滿
-      if (timeslot.reserved_count >= timeslot.capacity) {
+      if ((timeslot.reserved_count || 0) >= (timeslot.capacity || 20)) {
         failedBookings.push({ timeslot_id: timeslotId, reason: 'FULL' });
         continue;
       }
@@ -260,7 +260,7 @@ export const bookingService = {
       };
       
       classAppointments.push(newAppointment);
-      timeslot.reserved_count += 1;
+      timeslot.reserved_count = (timeslot.reserved_count || 0) + 1;
       
       successBookings.push({
         timeslot_id: timeslotId,
@@ -296,7 +296,7 @@ export const bookingService = {
     
     // 取消預約
     appointment.status = 'CANCELED';
-    timeslot.reserved_count = Math.max(0, timeslot.reserved_count - 1);
+    timeslot.reserved_count = Math.max(0, (timeslot.reserved_count || 0) - 1);
     
     return { success: true, data: true };
   },

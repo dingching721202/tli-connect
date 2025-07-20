@@ -15,17 +15,17 @@ const Navigation: React.FC = () => {
   const pathname = usePathname();
 
   const navigationItems = [
-    { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['student', 'instructor', 'consultant', 'admin'] },
-    { name: '用戶管理', href: '/user-management', icon: FiUsers, roles: ['admin'] },
-    { name: '課程預約', href: '/', icon: FiBook, roles: ['guest', 'student'] },
-    { name: '我的預約', href: '/my-bookings', icon: FiCalendar, roles: ['student', 'instructor'] },
-    { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['instructor', 'admin'] },
-    { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['admin'] },
-    { name: '會員方案', href: '/membership', icon: FiUsers, roles: ['guest', 'student'] },
-    { name: '會員方案管理', href: '/membership-management', icon: FiSettings, roles: ['admin'] },
-    { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['admin'] },
-    { name: '企業管理', href: '/corporate-management', icon: FiBriefcase, roles: ['corporate_contact'] },
-    { name: '系統設定', href: '/system-settings', icon: FiSettings, roles: ['admin'] },
+    { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'OPS', 'CORPORATE_CONTACT'] },
+    { name: '用戶管理', href: '/user-management', icon: FiUsers, roles: ['OPS'] },
+    { name: '課程預約', href: '/', icon: FiBook, roles: ['guest', 'STUDENT'] },
+    { name: '我的預約', href: '/my-bookings', icon: FiCalendar, roles: ['STUDENT', 'TEACHER'] },
+    { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['TEACHER', 'OPS'] },
+    { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['OPS'] },
+    { name: '會員方案', href: '/membership', icon: FiUsers, roles: ['guest', 'STUDENT'] },
+    { name: '會員方案管理', href: '/membership-management', icon: FiSettings, roles: ['OPS'] },
+    { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['OPS'] },
+    { name: '企業管理', href: '/corporate-management', icon: FiBriefcase, roles: ['CORPORATE_CONTACT'] },
+    { name: '系統設定', href: '/system-settings', icon: FiSettings, roles: ['OPS'] },
   ];
 
   const handleNavigation = (href: string) => {

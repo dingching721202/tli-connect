@@ -132,8 +132,8 @@ const BookingSystem: React.FC = () => {
   const handleConfirmBooking = async () => {
     // Check if user is logged in
     if (!user) {
-      alert('請先登入才能預約課程！');
-      router.push('/login');
+      alert('歡迎來到 TLI Connect！\n\n加入會員即可享受免費課程預約服務\n即將跳轉到會員方案頁面...');
+      router.push('/membership');
       return;
     }
 
@@ -343,22 +343,22 @@ const BookingSystem: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="mt-8 bg-blue-50 border border-blue-200 rounded-xl p-6 text-center"
         >
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">想要預約課程？</h3>
+          <h3 className="text-lg font-semibold text-blue-900 mb-2">開始您的學習之旅！</h3>
           <p className="text-blue-700 mb-4">
-            登入並加入會員即可享受完整學習體驗，包含免費課程預約、學習影片觀看等豐富內容
+            加入會員即可享受免費課程預約、專業師資指導、學習影片觀看等完整學習體驗
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/membership')}
               className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
             >
-              立即登入
+              立即加入會員
             </button>
             <button
-              onClick={() => router.push('/membership')}
+              onClick={() => router.push('/login')}
               className="bg-white text-blue-600 px-6 py-2 rounded-lg border border-blue-600 hover:bg-blue-50 transition-colors"
             >
-              查看會員方案
+              已有帳號？登入
             </button>
           </div>
         </motion.div>

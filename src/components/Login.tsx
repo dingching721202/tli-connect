@@ -20,14 +20,12 @@ const Login: React.FC = () => {
   const { register, login } = useAuth();
   const router = useRouter();
 
-  // 示範帳號
+  // 示範帳號 - 對應新的四個角色
   const demoAccounts = [
-    { email: 'student@example.com', name: '王小明', role: '學生' },
-    { email: 'instructor@example.com', name: '張老師', role: '教師' },
-    { email: 'consultant@example.com', name: '李顧問', role: '顧問' },
-    { email: 'admin@example.com', name: '系統管理員', role: '管理員' },
-    { email: 'corporate.contact@taiwantech.com', name: '王企業窗口', role: '企業窗口' },
-    { email: 'corporate@example.com', name: '企業員工A', role: '企業用戶' }
+    { email: 'alice@example.com', name: 'Alice Wang', role: '學生 (STUDENT)' },
+    { email: 'daisy@example.com', name: 'Daisy Hsu', role: '教師 (TEACHER)' },
+    { email: 'olivia@example.com', name: 'Olivia Kao', role: '營運管理員 (OPS)' },
+    { email: 'frank@taiwantech.com', name: 'Frank Liu', role: '企業聯絡人 (CORPORATE_CONTACT)' }
   ];
 
   const fillDemoAccount = (demoEmail: string) => {
