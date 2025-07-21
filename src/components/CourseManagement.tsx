@@ -32,7 +32,7 @@ interface Schedule {
   weekdays: string[];
   startTime: string;
   endTime: string;
-  instructorId: string | number;
+  teacherId: string | number;
 }
 
 interface Session {
@@ -46,7 +46,7 @@ interface GeneratedSession {
   title: string;
   startTime: string;
   endTime: string;
-  instructorId: string | number;
+  teacherId: string | number;
   instructorName: string;
   classroom: string;
   materials: string;
@@ -102,7 +102,7 @@ const CourseManagement = () => {
         weekdays: [],
         startTime: '',
         endTime: '',
-        instructorId: ''
+        teacherId: ''
       }
     ],
     sessions: [
@@ -133,8 +133,8 @@ const CourseManagement = () => {
       if (isTeacher && user) {
         const assignedCourses = coursesData.filter(course => 
           course.globalSchedules.some(schedule => 
-            schedule.instructorId === user.id || 
-            schedule.instructorId === user.id.toString()
+            schedule.teacherId === user.id || 
+            schedule.teacherId === user.id.toString()
           )
         );
         setCourses(assignedCourses);
@@ -290,7 +290,7 @@ const CourseManagement = () => {
       weekdays: [],
       startTime: '',
       endTime: '',
-      instructorId: ''
+      teacherId: ''
     });
     
     setNewCourse(prev => ({
@@ -403,7 +403,7 @@ const CourseManagement = () => {
           // 檢查當前日期是否是指定的上課日
           if (schedule.weekdays.includes(dayOfWeek)) {
             // 獲取教師資訊
-            const teacher = teachers.find(i => i.id === parseInt(schedule.instructorId.toString()));
+            const teacher = teachers.find(i => i.id === parseInt(schedule.teacherId.toString()));
             const teacherName = teacher ? teacher.name : '未指定';
             
             // 獲取對應的課程內容
@@ -414,7 +414,7 @@ const CourseManagement = () => {
               title: sessionContent.title || `第 ${sessionCount + 1} 堂課`,
               startTime: schedule.startTime,
               endTime: schedule.endTime,
-              instructorId: schedule.instructorId,
+              teacherId: schedule.teacherId,
               instructorName: teacherName,
               classroom: sessionContent.classroom,
               materials: sessionContent.materials
@@ -464,7 +464,7 @@ const CourseManagement = () => {
         hasScheduleErrors = true;
       }
       
-      if (!schedule.instructorId) {
+      if (!schedule.teacherId) {
         errors.push(`第 ${index + 1} 個時間段的教師`);
         hasScheduleErrors = true;
       }
@@ -601,7 +601,7 @@ const CourseManagement = () => {
           weekdays: [],
           startTime: '',
           endTime: '',
-          instructorId: ''
+          teacherId: ''
         }
       ],
       sessions: [
@@ -728,7 +728,7 @@ const CourseManagement = () => {
     const scheduleData: Record<string, string | number>[] = [];
     filteredCourses.forEach(course => {
       course.globalSchedules.forEach((schedule, index) => {
-        const instructor = instructors.find(i => i.id === parseInt(schedule.instructorId.toString()));
+        const teacher = teachers.find(i => i.id === parseInt(schedule.teacherId.toString()));
         scheduleData.push({
           '課程ID': course.id || '',
           '課程標題': course.title,
@@ -736,8 +736,8 @@ const CourseManagement = () => {
           '上課星期': schedule.weekdays.join(', '),
           '開始時間': schedule.startTime,
           '結束時間': schedule.endTime,
-          '講師ID': schedule.instructorId,
-          '講師姓名': instructor ? instructor.name : '未指定'
+          '講師ID': schedule.teacherId,
+          '講師姓名': teacher ? teacher.name : '未指定'
         });
       });
     });
@@ -769,7 +769,7 @@ const CourseManagement = () => {
           '課程主題': session.title,
           '開始時間': session.startTime,
           '結束時間': session.endTime,
-          '講師ID': session.instructorId,
+          '講師ID': session.teacherId,
           '講師姓名': session.instructorName,
           '教室': session.classroom,
           '教材': session.materials
@@ -933,7 +933,7 @@ const CourseManagement = () => {
                           {formatWeekdays(schedule.weekdays)} {schedule.startTime}-{schedule.endTime}
                         </div>
                         <div className="text-blue-600">
-                          教師: {instructors.find(i => i.id === parseInt(schedule.instructorId.toString()))?.name || '未指定'}
+                          教師: {teachers.find(i => i.id === parseInt(schedule.teacherId.toString()))?.name || '未指定'}
                         </div>
                       </div>
                     ))}

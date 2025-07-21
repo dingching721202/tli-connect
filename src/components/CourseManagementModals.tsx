@@ -22,7 +22,7 @@ interface Schedule {
   weekdays: string[];
   startTime: string;
   endTime: string;
-  instructorId: string | number;
+  teacherId: string | number;
 }
 
 interface Session {
@@ -36,7 +36,7 @@ interface GeneratedSession {
   title: string;
   startTime: string;
   endTime: string;
-  instructorId: string | number;
+  teacherId: string | number;
   instructorName: string;
   classroom: string;
   materials: string;
@@ -346,8 +346,8 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
                   </label>
                   <div className="flex gap-2">
                     <select
-                      value={schedule.instructorId}
-                      onChange={(e) => handleGlobalScheduleChange(scheduleIndex, 'instructorId', e.target.value)}
+                      value={schedule.teacherId}
+                      onChange={(e) => handleGlobalScheduleChange(scheduleIndex, 'teacherId', e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                     >
                       <option value="">請選擇教師</option>

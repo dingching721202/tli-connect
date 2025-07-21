@@ -5,7 +5,7 @@ export interface Schedule {
   weekdays: string[];
   startTime: string;
   endTime: string;
-  instructorId: string | number;
+  teacherId: string | number;
 }
 
 export interface Session {
@@ -19,7 +19,7 @@ export interface GeneratedSession {
   title: string;
   startTime: string;
   endTime: string;
-  instructorId: string | number;
+  teacherId: string | number;
   instructorName: string;
   classroom: string;
   materials: string;
@@ -135,7 +135,7 @@ const initializeData = () => {
           weekdays: ['2', '4'], // 週二、週四
           startTime: '09:00',
           endTime: '10:30',
-          instructorId: 1
+          teacherId: 1
         }
       ],
       sessions: [
@@ -161,7 +161,7 @@ const initializeData = () => {
           weekdays: ['1', '3'], // 週一、週三
           startTime: '14:00',
           endTime: '15:30',
-          instructorId: 2
+          teacherId: 2
         }
       ],
       sessions: [
@@ -186,7 +186,7 @@ const initializeData = () => {
           weekdays: ['1', '3', '5'], // 週一、週三、週五
           startTime: '10:00',
           endTime: '11:30',
-          instructorId: 3
+          teacherId: 3
         }
       ],
       sessions: [
@@ -231,7 +231,7 @@ const generateCourseSessions = (course: ManagedCourse): GeneratedSession[] => {
         // 檢查當前日期是否是指定的上課日
         if (schedule.weekdays.includes(dayOfWeek)) {
           // 獲取教師資訊
-          const teacher = teachers.find(i => i.id === parseInt(schedule.instructorId.toString()));
+          const teacher = teachers.find(i => i.id === parseInt(schedule.teacherId.toString()));
           const teacherName = teacher ? teacher.name : '未指定';
           
           // 獲取對應的課程內容
@@ -242,7 +242,7 @@ const generateCourseSessions = (course: ManagedCourse): GeneratedSession[] => {
             title: sessionContent.title || `第 ${sessionCount + 1} 堂課`,
             startTime: schedule.startTime,
             endTime: schedule.endTime,
-            instructorId: schedule.instructorId,
+            teacherId: schedule.teacherId,
             instructorName: teacherName,
             classroom: sessionContent.classroom,
             materials: sessionContent.materials
