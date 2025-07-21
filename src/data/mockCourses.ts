@@ -24,7 +24,7 @@ export const mockCourses: Course[] = [
     title: "華語文寫作班",
     date: "2025-06-03",
     timeSlot: "14:00-15:30",
-    instructor: "王老師",
+    teacher: "王老師",
     price: 0,
     description: "針對華語文寫作技巧進行深度訓練，包含議論文與記敘文"
   },
@@ -33,7 +33,7 @@ export const mockCourses: Course[] = [
     title: "日常華語對話",
     date: "2025-06-05",
     timeSlot: "10:00-11:30",
-    instructor: "陳老師",
+    teacher: "陳老師",
     price: 0,
     description: "生活化華語對話練習，提升口語表達流利度"
   },

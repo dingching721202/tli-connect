@@ -216,7 +216,7 @@ const Dashboard = () => {
     });
   };
 
-  // Mock instructor courses data (similar to student booking system)
+  // Mock teacher courses data (similar to student booking system)
   const getTeacherCourses = (): Course[] => {
     const courses: Course[] = [
       {
@@ -291,7 +291,7 @@ const Dashboard = () => {
         studentName: '張小明',
         studentEmail: 'zhang@taiwantech.com',
         courseName: '商務華語會話',
-        instructor: '張老師',
+        teacher: '張老師',
         date: '2025-01-15',
         time: '14:00-15:30',
         status: 'upcoming' as const,
@@ -306,7 +306,7 @@ const Dashboard = () => {
         studentName: '李小華',
         studentEmail: 'li@taiwantech.com',
         courseName: '華語文法精修',
-        instructor: '王老師',
+        teacher: '王老師',
         date: '2025-01-16',
         time: '10:00-11:30',
         status: 'upcoming' as const,
@@ -336,7 +336,7 @@ const Dashboard = () => {
         studentName: '林設計師',
         studentEmail: 'lin@taiwantech.com',
         courseName: '商務華語會話',
-        instructor: '張老師',
+        teacher: '張老師',
         date: '2025-01-10',
         time: '14:00-15:30',
         status: 'completed' as const,
