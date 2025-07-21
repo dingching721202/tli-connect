@@ -351,9 +351,9 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                     >
                       <option value="">請選擇教師</option>
-                      {instructors.map((instructor) => (
-                        <option key={instructor.id} value={instructor.id}>
-                          {instructor.name} - {instructor.expertise}
+                      {teachers.map((teacher) => (
+                        <option key={teacher.id} value={teacher.id}>
+                          {teacher.name} - {teacher.expertise}
                         </option>
                       ))}
                     </select>

@@ -403,8 +403,8 @@ const CourseManagement = () => {
           // 檢查當前日期是否是指定的上課日
           if (schedule.weekdays.includes(dayOfWeek)) {
             // 獲取教師資訊
-            const instructor = instructors.find(i => i.id === parseInt(schedule.instructorId.toString()));
-            const instructorName = instructor ? instructor.name : '未指定';
+            const teacher = teachers.find(i => i.id === parseInt(schedule.instructorId.toString()));
+            const teacherName = teacher ? teacher.name : '未指定';
             
             // 獲取對應的課程內容
             const sessionContent = sessions[currentSessionIndex % sessions.length];
@@ -415,7 +415,7 @@ const CourseManagement = () => {
               startTime: schedule.startTime,
               endTime: schedule.endTime,
               instructorId: schedule.instructorId,
-              instructorName,
+              instructorName: teacherName,
               classroom: sessionContent.classroom,
               materials: sessionContent.materials
             });
