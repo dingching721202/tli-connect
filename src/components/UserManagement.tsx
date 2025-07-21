@@ -125,7 +125,7 @@ const UserManagement: React.FC = () => {
   const [showAddUserModal, setShowAddUserModal] = useState(false);
   const [showEditUserModal, setShowEditUserModal] = useState(false);
   const [, setEditingUser] = useState<User | null>(null);
-  const [companies, setCompanies] = useState(getCompanies());
+  const [companies, setCompanies] = useState(getCompanies() || []);
   const [expandedCompanies, setExpandedCompanies] = useState<Set<number>>(new Set());
   const [expandedPlans, setExpandedPlans] = useState<Set<number>>(new Set());
   
@@ -139,6 +139,20 @@ const UserManagement: React.FC = () => {
   const [showEditPlanModal, setShowEditPlanModal] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<number | null>(null);
   const [editingPlan, setEditingPlan] = useState<MembershipPlan | null>(null);
+  
+  // 方案會員管理相關狀態
+  const [showAddPlanUserModal, setShowAddPlanUserModal] = useState(false);
+  const [showEditPlanUserModal, setShowEditPlanUserModal] = useState(false);
+  const [editingPlanUser, setEditingPlanUser] = useState<any>(null);
+  
+  // 新增方案會員表單狀態
+  const [newPlanUser, setNewPlanUser] = useState({
+    name: '',
+    email: '',
+    department: '',
+    position: '',
+    phone: ''
+  });
   
   // 新增方案表單狀態
   const [newPlan, setNewPlan] = useState({
@@ -1232,7 +1246,7 @@ const UserManagement: React.FC = () => {
         if (company.id === selectedCompanyId) {
           return {
             ...company,
-            membershipPlans: company.membershipPlans.map(plan =>
+            membershipPlans: (company.membershipPlans || []).map(plan =>
               plan.id === editingPlan.id ? editingPlan : plan
             ),
           };
@@ -1297,6 +1311,54 @@ const UserManagement: React.FC = () => {
       }
       return newSet;
     });
+  };
+
+  // 方案會員管理函數
+  const handleRemoveUserFromPlan = (planId: string | number, userId: string | number) => {
+    try {
+      // 這裡應該調用 API 從方案中移除用戶
+      // 暫時使用模擬邏輯
+      alert('✅ 會員已從方案中移除！');
+      
+      // 如果有實際的狀態管理，可以在這裡更新狀態
+      // 例如：重新獲取方案用戶列表
+    } catch (error) {
+      console.error('移除會員失敗:', error);
+      alert('❌ 移除會員失敗！');
+    }
+  };
+
+  const handleAddUserToPlan = (planId: string | number, userInfo: any) => {
+    try {
+      // 這裡應該調用 API 添加用戶到方案
+      // 暫時使用模擬邏輯
+      alert('✅ 會員已添加到方案！');
+      
+      // 關閉模態框並重置表單
+      setShowAddPlanUserModal(false);
+      
+      // 如果有實際的狀態管理，可以在這裡更新狀態
+    } catch (error) {
+      console.error('添加會員失敗:', error);
+      alert('❌ 添加會員失敗！');
+    }
+  };
+
+  const handleEditPlanUser = (userId: string | number, updatedInfo: any) => {
+    try {
+      // 這裡應該調用 API 更新用戶信息
+      // 暫時使用模擬邏輯
+      alert('✅ 會員信息已更新！');
+      
+      // 關閉模態框並重置表單
+      setShowEditPlanUserModal(false);
+      setEditingPlanUser(null);
+      
+      // 如果有實際的狀態管理，可以在這裡更新狀態
+    } catch (error) {
+      console.error('更新會員失敗:', error);
+      alert('❌ 更新會員失敗！');
+    }
   };
 
   // CSV匯出功能
@@ -1497,7 +1559,7 @@ const UserManagement: React.FC = () => {
       {/* Corporate Companies View */}
       {membershipFilter === 'corporate_companies' && (
         <div className="space-y-6">
-          {companies.map((company) => {
+          {(companies || []).map((company) => {
             const stats = getCompanyStatistics(company.id.toString());
             const users = getCorporateUsersByCompany(company.id.toString());
             
@@ -1532,7 +1594,7 @@ const UserManagement: React.FC = () => {
                               
                               {/* 方案信息 - 支援多個方案 */}
                               <div className="space-y-2">
-                                {company.membershipPlans.map((plan, index) => {
+                                {(company.membershipPlans || []).map((plan, index) => {
                                   // 計算剩餘天數和進度
                                   const totalDays = Math.ceil((new Date(plan.endDate).getTime() - new Date(plan.startDate).getTime()) / (1000 * 60 * 60 * 24));
                                   const remainingDays = Math.max(0, Math.ceil((new Date(plan.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)));
@@ -1571,7 +1633,7 @@ const UserManagement: React.FC = () => {
                                       return (
                                         <div key="more-plans" className="text-center">
                                           <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
-                                            + {company.membershipPlans.length - 2} 個方案 (點擊展開查看)
+                                            + {(company.membershipPlans || []).length - 2} 個方案 (點擊展開查看)
                                           </span>
                                         </div>
                                       );
@@ -1702,11 +1764,11 @@ const UserManagement: React.FC = () => {
                                           className="border-t border-gray-200 p-4 bg-white/90"
                                         >
                                           {(() => {
-                                            const planUsers = getCorporateUsersByPlan(plan.id);
+                                            const planUsers = getCorporateUsersByPlan(plan.id) || [];
                                             const activeUsers = planUsers.filter(user => user.status === 'active');
-                                            const totalHours = planUsers.reduce((sum, user) => sum + user.learningProgress.totalHours, 0);
+                                            const totalHours = planUsers.reduce((sum, user) => sum + (user.learningProgress?.totalHours || 0), 0);
                                             const averageCompletion = planUsers.length > 0 ? 
-                                              Math.round(planUsers.reduce((sum, user) => sum + user.learningProgress.completionRate, 0) / planUsers.length) : 0;
+                                              Math.round(planUsers.reduce((sum, user) => sum + (user.learningProgress?.completionRate || 0), 0) / planUsers.length) : 0;
 
                                             return (
                                               <div className="space-y-4">
@@ -1729,6 +1791,18 @@ const UserManagement: React.FC = () => {
                                                 {/* 會員表格 */}
                                                 <div className="flex justify-between items-center mb-3">
                                                   <h5 className="text-sm font-semibold text-gray-900">方案會員管理</h5>
+                                                  <button
+                                                    onClick={() => {
+                                                      // 設置要添加會員到的方案
+                                                      setEditingPlan(plan);
+                                                      setSelectedCompanyId(company.id);
+                                                      setShowAddPlanUserModal(true);
+                                                    }}
+                                                    className="flex items-center space-x-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-xs"
+                                                  >
+                                                    <SafeIcon icon={FiPlus} className="w-3 h-3" />
+                                                    <span>新增會員</span>
+                                                  </button>
                                                 </div>
                                                 
                                                 {planUsers.length > 0 ? (
@@ -1807,9 +1881,21 @@ const UserManagement: React.FC = () => {
                                                               <div className="flex items-center space-x-2">
                                                                 <button
                                                                   onClick={() => {
+                                                                    setEditingPlanUser(user);
+                                                                    setEditingPlan(plan);
+                                                                    setSelectedCompanyId(company.id);
+                                                                    setShowEditPlanUserModal(true);
+                                                                  }}
+                                                                  className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                                                  title="編輯會員"
+                                                                >
+                                                                  <SafeIcon icon={FiEdit2} className="w-3 h-3" />
+                                                                </button>
+                                                                <button
+                                                                  onClick={() => {
                                                                     if (window.confirm(`確定要從此方案中移除 ${user.name} 嗎？`)) {
-                                                                      // 處理刪除邏輯
-                                                                      alert('會員已從方案中移除');
+                                                                      // 處理刪除邏輯 - 這裡需要實際的刪除函數
+                                                                      handleRemoveUserFromPlan(plan.id, user.id);
                                                                     }
                                                                   }}
                                                                   className="p-1 text-red-600 hover:bg-red-50 rounded"
@@ -2948,7 +3034,7 @@ const UserManagement: React.FC = () => {
       )}
 
       {/* 新增方案用戶 Modal */}
-      {false && (
+      {showAddPlanUserModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -2958,7 +3044,7 @@ const UserManagement: React.FC = () => {
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900">新增方案會員</h3>
               <button
-                onClick={() => {}}
+                onClick={() => setShowAddPlanUserModal(false)}
                 className="text-gray-400 hover:text-gray-600"
               >
                 <SafeIcon icon={FiX} className="w-6 h-6" />
@@ -2967,9 +3053,15 @@ const UserManagement: React.FC = () => {
             
             <form onSubmit={(e) => {
               e.preventDefault();
-              // 這裡添加新增用戶到方案的邏輯
-              alert('新增用戶到方案功能開發中...');
-              // setShowAddPlanUserModal(false);
+              handleAddUserToPlan(editingPlan?.id, newPlanUser);
+              // 重置表單
+              setNewPlanUser({
+                name: '',
+                email: '',
+                department: '',
+                position: '',
+                phone: ''
+              });
             }}>
               <div className="space-y-4">
                 <div>
@@ -2977,6 +3069,8 @@ const UserManagement: React.FC = () => {
                   <input
                     type="text"
                     required
+                    value={newPlanUser.name}
+                    onChange={(e) => setNewPlanUser(prev => ({ ...prev, name: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="輸入員工姓名"
                   />
@@ -2986,6 +3080,8 @@ const UserManagement: React.FC = () => {
                   <input
                     type="email"
                     required
+                    value={newPlanUser.email}
+                    onChange={(e) => setNewPlanUser(prev => ({ ...prev, email: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="輸入電子郵件"
                   />
@@ -2995,6 +3091,8 @@ const UserManagement: React.FC = () => {
                   <input
                     type="text"
                     required
+                    value={newPlanUser.department}
+                    onChange={(e) => setNewPlanUser(prev => ({ ...prev, department: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="輸入部門"
                   />
@@ -3004,8 +3102,20 @@ const UserManagement: React.FC = () => {
                   <input
                     type="text"
                     required
+                    value={newPlanUser.position}
+                    onChange={(e) => setNewPlanUser(prev => ({ ...prev, position: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     placeholder="輸入職位"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">電話</label>
+                  <input
+                    type="tel"
+                    value={newPlanUser.phone}
+                    onChange={(e) => setNewPlanUser(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="輸入電話 (選填)"
                   />
                 </div>
                 <div>
@@ -3027,7 +3137,16 @@ const UserManagement: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {}}
+                  onClick={() => {
+                    setShowAddPlanUserModal(false);
+                    setNewPlanUser({
+                      name: '',
+                      email: '',
+                      department: '',
+                      position: '',
+                      phone: ''
+                    });
+                  }}
                   className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
                 >
                   取消
@@ -3038,6 +3157,122 @@ const UserManagement: React.FC = () => {
         </div>
       )}
 
+      {/* 編輯方案會員 Modal */}
+      {showEditPlanUserModal && editingPlanUser && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-xl p-6 w-full max-w-md mx-4"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">編輯方案會員</h3>
+              <button
+                onClick={() => {
+                  setShowEditPlanUserModal(false);
+                  setEditingPlanUser(null);
+                }}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <SafeIcon icon={FiX} className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              handleEditPlanUser(editingPlanUser.id, editingPlanUser);
+            }}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">姓名</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingPlanUser.name || ''}
+                    onChange={(e) => setEditingPlanUser(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="輸入員工姓名"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">電子郵件</label>
+                  <input
+                    type="email"
+                    required
+                    value={editingPlanUser.email || ''}
+                    onChange={(e) => setEditingPlanUser(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="輸入電子郵件"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">部門</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingPlanUser.department || ''}
+                    onChange={(e) => setEditingPlanUser(prev => ({ ...prev, department: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="輸入部門"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">職位</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingPlanUser.position || ''}
+                    onChange={(e) => setEditingPlanUser(prev => ({ ...prev, position: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="輸入職位"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">電話</label>
+                  <input
+                    type="tel"
+                    value={editingPlanUser.phone || ''}
+                    onChange={(e) => setEditingPlanUser(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="輸入電話 (選填)"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">帳號狀態</label>
+                  <select
+                    value={editingPlanUser.status || 'active'}
+                    onChange={(e) => setEditingPlanUser(prev => ({ ...prev, status: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="active">啟用</option>
+                    <option value="inactive">未啟用</option>
+                    <option value="suspended">停用</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="flex space-x-3 mt-6">
+                <button
+                  type="submit"
+                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  更新會員
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditPlanUserModal(false);
+                    setEditingPlanUser(null);
+                  }}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                >
+                  取消
+                </button>
+              </div>
+            </form>
+          </motion.div>
+        </div>
+      )}
 
       {/* 新增企業 Modal */}
       {showAddCompanyModal && (

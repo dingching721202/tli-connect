@@ -256,7 +256,8 @@ export function getCompanies(): Company[] {
     industry: client.industry,
     employeeCount: client.employeeCount,
     status: client.status === 'active' ? 'active' : 'inactive',
-    createdAt: client.createdAt
+    createdAt: client.createdAt,
+    membershipPlans: [] // 添加空數組作為預設值
   }));
 }
 

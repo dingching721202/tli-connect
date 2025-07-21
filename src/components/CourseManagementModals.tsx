@@ -342,7 +342,7 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    選擇教師 <span className="text-red-500">*</span>
+                    選擇教師
                   </label>
                   <div className="flex gap-2">
                     <select

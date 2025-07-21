@@ -19,11 +19,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // 國際化設定
-  i18n: {
-    locales: ['zh-TW'],
-    defaultLocale: 'zh-TW',
-  },
 }
 
 export default nextConfig

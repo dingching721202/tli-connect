@@ -26,6 +26,7 @@ interface AuthContextType {
   isStudent: boolean;
   isTeacher: boolean;
   isOps: boolean;
+  isAdmin: boolean;
   refreshMembership: () => Promise<void>;
 }
 
@@ -189,6 +190,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isStudent: user?.role === 'STUDENT',
     isTeacher: user?.role === 'TEACHER',
     isOps: user?.role === 'OPS',
+    isAdmin: user?.role === 'ADMIN',
     refreshMembership
   };
 

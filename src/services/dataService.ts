@@ -69,7 +69,15 @@ export const authService = {
     await delay(500);
     
     const user = users.find(u => u.email === email);
-    if (!user || password !== 'password') { // 簡化密碼驗證
+    if (!user) {
+      return { success: false, error: 'INVALID_CREDENTIALS' };
+    }
+    
+    // 簡化密碼驗證 - 支援預設密碼或儲存的密碼
+    const isValidPassword = password === 'password' || 
+                           password === user.password;
+    
+    if (!isValidPassword) {
       return { success: false, error: 'INVALID_CREDENTIALS' };
     }
     
