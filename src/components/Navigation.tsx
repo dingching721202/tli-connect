@@ -23,6 +23,7 @@ const Navigation: React.FC = () => {
     { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['OPS'] },
     { name: '會員方案', href: '/membership', icon: FiUsers, roles: ['guest', 'STUDENT'] },
     { name: '會員方案管理', href: '/membership-management', icon: FiSettings, roles: ['OPS'] },
+    { name: '企業詢價管理', href: '/corporate-inquiries', icon: FiBriefcase, roles: ['OPS'] },
     { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['OPS'] },
     { name: '企業管理', href: '/corporate-management', icon: FiBriefcase, roles: ['CORPORATE_CONTACT'] },
     { name: '系統設定', href: '/system-settings', icon: FiSettings, roles: ['OPS'] },

@@ -10,6 +10,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { paymentService } from '@/services/paymentService';
 import { PaymentRequest } from '@/types';
 import { MembershipPlan, getPublishedMembershipPlans } from '@/data/membershipPlans';
+import GuestPurchaseModal, { UserData } from '@/components/GuestPurchaseModal';
+import { CreditCardData } from '@/components/CreditCardForm';
+import CorporateInquiryForm from '@/components/CorporateInquiryForm';
 
 const {
   FiCreditCard, FiCheck, FiUsers, FiStar, FiCalendar, FiVideo, FiAward
@@ -19,8 +22,9 @@ function MembershipPageContent() {
   const { user } = useAuth();
   const router = useRouter();
   useSearchParams();
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'individual' | 'corporate'>('individual');
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showCorporateForm, setShowCorporateForm] = useState(false);
   const [paymentData, setPaymentData] = useState<{ title: string; price: number; duration_days: number; planId: string } | null>(null);
   const [membershipPlans, setMembershipPlans] = useState<MembershipPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +35,7 @@ function MembershipPageContent() {
     const loadPlans = async () => {
       try {
         setLoading(true);
-        const plans = getPublishedMembershipPlans('individual');
+        const plans = getPublishedMembershipPlans(activeTab);
         setMembershipPlans(plans);
       } catch (error) {
         console.error('載入會員方案失敗:', error);
@@ -40,36 +44,101 @@ function MembershipPageContent() {
       }
     };
     loadPlans();
-  }, []);
+  }, [activeTab]);
 
   const formatPrice = (price: number) => {
     return `NT$ ${price.toLocaleString()}`;
   };
 
-  const handleSelectPlan = (plan: MembershipPlan) => {
-    setSelectedPlan(plan.id);
-  };
-
-  const handlePurchase = () => {
-    if (!user) {
-      router.push('/login');
-      return;
+  const handlePurchase = (plan: MembershipPlan) => {
+    if (plan.type === 'corporate') {
+      setShowCorporateForm(true);
+    } else {
+      setPaymentData({
+        title: plan.name,
+        price: plan.price,
+        duration_days: plan.duration * 30, // 轉換月數為天數
+        planId: plan.id
+      });
+      setShowPaymentModal(true);
     }
-
-    const plan = membershipPlans.find(p => p.id === selectedPlan);
-    if (!plan) return;
-
-    setPaymentData({
-      title: plan.name,
-      price: plan.price,
-      duration_days: plan.duration * 30, // 轉換月數為天數
-      planId: plan.id
-    });
-    setShowPaymentModal(true);
   };
 
-  // 處理實際購買
-  const handleConfirmPurchase = async () => {
+  // 處理訪客購買（包含自動註冊）
+  const handleGuestPurchase = async (userData: UserData, cardData: CreditCardData) => {
+    if (!paymentData) return;
+
+    try {
+      setPurchaseLoading(true);
+      
+      // 步驟 1: 生成訂單 ID
+      const orderId = paymentService.generateOrderId('ord');
+      
+      // 步驟 2: 建立付款請求
+      const paymentRequest: PaymentRequest = {
+        order_id: orderId,
+        amount: paymentData.price,
+        description: `${paymentData.title} - 會員方案`,
+        return_url: `${window.location.origin}/payment-result`
+      };
+
+      console.log('正在處理付款...', paymentRequest);
+      
+      // 步驟 3: 呼叫付款服務
+      const paymentResult = await paymentService.createPayment(paymentRequest);
+      
+      if (paymentResult.success && paymentResult.data?.status === 'successful') {
+        // 步驟 4: 付款成功後自動註冊用戶
+        console.log('付款成功，正在創建帳號...');
+        
+        const { authService } = await import('@/services/dataService');
+        const registerResult = await authService.register(
+          userData.email,
+          userData.password,
+          userData.name,
+          userData.phone
+        );
+        
+        if (registerResult.success) {
+          // 步驟 5: 註冊成功後自動登入
+          console.log('帳號創建成功，正在登入...');
+          
+          const loginResult = await login(userData.email, userData.password);
+          
+          if (loginResult.success) {
+            alert(`🎉 購買成功！\n\n✅ 付款完成\n✅ 帳號已創建\n✅ 自動登入成功\n\n方案：${paymentData.title}\n金額：${formatPrice(paymentData.price)}\n付款 ID：${paymentResult.data.payment_id}\n\n會員資格已啟用，歡迎使用 TLI Connect！`);
+            setShowPaymentModal(false);
+            router.push('/dashboard');
+          } else {
+            alert(`✅ 付款和註冊成功！\n\n方案：${paymentData.title}\n帳號：${userData.email}\n\n請使用您設定的密碼登入系統。`);
+            setShowPaymentModal(false);
+            router.push('/login');
+          }
+        } else {
+          // 註冊失敗（可能 Email 已存在）
+          if (registerResult.error === 'EMAIL_ALREADY_EXISTS') {
+            alert(`⚠️ 付款成功但此 Email 已有帳號\n\n付款 ID：${paymentResult.data.payment_id}\n\n請使用現有帳號登入，或聯繫客服處理付款事宜。`);
+            router.push('/login');
+          } else {
+            alert(`❌ 付款成功但帳號創建失敗\n\n付款 ID：${paymentResult.data.payment_id}\n\n請聯繫客服處理。`);
+          }
+          setShowPaymentModal(false);
+        }
+      } else {
+        // 付款失敗
+        const errorMessage = paymentResult.error || '付款處理失敗';
+        alert(`❌ 付款失敗\n\n${errorMessage}\n\n請檢查付款資訊後重試`);
+      }
+    } catch (error) {
+      console.error('購買失敗:', error);
+      alert('購買過程中發生錯誤，請稍後再試');
+    } finally {
+      setPurchaseLoading(false);
+    }
+  };
+
+  // 處理已登入用戶的購買（統一使用 GuestPurchaseModal 的流程）
+  const handleUserPurchase = async (userData: UserData, cardData: CreditCardData) => {
     if (!user || !paymentData) return;
 
     try {
@@ -92,17 +161,9 @@ function MembershipPageContent() {
       const paymentResult = await paymentService.createPayment(paymentRequest);
       
       if (paymentResult.success && paymentResult.data?.status === 'successful') {
-        // 步驟 4: 付款成功後建立訂單
-        // 創建一個簡化的訂單，因為新的會員方案系統不需要複雜的訂單流程
-        const orderResult = { success: true, data: { id: Date.now() } };
-        
-        if (orderResult.success) {
-          alert(`🎉 付款成功！\n\n方案：${paymentData.title}\n金額：${formatPrice(paymentData.price)}\n付款 ID：${paymentResult.data.payment_id}\n\n會員卡已生成，請前往會員中心啟用！`);
-          setShowPaymentModal(false);
-          router.push('/dashboard');
-        } else {
-          alert('付款成功但會員卡生成失敗，請聯繫客服處理');
-        }
+        alert(`🎉 付款成功！\n\n✅ 付款完成\n✅ 會員資格已啟用\n\n方案：${paymentData.title}\n金額：${formatPrice(paymentData.price)}\n付款 ID：${paymentResult.data.payment_id}\n\n歡迎使用 TLI Connect 會員服務！`);
+        setShowPaymentModal(false);
+        router.push('/dashboard');
       } else {
         // 付款失敗
         const errorMessage = paymentResult.error || '付款處理失敗';
@@ -117,78 +178,6 @@ function MembershipPageContent() {
   };
 
 
-  const PaymentModal = () => (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={() => !purchaseLoading && setShowPaymentModal(false)}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-2xl p-6 max-w-md w-full"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center mb-4">
-          <SafeIcon icon={FiCreditCard} className="text-blue-600 mr-2" />
-          <h3 className="text-xl font-bold">確認付款</h3>
-        </div>
-        
-        <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <h4 className="font-medium text-gray-800 mb-3">訂單詳情</h4>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">方案：</span>
-              <span className="font-medium">{paymentData?.title}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">有效期限：</span>
-              <span className="font-medium">{paymentData?.duration_days} 天</span>
-            </div>
-            <div className="border-t pt-2 mt-2">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-600">付款金額：</span>
-                <span className="font-bold text-lg text-blue-600">{formatPrice(paymentData?.price || 0)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
-          <div className="flex items-start">
-            <SafeIcon icon={FiCheck} className="text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-blue-800">
-              <p className="font-medium mb-1">安全付款保障</p>
-              <p>本系統使用安全的付款處理服務，您的付款資訊將被加密保護。</p>
-            </div>
-          </div>
-        </div>
-        <div className="flex space-x-3">
-          <button
-            onClick={handleConfirmPurchase}
-            disabled={purchaseLoading}
-            className={`flex-1 py-2 rounded-lg transition-colors ${
-              purchaseLoading 
-                ? 'bg-gray-400 text-white cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-{purchaseLoading ? '付款處理中...' : '確認付款'}
-          </button>
-          <button
-            onClick={() => setShowPaymentModal(false)}
-            disabled={purchaseLoading}
-            className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors disabled:opacity-50"
-          >
-            取消
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
-
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <Navigation />
@@ -198,7 +187,7 @@ function MembershipPageContent() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="text-center mb-8"
         >
           <h1 className="text-4xl sm:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-4">
             選擇會員方案
@@ -206,6 +195,38 @@ function MembershipPageContent() {
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             加入 TLI Connect 會員，享受完整學習體驗，包含影片學習、線上課程、活動參與等豐富內容
           </p>
+        </motion.div>
+
+        {/* Tab Navigation */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex justify-center mb-12"
+        >
+          <div className="bg-gray-100 rounded-xl p-1 inline-flex">
+            <button
+              onClick={() => setActiveTab('individual')}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center ${
+                activeTab === 'individual'
+                  ? 'bg-white text-blue-600 shadow-md'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <SafeIcon icon={FiUsers} className="mr-2" />
+              個人方案
+            </button>
+            <button
+              onClick={() => setActiveTab('corporate')}
+              className={`px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center ${
+                activeTab === 'corporate'
+                  ? 'bg-white text-blue-600 shadow-md'
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              <SafeIcon icon={FiUsers} className="mr-2" />
+              企業方案
+            </button>
+          </div>
         </motion.div>
 
         {/* Loading State */}
@@ -219,10 +240,13 @@ function MembershipPageContent() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="grid md:grid-cols-2 gap-8 mb-12"
+            className={`gap-8 mb-12 ${
+              activeTab === 'corporate' 
+                ? 'flex justify-center' 
+                : 'grid md:grid-cols-2'
+            }`}
           >
             {membershipPlans.map((plan, index) => {
-              const isSelected = selectedPlan === plan.id;
               const isYearPlan = plan.duration === 12;
               
               return (
@@ -232,12 +256,10 @@ function MembershipPageContent() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   className={`relative bg-white rounded-2xl shadow-xl border-2 transition-all duration-300 ${
-                    isSelected
-                      ? 'border-blue-500 shadow-2xl scale-105'
-                      : isYearPlan
-                      ? 'border-blue-200 shadow-lg'
-                      : 'border-gray-200 hover:border-blue-300 hover:shadow-lg'
-                  }`}
+                    isYearPlan
+                      ? 'border-blue-200 shadow-lg hover:border-blue-400 hover:shadow-2xl'
+                      : 'border-gray-200 hover:border-blue-300 hover:shadow-2xl'
+                  } ${activeTab === 'corporate' ? 'max-w-lg w-full' : ''}`}
                 >
                   {isYearPlan && (
                     <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
@@ -261,22 +283,38 @@ function MembershipPageContent() {
                         </span>
                       </div>
                       <div className="mb-4">
-                        <div className="flex items-center justify-center space-x-2">
-                          <span className="text-4xl font-bold text-blue-600">{formatPrice(plan.price)}</span>
-                          {plan.originalPrice > plan.price && (
-                            <span className="text-2xl text-gray-500 line-through">{formatPrice(plan.originalPrice)}</span>
-                          )}
-                        </div>
-                        <p className="text-gray-600 mt-2">
-                          有效期限：{plan.duration} 個月
-                        </p>
-                        <p className="text-gray-500 text-sm">
-                          平均每月 {formatPrice(Math.round(plan.price / plan.duration))}
-                        </p>
-                        {plan.originalPrice > plan.price && (
-                          <p className="text-green-600 text-sm font-medium mt-1">
-                            省 {Math.round(((plan.originalPrice - plan.price) / plan.originalPrice) * 100)}%
-                          </p>
+                        {plan.type === 'corporate' ? (
+                          <>
+                            <div className="text-center">
+                              <span className="text-3xl font-bold text-blue-600">客製化報價</span>
+                            </div>
+                            <p className="text-gray-600 mt-2 text-center">
+                              根據您的企業需求量身定制
+                            </p>
+                            <p className="text-gray-500 text-sm text-center">
+                              專業顧問將為您提供詳細方案
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <div className="flex items-center justify-center space-x-2">
+                              <span className="text-4xl font-bold text-blue-600">{formatPrice(plan.price)}</span>
+                              {plan.originalPrice > plan.price && (
+                                <span className="text-2xl text-gray-500 line-through">{formatPrice(plan.originalPrice)}</span>
+                              )}
+                            </div>
+                            <p className="text-gray-600 mt-2">
+                              有效期限：{plan.duration} 個月
+                            </p>
+                            <p className="text-gray-500 text-sm">
+                              平均每月 {formatPrice(Math.round(plan.price / plan.duration))}
+                            </p>
+                            {plan.originalPrice > plan.price && (
+                              <p className="text-green-600 text-sm font-medium mt-1">
+                                省 {Math.round(((plan.originalPrice - plan.price) / plan.originalPrice) * 100)}%
+                              </p>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -291,14 +329,11 @@ function MembershipPageContent() {
                     </ul>
                     
                     <button
-                      onClick={() => handleSelectPlan(plan)}
-                      className={`w-full py-3 px-6 rounded-xl font-bold transition-all duration-300 ${
-                        isSelected
-                          ? 'bg-blue-600 text-white shadow-lg'
-                          : 'bg-gray-100 text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                      }`}
+                      onClick={() => handlePurchase(plan)}
+                      className="w-full py-3 px-6 rounded-xl font-bold transition-all duration-300 bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl flex items-center justify-center"
                     >
-                      {isSelected ? '已選擇' : '選擇方案'}
+                      <SafeIcon icon={plan.type === 'corporate' ? FiUsers : FiCreditCard} className="mr-2" />
+                      {plan.type === 'corporate' ? '立即諮詢' : '立即購買'}
                     </button>
                   </div>
                 </motion.div>
@@ -307,25 +342,6 @@ function MembershipPageContent() {
           </motion.div>
         )}
 
-        {/* Purchase Button */}
-        {!loading && selectedPlan && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="text-center"
-          >
-            <button
-              onClick={handlePurchase}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-12 py-4 rounded-xl font-bold text-lg hover:shadow-lg transition-all duration-300 flex items-center mx-auto"
-            >
-              <SafeIcon icon={FiCreditCard} className="mr-2" />
-              立即購買
-            </button>
-            <p className="text-gray-600 text-sm mt-4">
-              🔒 安全付款 • 💯 滿意保證 • 📞 24/7 客服支援
-            </p>
-          </motion.div>
-        )}
 
         {/* Benefits Section */}
         <div className="mt-16 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8">
@@ -354,7 +370,27 @@ function MembershipPageContent() {
         </div>
 
         {/* Modals */}
-        {showPaymentModal && <PaymentModal />}
+        {showPaymentModal && (
+          <GuestPurchaseModal
+            isOpen={showPaymentModal}
+            onClose={() => setShowPaymentModal(false)}
+            paymentData={paymentData}
+            onConfirmPurchase={user ? handleUserPurchase : handleGuestPurchase}
+            isLoading={purchaseLoading}
+            existingUser={user ? {
+              name: user.name,
+              email: user.email,
+              phone: user.phone
+            } : null}
+          />
+        )}
+
+        {showCorporateForm && (
+          <CorporateInquiryForm
+            isOpen={showCorporateForm}
+            onClose={() => setShowCorporateForm(false)}
+          />
+        )}
       </div>
     </div>
   );

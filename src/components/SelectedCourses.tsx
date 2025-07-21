@@ -2,10 +2,11 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiTrash2, FiCalendar, FiClock, FiUser, FiCheck } from 'react-icons/fi';
+import { FiTrash2, FiCalendar, FiClock, FiUser, FiCheck, FiCreditCard, FiLogIn } from 'react-icons/fi';
 import { Course } from '@/data/mockCourses';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
+import { useRouter } from 'next/navigation';
 
 interface SelectedCoursesProps {
   selectedCourses: Course[];
@@ -21,6 +22,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
   showPrice = false
 }) => {
   const { user, hasActiveMembership } = useAuth();
+  const router = useRouter();
 
   // Group courses by date and sort
   const groupedCourses = selectedCourses.reduce((groups, course) => {
@@ -239,37 +241,68 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
             </div>
           </div>
 
-          {/* Confirm Button */}
-          <motion.button
-            onClick={onConfirmBooking}
-            disabled={!isUserEligible()}
-            className={`
-              w-full py-3 px-6 rounded-lg font-semibold text-center transition-all
-              ${isUserEligible()
-                ? 'bg-purple-600 text-white hover:bg-purple-700 shadow-md hover:shadow-lg'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }
-            `}
-            whileHover={isUserEligible() ? { scale: 1.02 } : {}}
-            whileTap={isUserEligible() ? { scale: 0.98 } : {}}
-          >
-            {!user 
-              ? '請先登入以完成預約'
-              : user.role === 'STUDENT' && !hasActiveMembership()
-                ? '需要會員資格才能預約'
-                : `確認預約 ${selectedCourses.length} 堂課程`
-            }
-          </motion.button>
+          {/* Action Buttons */}
+          {isUserEligible() ? (
+            <motion.button
+              onClick={onConfirmBooking}
+              className="w-full py-3 px-6 rounded-lg font-semibold text-center transition-all bg-purple-600 text-white hover:bg-purple-700 shadow-md hover:shadow-lg"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              確認預約 {selectedCourses.length} 堂課程
+            </motion.button>
+          ) : !user ? (
+            /* 訪客狀態 - 顯示購買會員和登入按鈕 */
+            <div className="space-y-3">
+              <motion.button
+                onClick={() => router.push('/membership')}
+                className="w-full py-3 px-6 rounded-lg font-semibold text-center transition-all bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg flex items-center justify-center"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <SafeIcon icon={FiCreditCard} className="mr-2" />
+                購買會員方案
+              </motion.button>
+              <motion.button
+                onClick={() => router.push('/login')}
+                className="w-full py-2 px-6 rounded-lg font-medium text-center transition-all bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 flex items-center justify-center"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <SafeIcon icon={FiLogIn} className="mr-2" />
+                已有帳號？登入
+              </motion.button>
+            </div>
+          ) : (
+            /* 已登入但無會員資格 - 顯示購買會員按鈕 */
+            <motion.button
+              onClick={() => router.push('/membership')}
+              className="w-full py-3 px-6 rounded-lg font-semibold text-center transition-all bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg flex items-center justify-center"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <SafeIcon icon={FiCreditCard} className="mr-2" />
+              購買會員方案享受免費預約
+            </motion.button>
+          )}
 
-          {/* User Status Info */}
+          {/* Status Info */}
           {!isUserEligible() && (
-            <div className="mt-3 text-center">
-              <p className="text-xs text-gray-500">
-                {!user 
-                  ? '登入後即可享受完整預約功能'
-                  : '購買會員方案享受免費課程預約'
-                }
-              </p>
+            <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="text-center">
+                <p className="text-sm text-blue-800 font-medium mb-1">
+                  {!user 
+                    ? '成為會員享受完整預約功能'
+                    : '升級會員資格'
+                  }
+                </p>
+                <p className="text-xs text-blue-600">
+                  {!user 
+                    ? '免費課程預約 • 專業師資指導 • 學習影片觀看'
+                    : '立即購買會員方案，享受免費課程預約服務'
+                  }
+                </p>
+              </div>
             </div>
           )}
         </div>

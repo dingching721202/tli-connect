@@ -2,7 +2,7 @@ import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // 添加图片域名配置
+  // 添加圖片域名配置
   images: {
     remotePatterns: [
       {
@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         pathname: '/avatar/**',
       },
     ],
+  },
+  // 國際化設定
+  i18n: {
+    locales: ['zh-TW'],
+    defaultLocale: 'zh-TW',
   },
 }
 

@@ -117,5 +117,17 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-geist-sans), 'Noto Sans TC', 'Microsoft JhengHei', '微軟正黑體', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  /* 優化中文字體渲染 */
+  .font-chinese {
+    font-family: 'Noto Sans TC', 'Microsoft JhengHei', '微軟正黑體', 'PingFang TC', sans-serif;
+  }
+  
+  /* 確保中文字體在不同設備上的最佳顯示 */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-geist-sans), 'Noto Sans TC', 'Microsoft JhengHei', '微軟正黑體', 'PingFang TC', sans-serif;
+    font-weight: 600;
   }
 }

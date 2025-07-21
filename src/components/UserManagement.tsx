@@ -688,9 +688,9 @@ const UserManagement: React.FC = () => {
     }
 
     if (newUser.phone) {
-      const phonePattern = /^09\d{8}$/;
-      if (!phonePattern.test(newUser.phone)) {
-        errors.push('手機號碼格式不正確（格式：09xxxxxxxx）');
+      const cleanPhone = newUser.phone.replace(/[- +()]/g, '');
+      if (cleanPhone.length < 8 || cleanPhone.length > 15) {
+        errors.push('手機號碼格式不正確（請輸入 8-15 位數字）');
       }
     }
 
@@ -910,9 +910,9 @@ const UserManagement: React.FC = () => {
     }
 
     if (editUser.phone) {
-      const phonePattern = /^09\d{8}$/;
-      if (!phonePattern.test(editUser.phone)) {
-        errors.push('手機號碼格式不正確（格式：09xxxxxxxx）');
+      const cleanPhone = editUser.phone.replace(/[- +()]/g, '');
+      if (cleanPhone.length < 8 || cleanPhone.length > 15) {
+        errors.push('手機號碼格式不正確（請輸入 8-15 位數字）');
       }
     }
 
