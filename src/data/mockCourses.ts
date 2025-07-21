@@ -3,7 +3,7 @@ export interface Course {
   title: string;
   date: string;
   timeSlot: string;
-  instructor: string;
+  teacher: string;
   price: number;
   description: string;
 }
@@ -15,7 +15,7 @@ export const mockCourses: Course[] = [
     title: "商務華語會話",
     date: "2025-06-03",
     timeSlot: "09:00-10:30",
-    instructor: "張老師",
+    teacher: "張老師",
     price: 0, // 會員免費
     description: "提升商務溝通技巧，學習專業商務用語及會議表達"
   },

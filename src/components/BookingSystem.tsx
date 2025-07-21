@@ -57,7 +57,7 @@ const BookingSystem: React.FC = () => {
         title: `課程 ${timeslot.id}`, // 可以後續從關聯的課程資料取得
         date: startTime.toISOString().split('T')[0],
         timeSlot: `${startTime.toTimeString().slice(0, 5)}-${endTime.toTimeString().slice(0, 5)}`,
-        instructor: '老師', // 可以後續從關聯的課程資料取得
+        teacher: '老師', // 可以後續從關聯的課程資料取得
         price: 0,
         description: `課程時段 ${timeslot.id}`,
         // 新增時段狀態資訊

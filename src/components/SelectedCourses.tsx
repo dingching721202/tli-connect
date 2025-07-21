@@ -166,7 +166,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
                               
                               <div className="flex items-center text-sm text-gray-600">
                                 <SafeIcon icon={FiUser} size={14} className="mr-2" />
-                                <span>{course.instructor}</span>
+                                <span>{course.teacher}</span>
                               </div>
                             </div>
 

@@ -32,7 +32,7 @@ interface Course {
   id: number;
   title?: string;
   courseName?: string;
-  instructor?: string;
+  teacher?: string;
   students?: string;
   studentName?: string;
   studentEmail?: string;
@@ -198,7 +198,7 @@ const Dashboard = () => {
       return {
         id: item.appointment.id,
         title: `課程 ${item.timeslot.id}`, // 可以後續改為實際課程名稱
-        instructor: '老師', // 可以後續改為實際老師名稱
+        teacher: '老師', // 可以後續改為實際老師名稱
         date: startTime.toISOString().split('T')[0],
         time: `${startTime.toTimeString().slice(0, 5)}-${endTime.toTimeString().slice(0, 5)}`,
         status,
@@ -321,7 +321,7 @@ const Dashboard = () => {
         studentName: '王小美',
         studentEmail: 'wang@taiwantech.com',
         courseName: '華語聽力強化',
-        instructor: '陳老師',
+        teacher: '陳老師',
         date: '2025-01-17',
         time: '16:00-17:30',
         status: 'upcoming' as const,
@@ -876,11 +876,11 @@ const Dashboard = () => {
                         <SafeIcon icon={FiClock} className="text-xs" />
                         <span>{course.time}</span>
                       </div>
-                      {/* Admin view: Show instructor */}
+                      {/* Admin view: Show teacher */}
                       {(user?.role === 'OPS' || user?.role === 'ADMIN') && (
                         <div className="flex items-center space-x-1">
                           <SafeIcon icon={FiUserCheck} className="text-xs" />
-                          <span>教師：{course.instructor}</span>
+                          <span>教師：{course.teacher}</span>
                         </div>
                       )}
                     </div>

@@ -57,7 +57,7 @@ export interface BookingCourse {
   title: string;
   date: string;
   timeSlot: string;
-  instructor: string;
+  teacher: string;
   price: number;
   description: string;
 }
@@ -349,7 +349,7 @@ export const convertToBookingCourses = (): BookingCourse[] => {
         title: course.title,
         date: session.date,
         timeSlot: `${session.startTime}-${session.endTime}`,
-        instructor: session.instructorName,
+        teacher: session.instructorName,
         price: 0, // 會員免費
         description: course.description
       });
@@ -373,7 +373,7 @@ export const searchCourses = (query: string): BookingCourse[] => {
   return allBookingCourses.filter(course => 
     course.title.toLowerCase().includes(searchLower) ||
     course.description.toLowerCase().includes(searchLower) ||
-    course.instructor.toLowerCase().includes(searchLower)
+    course.teacher.toLowerCase().includes(searchLower)
   );
 };
 

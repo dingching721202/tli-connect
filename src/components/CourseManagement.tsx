@@ -829,7 +829,7 @@ const CourseManagement = () => {
           <h2 className="text-2xl font-bold text-gray-900">課程管理</h2>
           <p className="text-sm text-gray-600 mt-1">創建和管理華語文課程</p>
         </div>
-        {!isInstructor && (
+        {!isTeacher && (
           <div className="flex space-x-3">
             <motion.button
               whileHover={{ scale: 1.02 }}
