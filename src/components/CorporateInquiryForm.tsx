@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
-import { createCorporateInquiry, CorporateInquiry } from '@/data/membershipPlans';
+import { createCorporateInquiry, CorporateInquiry } from '@/data/corporateInquiry';
 
 const {
   FiX, FiUser, FiBriefcase, FiUsers,

@@ -16,7 +16,7 @@ import {
   updateManagedCourse,
   deleteManagedCourse,
   addTeacher
-} from '@/data/courseData';
+} from '@/data/courseUtils';
 
 const {
   FiBook,

@@ -11,7 +11,7 @@ import {
   updateMembershipPlan,
   deleteMembershipPlan,
   duplicateMembershipPlan
-} from '@/data/membershipPlans';
+} from '@/data/membershipUtils';
 
 const {
   FiPlus, FiEdit2, FiTrash2, FiSave, FiX, FiCopy,

@@ -9,7 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { paymentService } from '@/services/paymentService';
 import { PaymentRequest } from '@/types';
-import { MembershipPlan, getPublishedMembershipPlans } from '@/data/membershipPlans';
+import { MembershipPlan, getPublishedMembershipPlans } from '@/data/membershipUtils';
 import GuestPurchaseModal, { UserData } from '@/components/GuestPurchaseModal';
 import { CreditCardData } from '@/components/CreditCardForm';
 import CorporateInquiryForm from '@/components/CorporateInquiryForm';

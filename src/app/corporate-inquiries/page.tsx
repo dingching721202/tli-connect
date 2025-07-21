@@ -12,7 +12,7 @@ import {
   updateCorporateInquiry, 
   deleteCorporateInquiry,
   CorporateInquiry 
-} from '@/data/membershipPlans';
+} from '@/data/corporateInquiry';
 
 const {
   FiUsers, FiBriefcase, FiMail, FiCalendar, FiDollarSign,
