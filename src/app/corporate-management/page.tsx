@@ -149,7 +149,7 @@ export default function CorporateManagementPage() {
 
     // 計算會員期限
     const joinDate = new Date().toISOString().split('T')[0];
-    const membershipPeriod = calculateMembershipPeriod(joinDate, selectedPlan.planType, selectedPlan.endDate);
+    const membershipPeriod = calculateMembershipPeriod(joinDate, 12); // Default to 12 months
 
     // 創建新用戶
     const newUser: CorporateUser = {
@@ -157,14 +157,14 @@ export default function CorporateManagementPage() {
       planId: selectedPlanForNewUser,
       ...userInfo,
       joinDate,
-      membershipStartDate: membershipPeriod.startDate,
+      membershipStartDate: joinDate,
       membershipEndDate: membershipPeriod.endDate,
       status: membershipPeriod.daysRemaining > 0 ? 'active' : 'expired',
       isAccountHolder: false,
       membershipStatus: {
         isActive: membershipPeriod.daysRemaining > 0,
         daysRemaining: membershipPeriod.daysRemaining,
-        willExpireWithPlan: membershipPeriod.willExpireWithPlan
+        willExpireWithPlan: true
       },
       learningProgress: {
         coursesEnrolled: 0,

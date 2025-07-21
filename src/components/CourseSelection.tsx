@@ -3,14 +3,26 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiClock, FiUser, FiBook } from 'react-icons/fi';
-import { Course } from '@/data/mockCourses';
+interface BookingCourse {
+  id: number;
+  title: string;
+  date: string;
+  timeSlot: string;
+  teacher: string;
+  price: number;
+  description: string;
+  capacity: number | undefined;
+  reserved_count: number | undefined;
+  status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
+  timeslot_id: number;
+}
 import SafeIcon from './common/SafeIcon';
 
 interface CourseSelectionProps {
   selectedDate: Date | null;
-  availableCourses: Course[];
-  selectedCourses: Course[];
-  onCourseSelect: (course: Course) => void;
+  availableCourses: BookingCourse[];
+  selectedCourses: BookingCourse[];
+  onCourseSelect: (course: BookingCourse) => void;
   onClose: () => void;
 }
 
@@ -31,13 +43,13 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
     });
   };
 
-  const isCourseSelected = (course: Course) => {
+  const isCourseSelected = (course: BookingCourse) => {
     return selectedCourses.some(sc => 
       `${sc.id}-${sc.timeSlot}` === `${course.id}-${course.timeSlot}`
     );
   };
 
-  const handleCourseClick = (course: Course) => {
+  const handleCourseClick = (course: BookingCourse) => {
     onCourseSelect(course);
   };
 

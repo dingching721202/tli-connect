@@ -22,7 +22,7 @@ export default function ReferralPage() {
     }
 
     // 所有用戶（包括管理員）都只能看到自己的推薦代碼
-    const codes = getReferralCodesByUser(user.id);
+    const codes = getReferralCodesByUser(user.id.toString());
     setReferralCodes(codes);
   }, [user, router]);
 
@@ -48,17 +48,17 @@ export default function ReferralPage() {
 
   const getTotalStats = () => {
     // 所有用戶都只看自己的統計數據
-    const userCodes = referralCodes.filter(code => code.userId === user?.id);
+    const userCodes = referralCodes.filter(code => code.referrerId === user?.id.toString());
     
     return {
-      totalReferrals: userCodes.reduce((sum, code) => sum + code.totalReferrals, 0),
-      successfulReferrals: userCodes.reduce((sum, code) => sum + code.successfulReferrals, 0),
-      totalCommission: userCodes.reduce((sum, code) => sum + code.totalCommission, 0),
-      monthlyCommission: userCodes.reduce((sum, code) => sum + code.monthlyCommission, 0)
+      totalReferrals: userCodes.reduce((sum, code) => sum + code.currentUses, 0),
+      successfulReferrals: userCodes.reduce((sum, code) => sum + code.currentUses, 0),
+      totalCommission: userCodes.reduce((sum, code) => sum + (code.currentUses * 100), 0),
+      monthlyCommission: userCodes.reduce((sum, code) => sum + (code.currentUses * 50), 0)
     };
   };
 
-  const userCodes = referralCodes.filter(code => code.userId === user?.id);
+  const userCodes = referralCodes.filter(code => code.referrerId === user?.id.toString());
   const stats = getTotalStats();
 
   if (!user) {
@@ -144,7 +144,7 @@ export default function ReferralPage() {
                         >
                           <div className="flex items-center justify-between mb-4">
                             <div>
-                              <h4 className="text-xl font-bold text-gray-900">{code.membershipPlanName}</h4>
+                              <h4 className="text-xl font-bold text-gray-900">推薦方案</h4>
                               <div className="text-sm text-gray-600 mt-1">
                                 代碼：<span className="font-mono text-blue-600 font-medium">{code.code}</span>
                               </div>
@@ -158,11 +158,11 @@ export default function ReferralPage() {
                                 {copiedCode === code.code ? <FiCheck className="w-5 h-5" /> : <FiCopy className="w-5 h-5" />}
                               </button>
                               <button
-                                onClick={() => handleCopyLink(code.referralLink)}
+                                onClick={() => handleCopyLink(`https://tliconnect.com/signup?ref=${code.code}`)}
                                 className="p-3 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
                                 title="複製推廣連結"
                               >
-                                {copiedCode === code.referralLink ? <FiCheck className="w-5 h-5" /> : <FiExternalLink className="w-5 h-5" />}
+                                {copiedCode === `https://tliconnect.com/signup?ref=${code.code}` ? <FiCheck className="w-5 h-5" /> : <FiExternalLink className="w-5 h-5" />}
                               </button>
                             </div>
                           </div>
@@ -170,19 +170,19 @@ export default function ReferralPage() {
                           <div className="grid grid-cols-2 gap-4">
                             <div className="bg-white rounded-lg p-4">
                               <div className="text-sm text-gray-600">總推薦</div>
-                              <div className="text-2xl font-bold text-gray-900">{code.totalReferrals}</div>
+                              <div className="text-2xl font-bold text-gray-900">{code.currentUses}</div>
                             </div>
                             <div className="bg-white rounded-lg p-4">
                               <div className="text-sm text-gray-600">成功推薦</div>
-                              <div className="text-2xl font-bold text-green-600">{code.successfulReferrals}</div>
+                              <div className="text-2xl font-bold text-green-600">{code.currentUses}</div>
                             </div>
                             <div className="bg-white rounded-lg p-4">
                               <div className="text-sm text-gray-600">總佣金</div>
-                              <div className="text-lg font-bold text-purple-600">NT${code.totalCommission.toLocaleString()}</div>
+                              <div className="text-lg font-bold text-purple-600">NT${(code.currentUses * 100).toLocaleString()}</div>
                             </div>
                             <div className="bg-white rounded-lg p-4">
                               <div className="text-sm text-gray-600">本月佣金</div>
-                              <div className="text-lg font-bold text-orange-600">NT${code.monthlyCommission.toLocaleString()}</div>
+                              <div className="text-lg font-bold text-orange-600">NT${(code.currentUses * 50).toLocaleString()}</div>
                             </div>
                           </div>
                         </motion.div>

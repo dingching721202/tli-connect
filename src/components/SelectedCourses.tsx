@@ -3,14 +3,26 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiTrash2, FiCalendar, FiClock, FiUser, FiCheck, FiCreditCard, FiLogIn } from 'react-icons/fi';
-import { Course } from '@/data/mockCourses';
+interface BookingCourse {
+  id: number;
+  title: string;
+  date: string;
+  timeSlot: string;
+  teacher: string;
+  price: number;
+  description: string;
+  capacity: number | undefined;
+  reserved_count: number | undefined;
+  status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
+  timeslot_id: number;
+}
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
 import { useRouter } from 'next/navigation';
 
 interface SelectedCoursesProps {
-  selectedCourses: Course[];
-  onRemoveCourse: (course: Course) => void;
+  selectedCourses: BookingCourse[];
+  onRemoveCourse: (course: BookingCourse) => void;
   onConfirmBooking: () => void;
   showPrice?: boolean;
 }
@@ -32,7 +44,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
     }
     groups[date].push(course);
     return groups;
-  }, {} as Record<string, Course[]>);
+  }, {} as Record<string, BookingCourse[]>);
 
   // Sort dates and courses within each date
   const sortedDates = Object.keys(groupedCourses).sort();
@@ -65,7 +77,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
     return selectedCourses.reduce((total, course) => total + course.price, 0);
   };
 
-  const handleRemoveCourse = (course: Course) => {
+  const handleRemoveCourse = (course: BookingCourse) => {
     onRemoveCourse(course);
   };
 

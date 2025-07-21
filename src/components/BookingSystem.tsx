@@ -6,7 +6,20 @@ import { useRouter } from 'next/navigation';
 import Calendar from './Calendar';
 import CourseSelection from './CourseSelection';
 import SelectedCourses from './SelectedCourses';
-import { Course } from '@/data/mockCourses';
+
+interface BookingCourse {
+  id: number;
+  title: string;
+  date: string;
+  timeSlot: string;
+  teacher: string;
+  price: number;
+  description: string;
+  capacity: number | undefined;
+  reserved_count: number | undefined;
+  status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
+  timeslot_id: number;
+}
 import { timeslotService, bookingService } from '@/services/dataService';
 import { ClassTimeslot } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,10 +31,10 @@ const BookingSystem: React.FC = () => {
   const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // July 2025
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedCourses, setSelectedCourses] = useState<Course[]>([]);
-  const [availableCourses, setAvailableCourses] = useState<Course[]>([]);
+  const [selectedCourses, setSelectedCourses] = useState<BookingCourse[]>([]);
+  const [availableCourses, setAvailableCourses] = useState<BookingCourse[]>([]);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
-  const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [allCourses, setAllCourses] = useState<BookingCourse[]>([]);
   useState<ClassTimeslot[]>([]);
   const [loading, setLoading] = useState(true);
   useState(false);
@@ -47,7 +60,7 @@ const BookingSystem: React.FC = () => {
   }, []);
 
   // 將 ClassTimeslot 轉換為 Course 格式
-  const convertTimeslotsToCourses = async (timeslots: ClassTimeslot[]): Promise<Course[]> => {
+  const convertTimeslotsToCourses = async (timeslots: ClassTimeslot[]) => {
     return timeslots.map(timeslot => {
       const startTime = new Date(timeslot.start_time);
       const endTime = new Date(timeslot.end_time);
@@ -65,11 +78,11 @@ const BookingSystem: React.FC = () => {
         reserved_count: timeslot.reserved_count,
         status: timeslot.status,
         timeslot_id: timeslot.id
-      } as Course & { capacity: number; reserved_count: number; status: string; timeslot_id: number };
+      } as BookingCourse;
     });
   };
 
-  const handleDateSelect = (date: Date, specificCourse?: Course) => {
+  const handleDateSelect = (date: Date, specificCourse?: BookingCourse) => {
     setSelectedDate(date);
     const dateStr = date.toISOString().split('T')[0];
     
@@ -77,11 +90,11 @@ const BookingSystem: React.FC = () => {
     const coursesForDate = allCourses.filter(course => {
       if (course.date !== dateStr) return false;
       
-      const courseWithStatus = course as Course & { capacity: number; reserved_count: number; status: string; timeslot_id: number };
+      const courseWithStatus = course;
       
       // 檢查時段狀態和容量 (US05.1)
       if (courseWithStatus.status !== 'CREATED') return false;
-      if (courseWithStatus.reserved_count >= courseWithStatus.capacity) return false;
+      if ((courseWithStatus.reserved_count || 0) >= (courseWithStatus.capacity || 0)) return false;
       
       // 檢查是否在24小時內 (US05.3)
       const courseDateTime = new Date(`${course.date} ${course.timeSlot.split('-')[0]}`);
@@ -107,7 +120,7 @@ const BookingSystem: React.FC = () => {
     }
   };
 
-  const handleCourseSelect = (course: Course) => {
+  const handleCourseSelect = (course: BookingCourse) => {
     const courseKey = `${course.id}-${course.timeSlot}`;
     const isSelected = selectedCourses.some(c => `${c.id}-${c.timeSlot}` === courseKey);
     
@@ -118,12 +131,12 @@ const BookingSystem: React.FC = () => {
     }
   };
 
-  const handleCourseToggle = (course: Course) => {
+  const handleCourseToggle = (course: BookingCourse) => {
     const courseKey = `${course.id}-${course.timeSlot}`;
     setSelectedCourses(prev => prev.filter(c => `${c.id}-${c.timeSlot}` !== courseKey));
   };
 
-  const handleRemoveCourse = (courseToRemove: Course) => {
+  const handleRemoveCourse = (courseToRemove: BookingCourse) => {
     const courseKey = `${courseToRemove.id}-${courseToRemove.timeSlot}`;
     setSelectedCourses(prev => prev.filter(c => `${c.id}-${c.timeSlot}` !== courseKey));
   };
@@ -153,7 +166,7 @@ const BookingSystem: React.FC = () => {
       
       // 提取 timeslot IDs (US06.1)
       const timeslotIds = selectedCourses.map(course => {
-        const courseWithStatus = course as Course & { timeslot_id: number };
+        const courseWithStatus = course;
         return courseWithStatus.timeslot_id;
       });
 
@@ -167,7 +180,7 @@ const BookingSystem: React.FC = () => {
         resultMessage += `🎉 成功預約 ${result.success.length} 堂課程：\n`;
         result.success.forEach(booking => {
           const course = selectedCourses.find(c => {
-            const courseWithStatus = c as Course & { timeslot_id: number };
+            const courseWithStatus = c;
             return courseWithStatus.timeslot_id === booking.timeslot_id;
           });
           if (course) {
@@ -180,7 +193,7 @@ const BookingSystem: React.FC = () => {
         resultMessage += `\n❌ 無法預約 ${result.failed.length} 堂課程：\n`;
         result.failed.forEach(failure => {
           const course = selectedCourses.find(c => {
-            const courseWithStatus = c as Course & { timeslot_id: number };
+            const courseWithStatus = c;
             return courseWithStatus.timeslot_id === failure.timeslot_id;
           });
           if (course) {

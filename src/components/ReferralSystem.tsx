@@ -20,7 +20,7 @@ const ReferralSystem: React.FC<ReferralSystemProps> = ({ isOpen, onClose }) => {
   useEffect(() => {
     if (user) {
       // 所有用戶（包括管理員）都只能看到自己的推薦代碼
-      const codes = getReferralCodesByUser(user.id);
+      const codes = getReferralCodesByUser(user.id.toString());
       setReferralCodes(codes);
     }
   }, [user]);
@@ -48,17 +48,17 @@ const ReferralSystem: React.FC<ReferralSystemProps> = ({ isOpen, onClose }) => {
 
   const getTotalStats = () => {
     // 所有用戶都只看自己的統計數據
-    const userCodes = referralCodes.filter(code => code.userId === user?.id);
+    const userCodes = referralCodes.filter(code => code.referrerId === user?.id.toString());
     
     return {
-      totalReferrals: userCodes.reduce((sum, code) => sum + code.totalReferrals, 0),
-      successfulReferrals: userCodes.reduce((sum, code) => sum + code.successfulReferrals, 0),
-      totalCommission: userCodes.reduce((sum, code) => sum + code.totalCommission, 0),
-      monthlyCommission: userCodes.reduce((sum, code) => sum + code.monthlyCommission, 0)
+      totalReferrals: userCodes.reduce((sum, code) => sum + code.currentUses, 0),
+      successfulReferrals: userCodes.reduce((sum, code) => sum + code.currentUses, 0),
+      totalCommission: userCodes.length * 100, // Placeholder calculation
+      monthlyCommission: 0 // Placeholder
     };
   };
 
-  const userCodes = referralCodes.filter(code => code.userId === user?.id);
+  const userCodes = referralCodes.filter(code => code.referrerId === user?.id.toString());
   const stats = getTotalStats();
 
   if (!isOpen) return null;
@@ -129,7 +129,7 @@ const ReferralSystem: React.FC<ReferralSystemProps> = ({ isOpen, onClose }) => {
                       <div key={code.id} className="bg-gray-50 rounded-lg p-4 border">
                         <div className="flex items-center justify-between mb-3">
                           <div>
-                            <h4 className="font-semibold text-gray-900">{code.membershipPlanName}</h4>
+                            <h4 className="font-semibold text-gray-900">推薦方案 {code.id}</h4>
                             <div className="text-sm text-gray-600">
                               代碼：<span className="font-mono">{code.code}</span>
                             </div>
@@ -143,11 +143,11 @@ const ReferralSystem: React.FC<ReferralSystemProps> = ({ isOpen, onClose }) => {
                               {copiedCode === code.code ? <FiCheck className="w-4 h-4" /> : <FiCopy className="w-4 h-4" />}
                             </button>
                             <button
-                              onClick={() => handleCopyLink(code.referralLink)}
+                              onClick={() => handleCopyLink(`https://example.com/ref/${code.code}`)}
                               className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
                               title="複製推廣連結"
                             >
-                              {copiedCode === code.referralLink ? <FiCheck className="w-4 h-4" /> : <FiExternalLink className="w-4 h-4" />}
+                              {copiedCode === `https://example.com/ref/${code.code}` ? <FiCheck className="w-4 h-4" /> : <FiExternalLink className="w-4 h-4" />}
                             </button>
                           </div>
                         </div>
@@ -155,19 +155,19 @@ const ReferralSystem: React.FC<ReferralSystemProps> = ({ isOpen, onClose }) => {
                         <div className="grid grid-cols-2 gap-4 text-sm">
                           <div>
                             <div className="text-gray-600">總推薦</div>
-                            <div className="font-semibold">{code.totalReferrals}</div>
+                            <div className="font-semibold">{code.currentUses}</div>
                           </div>
                           <div>
                             <div className="text-gray-600">成功推薦</div>
-                            <div className="font-semibold text-green-600">{code.successfulReferrals}</div>
+                            <div className="font-semibold text-green-600">{code.currentUses}</div>
                           </div>
                           <div>
                             <div className="text-gray-600">總佣金</div>
-                            <div className="font-semibold">NT${code.totalCommission.toLocaleString()}</div>
+                            <div className="font-semibold">NT${(code.currentUses * 100).toLocaleString()}</div>
                           </div>
                           <div>
                             <div className="text-gray-600">本月佣金</div>
-                            <div className="font-semibold text-blue-600">NT${code.monthlyCommission.toLocaleString()}</div>
+                            <div className="font-semibold text-blue-600">NT$0</div>
                           </div>
                         </div>
                       </div>

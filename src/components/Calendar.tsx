@@ -3,16 +3,28 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiChevronLeft, FiChevronRight, FiCalendar } from 'react-icons/fi';
-import { Course } from '@/data/mockCourses';
+interface BookingCourse {
+  id: number;
+  title: string;
+  date: string;
+  timeSlot: string;
+  teacher: string;
+  price: number;
+  description: string;
+  capacity: number | undefined;
+  reserved_count: number | undefined;
+  status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
+  timeslot_id: number;
+}
 import SafeIcon from './common/SafeIcon';
 
 interface CalendarProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
-  onDateSelect: (date: Date, course?: Course) => void;
-  courses: Course[];
-  selectedCourses: Course[];
-  onCourseToggle: (course: Course) => void;
+  onDateSelect: (date: Date, course?: BookingCourse) => void;
+  courses: BookingCourse[];
+  selectedCourses: BookingCourse[];
+  onCourseToggle: (course: BookingCourse) => void;
 }
 
 const Calendar: React.FC<CalendarProps> = ({
@@ -99,7 +111,7 @@ const Calendar: React.FC<CalendarProps> = ({
     }
   };
 
-  const handleCourseClick = (course: Course, date: Date, event: React.MouseEvent) => {
+  const handleCourseClick = (course: BookingCourse, date: Date, event: React.MouseEvent) => {
     event.stopPropagation();
     
     // Check if course is already selected
@@ -121,7 +133,7 @@ const Calendar: React.FC<CalendarProps> = ({
     onDateSelect(date);
   };
 
-  const renderCourseItem = (course: Course, date: Date, index: number) => {
+  const renderCourseItem = (course: BookingCourse, date: Date, index: number) => {
     const isSelected = selectedCourses.some(sc => 
       `${sc.id}-${sc.timeSlot}` === `${course.id}-${course.timeSlot}`
     );

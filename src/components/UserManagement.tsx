@@ -257,7 +257,7 @@ const UserManagement: React.FC = () => {
         {
           id: 1,
           name: '企業基礎方案',
-          type: 'primary',
+          type: 'corporate',
           duration: 12,
           durationType: 'annual',
           purchaseDate: '2024-01-15',
@@ -328,9 +328,9 @@ const UserManagement: React.FC = () => {
       status: 'active',
       membershipPlans: [
         {
-          id: 4,
+          id: '4',
           name: '企業標準方案',
-          type: 'primary',
+          type: 'corporate',
           duration: 3,
           durationType: 'quarterly',
           purchaseDate: '2024-02-01',
@@ -343,7 +343,7 @@ const UserManagement: React.FC = () => {
           features: ['Standard courses']
         },
         {
-          id: 5,
+          id: '5',
           name: '團隊協作工具',
           type: 'addon',
           duration: 3,
@@ -465,7 +465,7 @@ const UserManagement: React.FC = () => {
     enterpriseAccounts.forEach(account => {
       // 找到對應的企業來獲取方案類型
       const company = companies.find(comp => comp.id === account.id);
-      const primaryPlan = company?.membershipPlans.find(plan => plan.type === 'primary');
+      const primaryPlan = company?.membershipPlans?.find(plan => plan.type === 'primary');
       const planTypeName = primaryPlan?.duration === 3 ? '企業季方案' : '企業年方案';
       
       account.subAccounts.forEach(subAccount => {
@@ -734,17 +734,17 @@ const UserManagement: React.FC = () => {
       const company = companies.find(comp => comp.id === parseInt(newUser.companyId || '0'));
       if (company) {
         // 根據企業的主要方案類型來決定顯示的方案名稱
-        const primaryPlan = company.membershipPlans.find(plan => plan.type === 'primary');
+        const primaryPlan = company.membershipPlans?.find(plan => plan.type === 'primary');
         const planTypeName = primaryPlan?.duration === 3 ? '企業季方案' : '企業年方案';
         
         membershipData = {
           plan: 'corporate',
           planName: planTypeName,
-          startDate: company.startDate,
-          endDate: company.endDate,
+          startDate: company.startDate || new Date().toISOString().split('T')[0],
+          endDate: company.endDate || new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           price: 0,
           autoRenewal: true,
-          daysRemaining: Math.ceil((new Date(company.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)),
+          daysRemaining: company.endDate ? Math.ceil((new Date(company.endDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0,
           isExpiringSoon: false
         };
         membershipStatus = 'active';
@@ -957,7 +957,7 @@ const UserManagement: React.FC = () => {
         } else if (editUser.role === 'STUDENT' && editUser.membershipType === 'corporate') {
           // 根據企業的主要方案類型來決定顯示的方案名稱
           const company = companies.find(comp => comp.id === parseInt(editUser.companyId || (user.companyId?.toString() ?? '0')));
-          const primaryPlan = company?.membershipPlans.find(plan => plan.type === 'primary');
+          const primaryPlan = company?.membershipPlans?.find(plan => plan.type === 'primary');
           const planTypeName = primaryPlan?.duration === 3 ? '企業季方案' : '企業年方案';
           
           updatedMembership = {
@@ -1057,7 +1057,7 @@ const UserManagement: React.FC = () => {
     }
     
     try {
-      const result = addCompany(newCompany);
+      const result = addCompany(newCompany as any);
       
       // 更新企業列表
       setCompanies(getCompanies());
