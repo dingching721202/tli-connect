@@ -42,7 +42,7 @@ export const mockCourses: Course[] = [
     title: "華語聽力強化",
     date: "2025-06-05",
     timeSlot: "15:00-16:30",
-    instructor: "李老師",
+    teacher: "李老師",
     price: 0,
     description: "華語聽力技巧訓練與模擬測驗，提升聽力理解能力"
   },
@@ -61,7 +61,7 @@ export const mockCourses: Course[] = [
     title: "商務華語簡報",
     date: "2025-06-08",
     timeSlot: "13:00-14:30",
-    instructor: "吳老師",
+    teacher: "吳老師",
     price: 0,
     description: "華語商務簡報技巧與實戰演練，提升職場溝通能力"
   },
@@ -70,7 +70,7 @@ export const mockCourses: Course[] = [
     title: "華語發音矯正",
     date: "2025-06-08",
     timeSlot: "16:00-17:30",
-    instructor: "劉老師",
+    teacher: "劉老師",
     price: 0,
     description: "華語發音技巧與聲調矯正，打造標準普通話"
   },
@@ -80,7 +80,7 @@ export const mockCourses: Course[] = [
     title: "旅遊華語",
     date: "2025-06-12",
     timeSlot: "09:00-10:30",
-    instructor: "黃老師",
+    teacher: "林老師",
     price: 0,
     description: "旅遊常用華語對話與情境練習，輕鬆暢遊華語世界"
   },
