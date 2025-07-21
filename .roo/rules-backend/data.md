@@ -1,0 +1,1 @@
+1. Never change the data schema setting in src/data
