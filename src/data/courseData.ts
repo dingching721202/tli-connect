@@ -41,7 +41,7 @@ export interface ManagedCourse {
   generatedSessions: GeneratedSession[];
 }
 
-export interface Instructor {
+export interface Teacher {
   id: number;
   name: string;
   email: string;
@@ -64,12 +64,12 @@ export interface BookingCourse {
 
 // 全局數據存儲
 let managedCourses: ManagedCourse[] = [];
-let instructors: Instructor[] = [];
+let teachers: Teacher[] = [];
 
 // 初始化數據
 const initializeData = () => {
   // 初始化教師數據
-  instructors = [
+  teachers = [
     {
       id: 1,
       name: '張老師',
@@ -231,8 +231,8 @@ const generateCourseSessions = (course: ManagedCourse): GeneratedSession[] => {
         // 檢查當前日期是否是指定的上課日
         if (schedule.weekdays.includes(dayOfWeek)) {
           // 獲取教師資訊
-          const instructor = instructors.find(i => i.id === parseInt(schedule.instructorId.toString()));
-          const instructorName = instructor ? instructor.name : '未指定';
+          const teacher = teachers.find(i => i.id === parseInt(schedule.instructorId.toString()));
+          const teacherName = teacher ? teacher.name : '未指定';
           
           // 獲取對應的課程內容
           const sessionContent = sessions[currentSessionIndex % sessions.length];
@@ -243,7 +243,7 @@ const generateCourseSessions = (course: ManagedCourse): GeneratedSession[] => {
             startTime: schedule.startTime,
             endTime: schedule.endTime,
             instructorId: schedule.instructorId,
-            instructorName,
+            instructorName: teacherName,
             classroom: sessionContent.classroom,
             materials: sessionContent.materials
           });
@@ -321,18 +321,18 @@ export const deleteManagedCourse = (id: number): boolean => {
 };
 
 // 獲取教師列表
-export const getInstructors = (): Instructor[] => {
-  return instructors;
+export const getTeachers = (): Teacher[] => {
+  return teachers;
 };
 
 // 新增教師
-export const addInstructor = (instructor: Omit<Instructor, 'id'>): Instructor => {
-  const newInstructor = {
-    ...instructor,
-    id: Math.max(0, ...instructors.map(i => i.id)) + 1
+export const addTeacher = (teacher: Omit<Teacher, 'id'>): Teacher => {
+  const newTeacher = {
+    ...teacher,
+    id: Math.max(0, ...teachers.map(i => i.id)) + 1
   };
-  instructors.push(newInstructor);
-  return newInstructor;
+  teachers.push(newTeacher);
+  return newTeacher;
 };
 
 // 轉換為預約系統格式的函數

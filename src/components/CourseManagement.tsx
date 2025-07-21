@@ -10,11 +10,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   ManagedCourse,
   getManagedCourses,
-  getInstructors,
+  getTeachers,
   addManagedCourse,
   updateManagedCourse,
   deleteManagedCourse,
-  addInstructor
+  addTeacher
 } from '@/data/courseData';
 
 const {
@@ -55,7 +55,7 @@ interface GeneratedSession {
 // 使用統一的 ManagedCourse 類型
 type Course = ManagedCourse;
 
-interface Instructor {
+interface Teacher {
   id: number;
   name: string;
   email: string;
@@ -65,7 +65,7 @@ interface Instructor {
   courses: number[];
 }
 
-interface NewInstructor {
+interface NewTeacher {
   name: string;
   email: string;
   expertise: string;
@@ -74,14 +74,14 @@ interface NewInstructor {
 
 const CourseManagement = () => {
   const { user } = useAuth();
-  const isInstructor = user?.role === 'TEACHER';
+  const isTeacher = user?.role === 'TEACHER';
   
   // 主要狀態
   const [courses, setCourses] = useState<Course[]>([]);
-  const [instructors, setInstructors] = useState<Instructor[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [showAddCourseModal, setShowAddCourseModal] = useState(false);
   const [showEditCourseModal, setShowEditCourseModal] = useState(false);
-  const [showAddInstructorModal, setShowAddInstructorModal] = useState(false);
+  const [showAddTeacherModal, setShowAddTeacherModal] = useState(false);
   const [, setEditingCourse] = useState<Course | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | 'draft' | 'active' | 'completed'>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -116,7 +116,7 @@ const CourseManagement = () => {
   });
 
   // 新教師表單狀態
-  const [newInstructor, setNewInstructor] = useState<NewInstructor>({
+  const [newTeacher, setNewTeacher] = useState<NewTeacher>({
     name: '',
     email: '',
     expertise: '',
@@ -127,10 +127,10 @@ const CourseManagement = () => {
   useEffect(() => {
     const loadData = () => {
       const coursesData = getManagedCourses();
-      const instructorsData = getInstructors();
+      const teachersData = getTeachers();
       
-      // 如果是講師，只顯示被指派的課程
-      if (isInstructor && user) {
+      // 如果是教師，只顯示自己的課程
+      if (isTeacher && user) {
         const assignedCourses = coursesData.filter(course => 
           course.globalSchedules.some(schedule => 
             schedule.instructorId === user.id || 
@@ -142,10 +142,10 @@ const CourseManagement = () => {
         setCourses(coursesData);
       }
       
-      setInstructors(instructorsData);
+      setTeachers(teachersData);
     };
     loadData();
-  }, [isInstructor, user]);
+  }, [isTeacher, user]);
 
   // 自動計算結束日期函數
   const calculateEndDate = (courseData?: Course) => {
@@ -342,16 +342,16 @@ const CourseManagement = () => {
   };
 
   // 新增教師
-  const handleAddInstructor = () => {
-    if (!newInstructor.name || !newInstructor.email) {
+  const handleAddTeacher = () => {
+    if (!newTeacher.name || !newTeacher.email) {
       alert('請填寫教師姓名和電子郵件');
       return;
     }
     
-    const newInstructorData = addInstructor({
-      name: newInstructor.name,
-      email: newInstructor.email,
-      expertise: newInstructor.expertise,
+    const newTeacherData = addTeacher({
+      name: newTeacher.name,
+      email: newTeacher.email,
+      expertise: newTeacher.expertise,
       availability: {
         '1': ['09:00-17:00'],
         '2': ['09:00-17:00'],
@@ -363,9 +363,9 @@ const CourseManagement = () => {
       courses: []
     });
     
-    setInstructors(prev => [...prev, newInstructorData]);
-    setShowAddInstructorModal(false);
-    setNewInstructor({
+    setTeachers(prev => [...prev, newTeacherData]);
+    setShowAddTeacherModal(false);
+    setNewTeacher({
       name: '',
       email: '',
       expertise: '',
@@ -940,7 +940,7 @@ const CourseManagement = () => {
                   </div>
                 </div>
 
-                {!isInstructor && (
+                {!isTeacher && (
                   <div className="flex justify-between">
                     <div className="flex space-x-2">
                       <motion.button
@@ -1002,15 +1002,15 @@ const CourseManagement = () => {
       <CourseManagementModals
         showAddCourseModal={showAddCourseModal}
         showEditCourseModal={showEditCourseModal}
-        showAddInstructorModal={showAddInstructorModal}
+        showAddTeacherModal={showAddTeacherModal}
         setShowAddCourseModal={setShowAddCourseModal}
         setShowEditCourseModal={setShowEditCourseModal}
-        setShowAddInstructorModal={setShowAddInstructorModal}
+        setShowAddTeacherModal={setShowAddTeacherModal}
         newCourse={newCourse}
         setNewCourse={setNewCourse}
-        newInstructor={newInstructor}
-        setNewInstructor={setNewInstructor}
-        instructors={instructors}
+        newTeacher={newTeacher}
+        setNewTeacher={setNewTeacher}
+        teachers={teachers}
         handleTotalSessionsChange={handleTotalSessionsChange}
         handleExcludeDate={handleExcludeDate}
         calculateEndDate={calculateEndDate}
@@ -1022,7 +1022,7 @@ const CourseManagement = () => {
         generateCourseSessions={generateCourseSessions}
         handleSubmitCourse={handleSubmitCourse}
         handleUpdateCourse={handleUpdateCourse}
-        handleAddInstructor={handleAddInstructor}
+        handleAddTeacher={handleAddTeacher}
       />
     </div>
   );

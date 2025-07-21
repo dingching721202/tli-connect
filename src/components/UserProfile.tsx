@@ -124,7 +124,8 @@ const UserProfile = () => {
     switch (role) {
       case 'STUDENT': return 'bg-blue-100 text-blue-800';
       case 'TEACHER': return 'bg-green-100 text-green-800';
-      case 'OPS': return 'bg-purple-100 text-purple-800';
+      case 'OPS': return 'bg-orange-100 text-orange-800';
+      case 'ADMIN': return 'bg-purple-100 text-purple-800';
       case 'CORPORATE_CONTACT': return 'bg-indigo-100 text-indigo-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -134,8 +135,9 @@ const UserProfile = () => {
     switch (role) {
       case 'STUDENT': return '學生';
       case 'TEACHER': return '教師';
-      case 'OPS': return '管理員';
-      case 'CORPORATE_CONTACT': return '企業聯絡人';
+      case 'OPS': return '營運';
+      case 'ADMIN': return '管理員';
+      case 'CORPORATE_CONTACT': return '企業窗口';
       default: return '未知';
     }
   };

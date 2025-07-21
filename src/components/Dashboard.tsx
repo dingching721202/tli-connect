@@ -136,12 +136,19 @@ const Dashboard = () => {
     }
 
 
-    if (user?.role === 'OPS') {
+    if (user?.role === 'OPS' || user?.role === 'ADMIN') {
       return [
         { label: '總用戶數', value: '1,234', icon: FiUsers },
         { label: '總課程數', value: '156', icon: FiBook },
         { label: '本月預約', value: '89', icon: FiCalendar },
         { label: '系統使用率', value: '92%', icon: FiBarChart }
+      ];
+    } else if (user?.role === 'CORPORATE_CONTACT') {
+      return [
+        { label: '企業員工數', value: '45', icon: FiUsers },
+        { label: '已用名額', value: '32/50', icon: FiUserCheck },
+        { label: '本月課程', value: '28', icon: FiCalendar },
+        { label: '方案狀態', value: '已啟用', icon: FiCheckCircle }
       ];
     }
 
@@ -162,7 +169,9 @@ const Dashboard = () => {
     switch (user?.role) {
       case 'STUDENT': return '歡迎使用 TLI Connect 課程預約系統，開始您的學習之旅！';
       case 'TEACHER': return '歡迎回到教師管理面板，管理您的課程與學生。';
-      case 'OPS': return '歡迎使用管理員面板，管理系統設定與用戶。';
+      case 'OPS': return '歡迎使用營運面板，管理系統設定與用戶。';
+      case 'ADMIN': return '歡迎使用管理員面板，您擁有系統最高權限。';
+      case 'CORPORATE_CONTACT': return '歡迎使用企業窗口管理面板，管理您的企業會員與課程安排。';
       default: return '歡迎使用 TLI Connect 系統！';
     }
   };
@@ -208,7 +217,7 @@ const Dashboard = () => {
   };
 
   // Mock instructor courses data (similar to student booking system)
-  const getInstructorCourses = (): Course[] => {
+  const getTeacherCourses = (): Course[] => {
     const courses: Course[] = [
       {
         id: 1,
@@ -272,6 +281,72 @@ const Dashboard = () => {
       if (a.status !== 'completed' && b.status === 'completed') return -1;
       return a.daysFromNow - b.daysFromNow;
     });
+  };
+
+  // 企業窗口專用：企業員工課程數據
+  const getCorporateCourses = (): Course[] => {
+    return [
+      {
+        id: 1,
+        studentName: '張小明',
+        studentEmail: 'zhang@taiwantech.com',
+        courseName: '商務華語會話',
+        instructor: '張老師',
+        date: '2025-01-15',
+        time: '14:00-15:30',
+        status: 'upcoming' as const,
+        classroom: '教室A',
+        materials: '商務會話教材',
+        daysFromNow: 3,
+        membershipType: 'corporate' as const,
+        companyName: '台灣科技股份有限公司'
+      },
+      {
+        id: 2,
+        studentName: '李小華',
+        studentEmail: 'li@taiwantech.com',
+        courseName: '華語文法精修',
+        instructor: '王老師',
+        date: '2025-01-16',
+        time: '10:00-11:30',
+        status: 'upcoming' as const,
+        classroom: '教室B',
+        materials: '文法練習本',
+        daysFromNow: 4,
+        membershipType: 'corporate' as const,
+        companyName: '台灣科技股份有限公司'
+      },
+      {
+        id: 3,
+        studentName: '王小美',
+        studentEmail: 'wang@taiwantech.com',
+        courseName: '華語聽力強化',
+        instructor: '陳老師',
+        date: '2025-01-17',
+        time: '16:00-17:30',
+        status: 'upcoming' as const,
+        classroom: '教室C',
+        materials: '聽力訓練CD',
+        daysFromNow: 5,
+        membershipType: 'corporate' as const,
+        companyName: '台灣科技股份有限公司'
+      },
+      {
+        id: 4,
+        studentName: '林設計師',
+        studentEmail: 'lin@taiwantech.com',
+        courseName: '商務華語會話',
+        instructor: '張老師',
+        date: '2025-01-10',
+        time: '14:00-15:30',
+        status: 'completed' as const,
+        classroom: '教室A',
+        materials: '商務會話教材',
+        daysFromNow: -2,
+        membershipType: 'corporate' as const,
+        companyName: '台灣科技股份有限公司'
+      }
+    ];
   };
 
   // 管理員專用：全體會員預約數據
@@ -434,7 +509,7 @@ const Dashboard = () => {
   };
 
   const handleRequestLeave = (courseId: number) => {
-    const course = allInstructorCourses.find(c => c.id === courseId);
+    const course = allTeacherCourses.find(c => c.id === courseId);
     if (course) {
       setSelectedCourse(course);
       setShowLeaveModal(true);
@@ -511,8 +586,9 @@ const Dashboard = () => {
 
   const quickStats = getQuickStats();
   const allBookedCourses = user?.role === 'STUDENT' ? getBookedCourses() : [];
-  const allInstructorCourses = user?.role === 'TEACHER' ? getInstructorCourses() : [];
-  const allMemberBookings = user?.role === 'OPS' ? getAllMemberBookings() : [];
+  const allTeacherCourses = user?.role === 'TEACHER' ? getTeacherCourses() : [];
+  const allMemberBookings = (user?.role === 'OPS' || user?.role === 'ADMIN') ? getAllMemberBookings() : [];
+  const allCorporateCourses = user?.role === 'CORPORATE_CONTACT' ? getCorporateCourses() : [];
 
   // Filter courses based on selected tab
   const filteredCourses = user?.role === 'STUDENT'
@@ -524,32 +600,48 @@ const Dashboard = () => {
         }
       })
     : user?.role === 'TEACHER'
-    ? allInstructorCourses.filter(course => {
+    ? allTeacherCourses.filter(course => {
         if (courseTab === 'upcoming') {
           return course.status === 'upcoming';
         } else {
           return course.status === 'completed';
         }
       })
-    : allMemberBookings.filter(booking => {
-        if (courseTab === 'upcoming') {
-          return booking.status === 'upcoming';
-        } else {
-          return booking.status === 'completed';
-        }
-      });
+    : user?.role === 'CORPORATE_CONTACT'
+      ? allCorporateCourses.filter(course => {
+          if (courseTab === 'upcoming') {
+            return course.status === 'upcoming';
+          } else {
+            return course.status === 'completed';
+          }
+        })
+      : allMemberBookings.filter(booking => {
+          if (courseTab === 'upcoming') {
+            return booking.status === 'upcoming';
+          } else {
+            return booking.status === 'completed';
+          }
+        });
 
   const upcomingCount = user?.role === 'STUDENT'
     ? allBookedCourses.filter(c => c.status === 'upcoming').length
     : user?.role === 'TEACHER'
-    ? allInstructorCourses.filter(c => c.status === 'upcoming').length
-    : allMemberBookings.filter(b => b.status === 'upcoming').length;
+    ? allTeacherCourses.filter(c => c.status === 'upcoming').length
+    : user?.role === 'CORPORATE_CONTACT'
+    ? allCorporateCourses.filter(c => c.status === 'upcoming').length
+    : (user?.role === 'OPS' || user?.role === 'ADMIN')
+    ? allMemberBookings.filter(b => b.status === 'upcoming').length
+    : 0;
 
   const completedCount = user?.role === 'STUDENT'
     ? allBookedCourses.filter(c => c.status === 'completed').length
     : user?.role === 'TEACHER'
-    ? allInstructorCourses.filter(c => c.status === 'completed').length
-    : allMemberBookings.filter(b => b.status === 'completed').length;
+    ? allTeacherCourses.filter(c => c.status === 'completed').length
+    : user?.role === 'CORPORATE_CONTACT'
+    ? allCorporateCourses.filter(c => c.status === 'completed').length
+    : (user?.role === 'OPS' || user?.role === 'ADMIN')
+    ? allMemberBookings.filter(b => b.status === 'completed').length
+    : 0;
 
   return (
     <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
@@ -583,6 +675,53 @@ const Dashboard = () => {
           )}
         </div>
       </motion.div>
+
+      {/* Corporate Management for Corporate Contact */}
+      {user?.role === 'CORPORATE_CONTACT' && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">企業方案管理</h2>
+            <Link 
+              href="/corporate-management"
+              className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center space-x-1"
+            >
+              <span>查看詳細</span>
+              <SafeIcon icon={FiExternalLink} size={14} />
+            </Link>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Company Info */}
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h3 className="font-medium text-blue-900 mb-2">企業資訊</h3>
+              <div className="space-y-2 text-sm text-blue-700">
+                <div>公司名稱：台灣科技股份有限公司</div>
+                <div>方案類型：企業方案 (50人)</div>
+                <div>方案狀態：<span className="text-green-600 font-medium">已啟用</span></div>
+                <div>到期日期：2025-07-01</div>
+              </div>
+            </div>
+            
+            {/* Usage Stats */}
+            <div className="bg-green-50 rounded-lg p-4">
+              <h3 className="font-medium text-green-900 mb-2">使用統計</h3>
+              <div className="space-y-2 text-sm text-green-700">
+                <div>已註冊員工：32/50 人</div>
+                <div>本月課程：28 堂</div>
+                <div>使用率：64%</div>
+                <div className="w-full bg-green-200 rounded-full h-2 mt-2">
+                  <div className="bg-green-600 h-2 rounded-full" style={{ width: '64%' }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Membership Card Management for Students */}
       {user?.role === 'STUDENT' && (
@@ -626,7 +765,7 @@ const Dashboard = () => {
 
 
       {/* Course Bookings Dashboard - 手機優化 */}
-      {(user?.role === 'STUDENT' || user?.role === 'TEACHER' || user?.role === 'OPS') && (
+      {(user?.role === 'STUDENT' || user?.role === 'TEACHER' || user?.role === 'OPS' || user?.role === 'CORPORATE_CONTACT' || user?.role === 'ADMIN') && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -640,6 +779,10 @@ const Dashboard = () => {
                 ? '我的課程預約'
                 : user?.role === 'TEACHER'
                 ? '我的課程預約'
+                : user?.role === 'CORPORATE_CONTACT'
+                ? '企業員工課程預約'
+                : user?.role === 'ADMIN'
+                ? '全體會員預約 (管理員)'
                 : '全體會員預約'}
             </h2>
             {/* Tab Buttons - 手機優化 */}
@@ -690,13 +833,13 @@ const Dashboard = () => {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
-                          {user?.role === 'OPS' ? course.courseName : course.title}
+                          {(user?.role === 'OPS' || user?.role === 'CORPORATE_CONTACT' || user?.role === 'ADMIN') ? course.courseName : course.title}
                         </h3>
                         <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(course.status)}`}>
                           {getStatusText(course.status)}
                         </span>
-                        {/* Admin view: Show membership type badges */}
-                        {user?.role === 'OPS' && (
+                        {/* Admin and Corporate view: Show membership type badges */}
+                        {(user?.role === 'OPS' || user?.role === 'CORPORATE_CONTACT' || user?.role === 'ADMIN') && (
                           <>
                             <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
                               course.membershipType === 'corporate' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
@@ -716,12 +859,12 @@ const Dashboard = () => {
                     {/* Course Details - 手機優化為垂直排列 */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-gray-600">
                       <div className="flex items-center space-x-1">
-                        <SafeIcon icon={user?.role === 'OPS' ? FiUser : (user?.role === 'STUDENT' ? FiUserCheck : FiUsers)} className="text-xs" />
+                        <SafeIcon icon={(user?.role === 'OPS' || user?.role === 'CORPORATE_CONTACT' || user?.role === 'ADMIN') ? FiUser : (user?.role === 'STUDENT' ? FiUserCheck : FiUsers)} className="text-xs" />
                         <span>
-                          {user?.role === 'OPS'
-                            ? course.studentName
+                          {(user?.role === 'OPS' || user?.role === 'CORPORATE_CONTACT' || user?.role === 'ADMIN')
+                            ? `${course.studentName}${user?.role === 'CORPORATE_CONTACT' && course.studentEmail ? ` (${course.studentEmail})` : ''}`
                             : user?.role === 'STUDENT'
-                            ? course.instructor
+                            ? course.teacher
                             : course.students}
                         </span>
                       </div>
@@ -734,7 +877,7 @@ const Dashboard = () => {
                         <span>{course.time}</span>
                       </div>
                       {/* Admin view: Show instructor */}
-                      {user?.role === 'OPS' && (
+                      {(user?.role === 'OPS' || user?.role === 'ADMIN') && (
                         <div className="flex items-center space-x-1">
                           <SafeIcon icon={FiUserCheck} className="text-xs" />
                           <span>教師：{course.instructor}</span>

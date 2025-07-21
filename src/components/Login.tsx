@@ -24,8 +24,9 @@ const Login: React.FC = () => {
   const demoAccounts = [
     { email: 'alice@example.com', name: 'Alice Wang', role: '學生 (STUDENT)' },
     { email: 'daisy@example.com', name: 'Daisy Hsu', role: '教師 (TEACHER)' },
-    { email: 'olivia@example.com', name: 'Olivia Kao', role: '營運管理員 (OPS)' },
-    { email: 'frank@taiwantech.com', name: 'Frank Liu', role: '企業聯絡人 (CORPORATE_CONTACT)' }
+    { email: 'frank@taiwantech.com', name: 'Frank Liu', role: '企業窗口 (CORPORATE_CONTACT)' },
+    { email: 'olivia@example.com', name: 'Olivia Kao', role: '營運 (OPS)' },
+    { email: 'admin@example.com', name: 'Admin User', role: '管理員 (ADMIN)' }
   ];
 
   const fillDemoAccount = (demoEmail: string) => {

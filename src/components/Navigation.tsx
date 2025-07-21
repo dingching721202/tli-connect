@@ -15,18 +15,18 @@ const Navigation: React.FC = () => {
   const pathname = usePathname();
 
   const navigationItems = [
-    { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'OPS', 'CORPORATE_CONTACT'] },
-    { name: '用戶管理', href: '/user-management', icon: FiUsers, roles: ['OPS'] },
+    { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'OPS', 'CORPORATE_CONTACT', 'ADMIN'] },
+    { name: '用戶管理', href: '/user-management', icon: FiUsers, roles: ['OPS', 'ADMIN'] },
     { name: '課程預約', href: '/', icon: FiBook, roles: ['guest', 'STUDENT'] },
     { name: '我的預約', href: '/my-bookings', icon: FiCalendar, roles: ['STUDENT', 'TEACHER'] },
-    { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['TEACHER', 'OPS'] },
-    { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['OPS'] },
+    { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['TEACHER', 'OPS', 'ADMIN'] },
+    { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['OPS', 'ADMIN'] },
     { name: '會員方案', href: '/membership', icon: FiUsers, roles: ['guest', 'STUDENT'] },
-    { name: '會員方案管理', href: '/membership-management', icon: FiSettings, roles: ['OPS'] },
-    { name: '企業詢價管理', href: '/corporate-inquiries', icon: FiBriefcase, roles: ['OPS'] },
-    { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['OPS'] },
+    { name: '會員方案管理', href: '/membership-management', icon: FiSettings, roles: ['OPS', 'ADMIN'] },
+    { name: '企業詢價管理', href: '/corporate-inquiries', icon: FiBriefcase, roles: ['OPS', 'ADMIN'] },
+    { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['OPS', 'ADMIN'] },
     { name: '企業管理', href: '/corporate-management', icon: FiBriefcase, roles: ['CORPORATE_CONTACT'] },
-    { name: '系統設定', href: '/system-settings', icon: FiSettings, roles: ['OPS'] },
+    { name: '系統設定', href: '/system-settings', icon: FiSettings, roles: ['OPS', 'ADMIN'] },
   ];
 
   const handleNavigation = (href: string) => {
@@ -51,7 +51,7 @@ const Navigation: React.FC = () => {
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex justify-between items-center h-14 xl:h-16">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -65,25 +65,27 @@ const Navigation: React.FC = () => {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:block">
-            <div className="flex items-center space-x-8">
+          <div className="hidden lg:block">
+            <div className="flex items-center space-x-1 xl:space-x-2">
               {navigationItems.map((item) => (
                 canAccess(item.roles) && (
                   <motion.button
                     key={item.name}
                     onClick={() => handleNavigation(item.href)}
                     className={`
-                      flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
+                      flex items-center space-x-1 px-2 py-1.5 rounded-md text-xs xl:text-sm font-medium transition-colors whitespace-nowrap
                       ${isActive(item.href)
                         ? 'text-blue-600 bg-blue-50'
                         : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
                       }
                     `}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    title={item.name}
                   >
-                    <SafeIcon icon={item.icon} size={16} />
-                    <span>{item.name}</span>
+                    <SafeIcon icon={item.icon} size={14} />
+                    <span className="hidden xl:inline">{item.name}</span>
+                    <span className="xl:hidden text-[10px]">{item.name.slice(0, 2)}</span>
                   </motion.button>
                 )
               ))}
@@ -91,69 +93,70 @@ const Navigation: React.FC = () => {
           </div>
 
           {/* User Menu */}
-          <div className="hidden md:block">
+          <div className="hidden lg:block">
             {isAuthenticated ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
                 {/* Referral System Button */}
                 <motion.button
                   onClick={() => handleNavigation('/referral')}
-                  className={`flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`flex items-center space-x-1 px-2 py-1.5 text-xs xl:text-sm font-medium rounded-md transition-colors ${
                     isActive('/referral')
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
                   }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   title="推薦系統"
                 >
-                  <SafeIcon icon={FiShare2} size={16} />
-                  <span>推薦</span>
+                  <SafeIcon icon={FiShare2} size={14} />
+                  <span className="hidden xl:inline">推薦</span>
                 </motion.button>
                 
                 <motion.div 
-                  className="flex items-center space-x-3 cursor-pointer hover:bg-gray-50 rounded-lg p-2 transition-colors"
+                  className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 rounded-lg p-1.5 transition-colors"
                   onClick={() => handleNavigation('/profile')}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   title="查看個人資料"
                 >
                   <Image
-                    className="h-8 w-8 rounded-full object-cover"
+                    className="h-7 w-7 xl:h-8 xl:w-8 rounded-full object-cover"
                     src={user?.avatar || 'https://www.gravatar.com/avatar/?d=mp&s=32'}
                     alt={user?.name || 'User'}
                     width={32}
                     height={32}
                   />
-                  <div className="text-sm">
-                    <div className="font-medium text-gray-900">{user?.name}</div>
-                    <div className="text-gray-500 capitalize">{user?.role}</div>
+                  <div className="hidden xl:block text-xs">
+                    <div className="font-medium text-gray-900 truncate max-w-20">{user?.name}</div>
+                    <div className="text-gray-500 capitalize text-[10px]">{user?.role}</div>
                   </div>
                 </motion.div>
                 <motion.button
                   onClick={handleLogout}
-                  className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="flex items-center space-x-1 px-2 py-1.5 text-xs xl:text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  title="登出"
                 >
-                  <SafeIcon icon={FiLogOut} size={16} />
-                  <span>登出</span>
+                  <SafeIcon icon={FiLogOut} size={14} />
+                  <span className="hidden xl:inline">登出</span>
                 </motion.button>
               </div>
             ) : (
               <motion.button
                 onClick={() => handleNavigation('/login')}
-                className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                className="bg-blue-600 text-white px-3 py-1.5 xl:px-4 xl:py-2 rounded-lg hover:bg-blue-700 transition-colors text-xs xl:text-sm font-medium flex items-center space-x-1"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
               >
-                <SafeIcon icon={FiUser} size={16} />
-                <span>登入</span>
+                <SafeIcon icon={FiUser} size={14} />
+                <span className="hidden xl:inline">登入</span>
               </motion.button>
             )}
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <motion.button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               className="p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors"

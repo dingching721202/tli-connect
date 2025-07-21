@@ -58,7 +58,7 @@ interface Course {
   generatedSessions: GeneratedSession[];
 }
 
-interface Instructor {
+interface Teacher {
   id: number;
   name: string;
   email: string;
@@ -68,7 +68,7 @@ interface Instructor {
   courses: number[];
 }
 
-interface NewInstructor {
+interface NewTeacher {
   name: string;
   email: string;
   expertise: string;
@@ -79,17 +79,17 @@ interface CourseManagementModalsProps {
   // Modal states
   showAddCourseModal: boolean;
   showEditCourseModal: boolean;
-  showAddInstructorModal: boolean;
+  showAddTeacherModal: boolean;
   setShowAddCourseModal: (show: boolean) => void;
   setShowEditCourseModal: (show: boolean) => void;
-  setShowAddInstructorModal: (show: boolean) => void;
+  setShowAddTeacherModal: (show: boolean) => void;
   
   // Data
   newCourse: Course;
   setNewCourse: React.Dispatch<React.SetStateAction<Course>>;
-  newInstructor: NewInstructor;
-  setNewInstructor: React.Dispatch<React.SetStateAction<NewInstructor>>;
-  instructors: Instructor[];
+  newTeacher: NewTeacher;
+  setNewTeacher: React.Dispatch<React.SetStateAction<NewTeacher>>;
+  teachers: Teacher[];
   
   // Handlers
   handleTotalSessionsChange: (total: string) => void;
@@ -103,21 +103,21 @@ interface CourseManagementModalsProps {
   generateCourseSessions: (courseData?: Course) => GeneratedSession[];
   handleSubmitCourse: (isDraft?: boolean) => void;
   handleUpdateCourse: (isDraft?: boolean) => void;
-  handleAddInstructor: () => void;
+  handleAddTeacher: () => void;
 }
 
 const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
   showAddCourseModal,
   showEditCourseModal,
-  showAddInstructorModal,
+  showAddTeacherModal,
   setShowAddCourseModal,
   setShowEditCourseModal,
-  setShowAddInstructorModal,
+  setShowAddTeacherModal,
   newCourse,
   setNewCourse,
-  newInstructor,
-  setNewInstructor,
-  instructors,
+  newTeacher,
+  setNewTeacher,
+  teachers,
   handleTotalSessionsChange,
   handleExcludeDate,
   handleSessionChange,
@@ -128,7 +128,7 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
   generateCourseSessions,
   handleSubmitCourse,
   handleUpdateCourse,
-  handleAddInstructor
+  handleAddTeacher
 }) => {
   const CourseFormContent = ({ isEdit = false }: { isEdit?: boolean }) => (
     <form className="space-y-6">
@@ -359,7 +359,7 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
                     </select>
                     <button
                       type="button"
-                      onClick={() => setShowAddInstructorModal(true)}
+                      onClick={() => setShowAddTeacherModal(true)}
                       className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
                     >
                       <SafeIcon icon={FiPlus} className="text-sm" />
@@ -559,7 +559,7 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
       )}
 
       {/* 新增教師模態框 */}
-      {showAddInstructorModal && (
+      {showAddTeacherModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
@@ -569,7 +569,7 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
             <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-6 rounded-t-xl">
               <div className="flex justify-between items-center">
                 <h3 className="text-xl font-bold">新增教師</h3>
-                <button onClick={() => setShowAddInstructorModal(false)}>
+                <button onClick={() => setShowAddTeacherModal(false)}>
                   <SafeIcon icon={FiX} className="text-white text-xl" />
                 </button>
               </div>
@@ -582,8 +582,8 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={newInstructor.name}
-                    onChange={(e) => setNewInstructor(prev => ({ ...prev, name: e.target.value }))}
+                    value={newTeacher.name}
+                    onChange={(e) => setNewTeacher(prev => ({ ...prev, name: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                     placeholder="請輸入教師姓名"
                     required
@@ -595,8 +595,8 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
                   </label>
                   <input
                     type="email"
-                    value={newInstructor.email}
-                    onChange={(e) => setNewInstructor(prev => ({ ...prev, email: e.target.value }))}
+                    value={newTeacher.email}
+                    onChange={(e) => setNewTeacher(prev => ({ ...prev, email: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                     placeholder="請輸入電子郵件"
                     required
@@ -608,8 +608,8 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={newInstructor.expertise}
-                    onChange={(e) => setNewInstructor(prev => ({ ...prev, expertise: e.target.value }))}
+                    value={newTeacher.expertise}
+                    onChange={(e) => setNewTeacher(prev => ({ ...prev, expertise: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                     placeholder="例：商務華語、華語文法（用逗號分隔）"
                   />
@@ -619,14 +619,14 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     type="button"
-                    onClick={handleAddInstructor}
+                    onClick={handleAddTeacher}
                     className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-700 text-white py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-300 font-medium"
                   >
                     新增教師
                   </motion.button>
                   <button
                     type="button"
-                    onClick={() => setShowAddInstructorModal(false)}
+                    onClick={() => setShowAddTeacherModal(false)}
                     className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
                   >
                     取消
