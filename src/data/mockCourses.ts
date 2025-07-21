@@ -107,7 +107,7 @@ export const mockCourses: Course[] = [
     title: "華語面試技巧",
     date: "2025-06-12",
     timeSlot: "16:30-18:00",
-    instructor: "許老師",
+    teacher: "許老師",
     price: 0,
     description: "華語面試常見問題與回答技巧，增強求職競爭力"
   },
@@ -116,7 +116,7 @@ export const mockCourses: Course[] = [
     title: "華語演講訓練",
     date: "2025-06-12",
     timeSlot: "19:00-20:30",
-    instructor: "賴老師",
+    teacher: "賴老師",
     price: 0,
     description: "華語演講技巧與表達能力訓練，提升公眾演說能力"
   },
@@ -135,7 +135,7 @@ export const mockCourses: Course[] = [
     title: "華語新聞閱讀",
     date: "2025-06-18",
     timeSlot: "15:00-16:30",
-    instructor: "蔡老師",
+    teacher: "蔡老師",
     price: 0,
     description: "透過新聞文章提升華語閱讀理解能力與時事了解"
   },
@@ -144,7 +144,7 @@ export const mockCourses: Course[] = [
     title: "華語書信寫作",
     date: "2025-06-20",
     timeSlot: "13:30-15:00",
-    instructor: "楊老師",
+    teacher: "楊老師",
     price: 0,
     description: "正式書信與電子郵件寫作技巧與格式規範"
   },
@@ -171,7 +171,7 @@ export const mockCourses: Course[] = [
     title: "華語新聞閱讀",
     date: "2025-06-27",
     timeSlot: "15:00-16:30",
-    instructor: "蔡老師",
+    teacher: "蔡老師",
     price: 0,
     description: "透過新聞文章提升華語閱讀理解能力與時事了解"
   },
@@ -180,7 +180,7 @@ export const mockCourses: Course[] = [
     title: "華語書信寫作",
     date: "2025-06-29",
     timeSlot: "13:30-15:00",
-    instructor: "楊老師",
+    teacher: "楊老師",
     price: 0,
     description: "正式書信與電子郵件寫作技巧與格式規範"
   },
@@ -189,7 +189,7 @@ export const mockCourses: Course[] = [
     title: "華語演講訓練",
     date: "2025-06-29",
     timeSlot: "10:30-12:00",
-    instructor: "賴老師",
+    teacher: "賴老師",
     price: 0,
     description: "華語演講技巧與表達能力訓練，提升公眾演說能力"
   },
@@ -199,7 +199,7 @@ export const mockCourses: Course[] = [
     title: "初級華語會話",
     date: "2025-07-02",
     timeSlot: "09:00-10:30",
-    instructor: "陳老師",
+    teacher: "陳老師",
     price: 0,
     description: "華語基礎會話練習，適合初學者建立語言基礎"
   },
@@ -208,7 +208,7 @@ export const mockCourses: Course[] = [
     title: "華語文化課程",
     date: "2025-07-02",
     timeSlot: "14:00-15:30",
-    instructor: "王老師",
+    teacher: "蔡老師",
     price: 0,
     description: "透過文化學習華語，了解中華文化內涵"
   },
@@ -217,7 +217,7 @@ export const mockCourses: Course[] = [
     title: "中級華語會話",
     date: "2025-07-05",
     timeSlot: "10:00-11:30",
-    instructor: "李老師",
+    teacher: "李老師",
     price: 0,
     description: "中級華語會話練習，提升日常溝通能力"
   },
@@ -226,7 +226,7 @@ export const mockCourses: Course[] = [
     title: "華語詞彙擴充",
     date: "2025-07-08",
     timeSlot: "09:30-11:00",
-    instructor: "張老師",
+    teacher: "張老師",
     price: 0,
     description: "系統性學習華語詞彙，擴充語言表達能力"
   },
@@ -235,7 +235,7 @@ export const mockCourses: Course[] = [
     title: "華語童話故事",
     date: "2025-07-10",
     timeSlot: "11:00-12:30",
-    instructor: "林老師",
+    teacher: "賴老師",
     price: 0,
     description: "透過童話故事學習華語，寓教於樂的學習方式"
   }
