@@ -52,7 +52,7 @@ export const mockCourses: Course[] = [
     title: "華語文法精修",
     date: "2025-06-08",
     timeSlot: "09:30-11:00",
-    instructor: "林老師",
+    teacher: "林老師",
     price: 0,
     description: "系統性學習華語文法結構與語法應用"
   },
@@ -89,7 +89,7 @@ export const mockCourses: Course[] = [
     title: "華語朗讀訓練",
     date: "2025-06-12",
     timeSlot: "11:00-12:30",
-    instructor: "周老師",
+    teacher: "黃老師",
     price: 0,
     description: "華語朗讀技巧與情感表達訓練"
   },
@@ -98,7 +98,7 @@ export const mockCourses: Course[] = [
     title: "學術華語寫作",
     date: "2025-06-12",
     timeSlot: "14:00-15:30",
-    instructor: "鄭老師",
+    teacher: "鄭老師",
     price: 0,
     description: "學術論文寫作技巧與格式規範，提升學術表達能力"
   },
@@ -126,7 +126,7 @@ export const mockCourses: Course[] = [
     title: "華語閱讀理解",
     date: "2025-06-15",
     timeSlot: "10:00-11:30",
-    instructor: "謝老師",
+    teacher: "謝老師",
     price: 0,
     description: "華語閱讀理解技巧與文本分析能力培養"
   },
@@ -153,7 +153,7 @@ export const mockCourses: Course[] = [
     title: "華語面試技巧",
     date: "2025-06-22",
     timeSlot: "09:00-10:30",
-    instructor: "許老師",
+    teacher: "賴老師",
     price: 0,
     description: "華語面試常見問題與回答技巧，增強求職競爭力"
   },
@@ -162,7 +162,7 @@ export const mockCourses: Course[] = [
     title: "華語閱讀理解",
     date: "2025-06-25",
     timeSlot: "11:00-12:30",
-    instructor: "謝老師",
+    teacher: "許老師",
     price: 0,
     description: "華語閱讀理解技巧與文本分析能力培養"
   },
