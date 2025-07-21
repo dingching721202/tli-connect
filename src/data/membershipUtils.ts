@@ -10,7 +10,7 @@ interface RawMembershipPlanData {
   price: string;
   original_price: string;
   duration: number;
-  plan_type: 'individual' | 'corporate';
+  plan_type: string;
   features: string[];
   published: boolean;
   category: string;
@@ -46,7 +46,7 @@ function convertToMembershipPlan(plan: RawMembershipPlanData): MembershipPlan {
     price: parseFloat(plan.price),
     originalPrice: parseFloat(plan.original_price),
     duration: plan.duration,
-    type: plan.plan_type,
+    type: plan.plan_type as 'individual' | 'corporate',
     features: plan.features,
     published: plan.published,
     category: plan.category
@@ -90,7 +90,7 @@ export function createMembershipPlan(plan: Omit<MembershipPlan, 'id'>): Membersh
       price: plan.price.toString(),
       original_price: plan.originalPrice.toString(),
       duration: plan.duration,
-      plan_type: plan.type,
+      plan_type: plan.type as string,
       features: plan.features,
       published: plan.published,
       category: plan.category
@@ -122,7 +122,7 @@ export function updateMembershipPlan(id: string, updates: Partial<MembershipPlan
     if (updates.originalPrice) jsonUpdates.original_price = updates.originalPrice.toString();
     if (updates.duration) jsonUpdates.duration = updates.duration;
     if (updates.type) {
-      jsonUpdates.plan_type = updates.type;
+      jsonUpdates.plan_type = updates.type as string;
       jsonUpdates.type = updates.type.toUpperCase();
     }
     if (updates.features) jsonUpdates.features = updates.features;

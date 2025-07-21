@@ -177,8 +177,8 @@ function convertToCourse(data: RawCourseData): Course {
     original_price: data.original_price,
     currency: data.currency,
     category: data.categories,
-    level: data.level,
-    language: data.language,
+    level: data.level as 'beginner' | 'intermediate' | 'advanced',
+    language: data.language as 'english' | 'chinese' | 'japanese',
     max_students: data.max_students,
     current_students: data.current_students,
     rating: data.rating,
@@ -225,7 +225,7 @@ function convertToManagedCourse(data: RawCourseData): ManagedCourse {
     materials: data.materials,
     prerequisites: data.prerequisites,
     language: data.language,
-    difficulty: data.level,
+    difficulty: data.level as 'beginner' | 'intermediate' | 'advanced',
     totalSessions: data.total_sessions,
     sessionDuration: data.session_duration,
     recurring: data.recurring,
@@ -355,8 +355,8 @@ export function addManagedCourse(course: Omit<ManagedCourse, 'id' | 'createdAt' 
       end_date: course.endDate,
       enrollment_deadline: course.enrollmentDeadline,
       recurring: course.recurring,
-      recurring_type: course.recurringType,
-      recurring_days: course.recurringDays,
+      recurring_type: course.recurringType || 'weekly',
+      recurring_days: course.recurringDays || [],
       waitlist_enabled: course.waitlistEnabled,
       updated_at: new Date().toISOString()
     };
@@ -392,46 +392,47 @@ export function updateManagedCourse(id: string, updates: Partial<ManagedCourse>)
         // Map ManagedCourse fields to JSON format
         switch (key) {
           case 'capacity':
-            jsonUpdates.max_students = value;
+            jsonUpdates.max_students = value as number;
             break;
           case 'difficulty':
-            jsonUpdates.level = value;
+            jsonUpdates.level = value as string;
             break;
           case 'totalSessions':
-            jsonUpdates.total_sessions = value;
+            jsonUpdates.total_sessions = value as number;
             break;
           case 'sessionDuration':
-            jsonUpdates.session_duration = value;
+            jsonUpdates.session_duration = value as number;
             break;
           case 'currentEnrollments':
-            jsonUpdates.current_students = value;
+            jsonUpdates.current_students = value as number;
             break;
           case 'maxEnrollments':
-            jsonUpdates.max_students = value;
+            jsonUpdates.max_students = value as number;
             break;
           case 'waitlistEnabled':
-            jsonUpdates.waitlist_enabled = value;
+            jsonUpdates.waitlist_enabled = value as boolean;
             break;
           case 'refundPolicy':
-            jsonUpdates.refund_policy = value;
+            jsonUpdates.refund_policy = value as string;
             break;
           case 'startDate':
-            jsonUpdates.start_date = value;
+            jsonUpdates.start_date = value as string;
             break;
           case 'endDate':
-            jsonUpdates.end_date = value;
+            jsonUpdates.end_date = value as string;
             break;
           case 'enrollmentDeadline':
-            jsonUpdates.enrollment_deadline = value;
+            jsonUpdates.enrollment_deadline = value as string;
             break;
           case 'recurringType':
-            jsonUpdates.recurring_type = value;
+            jsonUpdates.recurring_type = value as string;
             break;
           case 'recurringDays':
-            jsonUpdates.recurring_days = value;
+            jsonUpdates.recurring_days = value as string[];
             break;
           default:
-            jsonUpdates[key] = value;
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (jsonUpdates as any)[key] = value;
             break;
         }
       }
