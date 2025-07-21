@@ -482,7 +482,7 @@ const Dashboard = () => {
         studentName: '李小華',
         studentEmail: 'user2@taiwantech.com',
         courseName: '華語文法精修',
-        instructor: '王老師',
+        teacher: '王老師',
         date: '2025-01-10',
         time: '14:00-15:30',
         status: 'completed',
