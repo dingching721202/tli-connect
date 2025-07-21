@@ -1,7 +1,20 @@
 // Import JSON data
 import memberCardPlans from './member_card_plans.json';
-import memberCards from './member_cards.json';
-import memberships from './memberships.json';
+
+interface RawMembershipPlanData {
+  id: number;
+  created_at: string;
+  member_card_id: number;
+  type: string;
+  name: string;
+  price: string;
+  original_price: string;
+  duration: number;
+  plan_type: 'individual' | 'corporate';
+  features: string[];
+  published: boolean;
+  category: string;
+}
 
 export interface MembershipPlan {
   id: string;
@@ -26,7 +39,7 @@ export interface MembershipPlan {
 }
 
 // Convert JSON data to MembershipPlan format
-function convertToMembershipPlan(plan: any): MembershipPlan {
+function convertToMembershipPlan(plan: RawMembershipPlanData): MembershipPlan {
   return {
     id: plan.id.toString(),
     name: plan.name,
@@ -99,11 +112,11 @@ export function createMembershipPlan(plan: Omit<MembershipPlan, 'id'>): Membersh
 export function updateMembershipPlan(id: string, updates: Partial<MembershipPlan>): MembershipPlan | null {
   if (typeof localStorage !== 'undefined') {
     const existingPlans = JSON.parse(localStorage.getItem('memberCardPlans') || JSON.stringify(memberCardPlans));
-    const index = existingPlans.findIndex((plan: any) => plan.id.toString() === id);
+    const index = existingPlans.findIndex((plan: RawMembershipPlanData) => plan.id.toString() === id);
     if (index === -1) return null;
     
     // Convert updates back to JSON format
-    const jsonUpdates: any = {};
+    const jsonUpdates: Partial<RawMembershipPlanData> = {};
     if (updates.name) jsonUpdates.name = updates.name;
     if (updates.price) jsonUpdates.price = updates.price.toString();
     if (updates.originalPrice) jsonUpdates.original_price = updates.originalPrice.toString();
@@ -128,7 +141,7 @@ export function updateMembershipPlan(id: string, updates: Partial<MembershipPlan
 export function deleteMembershipPlan(id: string): boolean {
   if (typeof localStorage !== 'undefined') {
     const existingPlans = JSON.parse(localStorage.getItem('memberCardPlans') || JSON.stringify(memberCardPlans));
-    const index = existingPlans.findIndex((plan: any) => plan.id.toString() === id);
+    const index = existingPlans.findIndex((plan: RawMembershipPlanData) => plan.id.toString() === id);
     if (index === -1) return false;
     
     existingPlans.splice(index, 1);

@@ -1,12 +1,63 @@
 // Import JSON data
 import coursesData from './courses.json';
-import classesData from './classes.json';
-import lessonsData from './lessons.json';
 import teachersData from './teachers.json';
-import classTimeslotsData from './class_timeslots.json';
-import classAppointmentsData from './class_appointments.json';
-import lessonAttachmentsData from './lesson_attachments.json';
-import lessonAttachmentRecordsData from './lesson_attachment_records.json';
+
+// Raw data interfaces for JSON files
+interface RawCourseData {
+  id: number;
+  created_at: string;
+  updated_at: string;
+  title: string;
+  description: string;
+  instructor: string;
+  instructor_id: string;
+  duration: string;
+  price: number;
+  original_price: number;
+  currency: string;
+  cover_image_url: string;
+  categories: string[];
+  language: string;
+  level: string;
+  max_students: number;
+  current_students: number;
+  rating: number;
+  total_sessions: number;
+  session_duration: number;
+  location: string;
+  is_active: boolean;
+  status: string;
+  tags: string[];
+  prerequisites: string;
+  materials: string[];
+  refund_policy: string;
+  start_date: string;
+  end_date: string;
+  enrollment_deadline: string;
+  recurring: boolean;
+  recurring_type: string;
+  recurring_days: string[];
+  waitlist_enabled: boolean;
+}
+
+interface RawTeacherData {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  bio: string;
+  specialties: string[];
+  languages: string[];
+  experience: number;
+  rating: number;
+  is_active: boolean;
+  profile_image?: string;
+  certifications: string[];
+  education: string[];
+  teaching_philosophy: string;
+  created_at: string;
+  updated_at: string;
+}
 
 // Type definitions based on the original files
 export interface Course {
@@ -114,7 +165,7 @@ export interface CourseSession {
 }
 
 // Convert JSON data to proper interfaces
-function convertToCourse(data: any): Course {
+function convertToCourse(data: RawCourseData): Course {
   return {
     id: data.id,
     title: data.title,
@@ -153,7 +204,7 @@ function convertToCourse(data: any): Course {
   };
 }
 
-function convertToManagedCourse(data: any): ManagedCourse {
+function convertToManagedCourse(data: RawCourseData): ManagedCourse {
   return {
     id: data.id.toString(),
     title: data.title,
@@ -327,14 +378,14 @@ export function addManagedCourse(course: Omit<ManagedCourse, 'id' | 'createdAt' 
 export function updateManagedCourse(id: string, updates: Partial<ManagedCourse>): ManagedCourse | null {
   if (typeof localStorage !== 'undefined') {
     const existingCourses = JSON.parse(localStorage.getItem('courses') || JSON.stringify(coursesData));
-    const courseIndex = existingCourses.findIndex((course: any) => course.id.toString() === id);
+    const courseIndex = existingCourses.findIndex((course: RawCourseData) => course.id.toString() === id);
     
     if (courseIndex === -1) {
       return null;
     }
     
     // Convert updates to JSON format
-    const jsonUpdates: any = { updated_at: new Date().toISOString() };
+    const jsonUpdates: Partial<RawCourseData> = { updated_at: new Date().toISOString() };
     Object.keys(updates).forEach(key => {
       const value = updates[key as keyof ManagedCourse];
       if (value !== undefined) {
@@ -397,7 +448,7 @@ export function updateManagedCourse(id: string, updates: Partial<ManagedCourse>)
 export function deleteManagedCourse(id: string): boolean {
   if (typeof localStorage !== 'undefined') {
     const existingCourses = JSON.parse(localStorage.getItem('courses') || JSON.stringify(coursesData));
-    const courseIndex = existingCourses.findIndex((course: any) => course.id.toString() === id);
+    const courseIndex = existingCourses.findIndex((course: RawCourseData) => course.id.toString() === id);
     
     if (courseIndex === -1) {
       return false;
@@ -446,7 +497,7 @@ export function addTeacher(teacher: Omit<Teacher, 'id' | 'created_at' | 'updated
 export function updateTeacher(id: string, updates: Partial<Teacher>): Teacher | null {
   if (typeof localStorage !== 'undefined') {
     const existingTeachers = JSON.parse(localStorage.getItem('teachers') || JSON.stringify(teachersData));
-    const teacherIndex = existingTeachers.findIndex((teacher: any) => teacher.id === id);
+    const teacherIndex = existingTeachers.findIndex((teacher: RawTeacherData) => teacher.id === id);
     
     if (teacherIndex === -1) {
       return null;
@@ -467,7 +518,7 @@ export function updateTeacher(id: string, updates: Partial<Teacher>): Teacher | 
 export function deleteTeacher(id: string): boolean {
   if (typeof localStorage !== 'undefined') {
     const existingTeachers = JSON.parse(localStorage.getItem('teachers') || JSON.stringify(teachersData));
-    const teacherIndex = existingTeachers.findIndex((teacher: any) => teacher.id === id);
+    const teacherIndex = existingTeachers.findIndex((teacher: RawTeacherData) => teacher.id === id);
     
     if (teacherIndex === -1) {
       return false;

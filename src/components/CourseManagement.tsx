@@ -3,12 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
-import * as XLSX from 'xlsx';
 import SafeIcon from './common/SafeIcon';
-import CourseManagementModals from './CourseManagementModals';
 import { useAuth } from '@/contexts/AuthContext';
 import {
-  Course,
   ManagedCourse,
   Teacher,
   getManagedCourses,
@@ -59,7 +56,6 @@ interface GeneratedSession {
   materials: string;
 }
 
-// 使用 courseUtils 中定義的 Course 型別
 
 
 interface NewTeacher {
@@ -105,7 +101,7 @@ const CourseManagement = () => {
       classroom: string;
       materials: string;
     }>;
-    generatedSessions?: Array<any>;
+    generatedSessions?: GeneratedSession[];
   }>({
     title: '',
     description: '',
@@ -242,11 +238,11 @@ const CourseManagement = () => {
   }, [isTeacher, user]);
 
   // 自動計算結束日期函數
-  const calculateEndDate = (courseData?: any) => {
+  const calculateEndDate = (courseData?: Partial<ManagedCourse>) => {
     const course = courseData || newCourse;
     const { startDate, totalSessions } = course;
     
-    if (!startDate || totalSessions <= 0) return;
+    if (!startDate || !totalSessions || totalSessions <= 0) return;
     
     // 簡單計算：每週一次課程
     const weeksNeeded = totalSessions;
@@ -320,7 +316,7 @@ const CourseManagement = () => {
   };
 
   // 處理全域時間表變化
-  const handleGlobalScheduleChange = (scheduleIndex: number, field: string, value: any) => {
+  const handleGlobalScheduleChange = (scheduleIndex: number, field: string, value: string | string[]) => {
     const globalSchedules = [...(newCourse.globalSchedules || [])];
     globalSchedules[scheduleIndex] = {
       ...globalSchedules[scheduleIndex],
@@ -403,7 +399,7 @@ const CourseManagement = () => {
   };
 
   // 生成課程預覽
-  const generateCourseSessions = (courseData?: any): GeneratedSession[] => {
+  const generateCourseSessions = (courseData?: Partial<ManagedCourse> & { globalSchedules?: Schedule[]; excludeDates?: string[]; sessions?: Session[] }): GeneratedSession[] => {
     const course = courseData || newCourse;
     const { startDate, endDate, totalSessions, globalSchedules, sessions, excludeDates } = course;
     
@@ -417,6 +413,7 @@ const CourseManagement = () => {
     const excludeSet = new Set(excludeDates || []);
     const generatedSessions: GeneratedSession[] = [];
     
+    // eslint-disable-next-line prefer-const
     let currentDate = new Date(start);
     let sessionIndex = 0;
     
@@ -623,19 +620,6 @@ const CourseManagement = () => {
   };
 
   // 格式化星期文字
-  const formatWeekdays = (weekdays: string[]) => {
-    const weekdayNames: Record<string, string> = {
-      '0': '週日',
-      '1': '週一',
-      '2': '週二',
-      '3': '週三',
-      '4': '週四',
-      '5': '週五',
-      '6': '週六'
-    };
-    
-    return weekdays.map(day => weekdayNames[day]).join('、');
-  };
 
   // 簡化的處理函式，作為佔位符
   const handleExportCourses = () => {
@@ -1029,7 +1013,7 @@ const CourseManagement = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">課程級別</label>
                       <select
                         value={newCourse.difficulty}
-                        onChange={(e) => setNewCourse(prev => ({ ...prev, difficulty: e.target.value as any }))}
+                        onChange={(e) => setNewCourse(prev => ({ ...prev, difficulty: e.target.value as 'beginner' | 'intermediate' | 'advanced' }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       >
                         <option value="unlimited">不限</option>
@@ -1449,7 +1433,7 @@ const CourseManagement = () => {
                       <label className="block text-sm font-medium text-gray-700 mb-2">課程級別</label>
                       <select
                         value={newCourse.difficulty}
-                        onChange={(e) => setNewCourse(prev => ({ ...prev, difficulty: e.target.value as any }))}
+                        onChange={(e) => setNewCourse(prev => ({ ...prev, difficulty: e.target.value as 'beginner' | 'intermediate' | 'advanced' }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                       >
                         <option value="unlimited">不限</option>

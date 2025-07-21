@@ -20,9 +20,11 @@ export interface Company {
   name: string;
   contactName: string;
   contactEmail: string;
+  contactPhone: string;
+  address?: string;
   industry: string;
   employeeCount: string;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'expired';
   createdAt: string;
   membershipPlans?: MembershipPlan[];
   startDate?: string;
@@ -253,9 +255,11 @@ export function getCompanies(): Company[] {
     name: client.companyName,
     contactName: client.contactName,
     contactEmail: client.contactEmail,
+    contactPhone: client.contactPhone,
+    address: '', // Default value since not in CorporateClient
     industry: client.industry,
     employeeCount: client.employeeCount,
-    status: client.status === 'active' ? 'active' : 'inactive',
+    status: client.status === 'active' ? 'active' : client.status === 'suspended' ? 'inactive' : 'inactive',
     createdAt: client.createdAt,
     membershipPlans: [] // 添加空數組作為預設值
   }));
@@ -265,12 +269,12 @@ export function getCompanyStatistics() {
   return getCorporateStatistics();
 }
 
-export function getCorporateUsersByCompany(companyId: string) {
+export function getCorporateUsersByCompany(_companyId: string) {
   // Mock data - in real app would fetch from database
   return [];
 }
 
-export function getCorporateUsersByPlan(planId: string) {
+export function getCorporateUsersByPlan(_planId: string) {
   // Mock data - in real app would fetch from database
   return [];
 }
@@ -297,7 +301,7 @@ export function updateCompany(id: string, updates: Partial<Company>): Company | 
   };
 }
 
-export function deleteCompany(id: string): boolean {
+export function deleteCompany(_id: string): boolean {
   // Mock implementation - would delete from database
   return true;
 }
