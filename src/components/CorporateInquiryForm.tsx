@@ -7,8 +7,8 @@ import SafeIcon from '@/components/common/SafeIcon';
 import { createCorporateInquiry, CorporateInquiry } from '@/data/membershipPlans';
 
 const {
-  FiX, FiUser, FiMail, FiPhone, FiBriefcase, FiUsers, FiDollarSign,
-  FiCalendar, FiCheck, FiSend, FiBuilding
+  FiX, FiUser, FiBriefcase, FiUsers,
+  FiCheck, FiSend
 } = FiIcons;
 
 interface CorporateInquiryFormProps {
@@ -276,7 +276,7 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
             {/* 左側：公司資訊 */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <SafeIcon icon={FiBuilding} className="mr-2 text-blue-600" />
+                <SafeIcon icon={FiBriefcase} className="mr-2 text-blue-600" />
                 公司資訊
               </h3>
 

@@ -7,7 +7,7 @@ import SafeIcon from '@/components/common/SafeIcon';
 import CreditCardForm, { CreditCardData } from './CreditCardForm';
 
 const { 
-  FiX, FiUser, FiMail, FiPhone, FiLock, FiCreditCard, 
+  FiX, FiUser, FiLock, FiCreditCard, 
   FiCheck, FiChevronLeft, FiChevronRight, FiEye, FiEyeOff 
 } = FiIcons;
 

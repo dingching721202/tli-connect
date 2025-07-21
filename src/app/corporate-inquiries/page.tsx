@@ -15,9 +15,9 @@ import {
 } from '@/data/membershipPlans';
 
 const {
-  FiUsers, FiBriefcase, FiMail, FiPhone, FiCalendar, FiDollarSign,
-  FiEye, FiEdit, FiTrash2, FiSearch, FiFilter, FiDownload,
-  FiCheck, FiClock, FiX, FiMessageSquare, FiBuilding, FiArrowRight
+  FiUsers, FiBriefcase, FiMail, FiCalendar, FiDollarSign,
+  FiEye, FiTrash2, FiSearch, FiDownload,
+  FiCheck, FiClock, FiX, FiMessageSquare, FiUser
 } = FiIcons;
 
 interface FilterState {
@@ -470,7 +470,7 @@ const CorporateInquiriesPage: React.FC = () => {
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <SafeIcon icon={FiBuilding} className="mr-2 text-blue-600" />
+                      <SafeIcon icon={FiBriefcase} className="mr-2 text-blue-600" />
                       公司資訊
                     </h3>
                     <div className="bg-gray-50 rounded-lg p-4 space-y-3">

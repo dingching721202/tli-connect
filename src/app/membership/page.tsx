@@ -19,7 +19,7 @@ const {
 } = FiIcons;
 
 function MembershipPageContent() {
-  const { user } = useAuth();
+  const { user, login } = useAuth();
   const router = useRouter();
   useSearchParams();
   const [activeTab, setActiveTab] = useState<'individual' | 'corporate'>('individual');
@@ -65,7 +65,8 @@ function MembershipPageContent() {
   };
 
   // 處理訪客購買（包含自動註冊）
-  const handleGuestPurchase = async (userData: UserData, cardData: CreditCardData) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleGuestPurchase = async (userData: UserData, _cardData: CreditCardData) => {
     if (!paymentData) return;
 
     try {
@@ -138,7 +139,8 @@ function MembershipPageContent() {
   };
 
   // 處理已登入用戶的購買（統一使用 GuestPurchaseModal 的流程）
-  const handleUserPurchase = async (userData: UserData, cardData: CreditCardData) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleUserPurchase = async (_userData: UserData, _cardData: CreditCardData) => {
     if (!user || !paymentData) return;
 
     try {

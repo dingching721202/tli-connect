@@ -73,7 +73,7 @@ const CreditCardForm: React.FC<CreditCardFormProps> = ({ onCardDataChange }) => 
 
   const handleInputChange = (field: keyof CreditCardData, value: string) => {
     let formattedValue = value;
-    let newErrors = { ...errors };
+    const newErrors = { ...errors };
 
     switch (field) {
       case 'cardNumber':
