@@ -135,6 +135,7 @@ export function generateScheduledSessions(
   const start = new Date(startDate);
   const excludeSet = new Set(excludeDates);
   let sessionCount = 0;
+  // eslint-disable-next-line prefer-const
   let currentDate = new Date(start);
 
   while (sessionCount < totalSessions) {
@@ -184,6 +185,7 @@ export function calculateEndDate(
   const start = new Date(startDate);
   const excludeSet = new Set(excludeDates);
   let sessionCount = 0;
+  // eslint-disable-next-line prefer-const
   let currentDate = new Date(start);
 
   while (sessionCount < totalSessions) {

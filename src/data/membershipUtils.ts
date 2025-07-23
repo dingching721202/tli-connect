@@ -71,7 +71,7 @@ export function getPublishedMembershipPlans(type?: 'individual' | 'corporate'): 
   });
   
   // 再加入 localStorage 資料（會覆蓋相同 ID）
-  localStoragePlans.forEach((plan: any) => {
+  localStoragePlans.forEach((plan: MembershipPlan) => {
     allPlansMap.set(plan.id, plan);
   });
   
