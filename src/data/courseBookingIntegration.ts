@@ -74,7 +74,23 @@ export function generateBookingSessions(): BookingCourseSession[] {
 }
 
 // 生成課程時段的輔助函數（從CourseManagement複製並修改）
-function generateCourseSessions(course: any) {
+function generateCourseSessions(course: {
+  startDate: string;
+  endDate: string;
+  totalSessions: number;
+  globalSchedules: Array<{
+    weekdays: string[];
+    startTime: string;
+    endTime: string;
+    teacherId: string | number;
+  }>;
+  sessions: Array<{
+    title: string;
+    classroom: string;
+    materials: string;
+  }>;
+  excludeDates?: string[];
+}) {
   const { startDate, endDate, totalSessions, globalSchedules, sessions, excludeDates } = course;
   
   if (!startDate || !endDate || !globalSchedules?.[0]?.weekdays?.length || !sessions?.length) {
@@ -85,9 +101,17 @@ function generateCourseSessions(course: any) {
   const end = new Date(endDate);
   const classDays = globalSchedules[0].weekdays.map((day: string) => parseInt(day));
   const excludeSet = new Set(excludeDates || []);
-  const generatedSessions: any[] = [];
+  const generatedSessions: Array<{
+    date: string;
+    title: string;
+    startTime: string;
+    endTime: string;
+    teacherId: string | number;
+    classroom: string;
+    materials: string;
+  }> = [];
   
-  let currentDate = new Date(start);
+  const currentDate = new Date(start);
   let sessionIndex = 0;
   
   while (currentDate <= end && sessionIndex < (totalSessions || 0)) {

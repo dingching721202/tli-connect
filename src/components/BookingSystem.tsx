@@ -24,7 +24,7 @@ import { timeslotService, bookingService } from '@/services/dataService';
 import { ClassTimeslot } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
-import { FiLoader, FiFilter, FiCheck, FiX } from 'react-icons/fi';
+import { FiLoader, FiFilter, FiCheck } from 'react-icons/fi';
 import { 
   generateBookingSessions, 
   getCourseFilters, 
@@ -43,7 +43,6 @@ const BookingSystem: React.FC = () => {
   
   // 新增課程篩選相關狀態
   const [courseFilters, setCourseFilters] = useState<CourseFilter[]>([]);
-  const [showFilterModal, setShowFilterModal] = useState(false);
   const [managedCourseSessions, setManagedCourseSessions] = useState<BookingCourseSession[]>([]);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
   const [allCourses, setAllCourses] = useState<BookingCourse[]>([]);
