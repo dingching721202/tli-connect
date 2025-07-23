@@ -1,6 +1,7 @@
 // Import TypeScript data
 import { courses as coursesData } from './courses';
 import { teachers as teachersData } from './teachers';
+import { courses } from './courses'; 
 
 // Raw data interfaces for JSON files
 interface RawCourseData {
