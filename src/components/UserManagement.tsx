@@ -1352,21 +1352,8 @@ const UserManagement: React.FC = () => {
   };
 
   // 方案會員管理函數
-  const handleRemoveUserFromPlan = () => {
-    try {
-      // 這裡應該調用 API 從方案中移除用戶
-      // 暫時使用模擬邏輯
-      alert('✅ 會員已從方案中移除！');
-      
-      // 如果有實際的狀態管理，可以在這裡更新狀態
-      // 例如：重新獲取方案用戶列表
-    } catch (error) {
-      console.error('移除會員失敗:', error);
-      alert('❌ 移除會員失敗！');
-    }
-  };
 
-  const handleAddUserToPlan = (planId: string, userData: any) => {
+  const handleAddUserToPlan = (planId: string, userData: typeof newPlanUser) => {
     try {
       console.log(`Adding user to plan ${planId}:`, userData);
       // 這裡應該調用 API 添加用戶到方案
