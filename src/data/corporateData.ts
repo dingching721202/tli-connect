@@ -301,8 +301,9 @@ export function updateCompany(id: string, updates: Partial<Company>): Company | 
   };
 }
 
-export function deleteCompany(): boolean {
+export function deleteCompany(companyId: string): boolean {
   // Mock implementation - would delete from database
+  console.log(`Deleting company with ID: ${companyId}`);
   return true;
 }
 
