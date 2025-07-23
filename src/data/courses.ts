@@ -42,7 +42,7 @@ export const courses: Course[] = [
     title: "基礎英文會話",
     description: "適合初學者的英文會話課程，重點培養日常對話能力",
     instructor: "Jennifer Smith",
-    instructor_id: "teacher_001",
+    instructor_id: "4", // Daisy Hsu - TEACHER
     duration: "8週",
     price: 3200,
     original_price: 3200,
@@ -81,7 +81,7 @@ export const courses: Course[] = [
     title: "基礎中文會話",
     description: "專為外國學生設計的中文會話課程，從基礎發音開始",
     instructor: "王小明",
-    instructor_id: "teacher_002",
+    instructor_id: "5", // Michael Chen - TEACHER
     duration: "10週",
     price: 4200,
     original_price: 4200,
@@ -120,7 +120,7 @@ export const courses: Course[] = [
     title: "商務英語進階",
     description: "針對商務環境設計的英語課程，包含會議、簡報、談判技巧",
     instructor: "Michael Johnson",
-    instructor_id: "teacher_003",
+    instructor_id: "4", // Daisy Hsu - TEACHER
     duration: "12週",
     price: 5800,
     original_price: 6200,
@@ -159,7 +159,7 @@ export const courses: Course[] = [
     title: "日語入門",
     description: "日語五十音開始，包含基礎語法與日常會話",
     instructor: "田中太郎",
-    instructor_id: "teacher_004",
+    instructor_id: "5", // Michael Chen - TEACHER
     duration: "14週",
     price: 6500,
     original_price: 7000,

@@ -20,8 +20,7 @@ interface BookingCourse {
   status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
   timeslot_id: number;
 }
-import { timeslotService, bookingService } from '@/services/dataService';
-import { ClassTimeslot } from '@/types';
+import { bookingService } from '@/services/dataService';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
 import { FiLoader, FiFilter, FiCheck } from 'react-icons/fi';
@@ -45,7 +44,6 @@ const BookingSystem: React.FC = () => {
   const [courseFilters, setCourseFilters] = useState<CourseFilter[]>([]);
   const [managedCourseSessions, setManagedCourseSessions] = useState<BookingCourseSession[]>([]);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
-  const [allCourses, setAllCourses] = useState<BookingCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
   // 載入課程時段資料 (US05)
@@ -58,10 +56,7 @@ const BookingSystem: React.FC = () => {
         const managedSessions = generateBookingSessions();
         const filters = getCourseFilters();
         
-        // 只使用課程管理的數據
-        const allCoursesData = convertManagedSessionsToCourses(managedSessions);
-        
-        setAllCourses(allCoursesData);
+        // 載入課程管理的數據
         setManagedCourseSessions(managedSessions);
         setCourseFilters(filters);
       } catch (error) {
@@ -74,28 +69,6 @@ const BookingSystem: React.FC = () => {
     loadTimeslots();
   }, []);
 
-  // 將 ClassTimeslot 轉換為 Course 格式
-  const convertTimeslotsToCourses = async (timeslots: ClassTimeslot[]) => {
-    return timeslots.map(timeslot => {
-      const startTime = new Date(timeslot.start_time);
-      const endTime = new Date(timeslot.end_time);
-      
-      return {
-        id: timeslot.id,
-        title: `課程 ${timeslot.id}`, // 可以後續從關聯的課程資料取得
-        date: startTime.toISOString().split('T')[0],
-        timeSlot: `${startTime.toTimeString().slice(0, 5)}-${endTime.toTimeString().slice(0, 5)}`,
-        teacher: '老師', // 可以後續從關聯的課程資料取得
-        price: 0,
-        description: `課程時段 ${timeslot.id}`,
-        // 新增時段狀態資訊
-        capacity: timeslot.capacity,
-        reserved_count: timeslot.reserved_count,
-        status: timeslot.status,
-        timeslot_id: timeslot.id
-      } as BookingCourse;
-    });
-  };
 
   // 將課程管理的 BookingCourseSession 轉換為 BookingCourse 格式
   const convertManagedSessionsToCourses = (sessions: BookingCourseSession[]): BookingCourse[] => {
@@ -278,8 +251,6 @@ const BookingSystem: React.FC = () => {
       
       // 重新載入課程管理資料以更新狀態
       const updatedManagedSessions = generateBookingSessions();
-      const updatedCourses = convertManagedSessionsToCourses(updatedManagedSessions);
-      setAllCourses(updatedCourses);
       setManagedCourseSessions(updatedManagedSessions);
 
     } catch (error) {
