@@ -1370,8 +1370,9 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleEditPlanUser = () => {
+  const handleEditPlanUser = (userId: string, userData: Partial<MockPlanUser>) => {
     try {
+      console.log(`Updating user ${userId}:`, userData);
       // 這裡應該調用 API 更新用戶信息
       // 暫時使用模擬邏輯
       alert('✅ 會員信息已更新！');
