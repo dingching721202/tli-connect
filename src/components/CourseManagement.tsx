@@ -225,7 +225,7 @@ const CourseManagement = () => {
       // 如果是教師，只顯示自己的課程
       if (isTeacher && user) {
         // 管理員可以看到所有課程，教師只看到自己的課程
-        if (user.role === 'admin') {
+        if (user.role === 'ADMIN') {
           setCourses(coursesData);
         } else {
           const assignedCourses = coursesData.filter(course => 
