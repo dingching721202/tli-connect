@@ -138,6 +138,50 @@ const Calendar: React.FC<CalendarProps> = ({
       `${sc.id}-${sc.timeSlot}` === `${course.id}-${course.timeSlot}`
     );
 
+    // 解析課程標題以提取課程信息
+    const parseCourseName = (title: string) => {
+      // 檢查是否為課程管理系統的課程格式
+      if (title.includes('第') && title.includes('課')) {
+        const parts = title.split(' ');
+        if (parts.length >= 2) {
+          return {
+            courseName: parts[0],
+            sessionInfo: parts.slice(1).join(' ')
+          };
+        }
+      }
+      return {
+        courseName: title,
+        sessionInfo: ''
+      };
+    };
+
+    const { courseName, sessionInfo } = parseCourseName(course.title);
+
+    // 根據課程類型設置顏色
+    const getCourseColor = () => {
+      if (course.title.includes('中文') || course.title.includes('華語')) {
+        return isSelected 
+          ? 'bg-blue-500 text-white' 
+          : 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+      } else if (course.title.includes('英文') || course.title.includes('English')) {
+        return isSelected 
+          ? 'bg-green-500 text-white' 
+          : 'bg-green-100 text-green-800 hover:bg-green-200';
+      } else if (course.title.includes('文化')) {
+        return isSelected 
+          ? 'bg-purple-500 text-white' 
+          : 'bg-purple-100 text-purple-800 hover:bg-purple-200';
+      } else if (course.title.includes('商業')) {
+        return isSelected 
+          ? 'bg-orange-500 text-white' 
+          : 'bg-orange-100 text-orange-800 hover:bg-orange-200';
+      }
+      return isSelected 
+        ? 'bg-gray-500 text-white' 
+        : 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+    };
+
     return (
       <motion.div
         key={`${course.id}-${course.timeSlot}`}
@@ -145,20 +189,26 @@ const Calendar: React.FC<CalendarProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
         className={`
-          text-xs px-2 py-1 rounded-md cursor-pointer transition-all duration-200 
-          ${isSelected 
-            ? 'bg-blue-500 text-white shadow-sm' 
-            : 'bg-blue-100 text-blue-800 hover:bg-blue-200'
-          }
+          text-xs px-2 py-1.5 rounded-md cursor-pointer transition-all duration-200 
+          ${getCourseColor()}
           ${isMobile ? 'mb-1' : 'mb-0.5'}
+          shadow-sm border border-opacity-20 border-gray-400
         `}
         onClick={(e) => handleCourseClick(course, date, e)}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
+        title={`${course.title} - ${course.teacher} - ${course.timeSlot}`}
       >
-        <div className="font-medium truncate">{course.title}</div>
-        <div className="text-xs opacity-75 flex items-center justify-between">
-          <span>{course.timeSlot.split('-')[0]}</span>
+        <div className="font-medium truncate leading-tight">
+          {courseName}
+        </div>
+        {sessionInfo && (
+          <div className="text-xs opacity-90 truncate leading-tight">
+            {sessionInfo}
+          </div>
+        )}
+        <div className="text-xs opacity-75 flex items-center justify-between mt-0.5">
+          <span className="font-medium">{course.timeSlot}</span>
           {isSelected && (
             <motion.div
               initial={{ scale: 0, rotate: -180 }}
@@ -169,6 +219,11 @@ const Calendar: React.FC<CalendarProps> = ({
             </motion.div>
           )}
         </div>
+        {course.teacher && course.teacher !== '老師' && (
+          <div className="text-xs opacity-70 truncate leading-tight">
+            {course.teacher}
+          </div>
+        )}
       </motion.div>
     );
   };

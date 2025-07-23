@@ -24,7 +24,14 @@ import { timeslotService, bookingService } from '@/services/dataService';
 import { ClassTimeslot } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
-import { FiLoader } from 'react-icons/fi';
+import { FiLoader, FiFilter, FiCheck, FiX } from 'react-icons/fi';
+import { 
+  generateBookingSessions, 
+  getCourseFilters, 
+  filterBookingSessions,
+  CourseFilter,
+  BookingCourseSession
+} from '@/data/courseBookingIntegration';
 
 const BookingSystem: React.FC = () => {
   const { user, hasActiveMembership } = useAuth();
@@ -33,6 +40,11 @@ const BookingSystem: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedCourses, setSelectedCourses] = useState<BookingCourse[]>([]);
   const [availableCourses, setAvailableCourses] = useState<BookingCourse[]>([]);
+  
+  // 新增課程篩選相關狀態
+  const [courseFilters, setCourseFilters] = useState<CourseFilter[]>([]);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [managedCourseSessions, setManagedCourseSessions] = useState<BookingCourseSession[]>([]);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
   const [allCourses, setAllCourses] = useState<BookingCourse[]>([]);
   useState<ClassTimeslot[]>([]);
@@ -44,11 +56,21 @@ const BookingSystem: React.FC = () => {
     const loadTimeslots = async () => {
       try {
         setLoading(true);
-        const timeslots = await timeslotService.getAllTimeslots();
         
-        // 轉換為現有的 Course 格式以保持相容性
+        // 載入原有的時段數據
+        const timeslots = await timeslotService.getAllTimeslots();
         const courses = await convertTimeslotsToCourses(timeslots);
-        setAllCourses(courses);
+        
+        // 載入課程管理的數據
+        const managedSessions = generateBookingSessions();
+        const filters = getCourseFilters();
+        
+        // 合併兩種數據源
+        const allCoursesData = [...courses, ...convertManagedSessionsToCourses(managedSessions)];
+        
+        setAllCourses(allCoursesData);
+        setManagedCourseSessions(managedSessions);
+        setCourseFilters(filters);
       } catch (error) {
         console.error('載入課程時段失敗:', error);
       } finally {
@@ -82,12 +104,60 @@ const BookingSystem: React.FC = () => {
     });
   };
 
+  // 將課程管理的 BookingCourseSession 轉換為 BookingCourse 格式
+  const convertManagedSessionsToCourses = (sessions: BookingCourseSession[]): BookingCourse[] => {
+    return sessions.map(session => ({
+      id: parseInt(session.id.split('_')[0]) || 0,
+      title: `${session.courseTitle} ${session.sessionTitle}`,
+      date: session.date,
+      timeSlot: `${session.startTime}-${session.endTime}`,
+      teacher: session.teacherName,
+      price: session.price,
+      description: `${session.courseTitle} - 第${session.sessionNumber}課`,
+      capacity: session.capacity,
+      reserved_count: session.currentEnrollments,
+      status: session.status === 'available' ? 'CREATED' : 'CANCELED',
+      timeslot_id: parseInt(session.id.replace(/\D/g, '')) || 0
+    }));
+  };
+
+  // 處理課程篩選
+  const handleCourseFilterToggle = (courseId: string) => {
+    setCourseFilters(prev => 
+      prev.map(filter => 
+        filter.id === courseId 
+          ? { ...filter, selected: !filter.selected }
+          : filter
+      )
+    );
+  };
+
+  // 獲取篩選後的課程
+  const getFilteredCourses = () => {
+    const selectedCourseIds = courseFilters
+      .filter(filter => filter.selected)
+      .map(filter => filter.id);
+    
+    const filteredManagedSessions = filterBookingSessions(managedCourseSessions, selectedCourseIds);
+    const filteredManagedCourses = convertManagedSessionsToCourses(filteredManagedSessions);
+    
+    // 原有的時段課程保持不變
+    const originalCourses = allCourses.filter(course => 
+      !managedCourseSessions.some(session => 
+        parseInt(session.id.split('_')[0]) === course.id
+      )
+    );
+    
+    return [...originalCourses, ...filteredManagedCourses];
+  };
+
   const handleDateSelect = (date: Date, specificCourse?: BookingCourse) => {
     setSelectedDate(date);
     const dateStr = date.toISOString().split('T')[0];
     
     // 篩選該日期的可預約課程時段 (US05)
-    const coursesForDate = allCourses.filter(course => {
+    const filteredCourses = getFilteredCourses();
+    const coursesForDate = filteredCourses.filter(course => {
       if (course.date !== dateStr) return false;
       
       const courseWithStatus = course;
@@ -312,18 +382,102 @@ const BookingSystem: React.FC = () => {
         </div>
       ) : (
         /* Main Content */
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-          {/* Calendar - Takes 2 columns on xl screens */}
-          <div className="xl:col-span-2">
-            <Calendar
-              currentDate={currentDate}
-              onDateChange={setCurrentDate}
-              onDateSelect={handleDateSelect}
-              courses={allCourses}
-              selectedCourses={selectedCourses}
-              onCourseToggle={handleCourseToggle}
-            />
-          </div>
+        <div className="space-y-6">
+          {/* 課程篩選界面 */}
+          {courseFilters.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl shadow-lg border border-gray-100 p-4"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <SafeIcon icon={FiFilter} className="mr-2 text-blue-600" />
+                  課程篩選
+                </h3>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setCourseFilters(prev => prev.map(f => ({ ...f, selected: true })))}
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                  >
+                    全選
+                  </button>
+                  <span className="text-gray-300">|</span>
+                  <button
+                    onClick={() => setCourseFilters(prev => prev.map(f => ({ ...f, selected: false })))}
+                    className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                  >
+                    全不選
+                  </button>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                {courseFilters.map(filter => (
+                  <motion.div
+                    key={filter.id}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => handleCourseFilterToggle(filter.id)}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                      filter.selected
+                        ? 'border-blue-500 bg-blue-50 text-blue-900'
+                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-sm truncate">{filter.title}</h4>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <span className={`inline-block px-2 py-0.5 text-xs rounded-full ${
+                            filter.category === '中文' ? 'bg-blue-100 text-blue-800' :
+                            filter.category === '英文' ? 'bg-green-100 text-green-800' :
+                            filter.category === '文化' ? 'bg-purple-100 text-purple-800' :
+                            filter.category === '商業' ? 'bg-orange-100 text-orange-800' :
+                            'bg-gray-100 text-gray-800'
+                          }`}>
+                            {filter.category}
+                          </span>
+                          <span className={`inline-block px-2 py-0.5 text-xs rounded-full ${
+                            filter.difficulty === 'beginner' ? 'bg-green-100 text-green-800' :
+                            filter.difficulty === 'intermediate' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }`}>
+                            {filter.difficulty === 'beginner' ? '初級' :
+                             filter.difficulty === 'intermediate' ? '中級' : '高級'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ml-2">
+                        {filter.selected ? (
+                          <SafeIcon icon={FiCheck} className="text-blue-600" />
+                        ) : (
+                          <div className="w-4 h-4 border-2 border-gray-300 rounded"></div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+              
+              <div className="mt-4 text-sm text-gray-600">
+                已選擇 {courseFilters.filter(f => f.selected).length} / {courseFilters.length} 門課程
+              </div>
+            </motion.div>
+          )}
+
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
+            {/* Calendar - Takes 2 columns on xl screens */}
+            <div className="xl:col-span-2">
+              <Calendar
+                currentDate={currentDate}
+                onDateChange={setCurrentDate}
+                onDateSelect={handleDateSelect}
+                courses={getFilteredCourses()}
+                selectedCourses={selectedCourses}
+                onCourseToggle={handleCourseToggle}
+              />
+            </div>
 
         {/* Right Panel - Takes 1 column on xl screens */}
         <div className="space-y-6">
