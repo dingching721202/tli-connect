@@ -45,21 +45,23 @@ export function generateBookingSessions(): BookingCourseSession[] {
     const courseSessions = generateCourseSessionsFromManagedCourse(course);
     
     courseSessions.forEach((session, index) => {
-      const teacher = teachers.find(t => t.id.toString() === course.instructor.toString());
+      // 優先使用排程中的教師ID，回退到課程的教師
+      const teacherId = session.teacherId || course.instructor;
+      const teacher = teachers.find(t => t.id.toString() === teacherId.toString());
       
       sessions.push({
         id: `${course.id}_session_${index + 1}`,
         courseId: course.id,
         courseTitle: course.title,
         sessionNumber: index + 1,
-        sessionTitle: `第${index + 1}課`,
+        sessionTitle: session.title || `第${index + 1}課`,
         date: session.date,
         startTime: session.startTime,
         endTime: session.endTime,
-        teacherId: course.instructor,
+        teacherId: teacherId,
         teacherName: teacher?.name || '未指定',
-        classroom: course.location || 'Online',
-        materials: course.materials.join(', ') || '',
+        classroom: session.classroom || course.location || 'Online',
+        materials: session.materials || course.materials?.join(', ') || '',
         category: course.category,
         difficulty: course.difficulty,
         capacity: course.capacity,
@@ -73,16 +75,15 @@ export function generateBookingSessions(): BookingCourseSession[] {
   return sessions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
 
-// 根據 ManagedCourse 生成課程時段
-function generateCourseSessionsFromManagedCourse(course: {
-  startDate: string;
-  endDate: string;
-  totalSessions: number;
-  startTime: string;
-  endTime: string;
-  recurring: boolean;
-  recurringDays?: string[];
-}) {
+// 根據 ManagedCourse 生成課程時段（使用課程管理的完整邏輯）
+function generateCourseSessionsFromManagedCourse(course: any) {
+  // 檢查課程是否有完整的排程配置
+  if (course.globalSchedules && course.sessions && course.startDate && course.endDate) {
+    // 使用課程管理的完整排程邏輯
+    return generateDetailedCourseSessions(course);
+  }
+  
+  // 回退到簡化邏輯（為了向後兼容）
   const { startDate, endDate, totalSessions, startTime, endTime, recurring, recurringDays } = course;
   
   if (!startDate || !endDate || !totalSessions) {
@@ -95,14 +96,20 @@ function generateCourseSessionsFromManagedCourse(course: {
     date: string;
     startTime: string;
     endTime: string;
+    title: string;
+    classroom: string;
+    materials: string;
   }> = [];
   
   if (!recurring) {
     // 非重複課程，只在開始日期創建一個時段
     generatedSessions.push({
       date: startDate,
-      startTime,
-      endTime
+      startTime: startTime || '09:00',
+      endTime: endTime || '17:00',
+      title: '第1課',
+      classroom: course.location || 'Online',
+      materials: course.materials?.join(', ') || ''
     });
   } else {
     // 重複課程，根據 recurringDays 生成時段
@@ -117,8 +124,11 @@ function generateCourseSessionsFromManagedCourse(course: {
       if (classDays.includes(dayOfWeek)) {
         generatedSessions.push({
           date: dateStr,
-          startTime,
-          endTime
+          startTime: startTime || '09:00',
+          endTime: endTime || '17:00',
+          title: `第${sessionIndex + 1}課`,
+          classroom: course.location || 'Online',
+          materials: course.materials?.join(', ') || ''
         });
         
         sessionIndex++;
@@ -126,6 +136,58 @@ function generateCourseSessionsFromManagedCourse(course: {
       
       currentDate.setDate(currentDate.getDate() + 1);
     }
+  }
+  
+  return generatedSessions;
+}
+
+// 使用課程管理的完整排程邏輯（複製自 CourseManagement.tsx）
+function generateDetailedCourseSessions(course: any) {
+  const { startDate, endDate, totalSessions, globalSchedules, sessions, excludeDates } = course;
+  
+  if (!startDate || !endDate || !globalSchedules?.[0]?.weekdays?.length || !sessions?.length) {
+    return [];
+  }
+  
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  const classDays = globalSchedules[0].weekdays.map((day: string) => parseInt(day));
+  const excludeSet = new Set(excludeDates || []);
+  const generatedSessions: Array<{
+    date: string;
+    startTime: string;
+    endTime: string;
+    title: string;
+    classroom: string;
+    materials: string;
+    teacherId: string | number;
+  }> = [];
+  
+  const currentDate = new Date(start);
+  let sessionIndex = 0;
+  
+  while (currentDate <= end && sessionIndex < (totalSessions || 0)) {
+    const dayOfWeek = currentDate.getDay();
+    const dateStr = currentDate.toISOString().split('T')[0];
+    
+    if (classDays.includes(dayOfWeek) && !excludeSet.has(dateStr)) {
+      const schedule = globalSchedules[0];
+      const sessionContent = sessions[sessionIndex % sessions.length];
+      
+      generatedSessions.push({
+        date: dateStr,
+        startTime: schedule.startTime,
+        endTime: schedule.endTime,
+        title: sessionContent.title,
+        classroom: sessionContent.classroom,
+        materials: sessionContent.materials,
+        teacherId: schedule.teacherId
+      });
+      
+      sessionIndex++;
+    }
+    
+    currentDate.setDate(currentDate.getDate() + 1);
   }
   
   return generatedSessions;
