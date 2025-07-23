@@ -46,6 +46,25 @@ function MembershipPageContent() {
     loadPlans();
   }, [activeTab]);
 
+  // 監聽 storage 事件以即時更新資料
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const plans = getPublishedMembershipPlans(activeTab);
+      setMembershipPlans(plans);
+    };
+
+    // 監聽 storage 事件（跨分頁時觸發）
+    window.addEventListener('storage', handleStorageChange);
+    
+    // 監聽自定義事件（同分頁內觸發）
+    window.addEventListener('membershipPlansUpdated', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('membershipPlansUpdated', handleStorageChange);
+    };
+  }, [activeTab]);
+
   const formatPrice = (price: number) => {
     return `NT$ ${price.toLocaleString()}`;
   };

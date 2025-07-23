@@ -1,0 +1,26 @@
+export interface Todo {
+  id: number;
+  created_at: string;
+  name: string;
+  due_date: string;
+  is_completed: boolean;
+}
+
+export const todos: Todo[] = [
+  {
+    id: 1,
+    created_at: "2025-07-14T12:00:00+00:00",
+    name: "準備課程材料",
+    due_date: "2025-07-17T12:00:00+00:00",
+    is_completed: false
+  },
+  {
+    id: 2,
+    created_at: "2025-07-14T12:00:00+00:00",
+    name: "檢查教室設備",
+    due_date: "2025-07-15T12:00:00+00:00",
+    is_completed: true
+  }
+];
+
+export default todos;

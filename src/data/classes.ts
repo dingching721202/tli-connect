@@ -1,0 +1,182 @@
+export interface Schedule {
+  days: string[];
+  start_time: string;
+  end_time: string;
+}
+
+export interface Class {
+  id: number;
+  created_at: string;
+  course_id: number;
+  class_name: string;
+  instructor_id: string;
+  start_time: string;
+  end_time: string;
+  capacity: number;
+  current_enrollments: number;
+  status: 'active' | 'inactive' | 'completed' | 'cancelled';
+  location: string;
+  class_code: string;
+  session_duration: number;
+  total_sessions: number;
+  schedule: Schedule;
+  enrollment_deadline: string;
+  waitlist_enabled: boolean;
+  waitlist_count: number;
+  updated_at: string;
+}
+
+export const classes: Class[] = [
+  {
+    id: 1,
+    created_at: "2025-07-14T12:00:00+00:00",
+    course_id: 1,
+    class_name: "基礎英文會話 - 第1期",
+    instructor_id: "teacher_001",
+    start_time: "2025-07-15T19:00:00+00:00",
+    end_time: "2025-09-12T21:00:00+00:00",
+    capacity: 15,
+    current_enrollments: 12,
+    status: "active",
+    location: "線上",
+    class_code: "ENG001-01",
+    session_duration: 120,
+    total_sessions: 16,
+    schedule: {
+      days: ["Tuesday", "Thursday"],
+      start_time: "19:00",
+      end_time: "21:00"
+    },
+    enrollment_deadline: "2024-07-25T23:59:59+00:00",
+    waitlist_enabled: true,
+    waitlist_count: 3,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 2,
+    created_at: "2025-07-14T12:00:00+00:00",
+    course_id: 2,
+    class_name: "基礎中文會話 - 第1期",
+    instructor_id: "teacher_002",
+    start_time: "2025-07-16T18:00:00+00:00",
+    end_time: "2025-10-12T20:00:00+00:00",
+    capacity: 12,
+    current_enrollments: 8,
+    status: "active",
+    location: "台北教室",
+    class_code: "CHN001-01",
+    session_duration: 120,
+    total_sessions: 20,
+    schedule: {
+      days: ["Tuesday", "Saturday"],
+      start_time: "18:00",
+      end_time: "20:00"
+    },
+    enrollment_deadline: "2024-08-01T23:59:59+00:00",
+    waitlist_enabled: false,
+    waitlist_count: 0,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 3,
+    created_at: "2025-07-14T12:00:00+00:00",
+    course_id: 3,
+    class_name: "商務英語進階 - 第1期",
+    instructor_id: "teacher_003",
+    start_time: "2025-08-05T19:30:00+00:00",
+    end_time: "2025-10-21T21:30:00+00:00",
+    capacity: 20,
+    current_enrollments: 16,
+    status: "active",
+    location: "線上",
+    class_code: "BUS001-01",
+    session_duration: 120,
+    total_sessions: 24,
+    schedule: {
+      days: ["Monday", "Wednesday"],
+      start_time: "19:30",
+      end_time: "21:30"
+    },
+    enrollment_deadline: "2024-07-25T23:59:59+00:00",
+    waitlist_enabled: true,
+    waitlist_count: 5,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 4,
+    created_at: "2025-07-14T12:00:00+00:00",
+    course_id: 4,
+    class_name: "日語入門 - 第1期",
+    instructor_id: "teacher_004",
+    start_time: "2025-08-02T19:00:00+00:00",
+    end_time: "2025-11-01T21:00:00+00:00",
+    capacity: 18,
+    current_enrollments: 14,
+    status: "active",
+    location: "台北教室",
+    class_code: "JPN001-01",
+    session_duration: 120,
+    total_sessions: 28,
+    schedule: {
+      days: ["Friday"],
+      start_time: "19:00",
+      end_time: "21:00"
+    },
+    enrollment_deadline: "2024-07-26T23:59:59+00:00",
+    waitlist_enabled: false,
+    waitlist_count: 0,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 5,
+    created_at: "2025-07-14T12:00:00+00:00",
+    course_id: 5,
+    class_name: "TOEIC 衝刺班 - 第1期",
+    instructor_id: "teacher_005",
+    start_time: "2025-08-03T14:00:00+00:00",
+    end_time: "2025-09-08T17:00:00+00:00",
+    capacity: 25,
+    current_enrollments: 22,
+    status: "active",
+    location: "台北教室",
+    class_code: "TOE001-01",
+    session_duration: 180,
+    total_sessions: 12,
+    schedule: {
+      days: ["Saturday", "Sunday"],
+      start_time: "14:00",
+      end_time: "17:00"
+    },
+    enrollment_deadline: "2024-07-30T23:59:59+00:00",
+    waitlist_enabled: true,
+    waitlist_count: 8,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 6,
+    created_at: "2025-07-14T12:00:00+00:00",
+    course_id: 6,
+    class_name: "雅思寫作專修 - 第1期",
+    instructor_id: "teacher_006",
+    start_time: "2025-08-07T18:30:00+00:00",
+    end_time: "2025-09-25T21:00:00+00:00",
+    capacity: 15,
+    current_enrollments: 11,
+    status: "active",
+    location: "線上",
+    class_code: "IEL001-01",
+    session_duration: 150,
+    total_sessions: 16,
+    schedule: {
+      days: ["Wednesday"],
+      start_time: "18:30",
+      end_time: "21:00"
+    },
+    enrollment_deadline: "2024-08-01T23:59:59+00:00",
+    waitlist_enabled: true,
+    waitlist_count: 2,
+    updated_at: "2025-07-20T00:00:00Z"
+  }
+];
+
+export default classes;

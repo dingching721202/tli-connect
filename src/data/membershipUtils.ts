@@ -1,5 +1,5 @@
-// Import JSON data
-import memberCardPlans from './member_card_plans.json';
+// Import TypeScript data
+import { memberCardPlans } from './member_card_plans';
 
 interface RawMembershipPlanData {
   id: number;
@@ -49,13 +49,34 @@ function convertToMembershipPlan(plan: RawMembershipPlanData): MembershipPlan {
     type: plan.plan_type as 'individual' | 'corporate',
     features: plan.features,
     published: plan.published,
-    category: plan.category
+    category: plan.category,
+    status: plan.published ? 'published' : 'draft'
   };
 }
 
 // Get published membership plans filtered by type
 export function getPublishedMembershipPlans(type?: 'individual' | 'corporate'): MembershipPlan[] {
-  let plans = memberCardPlans
+  // 合併靜態資料和 localStorage 資料
+  const staticPlans = memberCardPlans;
+  const localStoragePlans = typeof localStorage !== 'undefined' 
+    ? JSON.parse(localStorage.getItem('memberCardPlans') || '[]')
+    : [];
+  
+  // 合併資料，localStorage 優先（會覆蓋相同 ID 的靜態資料）
+  const allPlansMap = new Map();
+  
+  // 先加入靜態資料
+  staticPlans.forEach(plan => {
+    allPlansMap.set(plan.id, plan);
+  });
+  
+  // 再加入 localStorage 資料（會覆蓋相同 ID）
+  localStoragePlans.forEach((plan: any) => {
+    allPlansMap.set(plan.id, plan);
+  });
+  
+  // 轉換為陣列並過濾已發布的方案
+  let plans = Array.from(allPlansMap.values())
     .filter(plan => plan.published)
     .map(convertToMembershipPlan);
   
@@ -68,23 +89,59 @@ export function getPublishedMembershipPlans(type?: 'individual' | 'corporate'): 
 
 // Get membership plan by ID
 export function getMembershipPlanById(id: string): MembershipPlan | null {
+  // 先檢查 localStorage
+  if (typeof localStorage !== 'undefined') {
+    const localStoragePlans = JSON.parse(localStorage.getItem('memberCardPlans') || '[]');
+    const localPlan = localStoragePlans.find((plan: any) => plan.id.toString() === id);
+    if (localPlan) {
+      return convertToMembershipPlan(localPlan);
+    }
+  }
+  
+  // 如果 localStorage 中沒有，檢查靜態資料
   const plan = memberCardPlans.find(plan => plan.id.toString() === id);
   return plan ? convertToMembershipPlan(plan) : null;
 }
 
 // Get all membership plans
 export function getMembershipPlans(): MembershipPlan[] {
-  return memberCardPlans.map(convertToMembershipPlan);
+  // 合併靜態資料和 localStorage 資料
+  const staticPlans = memberCardPlans;
+  const localStoragePlans = typeof localStorage !== 'undefined' 
+    ? JSON.parse(localStorage.getItem('memberCardPlans') || '[]')
+    : [];
+  
+  // 合併資料，localStorage 優先（會覆蓋相同 ID 的靜態資料）
+  const allPlansMap = new Map();
+  
+  // 先加入靜態資料
+  staticPlans.forEach(plan => {
+    allPlansMap.set(plan.id, plan);
+  });
+  
+  // 再加入 localStorage 資料（會覆蓋相同 ID）
+  localStoragePlans.forEach((plan: any) => {
+    allPlansMap.set(plan.id, plan);
+  });
+  
+  // 轉換為陣列
+  return Array.from(allPlansMap.values()).map(convertToMembershipPlan);
 }
 
 // Create new membership plan (adds to localStorage)
 export function createMembershipPlan(plan: Omit<MembershipPlan, 'id'>): MembershipPlan {
   if (typeof localStorage !== 'undefined') {
     const existingPlans = JSON.parse(localStorage.getItem('memberCardPlans') || JSON.stringify(memberCardPlans));
+    
+    // 確保唯一 ID
+    const maxId = Math.max(0, ...existingPlans.map((p: any) => p.id || 0));
+    const newId = maxId + 1;
+    const timestamp = Date.now();
+    
     const newPlan = {
-      id: Date.now(),
+      id: newId,
       created_at: new Date().toISOString(),
-      member_card_id: Date.now(),
+      member_card_id: newId,
       type: plan.type.toUpperCase(),
       name: plan.name,
       price: plan.price.toString(),
@@ -97,13 +154,20 @@ export function createMembershipPlan(plan: Omit<MembershipPlan, 'id'>): Membersh
     };
     existingPlans.push(newPlan);
     localStorage.setItem('memberCardPlans', JSON.stringify(existingPlans));
+    
+    // 觸發更新事件
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('membershipPlansUpdated'));
+    }
+    
     return convertToMembershipPlan(newPlan);
   }
   
   // Fallback for server-side
+  const maxId = Math.max(0, ...memberCardPlans.map(p => p.id || 0));
   const newPlan: MembershipPlan = {
     ...plan,
-    id: `plan_${Date.now()}`
+    id: `plan_${maxId + 1}_${Date.now()}`
   };
   return newPlan;
 }
@@ -129,8 +193,19 @@ export function updateMembershipPlan(id: string, updates: Partial<MembershipPlan
     if (updates.published !== undefined) jsonUpdates.published = updates.published;
     if (updates.category) jsonUpdates.category = updates.category;
     
+    // Sync status and published properties
+    if (updates.status) {
+      jsonUpdates.published = updates.status === 'published';
+    }
+    
     existingPlans[index] = { ...existingPlans[index], ...jsonUpdates };
     localStorage.setItem('memberCardPlans', JSON.stringify(existingPlans));
+    
+    // 觸發更新事件
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('membershipPlansUpdated'));
+    }
+    
     return convertToMembershipPlan(existingPlans[index]);
   }
   
@@ -146,6 +221,12 @@ export function deleteMembershipPlan(id: string): boolean {
     
     existingPlans.splice(index, 1);
     localStorage.setItem('memberCardPlans', JSON.stringify(existingPlans));
+    
+    // 觸發更新事件
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('membershipPlansUpdated'));
+    }
+    
     return true;
   }
   

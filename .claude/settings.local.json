@@ -12,7 +12,9 @@
       "Bash(node:*)",
       "Bash(pkill:*)",
       "Bash(grep:*)",
-      "Bash(npm run lint)"
+      "Bash(npm run lint)",
+      "Bash(ls:*)",
+      "Bash(npx next:*)"
     ],
     "deny": []
   }

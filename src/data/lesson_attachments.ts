@@ -1,0 +1,161 @@
+export interface LessonAttachment {
+  id: number;
+  created_at: string;
+  lesson_id: number;
+  attachment_type: 'video' | 'pdf' | 'audio' | 'presentation' | 'interactive' | 'worksheet';
+  title: string;
+  description: string;
+  video_duration_in_seconds?: number;
+  video_url?: string;
+  file_size_bytes?: number;
+  thumbnail_url?: string;
+  file_url?: string;
+  audio_url?: string;
+  audio_duration_in_seconds?: number;
+  web_url?: string;
+  order: number;
+  is_required: boolean;
+  updated_at: string;
+}
+
+export const lessonAttachments: LessonAttachment[] = [
+  {
+    id: 1,
+    created_at: "2025-07-14T12:00:00+00:00",
+    lesson_id: 1,
+    attachment_type: "video",
+    title: "基礎問候語教學影片",
+    description: "學習英語基本問候語的發音和使用情境",
+    video_duration_in_seconds: 1800,
+    video_url: "https://example.com/video1.mp4",
+    file_size_bytes: 125000000,
+    thumbnail_url: "https://example.com/thumb1.jpg",
+    order: 1,
+    is_required: true,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 2,
+    created_at: "2025-07-14T12:00:00+00:00",
+    lesson_id: 2,
+    attachment_type: "video",
+    title: "日常對話情境演練",
+    description: "購物和餐廳場景的實際對話範例",
+    video_duration_in_seconds: 2100,
+    video_url: "https://example.com/video2.mp4",
+    file_size_bytes: 150000000,
+    thumbnail_url: "https://example.com/thumb2.jpg",
+    order: 1,
+    is_required: true,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 3,
+    created_at: "2025-07-14T12:00:00+00:00",
+    lesson_id: 1,
+    attachment_type: "pdf",
+    title: "問候語詞彙表",
+    description: "常用問候語和回應的詞彙列表",
+    file_url: "https://example.com/vocab-greeting.pdf",
+    file_size_bytes: 2500000,
+    order: 2,
+    is_required: true,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 4,
+    created_at: "2025-07-14T12:00:00+00:00",
+    lesson_id: 2,
+    attachment_type: "audio",
+    title: "對話練習音檔",
+    description: "購物和餐廳情境對話的音頻練習",
+    audio_url: "https://example.com/audio1.mp3",
+    audio_duration_in_seconds: 900,
+    file_size_bytes: 15000000,
+    order: 2,
+    is_required: false,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 5,
+    created_at: "2025-07-14T12:00:00+00:00",
+    lesson_id: 3,
+    attachment_type: "video",
+    title: "中文四聲調教學",
+    description: "詳細解說中文四個聲調的發音方法",
+    video_duration_in_seconds: 1500,
+    video_url: "https://example.com/chinese-tones.mp4",
+    file_size_bytes: 110000000,
+    thumbnail_url: "https://example.com/thumb-chinese.jpg",
+    order: 1,
+    is_required: true,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 6,
+    created_at: "2025-07-14T12:00:00+00:00",
+    lesson_id: 4,
+    attachment_type: "presentation",
+    title: "商務會議簡報範例",
+    description: "實際商務會議的簡報案例分析",
+    file_url: "https://example.com/business-meeting.pptx",
+    file_size_bytes: 8500000,
+    order: 1,
+    is_required: true,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 7,
+    created_at: "2025-07-14T12:00:00+00:00",
+    lesson_id: 5,
+    attachment_type: "interactive",
+    title: "五十音互動練習",
+    description: "日語五十音的互動式學習工具",
+    web_url: "https://example.com/hiragana-practice",
+    order: 1,
+    is_required: true,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 8,
+    created_at: "2025-07-14T12:00:00+00:00",
+    lesson_id: 6,
+    attachment_type: "audio",
+    title: "TOEIC聽力模擬試題",
+    description: "Part 1-4 完整聽力練習題目",
+    audio_url: "https://example.com/toeic-listening.mp3",
+    audio_duration_in_seconds: 3600,
+    file_size_bytes: 75000000,
+    order: 1,
+    is_required: true,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 9,
+    created_at: "2025-07-14T12:00:00+00:00",
+    lesson_id: 7,
+    attachment_type: "pdf",
+    title: "IELTS Task 1 範例分析",
+    description: "高分範文分析與寫作技巧說明",
+    file_url: "https://example.com/ielts-task1-samples.pdf",
+    file_size_bytes: 4500000,
+    order: 1,
+    is_required: true,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 10,
+    created_at: "2025-07-14T12:00:00+00:00",
+    lesson_id: 8,
+    attachment_type: "worksheet",
+    title: "時間表達練習題",
+    description: "各種時間和日期表達方式的練習題目",
+    file_url: "https://example.com/time-expressions-worksheet.pdf",
+    file_size_bytes: 1800000,
+    order: 1,
+    is_required: false,
+    updated_at: "2025-07-20T00:00:00Z"
+  }
+];
+
+export default lessonAttachments;

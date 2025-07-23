@@ -4,15 +4,15 @@ import {
   ApiResponse, LoginResponse, BatchBookingResponse
 } from '@/types';
 
-// JSON 資料匯入
-import usersData from '@/data/users.json';
-import coursesData from '@/data/courses.json';
-import classesData from '@/data/classes.json';
-import memberCardPlansData from '@/data/member_card_plans.json';
-import membershipsData from '@/data/memberships.json';
-import ordersData from '@/data/orders.json';
-import classTimeslotsData from '@/data/class_timeslots.json';
-import classAppointmentsData from '@/data/class_appointments.json';
+// TypeScript 資料匯入
+import { users as usersData } from '@/data/users';
+import { courses as coursesData } from '@/data/courses';
+import { classes as classesData } from '@/data/classes';
+import { memberCardPlans as memberCardPlansData } from '@/data/member_card_plans';
+import { memberships as membershipsData } from '@/data/memberships';
+import { orders as ordersData } from '@/data/orders';
+import { classTimeslots as classTimeslotsData } from '@/data/class_timeslots';
+import { classAppointments as classAppointmentsData } from '@/data/class_appointments';
 
 // 模擬資料庫
 const users: User[] = [...usersData] as User[];

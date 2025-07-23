@@ -122,16 +122,6 @@ const MembershipPlanManagement = () => {
     }
   };
 
-  const handleToggleStatus = (planId: string) => {
-    const plan = plans.find(p => p.id === planId);
-    if (plan) {
-      const newStatus = plan.status === 'draft' ? 'published' : 'draft';
-      const updatedPlan = updateMembershipPlan(planId, { status: newStatus });
-      if (updatedPlan) {
-        setPlans(prev => prev.map(p => p.id === planId ? updatedPlan : p));
-      }
-    }
-  };
 
   const handleFeatureChange = (index: number, value: string) => {
     const newFeatures = [...(formData.features || [])];
@@ -217,25 +207,30 @@ const MembershipPlanManagement = () => {
           <motion.div
             key={plan.id}
             whileHover={{ scale: 1.02 }}
-            className={`border rounded-xl p-6 relative ${
-              plan.status === 'published' ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
+            className={`border-2 rounded-xl p-6 relative transition-all duration-300 ${
+              (plan.status === 'published' || plan.published)
+                ? 'border-green-300 bg-gradient-to-br from-green-50 to-green-100 shadow-md hover:shadow-lg' 
+                : 'border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 opacity-75 hover:opacity-90'
             }`}
           >
-            {/* Status Badge */}
+            {/* Status Indicator */}
             <div className="absolute top-4 right-4">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                plan.status === 'published' 
-                  ? 'bg-green-100 text-green-800' 
-                  : 'bg-yellow-100 text-yellow-800'
+              <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1 ${
+                (plan.status === 'published' || plan.published)
+                  ? 'bg-green-100 text-green-800 border border-green-200' 
+                  : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
               }`}>
-                {plan.status === 'published' ? '已發布' : '草稿'}
-              </span>
+                <div className={`w-2 h-2 rounded-full ${
+                  (plan.status === 'published' || plan.published) ? 'bg-green-500' : 'bg-yellow-500'
+                }`} />
+                <span>{(plan.status === 'published' || plan.published) ? '已發布' : '草稿'}</span>
+              </div>
             </div>
 
             {/* Popular Badge */}
             {plan.popular && (
               <div className="absolute top-4 left-4">
-                <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1">
+                <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1 shadow-md">
                   <SafeIcon icon={FiStar} className="text-xs" />
                   <span>熱門</span>
                 </span>
@@ -250,7 +245,18 @@ const MembershipPlanManagement = () => {
                   {plan.type === 'individual' ? '個人方案' : '企業方案'}
                 </span>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
+              <div className="flex items-center space-x-2 mb-2">
+                <h3 className={`text-xl font-bold mb-0 ${
+                  (plan.status === 'published' || plan.published) ? 'text-gray-900' : 'text-gray-600'
+                }`}>
+                  {plan.name}
+                </h3>
+                {!(plan.status === 'published' || plan.published) && (
+                  <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
+                    預覽模式
+                  </span>
+                )}
+              </div>
               <div className="flex items-center space-x-2 mb-4">
                 <SafeIcon icon={FiCalendar} className="text-gray-500" />
                 <span className="text-sm text-gray-600">{plan.duration} 個月</span>
@@ -314,15 +320,41 @@ const MembershipPlanManagement = () => {
                     <SafeIcon icon={FiTrash2} />
                   </button>
                 </div>
+                
+                {/* Publish/Unpublish Button */}
                 <button
-                  onClick={() => handleToggleStatus(plan.id)}
-                  className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
-                    plan.status === 'published'
-                      ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
-                      : 'bg-green-100 text-green-800 hover:bg-green-200'
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('Button clicked, current plan:', plan.id, 'status:', plan.status, 'published:', plan.published);
+                    
+                    const currentStatus = plan.status || (plan.published ? 'published' : 'draft');
+                    const newStatus = currentStatus === 'published' ? 'draft' : 'published';
+                    
+                    console.log('Changing status from', currentStatus, 'to', newStatus);
+                    
+                    const updatedPlan = updateMembershipPlan(plan.id, { 
+                      status: newStatus,
+                      published: newStatus === 'published'
+                    });
+                    
+                    console.log('Updated plan result:', updatedPlan);
+                    
+                    if (updatedPlan) {
+                      setPlans(prev => {
+                        const newPlans = prev.map(p => p.id === plan.id ? updatedPlan : p);
+                        console.log('Updated plans list:', newPlans);
+                        return newPlans;
+                      });
+                    }
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    (plan.status === 'published' || plan.published)
+                      ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border border-yellow-200'
+                      : 'bg-green-100 text-green-800 hover:bg-green-200 border border-green-200'
                   }`}
+                  title={(plan.status === 'published' || plan.published) ? '取消發布' : '發布方案'}
                 >
-                  {plan.status === 'published' ? '設為草稿' : '發布'}
+                  {(plan.status === 'published' || plan.published) ? '取消發布' : '立即發布'}
                 </button>
               </div>
             </div>
