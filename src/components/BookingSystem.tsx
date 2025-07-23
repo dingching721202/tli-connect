@@ -54,16 +54,12 @@ const BookingSystem: React.FC = () => {
       try {
         setLoading(true);
         
-        // 載入原有的時段數據
-        const timeslots = await timeslotService.getAllTimeslots();
-        const courses = await convertTimeslotsToCourses(timeslots);
-        
-        // 載入課程管理的數據
+        // 只載入課程管理的數據
         const managedSessions = generateBookingSessions();
         const filters = getCourseFilters();
         
-        // 合併兩種數據源
-        const allCoursesData = [...courses, ...convertManagedSessionsToCourses(managedSessions)];
+        // 只使用課程管理的數據
+        const allCoursesData = convertManagedSessionsToCourses(managedSessions);
         
         setAllCourses(allCoursesData);
         setManagedCourseSessions(managedSessions);
@@ -138,14 +134,7 @@ const BookingSystem: React.FC = () => {
     const filteredManagedSessions = filterBookingSessions(managedCourseSessions, selectedCourseIds);
     const filteredManagedCourses = convertManagedSessionsToCourses(filteredManagedSessions);
     
-    // 原有的時段課程保持不變
-    const originalCourses = allCourses.filter(course => 
-      !managedCourseSessions.some(session => 
-        parseInt(session.id.split('_')[0]) === course.id
-      )
-    );
-    
-    return [...originalCourses, ...filteredManagedCourses];
+    return filteredManagedCourses;
   };
 
   const handleDateSelect = (date: Date, specificCourse?: BookingCourse) => {
@@ -287,10 +276,11 @@ const BookingSystem: React.FC = () => {
       setSelectedCourses([]);
       setShowCourseSelection(false);
       
-      // 重新載入時段資料以更新狀態
-      const timeslots = await timeslotService.getAllTimeslots();
-      const courses = await convertTimeslotsToCourses(timeslots);
-      setAllCourses(courses);
+      // 重新載入課程管理資料以更新狀態
+      const updatedManagedSessions = generateBookingSessions();
+      const updatedCourses = convertManagedSessionsToCourses(updatedManagedSessions);
+      setAllCourses(updatedCourses);
+      setManagedCourseSessions(updatedManagedSessions);
 
     } catch (error) {
       console.error('預約失敗:', error);
