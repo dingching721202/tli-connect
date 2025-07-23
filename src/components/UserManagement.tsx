@@ -1366,8 +1366,9 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleAddUserToPlan = () => {
+  const handleAddUserToPlan = (planId: string, userData: any) => {
     try {
+      console.log(`Adding user to plan ${planId}:`, userData);
       // 這裡應該調用 API 添加用戶到方案
       // 暫時使用模擬邏輯
       alert('✅ 會員已添加到方案！');
