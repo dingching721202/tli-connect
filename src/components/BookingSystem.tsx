@@ -47,9 +47,7 @@ const BookingSystem: React.FC = () => {
   const [managedCourseSessions, setManagedCourseSessions] = useState<BookingCourseSession[]>([]);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
   const [allCourses, setAllCourses] = useState<BookingCourse[]>([]);
-  useState<ClassTimeslot[]>([]);
   const [loading, setLoading] = useState(true);
-  useState(false);
 
   // 載入課程時段資料 (US05)
   useEffect(() => {
@@ -501,8 +499,6 @@ const BookingSystem: React.FC = () => {
           />
         </div>
       </div>
-      )}
-
 
       {/* Student without membership notice */}
       {user?.role === 'STUDENT' && !hasActiveMembership() && (
