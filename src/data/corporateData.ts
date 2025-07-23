@@ -269,8 +269,9 @@ export function getCompanyStatistics() {
   return getCorporateStatistics();
 }
 
-export function getCorporateUsersByCompany() {
+export function getCorporateUsersByCompany(companyId: string) {
   // Mock data - in real app would fetch from database
+  console.log(`Getting users for company ID: ${companyId}`);
   return [];
 }
 
