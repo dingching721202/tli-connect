@@ -41,31 +41,31 @@ export function generateBookingSessions(): BookingCourseSession[] {
     // 只處理已發布的課程
     if (course.status !== 'active') return;
 
-    // 生成課程時段
-    const courseSessions = generateCourseSessions(course);
+    // 根據 ManagedCourse 的實際結構生成時段
+    const courseSessions = generateCourseSessionsFromManagedCourse(course);
     
     courseSessions.forEach((session, index) => {
-      const teacher = teachers.find(t => t.id.toString() === session.teacherId.toString());
+      const teacher = teachers.find(t => t.id.toString() === course.instructor.toString());
       
       sessions.push({
         id: `${course.id}_session_${index + 1}`,
-        courseId: course.id!,
-        courseTitle: course.title || '',
+        courseId: course.id,
+        courseTitle: course.title,
         sessionNumber: index + 1,
-        sessionTitle: session.title,
+        sessionTitle: `第${index + 1}課`,
         date: session.date,
         startTime: session.startTime,
         endTime: session.endTime,
-        teacherId: session.teacherId,
+        teacherId: course.instructor,
         teacherName: teacher?.name || '未指定',
-        classroom: session.classroom,
-        materials: session.materials,
-        category: course.category || '其它',
-        difficulty: course.difficulty || 'beginner',
-        capacity: course.capacity || 20,
-        currentEnrollments: course.currentEnrollments || 0,
-        price: course.price || 0,
-        status: (course.currentEnrollments || 0) >= (course.capacity || 20) ? 'full' : 'available'
+        classroom: course.location || 'Online',
+        materials: course.materials.join(', ') || '',
+        category: course.category,
+        difficulty: course.difficulty,
+        capacity: course.capacity,
+        currentEnrollments: course.currentEnrollments,
+        price: course.price,
+        status: course.currentEnrollments >= course.capacity ? 'full' : 'available'
       });
     });
   });
@@ -73,69 +73,59 @@ export function generateBookingSessions(): BookingCourseSession[] {
   return sessions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
 
-// 生成課程時段的輔助函數（從CourseManagement複製並修改）
-function generateCourseSessions(course: {
+// 根據 ManagedCourse 生成課程時段
+function generateCourseSessionsFromManagedCourse(course: {
   startDate: string;
   endDate: string;
   totalSessions: number;
-  globalSchedules: Array<{
-    weekdays: string[];
-    startTime: string;
-    endTime: string;
-    teacherId: string | number;
-  }>;
-  sessions: Array<{
-    title: string;
-    classroom: string;
-    materials: string;
-  }>;
-  excludeDates?: string[];
+  startTime: string;
+  endTime: string;
+  recurring: boolean;
+  recurringDays?: string[];
 }) {
-  const { startDate, endDate, totalSessions, globalSchedules, sessions, excludeDates } = course;
+  const { startDate, endDate, totalSessions, startTime, endTime, recurring, recurringDays } = course;
   
-  if (!startDate || !endDate || !globalSchedules?.[0]?.weekdays?.length || !sessions?.length) {
+  if (!startDate || !endDate || !totalSessions) {
     return [];
   }
   
   const start = new Date(startDate);
   const end = new Date(endDate);
-  const classDays = globalSchedules[0].weekdays.map((day: string) => parseInt(day));
-  const excludeSet = new Set(excludeDates || []);
   const generatedSessions: Array<{
     date: string;
-    title: string;
     startTime: string;
     endTime: string;
-    teacherId: string | number;
-    classroom: string;
-    materials: string;
   }> = [];
   
-  const currentDate = new Date(start);
-  let sessionIndex = 0;
-  
-  while (currentDate <= end && sessionIndex < (totalSessions || 0)) {
-    const dayOfWeek = currentDate.getDay();
-    const dateStr = currentDate.toISOString().split('T')[0];
+  if (!recurring) {
+    // 非重複課程，只在開始日期創建一個時段
+    generatedSessions.push({
+      date: startDate,
+      startTime,
+      endTime
+    });
+  } else {
+    // 重複課程，根據 recurringDays 生成時段
+    const classDays = recurringDays?.map(day => parseInt(day)) || [1, 3, 5]; // 預設週一、三、五
+    const currentDate = new Date(start);
+    let sessionIndex = 0;
     
-    if (classDays.includes(dayOfWeek) && !excludeSet.has(dateStr)) {
-      const schedule = globalSchedules[0];
-      const sessionContent = sessions[sessionIndex % sessions.length];
+    while (currentDate <= end && sessionIndex < totalSessions) {
+      const dayOfWeek = currentDate.getDay();
+      const dateStr = currentDate.toISOString().split('T')[0];
       
-      generatedSessions.push({
-        date: dateStr,
-        title: sessionContent.title,
-        startTime: schedule.startTime,
-        endTime: schedule.endTime,
-        teacherId: schedule.teacherId,
-        classroom: sessionContent.classroom,
-        materials: sessionContent.materials
-      });
+      if (classDays.includes(dayOfWeek)) {
+        generatedSessions.push({
+          date: dateStr,
+          startTime,
+          endTime
+        });
+        
+        sessionIndex++;
+      }
       
-      sessionIndex++;
+      currentDate.setDate(currentDate.getDate() + 1);
     }
-    
-    currentDate.setDate(currentDate.getDate() + 1);
   }
   
   return generatedSessions;
