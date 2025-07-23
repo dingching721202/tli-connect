@@ -133,7 +133,7 @@ const CourseTemplateManagement = () => {
       return;
     }
 
-    if (status === 'published' && (!formData.description?.trim() || formData.totalSessions < 1)) {
+    if (status === 'published' && (!formData.description?.trim() || (formData.totalSessions ?? 0) < 1)) {
       alert('發布課程需要填寫描述和至少一堂課程');
       return;
     }
