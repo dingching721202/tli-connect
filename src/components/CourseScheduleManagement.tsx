@@ -230,7 +230,7 @@ const CourseScheduleManagement = () => {
   };
 
   // 處理時間段變更
-  const handleTimeSlotChange = (slotIndex: number, field: keyof TimeSlot, value: string | string[]) => {
+  const handleTimeSlotChange = (slotIndex: number, field: keyof TimeSlot, value: string | string[] | number[]) => {
     const newTimeSlots = [...formData.timeSlots];
     newTimeSlots[slotIndex] = {
       ...newTimeSlots[slotIndex],
