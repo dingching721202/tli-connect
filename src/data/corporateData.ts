@@ -269,12 +269,12 @@ export function getCompanyStatistics() {
   return getCorporateStatistics();
 }
 
-export function getCorporateUsersByCompany(_companyId: string) {
+export function getCorporateUsersByCompany() {
   // Mock data - in real app would fetch from database
   return [];
 }
 
-export function getCorporateUsersByPlan(_planId: string) {
+export function getCorporateUsersByPlan() {
   // Mock data - in real app would fetch from database
   return [];
 }
@@ -301,7 +301,7 @@ export function updateCompany(id: string, updates: Partial<Company>): Company | 
   };
 }
 
-export function deleteCompany(_id: string): boolean {
+export function deleteCompany(): boolean {
   // Mock implementation - would delete from database
   return true;
 }

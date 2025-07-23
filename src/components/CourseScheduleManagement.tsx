@@ -26,8 +26,8 @@ import {
 } from '@/data/courseUtils';
 
 const {
-  FiCalendar, FiClock, FiUser, FiPlus, FiTrash2, FiEdit2, FiSearch,
-  FiSave, FiX, FiEye, FiEyeOff, FiRefreshCw, FiUsers
+  FiCalendar, FiPlus, FiTrash2, FiEdit2, FiSearch,
+  FiSave, FiX, FiEye, FiEyeOff, FiRefreshCw
 } = FiIcons;
 
 const CourseScheduleManagement = () => {
@@ -230,7 +230,7 @@ const CourseScheduleManagement = () => {
   };
 
   // 處理時間段變更
-  const handleTimeSlotChange = (slotIndex: number, field: keyof TimeSlot, value: any) => {
+  const handleTimeSlotChange = (slotIndex: number, field: keyof TimeSlot, value: string | string[]) => {
     const newTimeSlots = [...formData.timeSlots];
     newTimeSlots[slotIndex] = {
       ...newTimeSlots[slotIndex],

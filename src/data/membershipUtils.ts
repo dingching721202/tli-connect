@@ -92,7 +92,7 @@ export function getMembershipPlanById(id: string): MembershipPlan | null {
   // 先檢查 localStorage
   if (typeof localStorage !== 'undefined') {
     const localStoragePlans = JSON.parse(localStorage.getItem('memberCardPlans') || '[]');
-    const localPlan = localStoragePlans.find((plan: any) => plan.id.toString() === id);
+    const localPlan = localStoragePlans.find((plan: { id: string | number }) => plan.id.toString() === id);
     if (localPlan) {
       return convertToMembershipPlan(localPlan);
     }
@@ -120,7 +120,7 @@ export function getMembershipPlans(): MembershipPlan[] {
   });
   
   // 再加入 localStorage 資料（會覆蓋相同 ID）
-  localStoragePlans.forEach((plan: any) => {
+  localStoragePlans.forEach((plan: { id: string | number }) => {
     allPlansMap.set(plan.id, plan);
   });
   
@@ -134,9 +134,8 @@ export function createMembershipPlan(plan: Omit<MembershipPlan, 'id'>): Membersh
     const existingPlans = JSON.parse(localStorage.getItem('memberCardPlans') || JSON.stringify(memberCardPlans));
     
     // 確保唯一 ID
-    const maxId = Math.max(0, ...existingPlans.map((p: any) => p.id || 0));
+    const maxId = Math.max(0, ...existingPlans.map((p: { id?: number }) => p.id || 0));
     const newId = maxId + 1;
-    const timestamp = Date.now();
     
     const newPlan = {
       id: newId,

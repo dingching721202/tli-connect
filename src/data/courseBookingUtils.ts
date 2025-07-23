@@ -1,7 +1,5 @@
 // 課程預約工具函數 - 使用日曆排程數據
 import {
-  CourseSchedule,
-  ScheduledSession,
   getPublishedCourseSchedules
 } from './courseScheduleUtils';
 
@@ -122,7 +120,7 @@ export function bookSession(sessionId: string, userId: string): boolean {
     const bookings = JSON.parse(localStorage.getItem('sessionBookings') || '[]');
     
     // 檢查是否已預約
-    const existingBooking = bookings.find((booking: any) => 
+    const existingBooking = bookings.find((booking: { sessionId: string; userId: string }) => 
       booking.sessionId === sessionId && booking.userId === userId
     );
     
@@ -131,7 +129,7 @@ export function bookSession(sessionId: string, userId: string): boolean {
     }
 
     // 檢查容量
-    const sessionBookings = bookings.filter((booking: any) => booking.sessionId === sessionId);
+    const sessionBookings = bookings.filter((booking: { sessionId: string }) => booking.sessionId === sessionId);
     if (sessionBookings.length >= 20) { // 預設容量
       return false; // 已滿
     }
@@ -161,7 +159,7 @@ export function bookSession(sessionId: string, userId: string): boolean {
 export function cancelBooking(sessionId: string, userId: string): boolean {
   if (typeof localStorage !== 'undefined') {
     const bookings = JSON.parse(localStorage.getItem('sessionBookings') || '[]');
-    const filteredBookings = bookings.filter((booking: any) => 
+    const filteredBookings = bookings.filter((booking: { sessionId: string; userId: string }) => 
       !(booking.sessionId === sessionId && booking.userId === userId)
     );
     
@@ -179,20 +177,20 @@ export function cancelBooking(sessionId: string, userId: string): boolean {
 }
 
 // 獲取特定時段的所有預約
-export function getSessionBookings(sessionId: string): any[] {
+export function getSessionBookings(sessionId: string): { sessionId: string; userId: string; bookedAt: string }[] {
   if (typeof localStorage !== 'undefined') {
     const bookings = JSON.parse(localStorage.getItem('sessionBookings') || '[]');
-    return bookings.filter((booking: any) => booking.sessionId === sessionId);
+    return bookings.filter((booking: { sessionId: string }) => booking.sessionId === sessionId);
   }
   
   return [];
 }
 
 // 獲取用戶的所有預約
-export function getUserBookings(userId: string): any[] {
+export function getUserBookings(userId: string): { sessionId: string; userId: string; bookedAt: string }[] {
   if (typeof localStorage !== 'undefined') {
     const bookings = JSON.parse(localStorage.getItem('sessionBookings') || '[]');
-    return bookings.filter((booking: any) => booking.userId === userId);
+    return bookings.filter((booking: { userId: string }) => booking.userId === userId);
   }
   
   return [];
@@ -217,7 +215,7 @@ export function batchBookSessions(sessionIds: string[], userId: string): {
       const existingBookings = getSessionBookings(sessionId);
       let reason = 'unknown';
       
-      if (existingBookings.some((booking: any) => booking.userId === userId)) {
+      if (existingBookings.some((booking: { userId: string }) => booking.userId === userId)) {
         reason = 'already_booked';
       } else if (existingBookings.length >= 20) {
         reason = 'full';

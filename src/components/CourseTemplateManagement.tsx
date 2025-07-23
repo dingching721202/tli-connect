@@ -461,7 +461,7 @@ const CourseTemplateManagement = () => {
                       </label>
                       <select
                         value={formData.category || '中文'}
-                        onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value as any }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="中文">中文</option>
@@ -478,7 +478,7 @@ const CourseTemplateManagement = () => {
                       </label>
                       <select
                         value={formData.level || '不限'}
-                        onChange={(e) => setFormData(prev => ({ ...prev, level: e.target.value as any }))}
+                        onChange={(e) => setFormData(prev => ({ ...prev, level: e.target.value }))}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         <option value="不限">不限</option>

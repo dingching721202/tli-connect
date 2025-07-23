@@ -1351,7 +1351,7 @@ const UserManagement: React.FC = () => {
   };
 
   // 方案會員管理函數
-  const handleRemoveUserFromPlan = (_planId: string | number, _userId: string | number) => {
+  const handleRemoveUserFromPlan = () => {
     try {
       // 這裡應該調用 API 從方案中移除用戶
       // 暫時使用模擬邏輯
@@ -1365,7 +1365,7 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleAddUserToPlan = (_planId: string | number, _userInfo: PlanUser) => {
+  const handleAddUserToPlan = () => {
     try {
       // 這裡應該調用 API 添加用戶到方案
       // 暫時使用模擬邏輯
@@ -1381,7 +1381,7 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleEditPlanUser = (_userId: string | number, _updatedInfo: Partial<MockPlanUser> | null) => {
+  const handleEditPlanUser = () => {
     try {
       // 這裡應該調用 API 更新用戶信息
       // 暫時使用模擬邏輯
