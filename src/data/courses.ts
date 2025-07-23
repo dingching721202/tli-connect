@@ -198,7 +198,7 @@ export const courses: Course[] = [
     title: "TOEIC 衝刺班",
     description: "針對TOEIC考試的密集訓練課程，目標分數700+",
     instructor: "Sarah Wilson",
-    instructor_id: "teacher_005",
+    instructor_id: "4", // Daisy Hsu - TEACHER
     duration: "6週",
     price: 4800,
     original_price: 5200,
@@ -237,7 +237,7 @@ export const courses: Course[] = [
     title: "雅思寫作專修",
     description: "專攻IELTS寫作技巧，提升學術寫作能力",
     instructor: "Dr. Emma Thompson",
-    instructor_id: "teacher_006",
+    instructor_id: "5", // Michael Chen - TEACHER
     duration: "8週",
     price: 5200,
     original_price: 5600,

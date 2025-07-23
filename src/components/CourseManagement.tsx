@@ -222,16 +222,20 @@ const CourseManagement = () => {
       const coursesData = getManagedCourses();
       const teachersData = getTeachers();
       
-      // 如果是教師，只顯示自己的課程
-      if (isTeacher && user) {
-        // 管理員可以看到所有課程，教師只看到自己的課程
+      // 根據用戶角色顯示課程
+      if (user) {
         if (user.role === 'ADMIN') {
+          // 管理員可以看到所有課程
           setCourses(coursesData);
-        } else {
+        } else if (user.role === 'TEACHER') {
+          // 教師只看到自己的課程
           const assignedCourses = coursesData.filter(course => 
             course.teacher === user.id.toString()
           );
           setCourses(assignedCourses);
+        } else {
+          // 其他角色看到所有課程
+          setCourses(coursesData);
         }
       } else {
         setCourses(coursesData);
