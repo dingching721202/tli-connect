@@ -76,7 +76,30 @@ export function generateBookingSessions(): BookingCourseSession[] {
 }
 
 // 根據 ManagedCourse 生成課程時段（使用課程管理的完整邏輯）
-function generateCourseSessionsFromManagedCourse(course: any) {
+function generateCourseSessionsFromManagedCourse(course: {
+  id: string;
+  startDate: string;
+  endDate: string;
+  totalSessions: number;
+  startTime: string;
+  endTime: string;
+  recurring: boolean;
+  recurringDays?: string[];
+  location?: string;
+  materials?: string[];
+  globalSchedules?: Array<{
+    weekdays: string[];
+    startTime: string;
+    endTime: string;
+    teacherId: string;
+  }>;
+  sessions?: Array<{
+    title: string;
+    classroom: string;
+    materials: string;
+  }>;
+  excludeDates?: string[];
+}) {
   // 檢查課程是否有完整的排程配置
   if (course.globalSchedules && course.sessions && course.startDate && course.endDate) {
     // 使用課程管理的完整排程邏輯
@@ -142,7 +165,23 @@ function generateCourseSessionsFromManagedCourse(course: any) {
 }
 
 // 使用課程管理的完整排程邏輯（複製自 CourseManagement.tsx）
-function generateDetailedCourseSessions(course: any) {
+function generateDetailedCourseSessions(course: {
+  startDate: string;
+  endDate: string;
+  totalSessions: number;
+  globalSchedules: Array<{
+    weekdays: string[];
+    startTime: string;
+    endTime: string;
+    teacherId: string;
+  }>;
+  sessions: Array<{
+    title: string;
+    classroom: string;
+    materials: string;
+  }>;
+  excludeDates?: string[];
+}) {
   const { startDate, endDate, totalSessions, globalSchedules, sessions, excludeDates } = course;
   
   if (!startDate || !endDate || !globalSchedules?.[0]?.weekdays?.length || !sessions?.length) {
