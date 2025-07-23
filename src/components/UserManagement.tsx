@@ -1201,6 +1201,16 @@ const UserManagement: React.FC = () => {
     }
   };
 
+  const handleRemoveUserFromPlan = (planId: string | number, userId: string) => {
+    try {
+      // Mock implementation - would remove user from plan in database
+      console.log(`Removing user ${userId} from plan ${planId}`);
+      alert('✅ 用戶已從方案中移除！');
+    } catch {
+      alert('❌ 移除用戶失敗！');
+    }
+  };
+
   // 企業方案CRUD功能
   const handleAddPlan = (e: React.FormEvent) => {
     e.preventDefault();
