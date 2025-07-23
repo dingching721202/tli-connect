@@ -114,7 +114,14 @@ function generateCourseSessionsFromManagedCourse(course: {
   // 檢查課程是否有完整的排程配置
   if (course.globalSchedules && course.sessions && course.startDate && course.endDate) {
     // 使用課程管理的完整排程邏輯
-    return generateDetailedCourseSessions(course);
+    return generateDetailedCourseSessions({
+      startDate: course.startDate,
+      endDate: course.endDate,
+      totalSessions: course.totalSessions,
+      globalSchedules: course.globalSchedules,
+      sessions: course.sessions,
+      excludeDates: course.excludeDates
+    });
   }
   
   // 回退到簡化邏輯（為了向後兼容）
