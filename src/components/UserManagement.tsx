@@ -1201,15 +1201,6 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  const handleRemoveUserFromPlan = (planId: string | number, userId: string) => {
-    try {
-      // Mock implementation - would remove user from plan in database
-      console.log(`Removing user ${userId} from plan ${planId}`);
-      alert('✅ 用戶已從方案中移除！');
-    } catch {
-      alert('❌ 移除用戶失敗！');
-    }
-  };
 
   // 企業方案CRUD功能
   const handleAddPlan = (e: React.FormEvent) => {
@@ -1942,7 +1933,9 @@ const UserManagement: React.FC = () => {
                                                                   onClick={() => {
                                                                     if (window.confirm(`確定要從此方案中移除 ${user.name} 嗎？`)) {
                                                                       // 處理刪除邏輯 - 這裡需要實際的刪除函數
-                                                                      handleRemoveUserFromPlan(plan.id, user.id);
+                                                                      // handleRemoveUserFromPlan(plan.id, user.id);
+                                                                      console.log(`Removing user ${user.id} from plan ${plan.id}`);
+                                                                      alert('✅ 用戶已從方案中移除！');
                                                                     }
                                                                   }}
                                                                   className="p-1 text-red-600 hover:bg-red-50 rounded"
