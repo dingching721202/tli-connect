@@ -3093,7 +3093,7 @@ const UserManagement: React.FC = () => {
             
             <form onSubmit={(e) => {
               e.preventDefault();
-              handleAddUserToPlan(editingPlan?.id || '', newPlanUser);
+              handleAddUserToPlan(editingPlan?.id?.toString() || '', newPlanUser);
               // 重置表單
               setNewPlanUser({
                 name: '',
