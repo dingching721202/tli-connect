@@ -164,6 +164,53 @@ export interface CourseSession {
   attendanceCount?: number;
 }
 
+// 將英文分類映射到中文分類
+function mapCategoryToChinese(englishCategory?: string): string {
+  if (!englishCategory) return "其它";
+  
+  const categoryMap: { [key: string]: string } = {
+    // 英文相關
+    'English': '英文',
+    'Business English': '英文',
+    'Academic English': '英文',
+    'Conversation': '英文',
+    'IELTS': '英文',
+    'TOEFL': '英文',
+    '證照考試': '英文',
+    
+    // 中文相關
+    'Chinese': '中文',
+    'Mandarin': '中文',
+    '華語': '中文',
+    '中文': '中文',
+    
+    // 文化相關
+    'Culture': '文化',
+    'Cultural Studies': '文化',
+    '文化': '文化',
+    '傳統文化': '文化',
+    
+    // 商業相關
+    'Business': '商業',
+    'Professional': '商業',
+    '商業': '商業',
+    '職場': '商業',
+    
+    // 師資相關
+    'Teacher Training': '師資',
+    'Education': '師資',
+    '師資培訓': '師資',
+    '教學': '師資',
+    
+    // 其他
+    'Language Learning': '其它',
+    'General': '其它',
+    'Others': '其它'
+  };
+  
+  return categoryMap[englishCategory] || "其它";
+}
+
 // Convert JSON data to proper interfaces
 function convertToCourse(data: RawCourseData): Course {
   return {
@@ -204,7 +251,98 @@ function convertToCourse(data: RawCourseData): Course {
   };
 }
 
-function convertToManagedCourse(data: RawCourseData): ManagedCourse {
+function convertToManagedCourse(data: RawCourseData): ManagedCourse & {
+  globalSchedules: Array<{
+    weekdays: string[];
+    startTime: string;
+    endTime: string;
+    teacherId: string;
+  }>;
+  sessions: Array<{
+    title: string;
+    classroom: string;
+    materials: string;
+  }>;
+  excludeDates: string[];
+} {
+  // 根據課程類型生成合適的時間
+  const getScheduleTime = () => {
+    if (data.categories.includes('商業') || data.categories.includes('證照考試')) {
+      return { startTime: "19:00", endTime: "21:00" }; // 晚上時段
+    } else if (data.categories.includes('文化') || data.categories.includes('兒童')) {
+      return { startTime: "14:00", endTime: "15:30" }; // 下午時段
+    } else {
+      return { startTime: "10:00", endTime: "11:30" }; // 上午時段
+    }
+  };
+
+  // 根據課程語言生成星期安排
+  const getWeekdays = () => {
+    if (data.recurring_days && data.recurring_days.length > 0) {
+      // 轉換英文星期名稱為數字
+      const dayMap: { [key: string]: string } = {
+        'Sunday': '0', 'Monday': '1', 'Tuesday': '2', 'Wednesday': '3',
+        'Thursday': '4', 'Friday': '5', 'Saturday': '6'
+      };
+      return data.recurring_days.map(day => dayMap[day] || '1');
+    }
+    // 預設安排
+    if (data.language === 'chinese') return ['1', '3', '5']; // 週一三五
+    if (data.language === 'english') return ['2', '4']; // 週二四
+    return ['6']; // 週六
+  };
+
+  // 生成課程內容
+  const generateSessions = () => {
+    const sessions = [];
+    const sessionCount = Math.min(data.total_sessions, 20); // 限制最多20堂課
+    
+    if (data.language === 'chinese') {
+      const chineseTopics = [
+        '自我介紹與問候', '數字與時間', '家庭與朋友', '日常活動',
+        '購物與消費', '餐廳與飲食', '交通與方向', '工作與學習',
+        '興趣與愛好', '天氣與季節', '健康與醫療', '旅遊與住宿',
+        '文化與節日', '科技與網路', '環境與自然', '未來計畫',
+        '情感表達', '社交禮儀', '商務溝通', '綜合練習'
+      ];
+      for (let i = 0; i < sessionCount; i++) {
+        sessions.push({
+          title: `第${i + 1}課：${chineseTopics[i] || '進階練習'}`,
+          classroom: 'https://meet.google.com/chinese-class',
+          materials: `華語教材第${i + 1}章`
+        });
+      }
+    } else if (data.language === 'english') {
+      const englishTopics = [
+        'Greetings and Introductions', 'Numbers and Time', 'Family and Friends', 'Daily Routines',
+        'Shopping and Money', 'Food and Restaurants', 'Transportation', 'Work and Study',
+        'Hobbies and Interests', 'Weather and Seasons', 'Health and Medical', 'Travel and Hotels',
+        'Culture and Holidays', 'Technology and Internet', 'Environment and Nature', 'Future Plans',
+        'Expressing Emotions', 'Social Etiquette', 'Business Communication', 'Review and Practice'
+      ];
+      for (let i = 0; i < sessionCount; i++) {
+        sessions.push({
+          title: `Lesson ${i + 1}: ${englishTopics[i] || 'Advanced Practice'}`,
+          classroom: 'https://meet.google.com/english-class',
+          materials: `English Textbook Chapter ${i + 1}`
+        });
+      }
+    } else {
+      // 日語或其他語言
+      for (let i = 0; i < sessionCount; i++) {
+        sessions.push({
+          title: `第${i + 1}課：基礎學習`,
+          classroom: 'https://meet.google.com/language-class',
+          materials: `教材第${i + 1}章`
+        });
+      }
+    }
+    
+    return sessions;
+  };
+
+  const { startTime, endTime } = getScheduleTime();
+  
   return {
     id: data.id.toString(),
     title: data.title,
@@ -215,10 +353,10 @@ function convertToManagedCourse(data: RawCourseData): ManagedCourse {
     currency: data.currency,
     startDate: data.start_date,
     endDate: data.end_date,
-    startTime: data.recurring_days?.[0] ? "19:00" : "18:00", // Default time
-    endTime: data.recurring_days?.[0] ? "21:00" : "20:00", // Default time
+    startTime,
+    endTime,
     location: data.location,
-    category: data.categories?.[0] || "語言學習",
+    category: mapCategoryToChinese(data.categories?.[0]) || "其它",
     tags: data.tags,
     status: data.status as 'draft' | 'active' | 'completed' | 'cancelled',
     enrollmentDeadline: data.enrollment_deadline,
@@ -236,7 +374,16 @@ function convertToManagedCourse(data: RawCourseData): ManagedCourse {
     waitlistEnabled: data.waitlist_enabled,
     refundPolicy: data.refund_policy,
     createdAt: data.created_at,
-    updatedAt: data.updated_at
+    updatedAt: data.updated_at,
+    // 新增課程管理所需的詳細排程
+    globalSchedules: [{
+      weekdays: getWeekdays(),
+      startTime,
+      endTime,
+      teacherId: data.instructor_id
+    }],
+    sessions: generateSessions(),
+    excludeDates: [] // 預設無排除日期
   };
 }
 
