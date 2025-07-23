@@ -31,6 +31,17 @@ export interface CourseFilter {
   selected: boolean;
 }
 
+// 定義生成的課程時段類型
+type GeneratedSession = {
+  date: string;
+  startTime: string;
+  endTime: string;
+  title: string;
+  classroom: string;
+  materials: string;
+  teacherId?: string | number;
+};
+
 // 從課程管理生成預約可用的課程時段
 export function generateBookingSessions(): BookingCourseSession[] {
   const courses = getManagedCourses();
@@ -42,11 +53,11 @@ export function generateBookingSessions(): BookingCourseSession[] {
     if (course.status !== 'active') return;
 
     // 根據 ManagedCourse 的實際結構生成時段
-    const courseSessions = generateCourseSessionsFromManagedCourse(course);
+    const courseSessions: GeneratedSession[] = generateCourseSessionsFromManagedCourse(course);
     
     courseSessions.forEach((session, index) => {
-      // 優先使用排程中的教師ID，回退到課程的教師
-      const teacherId = session.teacherId || course.instructor;
+      // 優先使用排程中的教師ID（如果存在），回退到課程的教師
+      const teacherId = session.teacherId || course.teacher;
       const teacher = teachers.find(t => t.id.toString() === teacherId.toString());
       
       sessions.push({
@@ -115,14 +126,7 @@ function generateCourseSessionsFromManagedCourse(course: {
   
   const start = new Date(startDate);
   const end = new Date(endDate);
-  const generatedSessions: Array<{
-    date: string;
-    startTime: string;
-    endTime: string;
-    title: string;
-    classroom: string;
-    materials: string;
-  }> = [];
+  const generatedSessions: GeneratedSession[] = [];
   
   if (!recurring) {
     // 非重複課程，只在開始日期創建一個時段
@@ -192,15 +196,7 @@ function generateDetailedCourseSessions(course: {
   const end = new Date(endDate);
   const classDays = globalSchedules[0].weekdays.map((day: string) => parseInt(day));
   const excludeSet = new Set(excludeDates || []);
-  const generatedSessions: Array<{
-    date: string;
-    startTime: string;
-    endTime: string;
-    title: string;
-    classroom: string;
-    materials: string;
-    teacherId: string | number;
-  }> = [];
+  const generatedSessions: GeneratedSession[] = [];
   
   const currentDate = new Date(start);
   let sessionIndex = 0;

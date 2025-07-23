@@ -101,7 +101,7 @@ export interface ManagedCourse {
   id: string;
   title: string;
   description: string;
-  instructor: string;
+  teacher: string;
   capacity: number;
   price: number;
   currency: string;
@@ -209,7 +209,7 @@ function convertToManagedCourse(data: RawCourseData): ManagedCourse {
     id: data.id.toString(),
     title: data.title,
     description: data.description,
-    instructor: data.instructor_id,
+    teacher: data.instructor_id,
     capacity: data.max_students,
     price: data.price,
     currency: data.currency,
@@ -329,8 +329,8 @@ export function addManagedCourse(course: Omit<ManagedCourse, 'id' | 'createdAt' 
       created_at: new Date().toISOString(),
       title: course.title,
       description: course.description,
-      instructor: course.instructor,
-      instructor_id: course.instructor,
+      instructor: course.teacher,
+      instructor_id: course.teacher,
       duration: "待定",
       price: course.price,
       original_price: course.price,
@@ -540,9 +540,9 @@ export function getCoursesByStatus(status: ManagedCourse['status']): ManagedCour
     .map(convertToManagedCourse);
 }
 
-export function getCoursesByInstructor(instructorId: string): ManagedCourse[] {
+export function getCoursesByTeacher(teacherId: string): ManagedCourse[] {
   return coursesData
-    .filter(course => course.instructor_id === instructorId)
+    .filter(course => course.instructor_id === teacherId)
     .map(convertToManagedCourse);
 }
 

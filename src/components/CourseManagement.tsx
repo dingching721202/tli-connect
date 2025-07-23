@@ -105,7 +105,7 @@ const CourseManagement = () => {
   }>({
     title: '',
     description: '',
-    instructor: '',
+    teacher: '',
     capacity: 20,
     price: 0,
     currency: 'TWD',
@@ -165,7 +165,7 @@ const CourseManagement = () => {
     setNewCourse({
       title: '',
       description: '',
-      instructor: '',
+      teacher: '',
       capacity: 20,
       price: 0,
       currency: 'TWD',
@@ -225,7 +225,7 @@ const CourseManagement = () => {
       // 如果是教師，只顯示自己的課程
       if (isTeacher && user) {
         const assignedCourses = coursesData.filter(course => 
-          course.instructor === user.id.toString()
+          course.teacher === user.id.toString()
         );
         setCourses(assignedCourses);
       } else {
@@ -524,7 +524,7 @@ const CourseManagement = () => {
     const courseToAdd = {
       title: newCourse.title || '',
       description: newCourse.description || '',
-      instructor: newCourse.instructor || '',
+      teacher: newCourse.teacher || '',
       capacity: newCourse.capacity || 20,
       price: newCourse.price || 0,
       currency: newCourse.currency || 'TWD',
@@ -801,7 +801,7 @@ const CourseManagement = () => {
                         {course.startTime}-{course.endTime}
                       </div>
                       <div className="text-blue-600">
-                        教師: {course.instructor}
+                        教師: {course.teacher}
                       </div>
                     </div>
                   </div>
