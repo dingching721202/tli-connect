@@ -499,6 +499,8 @@ const BookingSystem: React.FC = () => {
           />
         </div>
       </div>
+        </div>
+      )}
 
       {/* Student without membership notice */}
       {user?.role === 'STUDENT' && !hasActiveMembership() && (
