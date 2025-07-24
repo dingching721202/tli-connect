@@ -469,7 +469,7 @@ const MembershipPage: React.FC = () => {
                     {plan.hide_price ? (
                       <button
                         onClick={() => handleContactClick(plan)}
-                        className="w-full py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2 font-semibold bg-gray-600 text-white hover:bg-gray-700"
+                        className="w-full py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2 font-semibold bg-green-600 text-white hover:bg-green-700"
                       >
                         <SafeIcon icon={FiUsers} />
                         <span>聯繫我們</span>
@@ -488,7 +488,7 @@ const MembershipPage: React.FC = () => {
                         {plan.cta_options?.show_contact && (
                           <button
                             onClick={() => handleContactClick(plan)}
-                            className="w-full py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2 font-semibold bg-gray-200 text-gray-800 hover:bg-gray-300"
+                            className="w-full py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2 font-semibold bg-green-600 text-white hover:bg-green-700"
                           >
                             <SafeIcon icon={FiUsers} />
                             <span>聯繫我們</span>
