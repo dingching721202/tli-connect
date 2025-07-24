@@ -30,7 +30,16 @@ export function getCourseTemplates(): CourseTemplate[] {
     
     // 如果沒有用戶創建的模板，返回從預設課程轉換的模板
     if (userTemplates.length === 0) {
-      return getDefaultCourseTemplates();
+      const defaultTemplates = getDefaultCourseTemplates();
+      
+      // 同步已發布的預設模板到預約系統
+      defaultTemplates.forEach(template => {
+        if (template.status === 'published') {
+          syncTemplateToBookingSystem(template);
+        }
+      });
+      
+      return defaultTemplates;
     }
     
     return userTemplates;
@@ -118,6 +127,162 @@ export function getPublishedCourseTemplates(): CourseTemplate[] {
   return templates.filter(template => template.status === 'published');
 }
 
+// 將課程模板同步到預約系統的課程資料
+export function syncTemplateToBookingSystem(template: CourseTemplate): void {
+  if (typeof localStorage === 'undefined') return;
+  
+  // 獲取現有的課程資料
+  const coursesStr = localStorage.getItem('courses');
+  const existingCourses = coursesStr ? JSON.parse(coursesStr) : [];
+  
+  // 檢查是否已存在對應的課程（透過模板ID查找）
+  const existingCourseIndex = existingCourses.findIndex((course: { template_id?: string; id: number | string }) => 
+    course.template_id === template.id || course.id.toString() === template.id.replace('template_', '')
+  );
+  
+  // 將模板轉換為預約系統的課程格式
+  const bookingCourse = {
+    id: existingCourseIndex >= 0 ? existingCourses[existingCourseIndex].id : parseInt(template.id.replace('template_', '')),
+    template_id: template.id, // 記錄對應的模板ID
+    created_at: template.createdAt,
+    updated_at: template.updatedAt,
+    title: template.title,
+    description: template.description,
+    teacher: getTeacherNameFromCategory(template.category),
+    teacher_id: getTeacherIdFromCategory(template.category),
+    duration: `${template.totalSessions}堂課`,
+    price: getPriceFromCategory(template.category),
+    original_price: getPriceFromCategory(template.category),
+    currency: "TWD",
+    cover_image_url: "/images/courses/default.jpg",
+    categories: [template.category],
+    language: getLanguageFromCategory(template.category),
+    level: mapLevelToEnglish(template.level),
+    max_students: 15,
+    current_students: 0,
+    rating: 4.5,
+    total_sessions: template.totalSessions,
+    session_duration: 90,
+    location: "線上課程",
+    is_active: template.status === 'published',
+    status: template.status === 'published' ? 'active' : 'draft',
+    tags: [template.category, template.level],
+    prerequisites: "無特殊要求",
+    materials: template.sessions.map(session => session.materialLink || `第${session.sessionNumber}課教材`).filter(Boolean),
+    refund_policy: "課程開始前7天可申請退費",
+    start_date: "2025-08-01T00:00:00+00:00",
+    end_date: "2025-12-31T23:59:59+00:00",
+    enrollment_deadline: "2025-07-30T23:59:59+00:00",
+    recurring: true,
+    recurring_type: "weekly",
+    recurring_days: getRecurringDaysFromCategory(template.category),
+    waitlist_enabled: true
+  };
+  
+  if (existingCourseIndex >= 0) {
+    // 更新現有課程
+    existingCourses[existingCourseIndex] = { ...existingCourses[existingCourseIndex], ...bookingCourse };
+  } else {
+    // 添加新課程
+    existingCourses.push(bookingCourse);
+  }
+  
+  // 保存到 localStorage
+  localStorage.setItem('courses', JSON.stringify(existingCourses));
+}
+
+// 根據分類獲取合適的教師名稱
+function getTeacherNameFromCategory(category: string): string {
+  const teacherMap: { [key: string]: string } = {
+    '中文': 'Lisa Chen',
+    '英文': 'James Wilson', 
+    '文化': 'Amy Wu',
+    '商業': 'Michael Brown',
+    '師資': 'Dr. Emily Zhang',
+    '其它': 'Sarah Lee'
+  };
+  return teacherMap[category] || 'Sarah Lee';
+}
+
+// 根據分類獲取合適的教師ID
+function getTeacherIdFromCategory(category: string): string {
+  const teacherIdMap: { [key: string]: string } = {
+    '中文': 'teacher_001',
+    '英文': 'teacher_002',
+    '文化': 'teacher_003', 
+    '商業': 'teacher_004',
+    '師資': 'teacher_005',
+    '其它': 'teacher_006'
+  };
+  return teacherIdMap[category] || 'teacher_006';
+}
+
+// 根據分類獲取合適的價格
+function getPriceFromCategory(category: string): number {
+  const priceMap: { [key: string]: number } = {
+    '中文': 2800,
+    '英文': 3200,
+    '文化': 2500,
+    '商業': 4000,
+    '師資': 5000,
+    '其它': 2500
+  };
+  return priceMap[category] || 2500;
+}
+
+// 根據分類獲取合適的語言
+function getLanguageFromCategory(category: string): string {
+  const languageMap: { [key: string]: string } = {
+    '中文': 'chinese',
+    '英文': 'english',
+    '文化': 'chinese',
+    '商業': 'english',
+    '師資': 'chinese',
+    '其它': 'chinese'
+  };
+  return languageMap[category] || 'chinese';
+}
+
+// 將中文級別映射為英文級別
+function mapLevelToEnglish(level: string): string {
+  const levelMap: { [key: string]: string } = {
+    '初級': 'beginner',
+    '中級': 'intermediate', 
+    '中高級': 'intermediate',
+    '高級': 'advanced',
+    '不限': 'beginner'
+  };
+  return levelMap[level] || 'beginner';
+}
+
+// 根據分類獲取合適的重複日期
+function getRecurringDaysFromCategory(category: string): string[] {
+  const daysMap: { [key: string]: string[] } = {
+    '中文': ['Monday', 'Wednesday', 'Friday'],
+    '英文': ['Tuesday', 'Thursday'],
+    '文化': ['Saturday'],
+    '商業': ['Monday', 'Wednesday'],
+    '師資': ['Tuesday', 'Thursday'],
+    '其它': ['Saturday']
+  };
+  return daysMap[category] || ['Saturday'];
+}
+
+// 移除預約系統中的課程（當模板被刪除時）
+export function removeCourseFromBookingSystem(templateId: string): void {
+  if (typeof localStorage === 'undefined') return;
+  
+  const coursesStr = localStorage.getItem('courses');
+  if (!coursesStr) return;
+  
+  const existingCourses = JSON.parse(coursesStr);
+  const filteredCourses = existingCourses.filter((course: { template_id?: string; id: number | string }) => 
+    course.template_id !== templateId && course.id.toString() !== templateId.replace('template_', '')
+  );
+  
+  localStorage.setItem('courses', JSON.stringify(filteredCourses));
+}
+
 // 從預設課程轉換為課程模板
 function getDefaultCourseTemplates(): CourseTemplate[] {
   return courses.map(course => {
@@ -135,7 +300,7 @@ function getDefaultCourseTemplates(): CourseTemplate[] {
     };
 
     // 根據課程總堂數生成課程內容
-    const generateSessions = (totalSessions: number, title: string): CourseSession[] => {
+    const generateSessions = (totalSessions: number): CourseSession[] => {
       const sessions: CourseSession[] = [];
       for (let i = 1; i <= totalSessions; i++) {
         sessions.push({
@@ -165,7 +330,7 @@ function getDefaultCourseTemplates(): CourseTemplate[] {
       category: mapCategory(course.categories),
       level: mapLevel(course.level),
       totalSessions: course.total_sessions,
-      sessions: generateSessions(course.total_sessions, course.title),
+      sessions: generateSessions(course.total_sessions),
       status: 'published' as const,
       createdAt: course.created_at,
       updatedAt: course.updated_at

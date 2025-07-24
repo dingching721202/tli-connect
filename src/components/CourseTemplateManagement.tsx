@@ -11,7 +11,9 @@ import {
   createCourseTemplate,
   updateCourseTemplate,
   deleteCourseTemplate,
-  duplicateCourseTemplate
+  duplicateCourseTemplate,
+  syncTemplateToBookingSystem,
+  removeCourseFromBookingSystem
 } from '@/data/courseTemplateUtils';
 
 const {
@@ -153,24 +155,36 @@ const CourseTemplateManagement = () => {
       const updatedTemplate = updateCourseTemplate(editingTemplate.id, templateData);
       if (updatedTemplate) {
         setTemplates(prev => prev.map(t => t.id === editingTemplate.id ? updatedTemplate : t));
+        
+        // 如果是發布狀態，同步到預約系統
+        if (status === 'published') {
+          syncTemplateToBookingSystem(updatedTemplate);
+        }
       }
     } else {
       // 創建新模板
       const newTemplate = createCourseTemplate(templateData);
       setTemplates(prev => [...prev, newTemplate]);
+      
+      // 如果是發布狀態，同步到預約系統
+      if (status === 'published') {
+        syncTemplateToBookingSystem(newTemplate);
+      }
     }
 
     handleCloseModal();
-    alert(`課程模板已${status === 'published' ? '發布' : '儲存為草稿'}`);
+    alert(`課程模板已${status === 'published' ? '發布並同步至預約系統' : '儲存為草稿'}`);
   };
 
   // 刪除課程模板
   const handleDeleteTemplate = (templateId: string) => {
-    if (confirm('確定要刪除此課程模板嗎？此操作無法撤銷。')) {
+    if (confirm('確定要刪除此課程模板嗎？此操作無法撤銷，並會從預約系統中移除對應課程。')) {
       const success = deleteCourseTemplate(templateId);
       if (success) {
         setTemplates(prev => prev.filter(t => t.id !== templateId));
-        alert('課程模板已刪除');
+        // 從預約系統中移除對應課程
+        removeCourseFromBookingSystem(templateId);
+        alert('課程模板已刪除，並已從預約系統中移除');
       }
     }
   };
@@ -190,6 +204,14 @@ const CourseTemplateManagement = () => {
     const updatedTemplate = updateCourseTemplate(templateId, { status: newStatus });
     if (updatedTemplate) {
       setTemplates(prev => prev.map(t => t.id === templateId ? updatedTemplate : t));
+      
+      // 同步狀態變更到預約系統
+      if (newStatus === 'published') {
+        syncTemplateToBookingSystem(updatedTemplate);
+      } else {
+        // 取消發布時，從預約系統中移除
+        removeCourseFromBookingSystem(templateId);
+      }
     }
   };
 
