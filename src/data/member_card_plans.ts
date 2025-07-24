@@ -9,7 +9,7 @@ export interface MemberCardPlan {
   duration: number;
   plan_type: 'individual' | 'corporate';
   features: string[];
-  published: boolean;
+  status: 'DRAFT' | 'PUBLISHED';
   category: string;
 }
 
@@ -31,7 +31,7 @@ export const memberCardPlans: MemberCardPlan[] = [
       "24小時客服支援",
       "學習進度追蹤"
     ],
-    published: true,
+    status: 'PUBLISHED',
     category: "season"
   },
   {
@@ -54,7 +54,7 @@ export const memberCardPlans: MemberCardPlan[] = [
       "會員專屬活動",
       "課程資料下載"
     ],
-    published: true,
+    status: 'PUBLISHED',
     category: "year"
   },
   {
@@ -77,7 +77,7 @@ export const memberCardPlans: MemberCardPlan[] = [
       "多語言支援",
       "24小時技術支援"
     ],
-    published: true,
+    status: 'PUBLISHED',
     category: "corporate"
   }
 ];

@@ -36,7 +36,9 @@ const MembershipPlanManagement = () => {
     originalPrice: 0,
     popular: false,
     features: [''],
-    status: 'draft'
+    status: 'draft',
+    published: false,
+    category: 'general'
   });
 
   // 載入方案數據
@@ -62,7 +64,9 @@ const MembershipPlanManagement = () => {
         originalPrice: 0,
         popular: false,
         features: [''],
-        status: 'draft'
+        status: 'draft',
+        published: false,
+        category: 'general'
       });
     }
     setShowModal(true);
@@ -79,7 +83,9 @@ const MembershipPlanManagement = () => {
       originalPrice: 0,
       popular: false,
       features: [''],
-      status: 'draft'
+      status: 'draft',
+      published: false,
+      category: 'general'
     });
   };
 
@@ -89,9 +95,16 @@ const MembershipPlanManagement = () => {
       return;
     }
     
+    // 確保發布狀態正確設置
+    const planData = {
+      ...formData,
+      published: formData.status === 'published',
+      category: formData.category || 'general'
+    };
+    
     if (editingPlan) {
       // 更新現有方案
-      const updatedPlan = updateMembershipPlan(editingPlan.id, formData);
+      const updatedPlan = updateMembershipPlan(editingPlan.id, planData);
       if (updatedPlan) {
         setPlans(prev => prev.map(plan => 
           plan.id === editingPlan.id ? updatedPlan : plan
@@ -99,7 +112,7 @@ const MembershipPlanManagement = () => {
       }
     } else {
       // 創建新方案
-      const newPlan = createMembershipPlan(formData as Omit<MembershipPlan, 'id' | 'createdAt' | 'updatedAt'>);
+      const newPlan = createMembershipPlan(planData as Omit<MembershipPlan, 'id'>);
       setPlans(prev => [...prev, newPlan]);
     }
 
@@ -208,7 +221,7 @@ const MembershipPlanManagement = () => {
             key={plan.id}
             whileHover={{ scale: 1.02 }}
             className={`border-2 rounded-xl p-6 relative transition-all duration-300 ${
-              (plan.status === 'published' || plan.published)
+              plan.status === 'published'
                 ? 'border-green-300 bg-gradient-to-br from-green-50 to-green-100 shadow-md hover:shadow-lg' 
                 : 'border-dashed border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 opacity-75 hover:opacity-90'
             }`}
@@ -216,14 +229,14 @@ const MembershipPlanManagement = () => {
             {/* Status Indicator */}
             <div className="absolute top-4 right-4">
               <div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1 ${
-                (plan.status === 'published' || plan.published)
+                plan.status === 'published'
                   ? 'bg-green-100 text-green-800 border border-green-200' 
                   : 'bg-yellow-100 text-yellow-800 border border-yellow-200'
               }`}>
                 <div className={`w-2 h-2 rounded-full ${
-                  (plan.status === 'published' || plan.published) ? 'bg-green-500' : 'bg-yellow-500'
+                  plan.status === 'published' ? 'bg-green-500' : 'bg-yellow-500'
                 }`} />
-                <span>{(plan.status === 'published' || plan.published) ? '已發布' : '草稿'}</span>
+                <span>{plan.status === 'published' ? '已發布' : '草稿'}</span>
               </div>
             </div>
 
@@ -247,11 +260,11 @@ const MembershipPlanManagement = () => {
               </div>
               <div className="flex items-center space-x-2 mb-2">
                 <h3 className={`text-xl font-bold mb-0 ${
-                  (plan.status === 'published' || plan.published) ? 'text-gray-900' : 'text-gray-600'
+                  plan.status === 'published' ? 'text-gray-900' : 'text-gray-600'
                 }`}>
                   {plan.name}
                 </h3>
-                {!(plan.status === 'published' || plan.published) && (
+                {plan.status !== 'published' && (
                   <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
                     預覽模式
                   </span>
@@ -325,16 +338,15 @@ const MembershipPlanManagement = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    console.log('Button clicked, current plan:', plan.id, 'status:', plan.status, 'published:', plan.published);
+                    console.log('Button clicked, current plan:', plan.id, 'status:', plan.status);
                     
-                    const currentStatus = plan.status || (plan.published ? 'published' : 'draft');
+                    const currentStatus = plan.status || 'draft';
                     const newStatus = currentStatus === 'published' ? 'draft' : 'published';
                     
                     console.log('Changing status from', currentStatus, 'to', newStatus);
                     
                     const updatedPlan = updateMembershipPlan(plan.id, { 
-                      status: newStatus,
-                      published: newStatus === 'published'
+                      status: newStatus
                     });
                     
                     console.log('Updated plan result:', updatedPlan);
@@ -348,13 +360,13 @@ const MembershipPlanManagement = () => {
                     }
                   }}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    (plan.status === 'published' || plan.published)
+                    plan.status === 'published'
                       ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border border-yellow-200'
                       : 'bg-green-100 text-green-800 hover:bg-green-200 border border-green-200'
                   }`}
-                  title={(plan.status === 'published' || plan.published) ? '取消發布' : '發布方案'}
+                  title={plan.status === 'published' ? '取消發布' : '發布方案'}
                 >
-                  {(plan.status === 'published' || plan.published) ? '取消發布' : '立即發布'}
+                  {plan.status === 'published' ? '取消發布' : '立即發布'}
                 </button>
               </div>
             </div>

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiStar, FiCheck, FiLoader, FiCalendar, FiTrendingUp, FiAward } from 'react-icons/fi';
+import { FiStar, FiCheck, FiLoader, FiCalendar, FiTrendingUp, FiAward, FiUser, FiUsers } from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -22,6 +22,7 @@ const MembershipPlans: React.FC = () => {
   const [plans, setPlans] = useState<MembershipPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState<'individual' | 'corporate'>('individual');
   const { isAuthenticated } = useAuth();
 
   // 載入會員方案
@@ -29,16 +30,23 @@ const MembershipPlans: React.FC = () => {
     const fetchPlans = async () => {
       try {
         setLoading(true);
+        console.log('📡 開始載入會員方案...');
+        
         const response = await fetch('/api/member-card-plans');
         const data = await response.json();
+        
+        console.log('📦 API 返回資料:', data);
 
         if (data.success) {
+          console.log('✅ 成功載入', data.count, '個方案');
           setPlans(data.data);
+          setError('');
         } else {
+          console.error('❌ API 返回錯誤:', data.message);
           setError(data.message || '無法載入會員方案');
         }
       } catch (error) {
-        console.error('Failed to fetch membership plans:', error);
+        console.error('❌ 載入會員方案失敗:', error);
         setError('載入會員方案失敗，請稍後再試');
       } finally {
         setLoading(false);
@@ -46,6 +54,20 @@ const MembershipPlans: React.FC = () => {
     };
 
     fetchPlans();
+
+    // 監聽管理端的方案更新事件
+    const handlePlansUpdate = () => {
+      console.log('🔄 收到方案更新事件，重新載入資料...');
+      fetchPlans();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('membershipPlansUpdated', handlePlansUpdate);
+      
+      return () => {
+        window.removeEventListener('membershipPlansUpdated', handlePlansUpdate);
+      };
+    }
   }, []);
 
   // 獲取方案類型的樣式和圖示
@@ -132,8 +154,17 @@ const MembershipPlans: React.FC = () => {
     );
   }
 
+  // 根據分頁過濾方案
+  const filteredPlans = plans.filter(plan => {
+    if (activeTab === 'individual') {
+      return plan.plan_type === 'individual';
+    } else {
+      return plan.plan_type === 'corporate';
+    }
+  });
+
   // 按類型排序：季度 → 年度 → 企業
-  const sortedPlans = [...plans].sort((a, b) => {
+  const sortedPlans = [...filteredPlans].sort((a, b) => {
     const order = { 'SEASON': 1, 'YEAR': 2, 'CORPORATE': 3 };
     return order[a.type] - order[b.type];
   });
@@ -152,18 +183,83 @@ const MembershipPlans: React.FC = () => {
         <p className="text-xl text-gray-600 max-w-3xl mx-auto">
           無論您是個人學習者還是企業團隊，我們都有完美的方案為您服務
         </p>
-        {!isAuthenticated && (
-          <div className="mt-4 p-4 bg-yellow-50 rounded-lg border border-yellow-200 max-w-md mx-auto">
-            <p className="text-yellow-800 text-sm">
-              💡 登入後即可選購方案並享受完整會員服務
-            </p>
+        <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200 max-w-md mx-auto">
+          <p className="text-blue-800 text-sm">
+            🎯 立即選購方案，開始您的學習之旅！
+          </p>
+        </div>
+      </motion.div>
+
+      {/* 分頁切換按鈕 */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="flex justify-center mb-8"
+      >
+        <div className="bg-white rounded-xl shadow-lg p-2 border border-gray-200">
+          <div className="flex space-x-2">
+            <button
+              onClick={() => setActiveTab('individual')}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'individual'
+                  ? 'bg-blue-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+              }`}
+            >
+              <SafeIcon icon={FiUser} />
+              <span>個人方案</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('corporate')}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'corporate'
+                  ? 'bg-orange-600 text-white shadow-md'
+                  : 'text-gray-600 hover:text-orange-600 hover:bg-orange-50'
+              }`}
+            >
+              <SafeIcon icon={FiUsers} />
+              <span>企業方案</span>
+            </button>
           </div>
-        )}
+        </div>
       </motion.div>
 
       {/* 方案卡片 */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-        {sortedPlans.map((plan, index) => {
+      {sortedPlans.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center py-16"
+        >
+          <div className="text-6xl mb-4">
+            {activeTab === 'individual' ? '👤' : '🏢'}
+          </div>
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            {activeTab === 'individual' ? '暫無個人方案' : '暫無企業方案'}
+          </h3>
+          <p className="text-gray-500 mb-6">
+            {activeTab === 'individual' 
+              ? '目前沒有可用的個人會員方案，請稍後再來查看或聯繫客服。'
+              : '目前沒有可用的企業方案，請聯繫我們獲取客製化企業解決方案。'
+            }
+          </p>
+          <button
+            onClick={() => setActiveTab(activeTab === 'individual' ? 'corporate' : 'individual')}
+            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            查看{activeTab === 'individual' ? '企業' : '個人'}方案
+          </button>
+        </motion.div>
+      ) : (
+        <div className={`grid gap-8 mb-12 ${
+          sortedPlans.length === 1 
+            ? 'grid-cols-1 max-w-md mx-auto' 
+            : sortedPlans.length === 2 
+              ? 'grid-cols-1 md:grid-cols-2 max-w-4xl mx-auto' 
+              : 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3'
+        }`}>
+          {sortedPlans.map((plan, index) => {
           const config = getPlanTypeConfig(plan.type);
           const savings = getSavings(plan.price, plan.original_price);
 
@@ -257,29 +353,31 @@ const MembershipPlans: React.FC = () => {
 
                 {/* 選擇按鈕 */}
                 <button
-                  className={`w-full py-4 px-6 rounded-xl font-semibold text-white bg-gradient-to-r ${config.gradient} hover:shadow-lg transform hover:scale-105 transition-all duration-200 ${
-                    !isAuthenticated ? 'opacity-50 cursor-not-allowed' : ''
-                  }`}
-                  disabled={!isAuthenticated}
+                  className={`w-full py-4 px-6 rounded-xl font-semibold text-white bg-gradient-to-r ${config.gradient} hover:shadow-lg transform hover:scale-105 transition-all duration-200`}
                   onClick={() => {
-                    if (isAuthenticated) {
-                      // TODO: 導向購買流程
-                      console.log('選擇方案:', plan.plan_id);
+                    // TODO: 導向購買流程
+                    console.log('選擇方案:', plan.plan_id);
+                    if (plan.type === 'CORPORATE') {
+                      // 企業方案導向聯繫頁面
+                      window.location.href = '/corporate-inquiries';
+                    } else {
+                      // 個人方案導向購買流程
+                      // 可以導向購買頁面或顯示購買彈窗
+                      alert(`即將購買：${plan.title}\n價格：NT$ ${plan.price.toLocaleString()}\n\n購買功能開發中...`);
                     }
                   }}
                 >
-                  {!isAuthenticated 
-                    ? '請先登入' 
-                    : plan.type === 'CORPORATE' 
-                      ? '聯繫我們' 
-                      : '選擇此方案'
+                  {plan.type === 'CORPORATE' 
+                    ? '聯繫我們' 
+                    : '立即購買'
                   }
                 </button>
               </div>
             </motion.div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* 底部說明 */}
       <motion.div

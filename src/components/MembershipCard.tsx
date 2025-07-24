@@ -41,6 +41,25 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ className = '' }) => {
     };
 
     loadMembershipData();
+
+    // 監聽會員卡和方案更新事件
+    const handleCardsUpdate = () => {
+      loadMembershipData();
+    };
+
+    const handlePlansUpdate = () => {
+      loadMembershipData();
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('memberCardsUpdated', handleCardsUpdate);
+      window.addEventListener('membershipPlansUpdated', handlePlansUpdate);
+      
+      return () => {
+        window.removeEventListener('memberCardsUpdated', handleCardsUpdate);
+        window.removeEventListener('membershipPlansUpdated', handlePlansUpdate);
+      };
+    }
   }, [user]);
 
   // 啟用會員卡

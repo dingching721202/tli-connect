@@ -13,8 +13,8 @@ export async function GET() {
       title: plan.name,
       type: plan.type, // SEASON | YEAR | CORPORATE
       duration_days: plan.duration * 30, // 將月份轉換為天數 (簡化計算)
-      price: parseFloat(plan.price),
-      original_price: parseFloat(plan.original_price),
+      price: typeof plan.price === 'string' ? parseFloat(plan.price) : plan.price,
+      original_price: typeof plan.original_price === 'string' ? parseFloat(plan.original_price) : plan.original_price,
       features: plan.features,
       plan_type: plan.plan_type,
       category: plan.category

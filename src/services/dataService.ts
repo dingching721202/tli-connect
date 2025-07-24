@@ -116,12 +116,79 @@ export const membershipService = {
   // 獲取已發布的會員方案
   async getPublishedPlans(): Promise<MemberCardPlan[]> {
     await delay(300);
-    return memberCardPlans.filter(plan => plan.published === true);
+    
+    // 合併靜態資料和 localStorage 資料（與 membershipUtils 保持一致）
+    let allPlans = [...memberCardPlans];
+    
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const storedPlans = localStorage.getItem('memberCardPlans');
+        let localStoragePlans = [];
+        
+        if (storedPlans) {
+          localStoragePlans = JSON.parse(storedPlans);
+        } else {
+          // 如果 localStorage 為空，初始化為靜態資料
+          localStoragePlans = JSON.parse(JSON.stringify(memberCardPlans));
+          localStorage.setItem('memberCardPlans', JSON.stringify(localStoragePlans));
+        }
+        
+        // 合併資料，localStorage 優先（會覆蓋相同 ID 的靜態資料）
+        const allPlansMap = new Map();
+        
+        // 先加入靜態資料
+        memberCardPlans.forEach(plan => {
+          allPlansMap.set(plan.id, plan);
+        });
+        
+        // 再加入 localStorage 資料（會覆蓋相同 ID）
+        localStoragePlans.forEach((plan: any) => {
+          allPlansMap.set(plan.id, plan);
+        });
+        
+        allPlans = Array.from(allPlansMap.values());
+      } catch (error) {
+        console.warn('Failed to load localStorage plans:', error);
+      }
+    }
+    
+    return allPlans.filter(plan => plan.status === 'PUBLISHED');
   },
   
   // 獲取特定方案詳情
   async getPlan(planId: number): Promise<MemberCardPlan | null> {
-    return memberCardPlans.find(plan => plan.id === planId) || null;
+    // 合併靜態資料和 localStorage 資料
+    let allPlans = [...memberCardPlans];
+    
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const storedPlans = localStorage.getItem('memberCardPlans');
+        let localStoragePlans = [];
+        
+        if (storedPlans) {
+          localStoragePlans = JSON.parse(storedPlans);
+        } else {
+          // 如果 localStorage 為空，初始化為靜態資料
+          localStoragePlans = JSON.parse(JSON.stringify(memberCardPlans));
+          localStorage.setItem('memberCardPlans', JSON.stringify(localStoragePlans));
+        }
+        
+        // 合併資料，localStorage 優先
+        const allPlansMap = new Map();
+        memberCardPlans.forEach(plan => {
+          allPlansMap.set(plan.id, plan);
+        });
+        localStoragePlans.forEach((plan: any) => {
+          allPlansMap.set(plan.id, plan);
+        });
+        
+        allPlans = Array.from(allPlansMap.values());
+      } catch (error) {
+        console.warn('Failed to load localStorage plans:', error);
+      }
+    }
+    
+    return allPlans.find(plan => plan.id === planId) || null;
   }
 };
 

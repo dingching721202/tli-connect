@@ -1,5 +1,6 @@
 // Import TypeScript data
 import { memberCardPlans } from './member_card_plans';
+import { memberCards } from './member_cards';
 
 interface RawMembershipPlanData {
   id: number;
@@ -12,7 +13,7 @@ interface RawMembershipPlanData {
   duration: number;
   plan_type: string;
   features: string[];
-  published: boolean;
+  status: 'DRAFT' | 'PUBLISHED';
   category: string;
 }
 
@@ -48,9 +49,39 @@ function convertToMembershipPlan(plan: RawMembershipPlanData): MembershipPlan {
     duration: plan.duration,
     type: plan.plan_type as 'individual' | 'corporate',
     features: plan.features,
-    published: plan.published,
+    published: plan.status === 'PUBLISHED',
     category: plan.category,
-    status: plan.published ? 'published' : 'draft'
+    status: plan.status === 'PUBLISHED' ? 'published' : 'draft',
+    // 根據 type 欄位判斷是否為熱門方案（年度方案預設為熱門）
+    popular: plan.type === 'YEAR'
+  };
+}
+
+// Convert MembershipPlan to RawMembershipPlanData format
+function convertToRawPlan(plan: Partial<MembershipPlan> & { id?: string | number }): RawMembershipPlanData {
+  const id = typeof plan.id === 'string' ? parseInt(plan.id) : (plan.id || 0);
+  
+  // 根據持續時間自動判斷 type
+  let planType = 'SEASON';
+  if (plan.duration && plan.duration >= 12) {
+    planType = 'YEAR';
+  } else if (plan.type === 'corporate') {
+    planType = 'CORPORATE';
+  }
+  
+  return {
+    id: id,
+    created_at: new Date().toISOString(),
+    member_card_id: id,
+    type: planType,
+    name: plan.name || '',
+    price: (plan.price || 0).toString(),
+    original_price: (plan.originalPrice || plan.price || 0).toString(),
+    duration: plan.duration || 1,
+    plan_type: plan.type || 'individual',
+    features: plan.features || [],
+    status: (plan.status === 'published' || plan.published) ? 'PUBLISHED' : 'DRAFT',
+    category: plan.category || 'general'
   };
 }
 
@@ -71,13 +102,13 @@ export function getPublishedMembershipPlans(type?: 'individual' | 'corporate'): 
   });
   
   // 再加入 localStorage 資料（會覆蓋相同 ID）
-  localStoragePlans.forEach((plan: MembershipPlan) => {
+  localStoragePlans.forEach((plan: any) => {
     allPlansMap.set(plan.id, plan);
   });
   
   // 轉換為陣列並過濾已發布的方案
   let plans = Array.from(allPlansMap.values())
-    .filter(plan => plan.published)
+    .filter(plan => plan.status === 'PUBLISHED')
     .map(convertToMembershipPlan);
   
   if (type) {
@@ -107,9 +138,23 @@ export function getMembershipPlanById(id: string): MembershipPlan | null {
 export function getMembershipPlans(): MembershipPlan[] {
   // 合併靜態資料和 localStorage 資料
   const staticPlans = memberCardPlans;
-  const localStoragePlans = typeof localStorage !== 'undefined' 
-    ? JSON.parse(localStorage.getItem('memberCardPlans') || '[]')
-    : [];
+  let localStoragePlans = [];
+  
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const storedPlans = localStorage.getItem('memberCardPlans');
+      if (storedPlans) {
+        localStoragePlans = JSON.parse(storedPlans);
+      } else {
+        // 如果 localStorage 為空，初始化為靜態資料
+        localStoragePlans = JSON.parse(JSON.stringify(memberCardPlans));
+        localStorage.setItem('memberCardPlans', JSON.stringify(localStoragePlans));
+      }
+    } catch (error) {
+      console.warn('Failed to parse localStorage plans:', error);
+      localStoragePlans = [];
+    }
+  }
   
   // 合併資料，localStorage 優先（會覆蓋相同 ID 的靜態資料）
   const allPlansMap = new Map();
@@ -131,32 +176,45 @@ export function getMembershipPlans(): MembershipPlan[] {
 // Create new membership plan (adds to localStorage)
 export function createMembershipPlan(plan: Omit<MembershipPlan, 'id'>): MembershipPlan {
   if (typeof localStorage !== 'undefined') {
-    const existingPlans = JSON.parse(localStorage.getItem('memberCardPlans') || JSON.stringify(memberCardPlans));
+    // 獲取現有的 localStorage 資料，如果沒有則初始化為空陣列
+    let existingPlans = [];
+    try {
+      const storedPlans = localStorage.getItem('memberCardPlans');
+      if (storedPlans) {
+        existingPlans = JSON.parse(storedPlans);
+      } else {
+        // 如果 localStorage 為空，複製靜態資料作為初始資料
+        existingPlans = JSON.parse(JSON.stringify(memberCardPlans));
+        localStorage.setItem('memberCardPlans', JSON.stringify(existingPlans));
+      }
+    } catch (error) {
+      console.warn('Failed to parse localStorage plans, using static data:', error);
+      existingPlans = JSON.parse(JSON.stringify(memberCardPlans));
+    }
     
-    // 確保唯一 ID
-    const maxId = Math.max(0, ...existingPlans.map((p: { id?: number }) => p.id || 0));
+    // 確保唯一 ID（包含靜態資料的 ID）
+    const allIds = [
+      ...existingPlans.map((p: { id?: number }) => p.id || 0),
+      ...memberCardPlans.map(p => p.id)
+    ];
+    const maxId = Math.max(0, ...allIds);
     const newId = maxId + 1;
     
-    const newPlan = {
-      id: newId,
-      created_at: new Date().toISOString(),
-      member_card_id: newId,
-      type: plan.type.toUpperCase(),
-      name: plan.name,
-      price: plan.price.toString(),
-      original_price: plan.originalPrice.toString(),
-      duration: plan.duration,
-      plan_type: plan.type as string,
-      features: plan.features,
-      published: plan.published,
-      category: plan.category
-    };
+    // 使用統一的轉換函數
+    const newPlan = convertToRawPlan({
+      ...plan,
+      id: newId
+    });
     existingPlans.push(newPlan);
     localStorage.setItem('memberCardPlans', JSON.stringify(existingPlans));
+    
+    // 同時創建對應的會員卡
+    createMemberCard(newId, plan.name, plan.type);
     
     // 觸發更新事件
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('membershipPlansUpdated'));
+      window.dispatchEvent(new CustomEvent('memberCardsUpdated'));
     }
     
     return convertToMembershipPlan(newPlan);
@@ -174,34 +232,39 @@ export function createMembershipPlan(plan: Omit<MembershipPlan, 'id'>): Membersh
 // Update membership plan (updates localStorage)
 export function updateMembershipPlan(id: string, updates: Partial<MembershipPlan>): MembershipPlan | null {
   if (typeof localStorage !== 'undefined') {
-    const existingPlans = JSON.parse(localStorage.getItem('memberCardPlans') || JSON.stringify(memberCardPlans));
+    // 確保 localStorage 已初始化
+    let existingPlans = [];
+    try {
+      const storedPlans = localStorage.getItem('memberCardPlans');
+      if (storedPlans) {
+        existingPlans = JSON.parse(storedPlans);
+      } else {
+        existingPlans = JSON.parse(JSON.stringify(memberCardPlans));
+        localStorage.setItem('memberCardPlans', JSON.stringify(existingPlans));
+      }
+    } catch (error) {
+      console.warn('Failed to parse localStorage plans:', error);
+      existingPlans = JSON.parse(JSON.stringify(memberCardPlans));
+    }
     const index = existingPlans.findIndex((plan: RawMembershipPlanData) => plan.id.toString() === id);
     if (index === -1) return null;
     
-    // Convert updates back to JSON format
-    const jsonUpdates: Partial<RawMembershipPlanData> = {};
-    if (updates.name) jsonUpdates.name = updates.name;
-    if (updates.price) jsonUpdates.price = updates.price.toString();
-    if (updates.originalPrice) jsonUpdates.original_price = updates.originalPrice.toString();
-    if (updates.duration) jsonUpdates.duration = updates.duration;
-    if (updates.type) {
-      jsonUpdates.plan_type = updates.type as string;
-      jsonUpdates.type = updates.type.toUpperCase();
-    }
-    if (updates.features) jsonUpdates.features = updates.features;
-    if (updates.published !== undefined) jsonUpdates.published = updates.published;
-    if (updates.category) jsonUpdates.category = updates.category;
+    // 合併現有資料和更新資料
+    const currentPlan = existingPlans[index];
+    const mergedPlan = {
+      ...convertToMembershipPlan(currentPlan),
+      ...updates,
+      id: id
+    };
     
-    // Sync status and published properties
-    if (updates.status) {
-      jsonUpdates.published = updates.status === 'published';
-    }
-    
-    existingPlans[index] = { ...existingPlans[index], ...jsonUpdates };
+    // 使用統一的轉換函數
+    const updatedRawPlan = convertToRawPlan(mergedPlan);
+    existingPlans[index] = updatedRawPlan;
     localStorage.setItem('memberCardPlans', JSON.stringify(existingPlans));
     
     // 觸發更新事件
     if (typeof window !== 'undefined') {
+      console.log('🔔 觸發 membershipPlansUpdated 事件 - 方案已更新:', updatedRawPlan.name, 'status:', updatedRawPlan.status);
       window.dispatchEvent(new CustomEvent('membershipPlansUpdated'));
     }
     
@@ -214,16 +277,34 @@ export function updateMembershipPlan(id: string, updates: Partial<MembershipPlan
 // Delete membership plan (removes from localStorage)
 export function deleteMembershipPlan(id: string): boolean {
   if (typeof localStorage !== 'undefined') {
-    const existingPlans = JSON.parse(localStorage.getItem('memberCardPlans') || JSON.stringify(memberCardPlans));
+    // 確保 localStorage 已初始化
+    let existingPlans = [];
+    try {
+      const storedPlans = localStorage.getItem('memberCardPlans');
+      if (storedPlans) {
+        existingPlans = JSON.parse(storedPlans);
+      } else {
+        existingPlans = JSON.parse(JSON.stringify(memberCardPlans));
+        localStorage.setItem('memberCardPlans', JSON.stringify(existingPlans));
+      }
+    } catch (error) {
+      console.warn('Failed to parse localStorage plans:', error);
+      existingPlans = JSON.parse(JSON.stringify(memberCardPlans));
+    }
     const index = existingPlans.findIndex((plan: RawMembershipPlanData) => plan.id.toString() === id);
     if (index === -1) return false;
     
+    const planToDelete = existingPlans[index];
     existingPlans.splice(index, 1);
     localStorage.setItem('memberCardPlans', JSON.stringify(existingPlans));
+    
+    // 同時刪除對應的會員卡
+    deleteMemberCard(planToDelete.member_card_id);
     
     // 觸發更新事件
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('membershipPlansUpdated'));
+      window.dispatchEvent(new CustomEvent('memberCardsUpdated'));
     }
     
     return true;
@@ -242,4 +323,64 @@ export function duplicateMembershipPlan(id: string): MembershipPlan | null {
     name: `${plan.name} (複製)`,
     published: false
   });
+}
+
+// 會員卡管理功能
+export function createMemberCard(cardId: number, planName: string, planType: 'individual' | 'corporate'): void {
+  if (typeof localStorage !== 'undefined') {
+    const existingCards = JSON.parse(localStorage.getItem('memberCards') || JSON.stringify(memberCards));
+    
+    // 檢查是否已存在相同 ID 的會員卡
+    const existingCard = existingCards.find((card: any) => card.id === cardId);
+    if (existingCard) {
+      // 更新現有會員卡
+      existingCard.name = planName;
+      existingCard.card_type = planType;
+      existingCard.description = `${planName}通行證`;
+      existingCard.status = 'active';
+    } else {
+      // 創建新會員卡
+      const newCard = {
+        id: cardId,
+        created_at: new Date().toISOString(),
+        name: planName,
+        available_course_ids: planType === 'corporate' ? [1, 2] : [2], // 企業方案可訪問更多課程
+        description: `${planName}通行證`,
+        card_type: planType,
+        status: 'active'
+      };
+      existingCards.push(newCard);
+    }
+    
+    localStorage.setItem('memberCards', JSON.stringify(existingCards));
+  }
+}
+
+// 獲取所有會員卡
+export function getMemberCards() {
+  if (typeof localStorage !== 'undefined') {
+    const localStorageCards = JSON.parse(localStorage.getItem('memberCards') || JSON.stringify(memberCards));
+    return localStorageCards;
+  }
+  return memberCards;
+}
+
+// 刪除會員卡
+export function deleteMemberCard(cardId: number): boolean {
+  if (typeof localStorage !== 'undefined') {
+    const existingCards = JSON.parse(localStorage.getItem('memberCards') || JSON.stringify(memberCards));
+    const index = existingCards.findIndex((card: any) => card.id === cardId);
+    if (index === -1) return false;
+    
+    existingCards.splice(index, 1);
+    localStorage.setItem('memberCards', JSON.stringify(existingCards));
+    
+    // 觸發更新事件
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('memberCardsUpdated'));
+    }
+    
+    return true;
+  }
+  return false;
 }
