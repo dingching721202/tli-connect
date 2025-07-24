@@ -92,11 +92,11 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
       className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white p-4 sm:p-6">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg sm:text-xl font-bold mb-1">已選課程</h3>
-            <p className="text-purple-100 text-sm">
+            <p className="text-blue-100 text-sm">
               {selectedCourses.length === 0 
                 ? '尚未選擇任何課程' 
                 : `已選擇 ${selectedCourses.length} 堂課程`
@@ -109,7 +109,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
               <div className="text-2xl font-bold">
                 {selectedCourses.length}
               </div>
-              <div className="text-purple-200 text-xs">
+              <div className="text-blue-200 text-xs">
                 堂課程
               </div>
             </div>
@@ -147,7 +147,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
                 >
                   {/* Date Header */}
                   <div className="flex items-center mb-3">
-                    <div className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm font-medium">
+                    <div className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
                       {formatDate(date)}
                     </div>
                     <div className="h-px bg-gray-200 flex-1 ml-3"></div>
@@ -162,7 +162,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
                         transition={{ delay: index * 0.1 }}
-                        className="bg-purple-50 border border-purple-200 rounded-lg p-4 hover:bg-purple-100 transition-colors"
+                        className="bg-blue-50 border border-blue-200 rounded-lg p-4 hover:bg-blue-100 transition-colors"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -184,7 +184,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
 
                             {showPrice && (
                               <div className="text-right">
-                                <span className="text-lg font-bold text-purple-600">
+                                <span className="text-lg font-bold text-blue-600">
                                   {course.price === 0 || hasActiveMembership() 
                                     ? '免費' 
                                     : `NT$ ${course.price.toLocaleString()}`
@@ -222,7 +222,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
           {showPrice && calculateTotal() > 0 && (
             <div className="flex items-center justify-between mb-4 p-3 bg-white rounded-lg border">
               <span className="text-sm font-medium text-gray-600">總計</span>
-              <span className="text-xl font-bold text-purple-600">
+              <span className="text-xl font-bold text-blue-600">
                 NT$ {calculateTotal().toLocaleString()}
               </span>
             </div>
@@ -257,7 +257,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
           {isUserEligible() ? (
             <motion.button
               onClick={onConfirmBooking}
-              className="w-full py-3 px-6 rounded-lg font-semibold text-center transition-all bg-purple-600 text-white hover:bg-purple-700 shadow-md hover:shadow-lg"
+              className="w-full py-3 px-6 rounded-lg font-semibold text-center transition-all bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >

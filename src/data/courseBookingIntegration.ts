@@ -157,7 +157,9 @@ function generateCourseSessionsFromManagedCourse(course: {
     
     while (currentDate <= end && sessionIndex < totalSessions) {
       const dayOfWeek = currentDate.getDay();
-      const dateStr = currentDate.toISOString().split('T')[0];
+      const dateStr = currentDate.getFullYear() + '-' + 
+        String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(currentDate.getDate()).padStart(2, '0');
       
       if (classDays.includes(dayOfWeek)) {
         generatedSessions.push({
@@ -224,7 +226,9 @@ function generateDetailedCourseSessions(course: {
     // 為每個排程生成對應的課程時段
     while (currentDate <= end && sessionIndex < totalSessions) {
       const dayOfWeek = currentDate.getDay();
-      const dateStr = currentDate.toISOString().split('T')[0];
+      const dateStr = currentDate.getFullYear() + '-' + 
+        String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(currentDate.getDate()).padStart(2, '0');
       
       if (classDays.includes(dayOfWeek) && !excludeSet.has(dateStr)) {
         const sessionContent = sessions[sessionIndex % sessions.length];

@@ -141,7 +141,9 @@ export function generateScheduledSessions(
 
   while (sessionCount < totalSessions) {
     const dayOfWeek = currentDate.getDay();
-    const dateStr = currentDate.toISOString().split('T')[0];
+    const dateStr = currentDate.getFullYear() + '-' + 
+      String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(currentDate.getDate()).padStart(2, '0');
 
     // 檢查是否有符合的時間段且不在排除日期中
     for (const timeSlot of timeSlots) {
@@ -191,7 +193,9 @@ export function calculateEndDate(
 
   while (sessionCount < totalSessions) {
     const dayOfWeek = currentDate.getDay();
-    const dateStr = currentDate.toISOString().split('T')[0];
+    const dateStr = currentDate.getFullYear() + '-' + 
+      String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(currentDate.getDate()).padStart(2, '0');
 
     // 檢查是否有符合的時間段且不在排除日期中
     for (const timeSlot of timeSlots) {
@@ -207,7 +211,9 @@ export function calculateEndDate(
     currentDate.setDate(currentDate.getDate() + 1);
   }
 
-  return currentDate.toISOString().split('T')[0];
+  return currentDate.getFullYear() + '-' + 
+    String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+    String(currentDate.getDate()).padStart(2, '0');
 }
 
 // 獲取已發布的課程排程

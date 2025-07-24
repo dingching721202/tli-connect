@@ -20,6 +20,27 @@ interface BookingCourse {
   timeslot_id: number;
   bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled'; // US05新增：預約狀態
   disabledReason?: string; // US05新增：不可預約原因
+  sessionId?: string; // 完整的session ID用於選擇邏輯
+}
+
+// 添加字符串hashCode方法
+declare global {
+  interface String {
+    hashCode(): number;
+  }
+}
+
+if (typeof String.prototype.hashCode === 'undefined') {
+  String.prototype.hashCode = function() {
+    let hash = 0;
+    if (this.length === 0) return hash;
+    for (let i = 0; i < this.length; i++) {
+      const char = this.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash);
+  };
 }
 import { bookingService } from '@/services/dataService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -119,7 +140,7 @@ const BookingSystem: React.FC = () => {
       }
       
       return {
-        id: parseInt(session.id.split('_')[0]) || 0,
+        id: session.id.hashCode(), // 使用完整session ID的hash作為數字ID
         title: `${session.courseTitle} ${session.sessionTitle}`,
         date: session.date,
         timeSlot: `${session.startTime}-${session.endTime}`,
@@ -129,9 +150,10 @@ const BookingSystem: React.FC = () => {
         capacity: session.capacity,
         reserved_count: session.currentEnrollments,
         status: session.status === 'available' ? 'CREATED' : 'CANCELED',
-        timeslot_id: parseInt(session.id.replace(/\D/g, '')) || 0,
+        timeslot_id: session.id.hashCode(), // 使用相同的hash作為timeslot_id
         bookingStatus,
-        disabledReason
+        disabledReason,
+        sessionId: session.id // 保留完整的session ID用於選擇邏輯
       };
     });
   };
@@ -181,8 +203,8 @@ const BookingSystem: React.FC = () => {
     if (specificCourse) {
       // 只有可預約的課程才能被選取 (US05)
       if (specificCourse.bookingStatus === 'available') {
-        const courseKey = `${specificCourse.id}-${specificCourse.timeSlot}`;
-        const isSelected = selectedCourses.some(c => `${c.id}-${c.timeSlot}` === courseKey);
+        const courseKey = specificCourse.sessionId || `${specificCourse.id}-${specificCourse.timeSlot}`;
+        const isSelected = selectedCourses.some(c => (c.sessionId || `${c.id}-${c.timeSlot}`) === courseKey);
         
         if (!isSelected) {
           setSelectedCourses(prev => [...prev, specificCourse]);
@@ -197,24 +219,24 @@ const BookingSystem: React.FC = () => {
       return;
     }
     
-    const courseKey = `${course.id}-${course.timeSlot}`;
-    const isSelected = selectedCourses.some(c => `${c.id}-${c.timeSlot}` === courseKey);
+    const courseKey = course.sessionId || `${course.id}-${course.timeSlot}`;
+    const isSelected = selectedCourses.some(c => (c.sessionId || `${c.id}-${c.timeSlot}`) === courseKey);
     
     if (isSelected) {
-      setSelectedCourses(prev => prev.filter(c => `${c.id}-${c.timeSlot}` !== courseKey));
+      setSelectedCourses(prev => prev.filter(c => (c.sessionId || `${c.id}-${c.timeSlot}`) !== courseKey));
     } else {
       setSelectedCourses(prev => [...prev, course]);
     }
   };
 
   const handleCourseToggle = (course: BookingCourse) => {
-    const courseKey = `${course.id}-${course.timeSlot}`;
-    setSelectedCourses(prev => prev.filter(c => `${c.id}-${c.timeSlot}` !== courseKey));
+    const courseKey = course.sessionId || `${course.id}-${course.timeSlot}`;
+    setSelectedCourses(prev => prev.filter(c => (c.sessionId || `${c.id}-${c.timeSlot}`) !== courseKey));
   };
 
   const handleRemoveCourse = (courseToRemove: BookingCourse) => {
-    const courseKey = `${courseToRemove.id}-${courseToRemove.timeSlot}`;
-    setSelectedCourses(prev => prev.filter(c => `${c.id}-${c.timeSlot}` !== courseKey));
+    const courseKey = courseToRemove.sessionId || `${courseToRemove.id}-${courseToRemove.timeSlot}`;
+    setSelectedCourses(prev => prev.filter(c => (c.sessionId || `${c.id}-${c.timeSlot}`) !== courseKey));
   };
 
   // 批量預約功能 (US06)

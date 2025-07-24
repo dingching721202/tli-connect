@@ -17,6 +17,7 @@ interface BookingCourse {
   timeslot_id: number;
   bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled'; // US05新增：預約狀態
   disabledReason?: string; // US05新增：不可預約原因
+  sessionId?: string; // 完整的session ID用於選擇邏輯
 }
 import SafeIcon from './common/SafeIcon';
 
@@ -47,7 +48,7 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
 
   const isCourseSelected = (course: BookingCourse) => {
     return selectedCourses.some(sc => 
-      `${sc.id}-${sc.timeSlot}` === `${course.id}-${course.timeSlot}`
+      (sc.sessionId || `${sc.id}-${sc.timeSlot}`) === (course.sessionId || `${course.id}-${course.timeSlot}`)
     );
   };
 
@@ -68,11 +69,11 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
         className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden"
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-4 sm:p-6">
+        <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-4 sm:p-6">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg sm:text-xl font-bold mb-1">選擇課程</h3>
-              <p className="text-emerald-100 text-sm">
+              <p className="text-blue-100 text-sm">
                 {formatDate(selectedDate)}
               </p>
             </div>
@@ -116,13 +117,13 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
                     return 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60';
                   }
                   return isSelected 
-                    ? 'border-emerald-500 bg-emerald-50 cursor-pointer' 
-                    : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50 cursor-pointer';
+                    ? 'border-blue-500 bg-blue-50 cursor-pointer' 
+                    : 'border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 cursor-pointer';
                 };
                 
                 return (
                   <motion.div
-                    key={`${course.id}-${course.timeSlot}`}
+                    key={course.sessionId || `${course.id}-${course.timeSlot}`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -140,7 +141,7 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
                         <div className="flex items-center justify-between mb-2">
                           <h5 className={`
                             font-semibold text-base
-                            ${isSelected ? 'text-emerald-800' : isDisabled ? 'text-gray-500' : 'text-gray-900'}
+                            ${isSelected ? 'text-blue-800' : isDisabled ? 'text-gray-500' : 'text-gray-900'}
                           `}>
                             {course.title}
                           </h5>
@@ -181,7 +182,7 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
                         <div className={`
                           ml-4 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center
                           ${isSelected 
-                            ? 'border-emerald-500 bg-emerald-500' 
+                            ? 'border-blue-500 bg-blue-500' 
                             : 'border-gray-300'
                           }
                         `}>
@@ -202,7 +203,7 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
                         <span className="text-sm text-gray-500">課程費用</span>
                         <span className={`
                           text-lg font-bold
-                          ${isSelected ? 'text-emerald-600' : 'text-gray-900'}
+                          ${isSelected ? 'text-blue-600' : 'text-gray-900'}
                         `}>
                           {course.price === 0 ? '會員免費' : `NT$ ${course.price.toLocaleString()}`}
                         </span>
@@ -218,28 +219,17 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
         {/* Footer */}
         {availableCourses.length > 0 && (
           <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-            <div className="bg-emerald-50 rounded-lg p-4">
-              <div className="flex items-center justify-between">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <div className="flex items-center justify-center">
                 <div>
-                  <p className="text-sm font-medium text-emerald-800">
+                  <p className="text-sm font-medium text-blue-800 text-center">
                     已選擇 {selectedCourses.filter(sc => 
                       availableCourses.some(ac => 
-                        `${ac.id}-${ac.timeSlot}` === `${sc.id}-${sc.timeSlot}`
+                        (ac.sessionId || `${ac.id}-${ac.timeSlot}`) === (sc.sessionId || `${sc.id}-${sc.timeSlot}`)
                       )
                     ).length} / {availableCourses.length} 堂課程
                   </p>
-                  <p className="text-xs text-emerald-600 mt-1">
-                    點擊課程卡片來選擇或取消選擇
-                  </p>
                 </div>
-                <motion.button
-                  onClick={onClose}
-                  className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors text-sm font-medium"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  完成選擇
-                </motion.button>
               </div>
             </div>
           </div>

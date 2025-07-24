@@ -17,6 +17,7 @@ interface BookingCourse {
   timeslot_id: number;
   bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled'; // US05新增：預約狀態
   disabledReason?: string; // US05新增：不可預約原因
+  sessionId?: string; // 完整的session ID用於選擇邏輯
 }
 import SafeIcon from './common/SafeIcon';
 
@@ -123,7 +124,7 @@ const Calendar: React.FC<CalendarProps> = ({
     
     // Check if course is already selected
     const isCourseSelected = selectedCourses.some(
-      sc => sc.id === course.id && sc.timeSlot === course.timeSlot
+      sc => (sc.sessionId || `${sc.id}-${sc.timeSlot}`) === (course.sessionId || `${course.id}-${course.timeSlot}`)
     );
     
     if (isCourseSelected) {
@@ -142,7 +143,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
   const renderCourseItem = (course: BookingCourse, date: Date, index: number) => {
     const isSelected = selectedCourses.some(sc => 
-      `${sc.id}-${sc.timeSlot}` === `${course.id}-${course.timeSlot}`
+      (sc.sessionId || `${sc.id}-${sc.timeSlot}`) === (course.sessionId || `${course.id}-${course.timeSlot}`)
     );
 
     // 解析課程標題以提取課程信息
@@ -201,7 +202,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
     return (
       <motion.div
-        key={`${course.id}-${course.timeSlot}`}
+        key={course.sessionId || `${course.id}-${course.timeSlot}`}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
@@ -266,7 +267,6 @@ const Calendar: React.FC<CalendarProps> = ({
     const dayCourses = getCoursesByDate(date);
     const isToday = isDateToday(date);
     const isCurrentMonth = isDateInCurrentMonth(date);
-    const isSelected = isDateSelected(date);
     const maxDisplayCourses = isMobile ? 2 : 3;
 
     return (
@@ -276,7 +276,6 @@ const Calendar: React.FC<CalendarProps> = ({
           relative p-2 min-h-[100px] border border-gray-200 cursor-pointer
           transition-all duration-200 hover:bg-gray-50
           ${isToday ? 'bg-blue-50 border-blue-300' : ''}
-          ${isSelected ? 'ring-2 ring-blue-400' : ''}
           ${!isCurrentMonth ? 'text-gray-400 bg-gray-50' : ''}
         `}
         onClick={(e) => handleDateClick(date, e)}

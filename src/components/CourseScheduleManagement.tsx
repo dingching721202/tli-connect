@@ -13,7 +13,8 @@ import {
   updateCourseSchedule,
   deleteCourseSchedule,
   generateScheduledSessions,
-  calculateEndDate
+  calculateEndDate,
+  getCourseScheduleFullTitle
 } from '@/data/courseScheduleUtils';
 import {
   CourseTemplate,
@@ -44,6 +45,7 @@ const CourseScheduleManagement = () => {
   const [formData, setFormData] = useState<{
     templateId: string;
     templateTitle: string;
+    seriesName: string;
     teacherId: string;
     teacherName: string;
     timeSlots: TimeSlot[];
@@ -55,6 +57,7 @@ const CourseScheduleManagement = () => {
   }>({
     templateId: '',
     templateTitle: '',
+    seriesName: '',
     teacherId: '',
     teacherName: '',
     timeSlots: [{
@@ -110,6 +113,7 @@ const CourseScheduleManagement = () => {
       setFormData({
         templateId: schedule.templateId,
         templateTitle: schedule.templateTitle,
+        seriesName: schedule.seriesName || '',
         teacherId: schedule.teacherId,
         teacherName: schedule.teacherName,
         timeSlots: schedule.timeSlots,
@@ -124,6 +128,7 @@ const CourseScheduleManagement = () => {
       setFormData({
         templateId: '',
         templateTitle: '',
+        seriesName: '',
         teacherId: '',
         teacherName: '',
         timeSlots: [{
@@ -354,6 +359,7 @@ const CourseScheduleManagement = () => {
     const scheduleData = {
       templateId: formData.templateId,
       templateTitle: formData.templateTitle,
+      seriesName: formData.seriesName,
       teacherId: formData.teacherId,
       teacherName: formData.teacherName,
       timeSlots: formData.timeSlots,
@@ -410,8 +416,11 @@ const CourseScheduleManagement = () => {
       // 搜尋過濾
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
+        const fullTitle = getCourseScheduleFullTitle(schedule);
         return (
+          fullTitle?.toLowerCase().includes(searchLower) ||
           schedule.templateTitle?.toLowerCase().includes(searchLower) ||
+          schedule.seriesName?.toLowerCase().includes(searchLower) ||
           schedule.teacherName?.toLowerCase().includes(searchLower)
         );
       }
@@ -513,7 +522,7 @@ const CourseScheduleManagement = () => {
                 <h3 className={`text-xl font-bold mb-0 ${
                   schedule.status === 'published' ? 'text-gray-900' : 'text-gray-600'
                 }`}>
-                  {schedule.templateTitle}
+                  {getCourseScheduleFullTitle(schedule)}
                 </h3>
                 {schedule.status === 'draft' && (
                   <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
@@ -685,6 +694,25 @@ const CourseScheduleManagement = () => {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Series Name Field - Only show when a course is selected */}
+                  {formData.templateId && (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        系列名稱（選填）
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.seriesName}
+                        onChange={(e) => setFormData(prev => ({ ...prev, seriesName: e.target.value }))}
+                        placeholder="例：B班、進階班、週末班"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        系列名稱會加在課程標題後面，最終顯示為「{formData.templateTitle}{formData.seriesName ? `-${formData.seriesName}` : ''}」
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* Time Settings */}
