@@ -704,7 +704,7 @@ const CourseManagement = () => {
       {/* 標題和操作按鈕 */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">課程管理</h2>
+          <h2 className="text-2xl font-bold text-gray-900">課程模組</h2>
           <p className="text-sm text-gray-600 mt-1">創建和管理華語文課程</p>
         </div>
         {!isTeacher && (

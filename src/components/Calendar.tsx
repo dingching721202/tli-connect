@@ -140,7 +140,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
     // 解析課程標題以提取課程信息
     const parseCourseName = (title: string) => {
-      // 檢查是否為課程管理系統的課程格式
+      // 檢查是否為課程模組系統的課程格式
       if (title.includes('第') && title.includes('課')) {
         const parts = title.split(' ');
         if (parts.length >= 2) {

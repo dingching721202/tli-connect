@@ -654,7 +654,7 @@ const CourseScheduleManagement = () => {
                       </select>
                       {templates.length === 0 && (
                         <p className="text-sm text-red-500 mt-1">
-                          請先在「課程管理」中發布課程
+                          請先在「課程模組」中發布課程
                         </p>
                       )}
                     </div>

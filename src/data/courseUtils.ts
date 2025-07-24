@@ -375,7 +375,7 @@ function convertToManagedCourse(data: RawCourseData): ManagedCourse & {
     refundPolicy: data.refund_policy,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
-    // 新增課程管理所需的詳細排程
+    // 新增課程模組所需的詳細排程
     globalSchedules: [{
       weekdays: getWeekdays(),
       startTime,

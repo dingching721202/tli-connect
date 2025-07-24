@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "TLI Connect - 課程預約系統",
-  description: "TLI Connect 華語文課程預約系統，提供完整的學習體驗與課程管理功能",
+  description: "TLI Connect 華語文課程預約系統，提供完整的學習體驗與課程模組功能",
 };
 
 export default function RootLayout({

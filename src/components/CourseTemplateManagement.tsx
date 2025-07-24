@@ -227,8 +227,8 @@ const CourseTemplateManagement = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">課程管理</h2>
-          <p className="text-gray-600 mt-1">管理課程模板，建立課程本質內容</p>
+          <h2 className="text-2xl font-bold text-gray-900">課程模組</h2>
+          <p className="text-gray-600 mt-1">管理課程模板，建立課程架構</p>
         </div>
         <button
           onClick={() => handleOpenModal()}

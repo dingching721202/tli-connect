@@ -52,11 +52,11 @@ const BookingSystem: React.FC = () => {
       try {
         setLoading(true);
         
-        // 只載入課程管理的數據
+        // 只載入課程模組的數據
         const managedSessions = generateBookingSessions();
         const filters = getCourseFilters();
         
-        // 載入課程管理的數據
+        // 載入課程模組的數據
         setManagedCourseSessions(managedSessions);
         setCourseFilters(filters);
       } catch (error) {
@@ -70,7 +70,7 @@ const BookingSystem: React.FC = () => {
   }, []);
 
 
-  // 將課程管理的 BookingCourseSession 轉換為 BookingCourse 格式
+  // 將課程模組的 BookingCourseSession 轉換為 BookingCourse 格式
   const convertManagedSessionsToCourses = (sessions: BookingCourseSession[]): BookingCourse[] => {
     return sessions.map(session => ({
       id: parseInt(session.id.split('_')[0]) || 0,
@@ -249,7 +249,7 @@ const BookingSystem: React.FC = () => {
       setSelectedCourses([]);
       setShowCourseSelection(false);
       
-      // 重新載入課程管理資料以更新狀態
+      // 重新載入課程模組資料以更新狀態
       const updatedManagedSessions = generateBookingSessions();
       setManagedCourseSessions(updatedManagedSessions);
 

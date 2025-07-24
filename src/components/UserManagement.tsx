@@ -2608,7 +2608,7 @@ const UserManagement: React.FC = () => {
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">特殊權限</label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          {['用戶管理', '課程管理', '內容審核', '系統設定', '數據分析', '財務管理', '營運報告', '安全監控'].map((permission) => (
+                          {['用戶管理', '課程模組', '內容審核', '系統設定', '數據分析', '財務管理', '營運報告', '安全監控'].map((permission) => (
                             <label key={permission} className="flex items-center space-x-2">
                               <input
                                 type="checkbox"

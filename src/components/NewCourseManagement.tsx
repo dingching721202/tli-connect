@@ -17,7 +17,7 @@ const NewCourseManagement = () => {
   const tabs = [
     {
       id: 'template' as TabType,
-      label: '課程管理',
+      label: '課程模組',
       icon: FiBook,
       description: '建立和管理課程模板',
       color: 'blue'
@@ -63,7 +63,7 @@ const NewCourseManagement = () => {
             <div className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg">
               <SafeIcon icon={FiInfo} className="text-blue-600 text-sm" />
               <span className="text-xs text-blue-700">
-                先在「課程管理」發布課程，再到「日曆排程」安排時間
+                先在「課程模組」發布課程，再到「日曆排程」安排時間
               </span>
             </div>
           </div>

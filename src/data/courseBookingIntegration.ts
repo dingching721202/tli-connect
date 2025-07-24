@@ -1,4 +1,4 @@
-// 課程預約整合模組 - 連接課程管理與預約系統
+// 課程預約整合模組 - 連接課程模組與預約系統
 import { getManagedCourses } from './courseUtils';
 import { getTeachers } from './courseUtils';
 
@@ -42,7 +42,7 @@ type GeneratedSession = {
   teacherId?: string | number;
 };
 
-// 從課程管理生成預約可用的課程時段
+// 從課程模組生成預約可用的課程時段
 export function generateBookingSessions(): BookingCourseSession[] {
   const courses = getManagedCourses();
   const teachers = getTeachers();
@@ -86,7 +86,7 @@ export function generateBookingSessions(): BookingCourseSession[] {
   return sessions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }
 
-// 根據 ManagedCourse 生成課程時段（使用課程管理的完整邏輯）
+// 根據 ManagedCourse 生成課程時段（使用課程模組的完整邏輯）
 function generateCourseSessionsFromManagedCourse(course: {
   id: string;
   startDate: string;
@@ -113,7 +113,7 @@ function generateCourseSessionsFromManagedCourse(course: {
 }) {
   // 檢查課程是否有完整的排程配置
   if (course.globalSchedules && course.sessions && course.startDate && course.endDate) {
-    // 使用課程管理的完整排程邏輯
+    // 使用課程模組的完整排程邏輯
     return generateDetailedCourseSessions({
       startDate: course.startDate,
       endDate: course.endDate,
@@ -175,7 +175,7 @@ function generateCourseSessionsFromManagedCourse(course: {
   return generatedSessions;
 }
 
-// 使用課程管理的完整排程邏輯（複製自 CourseManagement.tsx）
+// 使用課程模組的完整排程邏輯（複製自 CourseManagement.tsx）
 function generateDetailedCourseSessions(course: {
   startDate: string;
   endDate: string;

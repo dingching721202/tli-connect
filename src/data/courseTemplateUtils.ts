@@ -1,4 +1,4 @@
-// 課程管理模組 - 專注於課程本質建立
+// 課程模組 - 專注於課程架構建立
 export interface CourseTemplate {
   id: string;
   title: string;
