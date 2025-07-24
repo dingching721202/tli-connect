@@ -166,7 +166,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
     const { courseName, sessionInfo } = parseCourseName(course.title);
 
-    // 根據課程狀態和類型設置顏色 (US05)
+    // 根據課程狀態設置統一顏色 (US05)
     const getCourseColor = () => {
       // US05.2 & US05.3: 不可預約的課程顯示為灰色
       if (course.bookingStatus === 'full') {
@@ -177,27 +177,10 @@ const Calendar: React.FC<CalendarProps> = ({
         return 'bg-red-200 text-red-600 cursor-not-allowed line-through opacity-50';
       }
       
-      // 可預約的課程按類型設置顏色
-      if (course.title.includes('中文') || course.title.includes('華語')) {
-        return isSelected 
-          ? 'bg-blue-500 text-white' 
-          : 'bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer';
-      } else if (course.title.includes('英文') || course.title.includes('English')) {
-        return isSelected 
-          ? 'bg-green-500 text-white' 
-          : 'bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer';
-      } else if (course.title.includes('文化')) {
-        return isSelected 
-          ? 'bg-purple-500 text-white' 
-          : 'bg-purple-100 text-purple-800 hover:bg-purple-200 cursor-pointer';
-      } else if (course.title.includes('商業')) {
-        return isSelected 
-          ? 'bg-orange-500 text-white' 
-          : 'bg-orange-100 text-orange-800 hover:bg-orange-200 cursor-pointer';
-      }
+      // 可預約的課程統一使用藍色系
       return isSelected 
-        ? 'bg-gray-500 text-white' 
-        : 'bg-gray-100 text-gray-800 hover:bg-gray-200 cursor-pointer';
+        ? 'bg-blue-500 text-white' 
+        : 'bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer';
     };
 
     return (

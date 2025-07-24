@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Calendar from './Calendar';
 import CourseSelection from './CourseSelection';
@@ -56,6 +57,7 @@ import {
 
 const BookingSystem: React.FC = () => {
   const { user, hasActiveMembership } = useAuth();
+  const searchParams = useSearchParams();
   const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // July 2025
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedCourses, setSelectedCourses] = useState<BookingCourse[]>([]);
@@ -66,6 +68,10 @@ const BookingSystem: React.FC = () => {
   const [managedCourseSessions, setManagedCourseSessions] = useState<BookingCourseSession[]>([]);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  // 單一課程模式 - 從URL參數獲取
+  const courseFilterParam = searchParams?.get('courseFilter');
+  const isSingleCourseMode = !!courseFilterParam;
 
   // 載入課程時段資料 (US05)
   const loadTimeslots = async () => {
@@ -74,7 +80,42 @@ const BookingSystem: React.FC = () => {
       
       // 只載入課程模組的數據
       const managedSessions = generateBookingSessions();
-      const filters = getCourseFilters();
+      let filters = getCourseFilters();
+      
+      // 單一課程模式：只顯示指定的課程
+      if (isSingleCourseMode && courseFilterParam) {
+        // 改進的課程匹配邏輯
+        const findFilterByTemplateId = (filters: CourseFilter[], templateId: string): CourseFilter[] => {
+          return filters.filter(filter => {
+            // 直接匹配 (用於沒有排程的課程)
+            if (filter.id === templateId) return true;
+            
+            // 檢查是否以 templateId + '_schedule_' 開頭 (用於有排程的課程)
+            if (filter.id.startsWith(templateId + '_schedule_')) return true;
+            
+            // 檢查是否 templateId 包含 filter.id (用於去掉 template_ 前綴的課程)
+            if (templateId.startsWith('template_') && filter.id === templateId.replace('template_', '')) return true;
+            
+            // 反向檢查：filter.id 是否包含 templateId 的核心部分
+            const templateCore = templateId.replace('template_', '');
+            if (filter.id.includes(templateCore)) return true;
+            
+            return false;
+          });
+        };
+        
+        const matchingFilters = findFilterByTemplateId(filters, courseFilterParam);
+        
+        if (matchingFilters.length > 0) {
+          // 只保留匹配的課程，並設為選中狀態
+          filters = matchingFilters.map(filter => ({ ...filter, selected: true }));
+          console.log(`找到 ${matchingFilters.length} 個匹配的課程:`, matchingFilters.map(f => f.title));
+        } else {
+          // 如果找不到對應課程，顯示所有課程但都不選中
+          console.warn(`找不到模板ID ${courseFilterParam} 對應的課程，顯示所有課程`);
+          filters = filters.map(f => ({ ...f, selected: false }));
+        }
+      }
       
       // 載入課程模組的數據
       setManagedCourseSessions(managedSessions);
@@ -160,6 +201,11 @@ const BookingSystem: React.FC = () => {
 
   // 處理課程篩選
   const handleCourseFilterToggle = (courseId: string) => {
+    // 單一課程模式下不允許切換篩選
+    if (isSingleCourseMode) {
+      return;
+    }
+    
     setCourseFilters(prev => 
       prev.map(filter => 
         filter.id === courseId 
@@ -169,8 +215,8 @@ const BookingSystem: React.FC = () => {
     );
   };
 
-  // 獲取篩選後的課程
-  const getFilteredCourses = () => {
+  // 獲取篩選後的課程 - 使用 useMemo 優化性能和確保重新渲染
+  const filteredCourses = useMemo(() => {
     const selectedCourseIds = courseFilters
       .filter(filter => filter.selected)
       .map(filter => filter.id);
@@ -179,14 +225,13 @@ const BookingSystem: React.FC = () => {
     const filteredManagedCourses = convertManagedSessionsToCourses(filteredManagedSessions);
     
     return filteredManagedCourses;
-  };
+  }, [courseFilters, managedCourseSessions]);
 
   const handleDateSelect = (date: Date, specificCourse?: BookingCourse) => {
     setSelectedDate(date);
     const dateStr = date.toISOString().split('T')[0];
     
     // 顯示該日期的所有課程時段，包含不可預約的 (US05)
-    const filteredCourses = getFilteredCourses();
     const coursesForDate = filteredCourses.filter(course => {
       if (course.date !== dateStr) return false;
       
@@ -358,7 +403,10 @@ const BookingSystem: React.FC = () => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          瀏覽課程內容，{user && hasActiveMembership() ? '免費預約您感興趣的課程' : '加入會員開始學習之旅'} ✨
+          {isSingleCourseMode 
+            ? `正在查看特定課程的預約時段 📅`
+            : `瀏覽課程內容，${user && hasActiveMembership() ? '免費預約您感興趣的課程' : '加入會員開始學習之旅'} ✨`
+          }
         </motion.p>
 
         {/* Membership Status */}
@@ -422,7 +470,7 @@ const BookingSystem: React.FC = () => {
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <SafeIcon icon={FiFilter} className="mr-2 text-blue-600" />
-                  課程篩選
+                  {isSingleCourseMode ? '課程資訊' : '課程篩選'}
                 </h3>
                 <div className="flex items-center space-x-2">
                   <button
@@ -434,20 +482,24 @@ const BookingSystem: React.FC = () => {
                     <SafeIcon icon={FiRefreshCw} className={loading ? 'animate-spin' : ''} />
                     <span>重新整理</span>
                   </button>
-                  <span className="text-gray-300">|</span>
-                  <button
-                    onClick={() => setCourseFilters(prev => prev.map(f => ({ ...f, selected: true })))}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    全選
-                  </button>
-                  <span className="text-gray-300">|</span>
-                  <button
-                    onClick={() => setCourseFilters(prev => prev.map(f => ({ ...f, selected: false })))}
-                    className="text-sm text-gray-600 hover:text-gray-800 font-medium"
-                  >
-                    全不選
-                  </button>
+                  {!isSingleCourseMode && (
+                    <>
+                      <span className="text-gray-300">|</span>
+                      <button
+                        onClick={() => setCourseFilters(prev => prev.map(f => ({ ...f, selected: true })))}
+                        className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                      >
+                        全選
+                      </button>
+                      <span className="text-gray-300">|</span>
+                      <button
+                        onClick={() => setCourseFilters(prev => prev.map(f => ({ ...f, selected: false })))}
+                        className="text-sm text-gray-600 hover:text-gray-800 font-medium"
+                      >
+                        全不選
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
               
@@ -455,13 +507,17 @@ const BookingSystem: React.FC = () => {
                 {courseFilters.map(filter => (
                   <motion.div
                     key={filter.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={!isSingleCourseMode ? { scale: 1.02 } : {}}
+                    whileTap={!isSingleCourseMode ? { scale: 0.98 } : {}}
                     onClick={() => handleCourseFilterToggle(filter.id)}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                      filter.selected
-                        ? 'border-blue-500 bg-blue-50 text-blue-900'
-                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300'
+                    className={`p-3 rounded-lg border-2 transition-all ${
+                      isSingleCourseMode 
+                        ? 'border-blue-500 bg-blue-50 text-blue-900 cursor-default'
+                        : `cursor-pointer ${
+                            filter.selected
+                              ? 'border-blue-500 bg-blue-50 text-blue-900'
+                              : 'border-gray-200 bg-gray-50 text-gray-700 hover:border-gray-300'
+                          }`
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -488,7 +544,9 @@ const BookingSystem: React.FC = () => {
                         </div>
                       </div>
                       <div className="ml-2">
-                        {filter.selected ? (
+                        {isSingleCourseMode ? (
+                          <SafeIcon icon={FiCheck} className="text-blue-600" />
+                        ) : filter.selected ? (
                           <SafeIcon icon={FiCheck} className="text-blue-600" />
                         ) : (
                           <div className="w-4 h-4 border-2 border-gray-300 rounded"></div>
@@ -500,7 +558,10 @@ const BookingSystem: React.FC = () => {
               </div>
               
               <div className="mt-4 text-sm text-gray-600">
-                已選擇 {courseFilters.filter(f => f.selected).length} / {courseFilters.length} 門課程
+                {isSingleCourseMode 
+                  ? `正在查看課程：${courseFilters[0]?.title || '未知課程'}`
+                  : `已選擇 ${courseFilters.filter(f => f.selected).length} / ${courseFilters.length} 門課程`
+                }
               </div>
             </motion.div>
           )}
@@ -512,7 +573,7 @@ const BookingSystem: React.FC = () => {
                 currentDate={currentDate}
                 onDateChange={setCurrentDate}
                 onDateSelect={handleDateSelect}
-                courses={getFilteredCourses()}
+                courses={filteredCourses}
                 selectedCourses={selectedCourses}
                 onCourseToggle={handleCourseToggle}
               />

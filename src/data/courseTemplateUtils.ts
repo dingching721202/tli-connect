@@ -9,6 +9,7 @@ export interface CourseTemplate {
   category: '中文' | '英文' | '文化' | '商業' | '師資' | '其它';
   level: '不限' | '初級' | '中級' | '中高級' | '高級';
   totalSessions: number;
+  capacity: number; // 滿班人數
   sessions: CourseSession[];
   status: 'draft' | 'published';
   createdAt: string;
@@ -345,6 +346,7 @@ function getDefaultCourseTemplates(): CourseTemplate[] {
       category: mapCategory(course.categories),
       level: mapLevel(course.level),
       totalSessions: course.total_sessions,
+      capacity: 20, // 預設滿班人數
       sessions: generateSessions(course.total_sessions),
       status: 'published' as const,
       createdAt: course.created_at,

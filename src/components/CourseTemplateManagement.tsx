@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
+import { useRouter } from 'next/navigation';
 import {
   CourseTemplate,
   CourseSession,
@@ -18,10 +19,11 @@ import {
 
 const {
   FiBook, FiEdit2, FiTrash2, FiPlus, FiSearch, FiSave, FiX, FiCopy,
-  FiEye, FiEyeOff, FiLink, FiFileText
+  FiEye, FiEyeOff, FiLink, FiFileText, FiCalendar
 } = FiIcons;
 
 const CourseTemplateManagement = () => {
+  const router = useRouter();
   const [templates, setTemplates] = useState<CourseTemplate[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<CourseTemplate | null>(null);
@@ -35,6 +37,7 @@ const CourseTemplateManagement = () => {
     category: '中文',
     level: '不限',
     totalSessions: 1,
+    capacity: 20, // 預設滿班人數
     sessions: [{
       sessionNumber: 1,
       title: '第 1 堂課',
@@ -66,6 +69,7 @@ const CourseTemplateManagement = () => {
         category: '中文',
         level: '不限',
         totalSessions: 1,
+        capacity: 20,
         sessions: [{
           sessionNumber: 1,
           title: '第 1 堂課',
@@ -88,6 +92,7 @@ const CourseTemplateManagement = () => {
       category: '中文',
       level: '不限',
       totalSessions: 1,
+      capacity: 20,
       sessions: [{
         sessionNumber: 1,
         title: '第 1 堂課',
@@ -146,6 +151,7 @@ const CourseTemplateManagement = () => {
       category: formData.category || '中文',
       level: formData.level || '不限',
       totalSessions: formData.totalSessions || 1,
+      capacity: formData.capacity || 20,
       sessions: formData.sessions || [],
       status
     };
@@ -196,6 +202,16 @@ const CourseTemplateManagement = () => {
       setTemplates(prev => [...prev, duplicatedTemplate]);
       alert('課程模板已複製');
     }
+  };
+
+  // 跳轉到課程日曆頁面
+  const handleViewCourseCalendar = (template: CourseTemplate) => {
+    if (template.status !== 'published') {
+      alert('請先發布課程模板才能查看課程日曆');
+      return;
+    }
+    // 跳轉到主頁面的預約系統，並帶上課程ID參數和錨點
+    router.push(`/?courseFilter=${encodeURIComponent(template.id)}#booking`);
   };
 
   // 切換發布狀態
@@ -339,6 +355,10 @@ const CourseTemplateManagement = () => {
                   <span className="text-gray-500">總堂數：</span>
                   <span className="font-medium text-blue-600">{template.totalSessions} 堂</span>
                 </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">滿班人數：</span>
+                  <span className="font-medium text-blue-600">{template.capacity || 20} 人</span>
+                </div>
               </div>
 
               {/* Course Sessions Preview */}
@@ -368,44 +388,56 @@ const CourseTemplateManagement = () => {
               </div>
 
               {/* Actions */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleOpenModal(template)}
+                      className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                      title="編輯"
+                    >
+                      <SafeIcon icon={FiEdit2} />
+                    </button>
+                    <button
+                      onClick={() => handleDuplicateTemplate(template)}
+                      className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
+                      title="複製"
+                    >
+                      <SafeIcon icon={FiCopy} />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTemplate(template.id)}
+                      className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                      title="刪除"
+                    >
+                      <SafeIcon icon={FiTrash2} />
+                    </button>
+                    {/* Course Calendar Button - 小尺寸並放在左側 */}
+                    {template.status === 'published' && (
+                      <button
+                        onClick={() => handleViewCourseCalendar(template)}
+                        className="p-2 text-purple-600 hover:bg-purple-100 rounded-lg transition-colors"
+                        title="課程日曆"
+                      >
+                        <SafeIcon icon={FiCalendar} />
+                      </button>
+                    )}
+                  </div>
+                  
+                  {/* Status Toggle Button */}
                   <button
-                    onClick={() => handleOpenModal(template)}
-                    className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                    title="編輯"
+                    onClick={() => handleToggleStatus(template.id, template.status)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1 ${
+                      template.status === 'published'
+                        ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border border-yellow-200'
+                        : 'bg-green-100 text-green-800 hover:bg-green-200 border border-green-200'
+                    }`}
+                    title={template.status === 'published' ? '取消發布' : '發布課程'}
                   >
-                    <SafeIcon icon={FiEdit2} />
-                  </button>
-                  <button
-                    onClick={() => handleDuplicateTemplate(template)}
-                    className="p-2 text-green-600 hover:bg-green-100 rounded-lg transition-colors"
-                    title="複製"
-                  >
-                    <SafeIcon icon={FiCopy} />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteTemplate(template.id)}
-                    className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                    title="刪除"
-                  >
-                    <SafeIcon icon={FiTrash2} />
+                    <SafeIcon icon={template.status === 'published' ? FiEyeOff : FiEye} />
+                    <span>{template.status === 'published' ? '取消發布' : '立即發布'}</span>
                   </button>
                 </div>
-                
-                {/* Status Toggle Button */}
-                <button
-                  onClick={() => handleToggleStatus(template.id, template.status)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center space-x-1 ${
-                    template.status === 'published'
-                      ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 border border-yellow-200'
-                      : 'bg-green-100 text-green-800 hover:bg-green-200 border border-green-200'
-                  }`}
-                  title={template.status === 'published' ? '取消發布' : '發布課程'}
-                >
-                  <SafeIcon icon={template.status === 'published' ? FiEyeOff : FiEye} />
-                  <span>{template.status === 'published' ? '取消發布' : '立即發布'}</span>
-                </button>
               </div>
             </div>
           </motion.div>
@@ -510,7 +542,7 @@ const CourseTemplateManagement = () => {
                         <option value="高級">高級</option>
                       </select>
                     </div>
-                    <div className="md:col-span-2">
+                    <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         課程堂數 *
                       </label>
@@ -520,6 +552,19 @@ const CourseTemplateManagement = () => {
                         value={formData.totalSessions || 1}
                         onChange={(e) => handleTotalSessionsChange(parseInt(e.target.value) || 1)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        滿班人數 *
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={formData.capacity || 20}
+                        onChange={(e) => setFormData(prev => ({ ...prev, capacity: parseInt(e.target.value) || 20 }))}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="20"
                       />
                     </div>
                   </div>
