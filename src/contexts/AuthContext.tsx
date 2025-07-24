@@ -90,6 +90,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setLoading(true);
       
+      console.log('AuthContext: 開始註冊請求');
+      
       // 調用 API 路由
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -101,11 +103,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const data = await response.json();
       
+      console.log('AuthContext: API 回應', { 
+        status: response.status, 
+        ok: response.ok, 
+        data 
+      });
+      
       if (response.ok && data.success && data.user_id && data.jwt) {
+        console.log('AuthContext: 註冊 API 成功，開始獲取用戶資料');
+        
         // 獲取完整用戶資料
         const userData = await authService.getUser(data.user_id);
+        console.log('AuthContext: 用戶資料', userData);
+        
         if (userData) {
           const userWithMembership = await loadUserWithMembership(userData);
+          console.log('AuthContext: 用戶會員資料', userWithMembership);
+          
           setUser(userWithMembership);
           
           // 保存會話
@@ -113,6 +127,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           localStorage.setItem('jwt', data.jwt);
           
           return { success: true, user: userWithMembership };
+        } else {
+          console.error('AuthContext: 無法獲取用戶資料');
+          return { success: false, error: '無法獲取用戶資料' };
         }
       }
       

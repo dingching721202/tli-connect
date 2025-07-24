@@ -10,26 +10,31 @@ interface PurchaseModalProps {
   isOpen: boolean;
   onClose: () => void;
   plan: MemberCardPlan;
+  mode?: 'purchase' | 'contact';
 }
 
 interface ContactFormData {
   name: string;
   email: string;
   phone: string;
+  company_name: string;
   industry: string;
-  language: string;
+  learning_subjects: string[];
   requirements: string;
 }
 
-const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan }) => {
+const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mode = 'purchase' }) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showContactForm, setShowContactForm] = useState(plan.hide_price || (plan.cta_options?.show_contact && !plan.cta_options?.show_payment));
+  const [showContactForm, setShowContactForm] = useState(
+    mode === 'contact' || plan.hide_price || (plan.cta_options?.show_contact && !plan.cta_options?.show_payment)
+  );
   const [contactData, setContactData] = useState<ContactFormData>({
     name: '',
     email: '',
     phone: '',
+    company_name: '',
     industry: '',
-    language: '',
+    learning_subjects: [],
     requirements: ''
   });
 
@@ -44,13 +49,27 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan }) 
     '其他'
   ];
 
-  const languages = [
+  const learningSubjects = [
     '中文',
-    '英文',
-    '日文',
-    '韓文',
-    '其他'
+    '英文', 
+    '文化',
+    '商業',
+    '師培'
   ];
+
+  const handleLearningSubjectChange = (subject: string, checked: boolean) => {
+    if (checked) {
+      setContactData({
+        ...contactData,
+        learning_subjects: [...contactData.learning_subjects, subject]
+      });
+    } else {
+      setContactData({
+        ...contactData,
+        learning_subjects: contactData.learning_subjects.filter(s => s !== subject)
+      });
+    }
+  };
 
   const handlePurchase = async () => {
     try {
@@ -171,7 +190,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan }) 
           {/* Header */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-bold text-gray-900">
-              {plan.hide_price ? '聯繫我們' : '購買會員方案'}
+              {mode === 'contact' || plan.hide_price ? '聯繫我們' : '購買會員方案'}
             </h2>
             <button
               onClick={onClose}
@@ -252,6 +271,22 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan }) 
                     />
                   </div>
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    企業名稱
+                  </label>
+                  <div className="relative">
+                    <SafeIcon icon={FiBriefcase} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                      type="text"
+                      value={contactData.company_name}
+                      onChange={(e) => setContactData({ ...contactData, company_name: e.target.value })}
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="請輸入企業名稱"
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Optional Info */}
@@ -278,23 +313,21 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan }) 
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    學習語系
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    想學習的項目 (可複選)
                   </label>
-                  <div className="relative">
-                    <SafeIcon icon={FiGlobe} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                    <select
-                      value={contactData.language}
-                      onChange={(e) => setContactData({ ...contactData, language: e.target.value })}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="">請選擇學習語系</option>
-                      {languages.map((language) => (
-                        <option key={language} value={language}>
-                          {language}
-                        </option>
-                      ))}
-                    </select>
+                  <div className="space-y-2">
+                    {learningSubjects.map((subject) => (
+                      <label key={subject} className="flex items-center space-x-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={contactData.learning_subjects.includes(subject)}
+                          onChange={(e) => handleLearningSubjectChange(subject, e.target.checked)}
+                          className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                        />
+                        <span className="text-sm text-gray-700">{subject}</span>
+                      </label>
+                    ))}
                   </div>
                 </div>
 

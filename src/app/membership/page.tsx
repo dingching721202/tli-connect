@@ -6,14 +6,18 @@ import { FiCheck, FiStar, FiClock, FiUsers, FiShoppingCart, FiCalendar, FiDollar
 import Navigation from '@/components/Navigation';
 import SafeIcon from '@/components/common/SafeIcon';
 import PurchaseModal from '@/components/PurchaseModal';
+import RegisterModal from '@/components/RegisterModal';
 import { MemberCardPlan } from '@/data/member_card_plans';
+import { useAuth } from '@/contexts/AuthContext';
 
 const MembershipPage: React.FC = () => {
+  const { user, isAuthenticated } = useAuth();
   const [plans, setPlans] = useState<MemberCardPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState<'individual' | 'corporate'>('individual');
   const [selectedPlan, setSelectedPlan] = useState<MemberCardPlan | null>(null);
-  const [showPurchaseModal, setShowPurchaseModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
 
   useEffect(() => {
     loadPlans();
@@ -103,15 +107,222 @@ const MembershipPage: React.FC = () => {
     return Math.round(((originalPrice - salePrice) / originalPrice) * 100);
   };
 
-  const handlePurchaseClick = (plan: MemberCardPlan) => {
-    setSelectedPlan(plan);
-    setShowPurchaseModal(true);
+  const handlePurchaseClick = async (plan: MemberCardPlan) => {
+    // 檢查是否已登入
+    if (!isAuthenticated || !user) {
+      // 未登入，顯示註冊表單
+      setSelectedPlan(plan);
+      setShowRegisterModal(true);
+      return;
+    }
+
+    // 已登入，直接進入付款流程
+    try {
+      const orderResponse = await fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan_id: plan.id,
+          user_email: user.email,
+          user_name: user.name
+        }),
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error('創建訂單失敗');
+      }
+
+      const orderData = await orderResponse.json();
+      const orderId = orderData.data.id;
+
+      // 使用 Mock 金流 API 格式
+      const paymentResponse = await fetch('/v1/payments', {
+        method: 'POST',
+        headers: {
+          'X-API-Key': 'test_api_key',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          order_id: orderId,
+          amount: parseInt(plan.sale_price, 10),
+          description: `購買會員方案: ${plan.title}`,
+          return_url: `${window.location.origin}/payment-result`
+        }),
+      });
+
+      if (!paymentResponse.ok) {
+        // 付款請求失敗，更新訂單狀態為 CANCELED
+        await fetch(`/api/orders/${orderId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'CANCELED'
+          }),
+        });
+        throw new Error('發起付款失敗');
+      }
+
+      const paymentData = await paymentResponse.json();
+      
+      if (paymentData.status === 'successful') {
+        // 付款成功，更新訂單狀態為 COMPLETED
+        const updateResponse = await fetch(`/api/orders/${orderId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'COMPLETED',
+            payment_id: paymentData.payment_id
+          }),
+        });
+
+        if (updateResponse.ok) {
+          // 顯示成交通知
+          alert('付款成功！您的會員資格已啟用。');
+          // 跳轉到完成頁面
+          window.location.href = `/payment-result?payment_id=${paymentData.payment_id}&status=success&order_id=${orderId}`;
+        } else {
+          console.error('更新訂單狀態失敗');
+          alert('付款成功但系統處理異常，請聯繫客服。');
+        }
+      } else {
+        // 付款失敗，更新訂單狀態為 CANCELED
+        await fetch(`/api/orders/${orderId}`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            status: 'CANCELED'
+          }),
+        });
+        throw new Error('付款失敗');
+      }
+    } catch (error) {
+      console.error('購買失敗:', error);
+      alert('購買失敗，請稍後再試');
+    }
   };
 
-  const handleClosePurchaseModal = () => {
-    setShowPurchaseModal(false);
+  const handleContactClick = (plan: MemberCardPlan) => {
+    setSelectedPlan(plan);
+    setShowContactModal(true);
+  };
+
+  const handleCloseContactModal = () => {
+    setShowContactModal(false);
     setSelectedPlan(null);
   };
+
+  const handleCloseRegisterModal = () => {
+    setShowRegisterModal(false);
+    setSelectedPlan(null);
+  };
+
+  const handleRegisterSuccess = async () => {
+    // 註冊成功後，給予一些時間讓AuthContext更新狀態
+    setTimeout(async () => {
+      if (selectedPlan && user) {
+        console.log('註冊成功，直接進入付款流程');
+        try {
+          const orderResponse = await fetch('/api/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              plan_id: selectedPlan.id,
+              user_email: user.email,
+              user_name: user.name
+            }),
+          });
+
+          if (!orderResponse.ok) {
+            throw new Error('創建訂單失敗');
+          }
+
+          const orderData = await orderResponse.json();
+          const orderId = orderData.data.id;
+
+          // 使用 Mock 金流 API 格式
+          const paymentResponse = await fetch('/v1/payments', {
+            method: 'POST',
+            headers: {
+              'X-API-Key': 'test_api_key',
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              order_id: orderId,
+              amount: parseInt(selectedPlan.sale_price, 10),
+              description: `購買會員方案: ${selectedPlan.title}`,
+              return_url: `${window.location.origin}/payment-result`
+            }),
+          });
+
+          if (!paymentResponse.ok) {
+            await fetch(`/api/orders/${orderId}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                status: 'CANCELED'
+              }),
+            });
+            throw new Error('發起付款失敗');
+          }
+
+          const paymentData = await paymentResponse.json();
+          
+          if (paymentData.status === 'successful') {
+            const updateResponse = await fetch(`/api/orders/${orderId}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                status: 'COMPLETED',
+                payment_id: paymentData.payment_id
+              }),
+            });
+
+            if (updateResponse.ok) {
+              alert('付款成功！您的會員資格已啟用。');
+              window.location.href = `/payment-result?payment_id=${paymentData.payment_id}&status=success&order_id=${orderId}`;
+            } else {
+              console.error('更新訂單狀態失敗');
+              alert('付款成功但系統處理異常，請聯繫客服。');
+            }
+          } else {
+            await fetch(`/api/orders/${orderId}`, {
+              method: 'PATCH',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                status: 'CANCELED'
+              }),
+            });
+            throw new Error('付款失敗');
+          }
+        } catch (error) {
+          console.error('購買失敗:', error);
+          alert('購買失敗，請稍後再試');
+        }
+      } else {
+        console.error('註冊成功但用戶資料未更新或方案遺失');
+        alert('註冊成功！請重新點擊購買按鈕。');
+        setShowRegisterModal(false);
+        setSelectedPlan(null);
+      }
+    }, 1000); // 等待1秒讓AuthContext狀態更新
+  };
+
 
   const filteredPlans = plans.filter(plan => {
     return plan.user_type === selectedFilter;
@@ -264,7 +475,7 @@ const MembershipPage: React.FC = () => {
                   <div className="space-y-3">
                     {plan.hide_price ? (
                       <button
-                        onClick={() => handlePurchaseClick(plan)}
+                        onClick={() => handleContactClick(plan)}
                         className="w-full py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2 font-semibold bg-gray-600 text-white hover:bg-gray-700"
                       >
                         <SafeIcon icon={FiUsers} />
@@ -278,12 +489,12 @@ const MembershipPage: React.FC = () => {
                             className="w-full py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2 font-semibold bg-blue-600 text-white hover:bg-blue-700"
                           >
                             <SafeIcon icon={FiShoppingCart} />
-                            <span>選擇此方案</span>
+                            <span>立即購買</span>
                           </button>
                         )}
                         {plan.cta_options?.show_contact && (
                           <button
-                            onClick={() => handlePurchaseClick(plan)}
+                            onClick={() => handleContactClick(plan)}
                             className="w-full py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2 font-semibold bg-gray-200 text-gray-800 hover:bg-gray-300"
                           >
                             <SafeIcon icon={FiUsers} />
@@ -307,12 +518,23 @@ const MembershipPage: React.FC = () => {
         )}
       </div>
 
-      {/* Purchase Modal */}
+      {/* Contact Modal */}
       {selectedPlan && (
         <PurchaseModal
-          isOpen={showPurchaseModal}
-          onClose={handleClosePurchaseModal}
+          isOpen={showContactModal}
+          onClose={handleCloseContactModal}
           plan={selectedPlan}
+          mode="contact"
+        />
+      )}
+
+      {/* Register Modal */}
+      {selectedPlan && (
+        <RegisterModal
+          isOpen={showRegisterModal}
+          onClose={handleCloseRegisterModal}
+          plan={selectedPlan}
+          onRegisterSuccess={handleRegisterSuccess}
         />
       )}
     </div>

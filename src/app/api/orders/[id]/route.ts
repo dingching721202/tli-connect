@@ -47,6 +47,14 @@ export async function PUT(
   }
 }
 
+// PATCH - 更新訂單狀態 (前端用)
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  return PUT(request, { params });
+}
+
 // GET - 獲取單一訂單詳情
 export async function GET(
   request: NextRequest,

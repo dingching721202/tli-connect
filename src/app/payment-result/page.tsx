@@ -13,19 +13,59 @@ const PaymentResultContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [paymentStatus, setPaymentStatus] = useState<'loading' | 'success' | 'failed'>('loading');
+  const [memberCardGenerated, setMemberCardGenerated] = useState(false);
 
   useEffect(() => {
-    // 模擬從 URL 參數或 API 獲取付款結果
     const checkPaymentResult = async () => {
       try {
-        // 在實際應用中，這裡會檢查 URL 參數或呼叫 API 來確認付款狀態
+        const paymentId = searchParams.get('payment_id');
         const status = searchParams.get('status');
+        const orderId = searchParams.get('order_id');
         
-        // 模擬 API 檢查延遲
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        // 模擬檢查延遲
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
-        if (status === 'successful' || Math.random() > 0.3) {
-          setPaymentStatus('success');
+        if (status === 'success' && orderId) {
+          // 檢查訂單狀態
+          const orderResponse = await fetch(`/api/orders/${orderId}`);
+          
+          if (orderResponse.ok) {
+            const orderData = await orderResponse.json();
+            const order = orderData.data;
+            
+            // 只有當訂單狀態為 COMPLETED 時才創建會員卡
+            if (order.status === 'COMPLETED') {
+              // 嘗試創建會員卡
+              const memberCardResponse = await fetch('/api/member-cards', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  order_id: orderId,
+                  plan_id: order.plan_id,
+                  user_email: order.user_email,
+                  user_name: order.user_name,
+                  user_id: order.user_id
+                }),
+              });
+              
+              if (memberCardResponse.ok) {
+                setMemberCardGenerated(true);
+                setPaymentStatus('success');
+              } else {
+                console.error('會員卡創建失敗');
+                setPaymentStatus('success'); // 付款成功但會員卡創建失敗
+              }
+            } else {
+              // 訂單狀態不是 COMPLETED，不能創建會員卡
+              console.error('訂單狀態無效，無法創建會員卡:', order.status);
+              setPaymentStatus('failed');
+            }
+          } else {
+            console.error('無法獲取訂單資訊');
+            setPaymentStatus('failed');
+          }
         } else {
           setPaymentStatus('failed');
         }
@@ -84,14 +124,22 @@ const PaymentResultContent = () => {
                 </motion.div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">付款成功！</h2>
                 <p className="text-gray-600 mb-6">
-                  恭喜您成功購買會員方案！您的會員卡已經生成，可以開始享受會員權益。
+                  恭喜您成功購買會員方案！
+                  {memberCardGenerated 
+                    ? '您的會員卡已經生成，可以開始享受會員權益。'
+                    : '系統正在處理您的會員資格，請稍候片刻。'
+                  }
                 </p>
                 
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
                   <div className="text-sm text-green-800">
                     <p className="font-medium mb-1">✅ 付款處理完成</p>
-                    <p className="font-medium mb-1">✅ 會員卡已生成</p>
-                    <p className="font-medium">✅ 可以開始預約課程</p>
+                    <p className={`font-medium mb-1 ${memberCardGenerated ? '' : 'text-yellow-600'}`}>
+                      {memberCardGenerated ? '✅ 會員卡已生成' : '⏳ 會員卡生成中...'}
+                    </p>
+                    <p className={`font-medium ${memberCardGenerated ? '' : 'text-gray-500'}`}>
+                      {memberCardGenerated ? '✅ 可以開始預約課程' : '待會員卡生成後即可預約課程'}
+                    </p>
                   </div>
                 </div>
 
