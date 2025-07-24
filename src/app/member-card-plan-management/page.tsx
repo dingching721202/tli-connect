@@ -819,7 +819,7 @@ const MemberCardPlanManagement: React.FC = () => {
                       <span className={`ml-2 text-sm ${
                         !formData.cta_options.show_payment ? 'text-gray-700' : 'text-gray-400'
                       }`}>
-                        隱藏價格（顯示"價格請洽詢"）
+                        隱藏價格（顯示&quot;價格請洽詢&quot;）
                       </span>
                     </label>
                     {formData.cta_options.show_payment && (

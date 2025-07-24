@@ -5,7 +5,6 @@ import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
-import Link from 'next/link';
 
 const {
   FiUser, FiMail, FiPhone, FiCalendar, FiAward, FiEdit2, FiSave, FiX, FiAlertTriangle,

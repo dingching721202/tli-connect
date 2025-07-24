@@ -11,7 +11,7 @@ const { FiCreditCard, FiCalendar, FiCheckCircle, FiClock, FiAlertCircle } = FiIc
 interface MembershipCardProps {
   dashboardData: {
     membership: Membership | null;
-    upcomingClasses: any[];
+    upcomingClasses: unknown[];
   } | null;
   onActivate: (membershipId: number) => Promise<void>;
   loading: boolean;

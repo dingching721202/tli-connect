@@ -100,12 +100,6 @@ const MembershipPage: React.FC = () => {
     };
   };
 
-  const calculateDiscount = (original: string, sale: string) => {
-    const originalPrice = parseFloat(original);
-    const salePrice = parseFloat(sale);
-    if (originalPrice <= salePrice) return 0;
-    return Math.round(((originalPrice - salePrice) / originalPrice) * 100);
-  };
 
   const handlePurchaseClick = async (plan: MemberCardPlan) => {
     // 檢查是否已登入
@@ -386,7 +380,6 @@ const MembershipPage: React.FC = () => {
           {filteredPlans.map((plan) => {
             const config = getPlanTypeConfig(plan.user_type, plan.duration_type);
             const Icon = config.icon;
-            const discount = calculateDiscount(plan.original_price, plan.sale_price);
             const isPopular = plan.popular || false;
 
             return (

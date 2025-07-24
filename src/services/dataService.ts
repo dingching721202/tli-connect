@@ -1,6 +1,6 @@
 import { 
   User, Course, Class,
-  Membership, Order, ClassTimeslot, ClassAppointment,
+  Membership, ClassTimeslot, ClassAppointment,
   ApiResponse, LoginResponse, BatchBookingResponse
 } from '@/types';
 
@@ -9,7 +9,6 @@ import { users as usersData } from '@/data/users';
 import { courses as coursesData } from '@/data/courses';
 import { classes as classesData } from '@/data/classes';
 import { memberships as membershipsData } from '@/data/memberships';
-import { orders as ordersData } from '@/data/orders';
 import { classTimeslots as classTimeslotsData } from '@/data/class_timeslots';
 import { classAppointments as classAppointmentsData } from '@/data/class_appointments';
 
@@ -18,7 +17,6 @@ const users: User[] = [...usersData] as User[];
 const courses: Course[] = [...coursesData] as Course[];
 const classes: Class[] = [...classesData] as Class[];
 const memberships: Membership[] = [...membershipsData] as Membership[];
-const orders: Order[] = [...ordersData] as Order[];
 const classTimeslots: ClassTimeslot[] = [...classTimeslotsData] as ClassTimeslot[];
 const classAppointments: ClassAppointment[] = [...classAppointmentsData] as ClassAppointment[];
 

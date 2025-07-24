@@ -18,7 +18,6 @@ const PaymentResultContent = () => {
   useEffect(() => {
     const checkPaymentResult = async () => {
       try {
-        const paymentId = searchParams.get('payment_id');
         const status = searchParams.get('status');
         const orderId = searchParams.get('order_id');
         

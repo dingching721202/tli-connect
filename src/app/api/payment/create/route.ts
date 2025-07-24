@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     if (paymentResult.success && paymentResult.data) {
       // 模擬金流成功，更新訂單狀態
-      const updatedOrder = orderStore.updateOrderStatus(
+      orderStore.updateOrderStatus(
         order_id, 
         'COMPLETED', 
         paymentResult.data.payment_id

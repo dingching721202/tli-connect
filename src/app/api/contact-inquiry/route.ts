@@ -14,7 +14,7 @@ interface ContactInquiry {
 }
 
 // 模擬資料庫存儲
-let contactInquiries: ContactInquiry[] = [];
+const contactInquiries: ContactInquiry[] = [];
 let nextId = 1;
 
 export async function POST(request: NextRequest) {

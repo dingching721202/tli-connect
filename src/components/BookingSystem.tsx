@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
 import Calendar from './Calendar';
 import CourseSelection from './CourseSelection';
 import SelectedCourses from './SelectedCourses';
@@ -34,7 +33,6 @@ import {
 
 const BookingSystem: React.FC = () => {
   const { user, hasActiveMembership } = useAuth();
-  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date(2025, 6, 1)); // July 2025
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedCourses, setSelectedCourses] = useState<BookingCourse[]>([]);

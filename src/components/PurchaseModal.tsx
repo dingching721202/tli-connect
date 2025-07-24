@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiCreditCard, FiUser, FiMail, FiPhone, FiBriefcase, FiGlobe, FiMessageSquare } from 'react-icons/fi';
+import { FiX, FiCreditCard, FiUser, FiMail, FiPhone, FiBriefcase, FiMessageSquare } from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
 import { MemberCardPlan } from '@/data/member_card_plans';
 
