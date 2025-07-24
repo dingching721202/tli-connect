@@ -81,6 +81,12 @@ export interface Membership {
   activated: boolean;
   activate_expire_time: string;
   created_at: string;
+  plan_id?: number;
+  user_email?: string;
+  user_name?: string;
+  order_id?: number;
+  start_date?: string;
+  end_date?: string;
 }
 
 export interface Order {

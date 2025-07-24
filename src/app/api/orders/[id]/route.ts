@@ -4,9 +4,10 @@ import { orderStore } from '@/lib/orderStore';
 // PUT - 更新訂單狀態 (金流回調用)
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const orderId = parseInt(params.id);
     const body = await request.json();
     const { status, payment_id } = body;
@@ -50,17 +51,18 @@ export async function PUT(
 // PATCH - 更新訂單狀態 (前端用)
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  return PUT(request, { params });
+  return PUT(request, context);
 }
 
 // GET - 獲取單一訂單詳情
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const orderId = parseInt(params.id);
     
     // 清理過期訂單

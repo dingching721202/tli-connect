@@ -116,6 +116,44 @@ export const orderService = {
 
 // 會員卡服務 (US04)
 export const memberCardService = {
+  // 取得所有會員卡
+  getAllCards() {
+    return memberships;
+  },
+  
+  // 創建會員卡
+  createCard(cardData: {
+    plan_id: number;
+    user_email: string;
+    user_name: string;
+    user_id: number;
+    order_id: number;
+    start_date: string;
+    end_date: string;
+    status: 'PURCHASED' | 'ACTIVE' | 'EXPIRED';
+  }) {
+    const newCard = {
+      id: generateId(memberships),
+      member_card_id: cardData.plan_id,
+      user_id: cardData.user_id,
+      duration_in_days: Math.ceil((new Date(cardData.end_date).getTime() - new Date(cardData.start_date).getTime()) / (1000 * 60 * 60 * 24)),
+      start_time: cardData.start_date,
+      expire_time: cardData.end_date,
+      status: cardData.status,
+      activated: cardData.status === 'ACTIVE',
+      activate_expire_time: cardData.end_date,
+      created_at: new Date().toISOString(),
+      plan_id: cardData.plan_id,
+      user_email: cardData.user_email,
+      user_name: cardData.user_name,
+      order_id: cardData.order_id,
+      start_date: cardData.start_date,
+      end_date: cardData.end_date
+    };
+    
+    memberships.push(newCard);
+    return newCard;
+  },
   // 啟用會員卡
   async activateMemberCard(userId: number, membershipId: number): Promise<ApiResponse<Membership>> {
     await delay(500);

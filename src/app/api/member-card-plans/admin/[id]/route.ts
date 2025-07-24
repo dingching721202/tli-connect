@@ -4,9 +4,10 @@ import { memberCardPlanStore } from '@/lib/memberCardPlanStore';
 // PUT - 更新方案
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const planId = parseInt(params.id);
     const body = await request.json();
     
@@ -35,9 +36,10 @@ export async function PUT(
 // DELETE - 刪除方案
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
     const planId = parseInt(params.id);
     
     const success = memberCardPlanStore.deletePlan(planId);

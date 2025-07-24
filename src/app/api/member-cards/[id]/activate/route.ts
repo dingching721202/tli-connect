@@ -4,7 +4,7 @@ import { jwtUtils } from '@/lib/jwt';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     // 驗證 JWT token
@@ -25,6 +25,7 @@ export async function POST(
       );
     }
 
+    const params = await context.params;
     const membershipId = parseInt(params.id);
     if (isNaN(membershipId)) {
       return NextResponse.json(
