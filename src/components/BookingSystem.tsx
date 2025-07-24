@@ -19,7 +19,7 @@ interface BookingCourse {
   reserved_count: number | undefined;
   status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
   timeslot_id: number;
-  bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled'; // US05新增：預約狀態
+  bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled' | 'booked'; // US05新增：預約狀態，US06新增：已預約狀態
   disabledReason?: string; // US05新增：不可預約原因
   sessionId?: string; // 完整的session ID用於選擇邏輯
 }
@@ -156,18 +156,26 @@ const BookingSystem: React.FC = () => {
   }, []);
 
 
-  // 將課程模組的 BookingCourseSession 轉換為 BookingCourse 格式 (US05)
+  // 將課程模組的 BookingCourseSession 轉換為 BookingCourse 格式 (US05, US06)
   const convertManagedSessionsToCourses = (sessions: BookingCourseSession[]): BookingCourse[] => {
     return sessions.map(session => {
       const now = new Date();
       const courseDateTime = new Date(`${session.date} ${session.startTime}`);
       const twentyFourHours = 24 * 60 * 60 * 1000;
+      const timeslotId = session.id.hashCode();
       
-      // 判斷預約狀態 (US05)
-      let bookingStatus: 'available' | 'full' | 'locked' | 'cancelled' = 'available';
+      // 檢查用戶是否已預約此時段 (US06)
+      const isBookedByUser = user ? checkUserBooking(user.id, timeslotId) : false;
+      
+      // 判斷預約狀態 (US05, US06)
+      let bookingStatus: 'available' | 'full' | 'locked' | 'cancelled' | 'booked' = 'available';
       let disabledReason = '';
       
-      if (session.status === 'cancelled') {
+      if (isBookedByUser) {
+        // US06.7: 用戶已預約的課程顯示為綠色
+        bookingStatus = 'booked';
+        disabledReason = '您已預約此課程';
+      } else if (session.status === 'cancelled') {
         bookingStatus = 'cancelled';
         disabledReason = '課程已取消';
       } else if (courseDateTime.getTime() - now.getTime() <= twentyFourHours) {
@@ -191,12 +199,29 @@ const BookingSystem: React.FC = () => {
         capacity: session.capacity,
         reserved_count: session.currentEnrollments,
         status: session.status === 'available' ? 'CREATED' : 'CANCELED',
-        timeslot_id: session.id.hashCode(), // 使用相同的hash作為timeslot_id
+        timeslot_id: timeslotId,
         bookingStatus,
         disabledReason,
         sessionId: session.id // 保留完整的session ID用於選擇邏輯
       };
     });
+  };
+
+  // 檢查用戶是否已預約指定時段 (US06)
+  const checkUserBooking = (userId: number, timeslotId: number): boolean => {
+    if (typeof localStorage === 'undefined') return false;
+    
+    try {
+      const appointments = JSON.parse(localStorage.getItem('classAppointments') || '[]');
+      return appointments.some((appointment: any) => 
+        appointment.user_id === userId && 
+        appointment.class_timeslot_id === timeslotId && 
+        appointment.status === 'CONFIRMED'
+      );
+    } catch (error) {
+      console.error('檢查用戶預約狀態時發生錯誤:', error);
+      return false;
+    }
   };
 
   // 處理課程篩選
@@ -318,6 +343,24 @@ const BookingSystem: React.FC = () => {
       // 呼叫批量預約 API (US06)
       const result = await bookingService.batchBooking(user.id, timeslotIds);
       
+      // US06.7: 同步本地預約資料，確保狀態立即更新
+      if (result.success.length > 0) {
+        try {
+          const existingAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]');
+          const newAppointments = result.success.map(booking => ({
+            id: booking.booking_id,
+            class_timeslot_id: booking.timeslot_id,
+            user_id: user.id,
+            status: 'CONFIRMED',
+            created_at: new Date().toISOString()
+          }));
+          
+          localStorage.setItem('classAppointments', JSON.stringify([...existingAppointments, ...newAppointments]));
+        } catch (error) {
+          console.error('同步本地預約資料失敗:', error);
+        }
+      }
+      
       // 顯示預約結果 (US06.6)
       let resultMessage = '';
       
@@ -365,7 +408,7 @@ const BookingSystem: React.FC = () => {
       setSelectedCourses([]);
       setShowCourseSelection(false);
       
-      // 重新載入課程模組資料以更新狀態
+      // US06.7: 重新載入課程模組資料以更新狀態（包含已預約狀態）
       const updatedManagedSessions = generateBookingSessions();
       setManagedCourseSessions(updatedManagedSessions);
 

@@ -15,7 +15,7 @@ interface BookingCourse {
   reserved_count: number | undefined;
   status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
   timeslot_id: number;
-  bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled'; // US05新增：預約狀態
+  bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled' | 'booked'; // US05新增：預約狀態，US06新增：已預約狀態
   disabledReason?: string; // US05新增：不可預約原因
   sessionId?: string; // 完整的session ID用於選擇邏輯
 }
@@ -117,7 +117,7 @@ const Calendar: React.FC<CalendarProps> = ({
   const handleCourseClick = (course: BookingCourse, date: Date, event: React.MouseEvent) => {
     event.stopPropagation();
     
-    // 不可預約的課程不允許點擊 (US05)
+    // 不可預約的課程和已預約的課程不允許點擊 (US05, US06)
     if (course.bookingStatus !== 'available') {
       return;
     }
@@ -166,8 +166,13 @@ const Calendar: React.FC<CalendarProps> = ({
 
     const { courseName, sessionInfo } = parseCourseName(course.title);
 
-    // 根據課程狀態設置統一顏色 (US05)
+    // 根據課程狀態設置統一顏色 (US05, US06)
     const getCourseColor = () => {
+      // US06.7: 已預約的課程顯示為綠色
+      if (course.bookingStatus === 'booked') {
+        return 'bg-green-500 text-white cursor-default';
+      }
+      
       // US05.2 & US05.3: 不可預約的課程顯示為灰色
       if (course.bookingStatus === 'full') {
         return 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60';
@@ -215,7 +220,10 @@ const Calendar: React.FC<CalendarProps> = ({
         <div className="text-xs opacity-75 flex items-center justify-between mt-0.5">
           <span className="font-medium">{course.timeSlot}</span>
           <div className="flex items-center space-x-1">
-            {/* US05: 狀態指示器 */}
+            {/* US05 & US06: 狀態指示器 */}
+            {course.bookingStatus === 'booked' && (
+              <span className="text-xs bg-green-700 text-white px-1 rounded" title="已預約">✓</span>
+            )}
             {course.bookingStatus === 'full' && (
               <span className="text-xs bg-gray-500 text-white px-1 rounded" title="課程已額滿">滿</span>
             )}
@@ -359,7 +367,7 @@ const Calendar: React.FC<CalendarProps> = ({
         {calendarDates.map((date) => renderDateCell(date))}
       </div>
 
-      {/* Legend (US05) */}
+      {/* Legend (US05, US06) */}
       <div className="p-4 bg-gray-50 border-t border-gray-200">
         <div className="flex flex-wrap items-center gap-4 text-xs text-gray-600">
           <div className="flex items-center gap-2">
@@ -373,6 +381,10 @@ const Calendar: React.FC<CalendarProps> = ({
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-blue-500 rounded-md"></div>
             <span>已選課程</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-green-500 rounded-md"></div>
+            <span>已預約</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-gray-300 rounded-md"></div>

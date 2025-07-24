@@ -15,7 +15,7 @@ interface BookingCourse {
   reserved_count: number | undefined;
   status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
   timeslot_id: number;
-  bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled'; // US05新增：預約狀態
+  bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled' | 'booked'; // US05新增：預約狀態，US06新增：已預約狀態
   disabledReason?: string; // US05新增：不可預約原因
   sessionId?: string; // 完整的session ID用於選擇邏輯
 }
@@ -111,9 +111,12 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
                 const isSelected = isCourseSelected(course);
                 const isDisabled = course.bookingStatus !== 'available';
                 
-                // 根據課程狀態設置樣式 (US05)
+                // 根據課程狀態設置樣式 (US05, US06)
                 const getCardStyle = () => {
-                  if (isDisabled) {
+                  if (course.bookingStatus === 'booked') {
+                    // US06: 已預約的課程顯示為綠色
+                    return 'border-green-400 bg-green-100 cursor-not-allowed';
+                  } else if (isDisabled) {
                     return 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60';
                   }
                   return isSelected 

@@ -259,8 +259,21 @@ export const bookingService = {
     const successBookings: Array<{ timeslot_id: number; booking_id: number }> = [];
     const failedBookings: Array<{ timeslot_id: number; reason: 'FULL' | 'WITHIN_24H' | 'MEMBERSHIP_EXPIRED' }> = [];
     
+    // US06: 從localStorage讀取最新的時段資料，確保與課程模組同步
+    let currentTimeslots = [...classTimeslots];
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const storedTimeslots = localStorage.getItem('classTimeslots');
+        if (storedTimeslots) {
+          currentTimeslots = JSON.parse(storedTimeslots);
+        }
+      } catch (error) {
+        console.error('讀取時段資料失敗:', error);
+      }
+    }
+    
     for (const timeslotId of timeslotIds) {
-      const timeslot = classTimeslots.find(t => t.id === timeslotId);
+      const timeslot = currentTimeslots.find(t => t.id === timeslotId);
       if (!timeslot) continue;
       
       const slotStart = new Date(timeslot.start_time);
@@ -287,7 +300,14 @@ export const bookingService = {
       };
       
       classAppointments.push(newAppointment);
+      
+      // 更新時段的預約人數
       timeslot.reserved_count = (timeslot.reserved_count || 0) + 1;
+      
+      // US06: 同步更新到localStorage
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('classTimeslots', JSON.stringify(currentTimeslots));
+      }
       
       successBookings.push({
         timeslot_id: timeslotId,

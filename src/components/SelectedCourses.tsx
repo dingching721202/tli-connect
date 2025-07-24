@@ -15,6 +15,9 @@ interface BookingCourse {
   reserved_count: number | undefined;
   status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
   timeslot_id: number;
+  bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled' | 'booked'; // US05新增：預約狀態，US06新增：已預約狀態
+  disabledReason?: string; // US05新增：不可預約原因
+  sessionId?: string; // 完整的session ID用於選擇邏輯
 }
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
