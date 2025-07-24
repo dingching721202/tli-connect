@@ -141,11 +141,6 @@ function getDefaultCourseTemplates(): CourseTemplate[] {
         sessions.push({
           sessionNumber: i,
           title: `第${i}課`,
-          description: `${title} - 第${i}堂課程內容`,
-          duration: course.session_duration,
-          objectives: [`掌握第${i}課的核心概念`, `完成第${i}課的實踐練習`],
-          materials: course.materials || [],
-          homework: `第${i}課課後練習`,
           virtualClassroomLink: 'https://meet.google.com/course-session',
           materialLink: ''
         });
@@ -153,24 +148,23 @@ function getDefaultCourseTemplates(): CourseTemplate[] {
       return sessions;
     };
 
+    // 將英文級別映射到中文級別
+    const mapLevel = (level: string): '不限' | '初級' | '中級' | '中高級' | '高級' => {
+      switch (level) {
+        case 'beginner': return '初級';
+        case 'intermediate': return '中級';
+        case 'advanced': return '高級';
+        default: return '不限';
+      }
+    };
+
     return {
       id: `template_${course.id}`,
       title: course.title,
       description: course.description,
       category: mapCategory(course.categories),
-      difficulty: course.level as 'beginner' | 'intermediate' | 'advanced',
-      language: course.language as 'chinese' | 'english' | 'japanese',
+      level: mapLevel(course.level),
       totalSessions: course.total_sessions,
-      sessionDuration: course.session_duration,
-      prerequisites: course.prerequisites || '無特殊要求',
-      targetAudience: course.level === 'beginner' ? '初學者' : course.level === 'intermediate' ? '中級學習者' : '高級學習者',
-      learningObjectives: [
-        `提升${course.language === 'chinese' ? '中文' : course.language === 'english' ? '英文' : '日語'}能力`,
-        '增強實際溝通技巧',
-        '建立自信的語言表達能力'
-      ],
-      teachingMethod: '互動式教學，結合理論與實踐',
-      assessmentMethod: '平時表現 40% + 期中測驗 30% + 期末專案 30%',
       sessions: generateSessions(course.total_sessions, course.title),
       status: 'published' as const,
       createdAt: course.created_at,

@@ -15,7 +15,8 @@
       "Bash(npm run lint)",
       "Bash(ls:*)",
       "Bash(npx next:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }
