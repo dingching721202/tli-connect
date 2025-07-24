@@ -1,6 +1,7 @@
 export interface CorporateInquiry {
   id: string;
   companyName: string;
+  enterpriseName?: string;
   contactName: string;
   contactTitle: string;
   email: string;

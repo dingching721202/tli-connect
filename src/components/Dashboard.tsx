@@ -91,6 +91,80 @@ const Dashboard = () => {
     note: ''
   });
 
+  // 會員卡啟用處理函數 (US04)
+  const handleActivateMembership = async (membershipId: number) => {
+    try {
+      const token = localStorage.getItem('jwt');
+      if (!token) {
+        alert('請先登入');
+        return;
+      }
+
+      const response = await fetch(`/api/member-cards/${membershipId}/activate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // 立即更新本地狀態，不等待 API 重新載入
+        if (dashboardData?.membership) {
+          const updatedMembership = {
+            ...dashboardData.membership,
+            status: 'ACTIVE' as const,
+            activated: true,
+            start_time: new Date().toISOString(),
+            expire_time: new Date(Date.now() + dashboardData.membership.duration_in_days * 24 * 60 * 60 * 1000).toISOString()
+          };
+          
+          setDashboardData({
+            ...dashboardData,
+            membership: updatedMembership
+          });
+          
+          console.log('✅ 本地狀態已立即更新:', updatedMembership);
+        }
+        
+        alert('會員卡啟用成功！');
+        
+        // 延遲重新載入 Dashboard 資料以確保後端狀態同步
+        setTimeout(async () => {
+          if (user) {
+            try {
+              const data = await dashboardService.getDashboardData(user.id);
+              console.log('🔄 後端重新載入的資料:', data);
+              
+              // 只有當後端資料確實是 ACTIVE 狀態時才更新
+              if (data.membership && data.membership.status === 'ACTIVE') {
+                setDashboardData(data);
+                console.log('✅ Dashboard 資料已從後端重新載入 (ACTIVE):', data);
+              } else {
+                console.log('⚠️ 後端資料狀態不是 ACTIVE，保持本地狀態');
+              }
+            } catch (error) {
+              console.error('❌ 重新載入 Dashboard 資料失敗:', error);
+            }
+          }
+        }, 1000);
+      } else {
+        if (result.error === 'ACTIVE_CARD_EXISTS') {
+          alert('您已有啟用中的會員卡，無法重複啟用');
+        } else if (result.error === 'MEMBERSHIP_NOT_FOUND') {
+          alert('找不到可啟用的會員卡');
+        } else {
+          alert(`啟用失敗：${result.message || result.error}`);
+        }
+      }
+    } catch (error) {
+      console.error('啟用會員卡時發生錯誤:', error);
+      alert('啟用失敗，請稍後再試');
+    }
+  };
+
 
 
   const getQuickStats = () => {
@@ -723,7 +797,7 @@ const Dashboard = () => {
         </motion.div>
       )}
 
-      {/* Membership Card Management for Students */}
+      {/* Membership Card Management for Students (US04) */}
       {user?.role === 'STUDENT' && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -731,8 +805,11 @@ const Dashboard = () => {
           transition={{ delay: 0.1 }}
           className="mb-6 sm:mb-8"
         >
-          <h2 className="text-xl font-bold text-gray-900 mb-4">會員卡管理</h2>
-          <MembershipCard />
+          <MembershipCard 
+            dashboardData={dashboardData}
+            onActivate={handleActivateMembership}
+            loading={loading}
+          />
         </motion.div>
       )}
 

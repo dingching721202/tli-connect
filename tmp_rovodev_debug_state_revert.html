@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員卡狀態回退問題調試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .debug-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .debug-section h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button.danger {
+            background: #dc3545;
+        }
+        button.danger:hover {
+            background: #c82333;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .timeline {
+            border-left: 3px solid #007bff;
+            padding-left: 20px;
+            margin: 20px 0;
+        }
+        .timeline-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .timestamp {
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 會員卡狀態回退問題調試</h1>
+        <p><strong>問題：</strong> 會員卡啟用後幾秒鐘又自動變回未啟用狀態</p>
+        
+        <div class="debug-section">
+            <h3>🎯 問題分析</h3>
+            <p>可能的原因：</p>
+            <ul>
+                <li>1. 本地狀態更新後，後端重新載入覆蓋了本地狀態</li>
+                <li>2. 後端資料沒有正確保存啟用狀態</li>
+                <li>3. Dashboard 重新載入時查找邏輯有問題</li>
+                <li>4. 記憶體中的資料被重置</li>
+            </ul>
+        </div>
+
+        <div class="debug-section">
+            <h3>🔐 1. 登入並準備測試</h3>
+            <button onclick="loginAndPrepare()">登入測試帳號</button>
+            <div id="loginResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📊 2. 監控狀態變化</h3>
+            <button onclick="startMonitoring()">開始監控會員卡狀態</button>
+            <button onclick="stopMonitoring()">停止監控</button>
+            <div id="monitoringResult" class="result" style="display: none;"></div>
+            <div id="timeline" class="timeline" style="display: none;"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>🚀 3. 執行啟用並觀察</h3>
+            <button onclick="activateAndObserve()">啟用會員卡並觀察狀態變化</button>
+            <div id="activationResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>🔍 4. 檢查後端資料</h3>
+            <button onclick="checkBackendData()">檢查後端會員資格資料</button>
+            <button onclick="simulateDataReload()">模擬資料重新載入</button>
+            <div id="backendResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>🛠️ 5. 修復測試</h3>
+            <button onclick="testFix()">測試修復方案</button>
+            <div id="fixResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentToken = null;
+        let currentUserId = null;
+        let monitoringInterval = null;
+        let stateHistory = [];
+
+        function showResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = content;
+            element.style.display = 'block';
+        }
+
+        function addToTimeline(event, status) {
+            const timeline = document.getElementById('timeline');
+            timeline.style.display = 'block';
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const item = document.createElement('div');
+            item.className = 'timeline-item';
+            item.innerHTML = `
+                <div class="timestamp">${timestamp}</div>
+                <div>${event}</div>
+                <div>狀態: ${status}</div>
+            `;
+            timeline.appendChild(item);
+            
+            // 保持最新的10個事件
+            if (timeline.children.length > 10) {
+                timeline.removeChild(timeline.firstChild);
+            }
+            
+            // 滾動到最新事件
+            timeline.scrollTop = timeline.scrollHeight;
+        }
+
+        async function loginAndPrepare() {
+            showResult('loginResult', '⏳ 登入測試帳號...', 'info');
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'user2@example.com',
+                        password: 'password'
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentToken = result.jwt;
+                    currentUserId = result.user_id;
+                    localStorage.setItem('jwt', result.jwt);
+                    
+                    showResult('loginResult', `✅ 登入成功！
+用戶 ID: ${result.user_id}
+準備開始調試狀態回退問題`, 'success');
+                    
+                    addToTimeline('用戶登入成功', `用戶 ID: ${result.user_id}`);
+                } else {
+                    showResult('loginResult', `❌ 登入失敗: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult('loginResult', `❌ 登入錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        function startMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+            }
+            
+            showResult('monitoringResult', '🔍 開始監控會員卡狀態變化...', 'info');
+            addToTimeline('開始監控狀態', '每2秒檢查一次');
+            
+            monitoringInterval = setInterval(async () => {
+                try {
+                    // 這裡應該呼叫實際的 Dashboard API
+                    // 目前模擬監控
+                    const timestamp = new Date().toLocaleTimeString();
+                    console.log(`[${timestamp}] 監控中...`);
+                    
+                    // 模擬狀態檢查
+                    addToTimeline('狀態檢查', '監控中...');
+                    
+                } catch (error) {
+                    console.error('監控錯誤:', error);
+                }
+            }, 2000);
+        }
+
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                showResult('monitoringResult', '⏹️ 監控已停止', 'warning');
+                addToTimeline('停止監控', '監控結束');
+            }
+        }
+
+        async function activateAndObserve() {
+            if (!currentToken) {
+                showResult('activationResult', '❌ 請先登入', 'error');
+                return;
+            }
+
+            showResult('activationResult', '🚀 開始啟用會員卡並觀察狀態變化...', 'info');
+            addToTimeline('開始啟用會員卡', 'PURCHASED → ACTIVE');
+            
+            try {
+                // 步驟 1: 啟用會員卡
+                console.log('🚀 步驟 1: 啟用會員卡');
+                const response = await fetch('/api/member-cards/2/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+                addToTimeline('API 啟用回應', `成功: ${result.success}`);
+                
+                if (result.success) {
+                    // 步驟 2: 立即檢查狀態
+                    console.log('🔍 步驟 2: 立即檢查狀態');
+                    addToTimeline('立即檢查狀態', '啟用後0秒');
+                    
+                    // 步驟 3: 等待1秒後檢查
+                    setTimeout(() => {
+                        console.log('🔍 步驟 3: 1秒後檢查狀態');
+                        addToTimeline('1秒後檢查狀態', '檢查是否保持 ACTIVE');
+                    }, 1000);
+                    
+                    // 步驟 4: 等待3秒後檢查
+                    setTimeout(() => {
+                        console.log('🔍 步驟 4: 3秒後檢查狀態');
+                        addToTimeline('3秒後檢查狀態', '檢查是否回退');
+                    }, 3000);
+                    
+                    // 步驟 5: 等待5秒後檢查
+                    setTimeout(() => {
+                        console.log('🔍 步驟 5: 5秒後檢查狀態');
+                        addToTimeline('5秒後檢查狀態', '最終狀態確認');
+                    }, 5000);
+                    
+                    showResult('activationResult', `✅ 啟用成功，正在觀察狀態變化...
+請查看時間軸和 Console 日誌
+觀察會員卡狀態是否在幾秒後回退`, 'success');
+                } else {
+                    showResult('activationResult', `❌ 啟用失敗: ${result.error}`, 'error');
+                    addToTimeline('啟用失敗', result.error);
+                }
+            } catch (error) {
+                showResult('activationResult', `❌ 啟用錯誤: ${error.message}`, 'error');
+                addToTimeline('啟用錯誤', error.message);
+            }
+        }
+
+        async function checkBackendData() {
+            showResult('backendResult', '🔍 檢查後端會員資格資料...', 'info');
+            
+            // 模擬檢查後端資料
+            const mockData = `📊 模擬後端會員資格資料檢查:
+
+會員資格 ID: 2
+用戶 ID: 2
+狀態: ${Math.random() > 0.5 ? 'ACTIVE' : 'PURCHASED'}
+啟用時間: ${new Date().toISOString()}
+到期時間: ${new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()}
+
+💡 關鍵檢查點:
+1. 啟用後狀態是否正確保存為 ACTIVE
+2. 記憶體中的資料是否被意外重置
+3. getDashboardData 是否正確查找 ACTIVE 會員卡`;
+
+            showResult('backendResult', mockData, 'info');
+            addToTimeline('檢查後端資料', '資料狀態檢查');
+        }
+
+        async function simulateDataReload() {
+            showResult('backendResult', '🔄 模擬資料重新載入...', 'info');
+            addToTimeline('模擬資料重新載入', '測試重新載入邏輯');
+            
+            setTimeout(() => {
+                const reloadResult = `🔄 資料重新載入完成
+
+模擬 getDashboardData 執行過程:
+1. 查找 ACTIVE 會員卡 → ${Math.random() > 0.3 ? '找到' : '未找到'}
+2. 查找 PURCHASED 會員卡 → ${Math.random() > 0.7 ? '找到' : '未找到'}
+3. 最終返回的會員卡狀態 → ${Math.random() > 0.5 ? 'ACTIVE' : 'PURCHASED'}
+
+⚠️ 如果重新載入後狀態回退，問題可能在於:
+- 啟用後的資料沒有正確保存
+- 查找邏輯有問題
+- 記憶體資料被重置`;
+
+                showResult('backendResult', reloadResult, 'warning');
+                addToTimeline('重新載入完成', '檢查結果');
+            }, 1000);
+        }
+
+        async function testFix() {
+            showResult('fixResult', '🛠️ 測試修復方案...', 'info');
+            
+            const fixSuggestions = `🛠️ 修復方案建議:
+
+1. 檢查 activateMemberCard 函數
+   - 確保狀態正確更新為 ACTIVE
+   - 確保資料正確保存在記憶體中
+
+2. 檢查 getDashboardData 函數
+   - 確保優先查找 ACTIVE 會員卡
+   - 確保查找邏輯正確
+
+3. 檢查前端狀態更新
+   - 移除延遲重新載入邏輯
+   - 或確保重新載入不會覆蓋正確狀態
+
+4. 添加更多調試日誌
+   - 在關鍵位置添加 console.log
+   - 追蹤狀態變化的完整流程
+
+🎯 立即修復建議:
+- 檢查 setTimeout 延遲載入是否導致狀態回退
+- 確保後端啟用邏輯正確執行
+- 驗證記憶體資料持久性`;
+
+            showResult('fixResult', fixSuggestions, 'warning');
+            addToTimeline('修復方案', '提供修復建議');
+        }
+
+        // 頁面載入時的說明
+        window.onload = function() {
+            console.log('🔍 會員卡狀態回退問題調試工具已載入');
+            console.log('請按順序執行調試步驟，觀察狀態變化');
+        };
+
+        // 頁面卸載時清理
+        window.onbeforeunload = function() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,270 +1,228 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FiCreditCard, FiLoader, FiAlertCircle } from 'react-icons/fi';
+import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
-import { useAuth } from '@/contexts/AuthContext';
-import { memberCardService, membershipService } from '@/services/dataService';
-import { Membership, MemberCardPlan } from '@/types';
+import { Membership } from '@/types';
+
+const { FiCreditCard, FiCalendar, FiCheckCircle, FiClock, FiAlertCircle } = FiIcons;
 
 interface MembershipCardProps {
-  className?: string;
+  dashboardData: {
+    membership: Membership | null;
+    upcomingClasses: any[];
+  } | null;
+  onActivate: (membershipId: number) => Promise<void>;
+  loading: boolean;
 }
 
-const MembershipCard: React.FC<MembershipCardProps> = ({ className = '' }) => {
-  const { user, refreshMembership } = useAuth();
-  const [allMemberships, setAllMemberships] = useState<Membership[]>([]);
-  const [memberCardPlans, setMemberCardPlans] = useState<MemberCardPlan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activatingId, setActivatingId] = useState<number | null>(null);
+const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActivate, loading }) => {
+  const [activating, setActivating] = useState(false);
 
-  // 載入會員資料
-  useEffect(() => {
-    const loadMembershipData = async () => {
-      if (!user) return;
-
-      try {
-        setLoading(true);
-        // 載入所有會員資格
-        const memberships = await memberCardService.getAllUserMemberships(user.id);
-        setAllMemberships(memberships);
-        
-        // 載入會員方案資料
-        const plans = await membershipService.getPublishedPlans();
-        setMemberCardPlans(plans);
-      } catch (error) {
-        console.error('載入會員資料失敗:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadMembershipData();
-
-    // 監聽會員卡和方案更新事件
-    const handleCardsUpdate = () => {
-      loadMembershipData();
-    };
-
-    const handlePlansUpdate = () => {
-      loadMembershipData();
-    };
-
-    if (typeof window !== 'undefined') {
-      window.addEventListener('memberCardsUpdated', handleCardsUpdate);
-      window.addEventListener('membershipPlansUpdated', handlePlansUpdate);
-      
-      return () => {
-        window.removeEventListener('memberCardsUpdated', handleCardsUpdate);
-        window.removeEventListener('membershipPlansUpdated', handlePlansUpdate);
-      };
-    }
-  }, [user]);
-
-  // 啟用會員卡
-  const handleActivateMembership = async (membershipId: number) => {
-    if (!user) return;
-
+  const handleActivate = async (membershipId: number) => {
+    setActivating(true);
     try {
-      setActivatingId(membershipId);
-      const result = await memberCardService.activateMemberCard(user.id, membershipId);
-
-      if (result.success) {
-        alert('🎉 會員卡啟用成功！\n\n您現在可以開始預約課程和使用所有會員功能了！');
-        // 刷新會員資料
-        await refreshMembership();
-        // 重新載入數據
-        const memberships = await memberCardService.getAllUserMemberships(user.id);
-        setAllMemberships(memberships);
-      } else {
-        let errorMessage = '啟用失敗';
-        if (result.error === 'ACTIVE_CARD_EXISTS') {
-          errorMessage = '您已經有一張啟用中的會員卡，無法重複啟用';
-        }
-        alert(errorMessage);
-      }
-    } catch (error) {
-      console.error('啟用會員卡失敗:', error);
-      alert('啟用過程中發生錯誤，請稍後再試');
+      await onActivate(membershipId);
     } finally {
-      setActivatingId(null);
+      setActivating(false);
     }
-  };
-
-  // 格式化日期
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('zh-TW', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  // 計算剩餘天數
-  const getDaysRemaining = (expireTime: string) => {
-    const expire = new Date(expireTime);
-    const now = new Date();
-    const diffTime = expire.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
   };
 
   if (loading) {
     return (
-      <div className={`bg-white rounded-lg shadow-md p-6 ${className}`}>
-        <div className="flex items-center justify-center">
-          <SafeIcon icon={FiLoader} className="animate-spin mr-2" />
-          載入會員資料中...
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/2 mb-2"></div>
+          <div className="h-3 bg-gray-200 rounded w-1/3"></div>
         </div>
       </div>
     );
   }
 
-  // 過濾不同狀態的會員資格
-  const activeMembership = allMemberships.find(m => m.status === 'ACTIVE');
-  const purchasedMemberships = allMemberships.filter(m => m.status === 'PURCHASED');
+  if (!dashboardData?.membership) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="flex items-center space-x-3 mb-4">
+          <SafeIcon icon={FiCreditCard} className="w-5 h-5 text-gray-400" />
+          <h3 className="text-lg font-semibold text-gray-700">會員資格</h3>
+        </div>
+        <div className="text-center py-8">
+          <SafeIcon icon={FiAlertCircle} className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500 text-lg font-medium mb-2">尚未購買會員方案</p>
+          <p className="text-sm text-gray-400 mb-6">購買會員方案後即可開始學習課程</p>
+          
+          {/* 購買會員方案按鈕 */}
+          <div className="space-y-3">
+            <motion.button
+              onClick={() => window.location.href = '/membership'}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors w-full sm:w-auto"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              🛒 購買會員方案
+            </motion.button>
+            
+            <div className="text-xs text-gray-400">
+              <p>💡 提示：購買後會員卡狀態為「待啟用」</p>
+              <p>您可以選擇立即啟用或稍後啟用</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-  // 獲取會員卡方案名稱
-  const getPlanName = (memberCardId: number) => {
-    const plan = memberCardPlans.find(p => p.member_card_id === memberCardId);
-    return plan?.title || '會員方案';
+  const membership = dashboardData.membership;
+  const isActive = membership.status === 'ACTIVE';
+  const isPurchased = membership.status === 'PURCHASED';
+  const isExpired = membership.status === 'EXPIRED';
+
+  const getStatusColor = () => {
+    if (isActive) return 'text-green-600 bg-green-50';
+    if (isPurchased) return 'text-yellow-600 bg-yellow-50';
+    if (isExpired) return 'text-red-600 bg-red-50';
+    return 'text-gray-600 bg-gray-50';
   };
 
+  const getStatusText = () => {
+    if (isActive) return '已啟用';
+    if (isPurchased) return '待啟用';
+    if (isExpired) return '已過期';
+    return '未知狀態';
+  };
+
+  const getStatusIcon = () => {
+    if (isActive) return FiCheckCircle;
+    if (isPurchased) return FiClock;
+    if (isExpired) return FiAlertCircle;
+    return FiAlertCircle;
+  };
+
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('zh-TW', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+  };
+
+  const getDaysRemaining = () => {
+    if (!membership.expire_time) return null;
+    const now = new Date();
+    const expireDate = new Date(membership.expire_time);
+    const diffTime = expireDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const daysRemaining = getDaysRemaining();
+
   return (
-    <div className={`space-y-4 ${className}`}>
-      {/* 啟用中的會員卡 */}
-      {activeMembership && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-6"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <SafeIcon icon={FiCreditCard} className="text-green-600 mr-3 text-xl" />
-              <div>
-                <h3 className="font-bold text-green-800">{getPlanName(activeMembership.member_card_id)}</h3>
-                <p className="text-green-600 text-sm">會員卡已啟用</p>
-              </div>
-            </div>
-            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
-              已啟用
-            </span>
+    <motion.div 
+      className="bg-white rounded-lg shadow-md overflow-hidden"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      {/* 卡片標題 */}
+      <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4">
+        <div className="flex items-center justify-between text-white">
+          <div className="flex items-center space-x-3">
+            <SafeIcon icon={FiCreditCard} className="w-6 h-6" />
+            <h3 className="text-lg font-semibold">會員資格</h3>
           </div>
+          <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor()}`}>
+            <div className="flex items-center space-x-1">
+              <SafeIcon icon={getStatusIcon()} className="w-4 h-4" />
+              <span>{getStatusText()}</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
-          <div className="grid grid-cols-2 gap-4">
+      {/* 卡片內容 */}
+      <div className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* 啟用日期 */}
+          <div className="flex items-center space-x-3">
+            <SafeIcon icon={FiCalendar} className="w-5 h-5 text-gray-400" />
             <div>
-              <div className="text-sm text-gray-600">啟用日期</div>
-              <div className="font-medium text-gray-800">
-                {formatDate(activeMembership.start_time!)}
-              </div>
+              <p className="text-sm text-gray-500">啟用日期</p>
+              <p className="font-medium">{formatDate(membership.start_time)}</p>
             </div>
+          </div>
+
+          {/* 到期日期 */}
+          <div className="flex items-center space-x-3">
+            <SafeIcon icon={FiClock} className="w-5 h-5 text-gray-400" />
             <div>
-              <div className="text-sm text-gray-600">到期日期</div>
-              <div className={`font-medium ${
-                getDaysRemaining(activeMembership.expire_time!) <= 14 
-                  ? 'text-yellow-600' 
-                  : 'text-gray-800'
-              }`}>
-                {formatDate(activeMembership.expire_time!)}
-              </div>
+              <p className="text-sm text-gray-500">到期日期</p>
+              <p className="font-medium">{formatDate(membership.expire_time)}</p>
             </div>
           </div>
+        </div>
 
-          {getDaysRemaining(activeMembership.expire_time!) <= 14 && getDaysRemaining(activeMembership.expire_time!) > 0 && (
-            <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-              <div className="flex items-center">
-                <SafeIcon icon={FiAlertCircle} className="text-yellow-600 mr-2" />
-                <span className="text-yellow-800 text-sm">
-                  您的會員卡將在 {getDaysRemaining(activeMembership.expire_time!)} 天後到期，
-                  請考慮續費以繼續享受會員服務
-                </span>
-              </div>
+        {/* 剩餘天數 */}
+        {isActive && daysRemaining !== null && (
+          <div className="bg-blue-50 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-between">
+              <span className="text-blue-700 font-medium">剩餘天數</span>
+              <span className={`text-lg font-bold ${daysRemaining > 30 ? 'text-blue-600' : daysRemaining > 7 ? 'text-yellow-600' : 'text-red-600'}`}>
+                {daysRemaining > 0 ? `${daysRemaining} 天` : '已過期'}
+              </span>
             </div>
-          )}
-        </motion.div>
-      )}
-
-      {/* 已購買但未啟用的會員卡 */}
-      {purchasedMemberships.map((membership, index) => (
-        <motion.div
-          key={membership.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.1 }}
-          className="bg-yellow-50 border border-yellow-200 rounded-lg p-6"
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center">
-              <SafeIcon icon={FiCreditCard} className="text-yellow-600 mr-3 text-xl" />
-              <div>
-                <h3 className="font-bold text-yellow-800">{getPlanName(membership.member_card_id)}</h3>
-                <p className="text-yellow-600 text-sm">等待啟用</p>
-              </div>
-            </div>
-            <span className="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
-              待啟用
-            </span>
-          </div>
-
-          <div className="mb-4">
-            <div className="text-sm text-gray-600 mb-2">有效期限</div>
-            <div className="font-medium text-gray-800">
-              啟用後 {membership.duration_in_days} 天有效
-            </div>
-          </div>
-
-          <button
-            onClick={() => handleActivateMembership(membership.id)}
-            disabled={activatingId === membership.id || !!activeMembership}
-            className={`w-full py-2 px-4 rounded-lg font-medium transition-colors ${
-              activatingId === membership.id
-                ? 'bg-gray-400 text-white cursor-not-allowed'
-                : activeMembership
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                : 'bg-yellow-600 text-white hover:bg-yellow-700'
-            }`}
-          >
-            {activatingId === membership.id ? (
-              <div className="flex items-center justify-center">
-                <SafeIcon icon={FiLoader} className="animate-spin mr-2" />
-                啟用中...
-              </div>
-            ) : activeMembership ? (
-              '已有啟用會員卡'
-            ) : (
-              '立即啟用'
+            {daysRemaining <= 7 && daysRemaining > 0 && (
+              <p className="text-sm text-yellow-600 mt-1">⚠️ 會員即將到期，請及時續費</p>
             )}
-          </button>
-        </motion.div>
-      ))}
-
-      {/* 沒有會員卡的情況 */}
-      {!activeMembership && purchasedMemberships.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-blue-50 border border-blue-200 rounded-lg p-6"
-        >
-          <div className="text-center">
-            <SafeIcon icon={FiCreditCard} className="text-blue-600 mx-auto mb-3 text-3xl" />
-            <h3 className="font-bold text-blue-800 mb-2">您還沒有會員卡</h3>
-            <p className="text-blue-600 text-sm mb-4">
-              購買會員方案即可開始您的學習之旅
-            </p>
-            <a
-              href="/membership"
-              className="inline-flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <SafeIcon icon={FiCreditCard} className="mr-2" />
-              選擇會員方案
-            </a>
           </div>
-        </motion.div>
-      )}
-    </div>
+        )}
+
+        {/* 啟用按鈕 */}
+        {isPurchased && (
+          <div className="bg-yellow-50 rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium text-yellow-800">會員卡待啟用</p>
+                <p className="text-sm text-yellow-600 mt-1">
+                  啟用後開始計算使用期限 ({membership.duration_in_days} 天)
+                </p>
+              </div>
+              <motion.button
+                onClick={() => handleActivate(membership.id)}
+                disabled={activating}
+                className="bg-yellow-600 hover:bg-yellow-700 disabled:bg-yellow-400 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {activating ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>啟用中...</span>
+                  </div>
+                ) : (
+                  '立即啟用'
+                )}
+              </motion.button>
+            </div>
+          </div>
+        )}
+
+        {/* 會員權益提醒 */}
+        {isActive && (
+          <div className="bg-green-50 rounded-lg p-4">
+            <p className="text-green-800 font-medium mb-2">✨ 會員權益</p>
+            <ul className="text-sm text-green-700 space-y-1">
+              <li>• 無限制預約課程</li>
+              <li>• 24小時前可免費取消</li>
+              <li>• 專屬會員客服支援</li>
+            </ul>
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 };
 

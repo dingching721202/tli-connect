@@ -16,7 +16,12 @@
       "Bash(ls:*)",
       "Bash(npx next:*)",
       "Bash(powershell:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(curl:*)",
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(/dev/null)",
+      "Bash(npx tsc:*)"
     ],
     "deny": []
   }

@@ -9,13 +9,6 @@ export interface Membership {
   activate_expire_time: string;
   user_id: number;
   status: 'PURCHASED' | 'ACTIVE' | 'EXPIRED';
-  purchase_date: string;
-  membership_type: 'individual' | 'corporate';
-  auto_renewal: boolean;
-  slots: number;
-  base_price: string;
-  final_price: string;
-  discount_rate: number;
 }
 
 export const memberships: Membership[] = [
@@ -29,14 +22,7 @@ export const memberships: Membership[] = [
     activated: true,
     activate_expire_time: "2025-08-13T12:00:00+00:00",
     user_id: 1,
-    status: "ACTIVE",
-    purchase_date: "2025-07-14T12:00:00+00:00",
-    membership_type: "individual",
-    auto_renewal: false,
-    slots: 1,
-    base_price: "3000.00",
-    final_price: "3000.00",
-    discount_rate: 0
+    status: 'ACTIVE' as const
   },
   {
     id: 2,
@@ -48,14 +34,7 @@ export const memberships: Membership[] = [
     activated: false,
     activate_expire_time: "2025-08-13T12:00:00+00:00",
     user_id: 2,
-    status: "PURCHASED",
-    purchase_date: "2025-07-14T12:00:00+00:00",
-    membership_type: "individual",
-    auto_renewal: false,
-    slots: 1,
-    base_price: "3000.00",
-    final_price: "3000.00",
-    discount_rate: 0
+    status: 'PURCHASED' as const
   },
   {
     id: 3,
@@ -67,15 +46,8 @@ export const memberships: Membership[] = [
     activated: true,
     activate_expire_time: "2025-08-13T12:00:00+00:00",
     user_id: 3,
-    status: "ACTIVE",
-    purchase_date: "2025-07-11T12:00:00+00:00",
-    membership_type: "individual",
-    auto_renewal: false,
-    slots: 1,
-    base_price: "3000.00",
-    final_price: "3000.00",
-    discount_rate: 0
-  }
+    status: 'ACTIVE' as const
+  },
+  // 新增：完全沒有會員卡的用戶 (user_id: 4)
+  // 用於測試「尚未購買會員方案」的情況
 ];
-
-export default memberships;

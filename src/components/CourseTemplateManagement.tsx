@@ -346,7 +346,7 @@ const CourseTemplateManagement = () => {
                 <h4 className="text-sm font-medium text-gray-700 mb-2">課程內容：</h4>
                 <div className="space-y-1 max-h-20 overflow-y-auto">
                   {template.sessions.slice(0, 3).map((session, index) => (
-                    <div key={index} className="flex items-center space-x-2 text-xs text-gray-600">
+                    <div key={`${template.id}-session-${session.sessionNumber || index}`} className="flex items-center space-x-2 text-xs text-gray-600">
                       <span className="w-4 h-4 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">
                         {session.sessionNumber}
                       </span>
@@ -530,7 +530,7 @@ const CourseTemplateManagement = () => {
                   <h4 className="font-semibold text-gray-900 mb-4">課程內容設置</h4>
                   <div className="space-y-4">
                     {(formData.sessions || []).map((session, index) => (
-                      <div key={index} className="bg-white rounded-lg p-4 border border-green-200">
+                      <div key={`form-session-${session.sessionNumber || index}-${Date.now()}`} className="bg-white rounded-lg p-4 border border-green-200">
                         <h5 className="font-medium text-gray-900 mb-3">第 {session.sessionNumber} 堂課</h5>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>

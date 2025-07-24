@@ -24,6 +24,7 @@ interface FormData {
   phone: string;
   employeeCount: string;
   industry: string;
+  enterpriseName: string;
   trainingNeeds: string[];
   budget: string;
   timeline: string;
@@ -42,6 +43,7 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
     phone: '',
     employeeCount: '',
     industry: '',
+    enterpriseName: '',
     trainingNeeds: [],
     budget: '',
     timeline: '',
@@ -192,6 +194,7 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
           phone: '',
           employeeCount: '',
           industry: '',
+          enterpriseName: '',
           trainingNeeds: [],
           budget: '',
           timeline: '',
@@ -322,24 +325,37 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    行業別 *
+                    企業名稱
                   </label>
-                  <select
-                    value={formData.industry}
-                    onChange={(e) => handleInputChange('industry', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.industry ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  >
-                    <option value="">請選擇</option>
-                    {industryOptions.map(option => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                  {errors.industry && (
-                    <p className="text-red-500 text-xs mt-1">{errors.industry}</p>
-                  )}
+                  <input
+                    type="text"
+                    value={formData.enterpriseName}
+                    onChange={(e) => handleInputChange('enterpriseName', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="請輸入企業名稱"
+                  />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  行業別 *
+                </label>
+                <select
+                  value={formData.industry}
+                  onChange={(e) => handleInputChange('industry', e.target.value)}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.industry ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                >
+                  <option value="">請選擇</option>
+                  {industryOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+                {errors.industry && (
+                  <p className="text-red-500 text-xs mt-1">{errors.industry}</p>
+                )}
               </div>
 
               <h3 className="text-lg font-semibold text-gray-800 mb-4 mt-8 flex items-center">

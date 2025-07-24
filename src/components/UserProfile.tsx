@@ -333,7 +333,8 @@ const UserProfile = () => {
 
                   {/* Action Buttons - 手機優化 */}
                   <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                    <Link href="/membership" className="flex-1">
+                    {/* <Link href="/membership" className="flex-1"> */}
+                    <div className="flex-1">
                       <motion.button
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -342,7 +343,8 @@ const UserProfile = () => {
                         <SafeIcon icon={FiCreditCard} />
                         <span>續約會員</span>
                       </motion.button>
-                    </Link>
+                    {/* </Link> */}
+                    </div>
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -376,7 +378,8 @@ const UserProfile = () => {
                   <SafeIcon icon={FiUser} className="text-4xl text-gray-400 mx-auto mb-3" />
                   <h4 className="text-lg font-medium text-gray-900 mb-2">尚未加入會員</h4>
                   <p className="text-gray-600 mb-4">加入會員享受完整學習體驗</p>
-                  <Link href="/membership">
+                  {/* <Link href="/membership"> */}
+                  <div>
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -384,7 +387,8 @@ const UserProfile = () => {
                     >
                       選擇會員方案
                     </motion.button>
-                  </Link>
+                  {/* </Link> */}
+                  </div>
                 </div>
               )}
             </div>

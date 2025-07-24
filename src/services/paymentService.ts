@@ -22,11 +22,45 @@ export const paymentService = {
   /**
    * 建立付款
    * POST /v1/payments
+   * 
+   * 請求格式:
+   * POST /v1/payments
+   * X-API-Key: test_api_key
+   * Content-Type: application/json
+   * 
+   * {
+   *   "order_id": "ord_123",
+   *   "amount": 1999,
+   *   "description": "一年期會員方案",
+   *   "return_url": "https://myapp.local/payment-result"
+   * }
+   * 
+   * 成功回應 201 Created:
+   * {
+   *   "payment_id": "pay_abc789",
+   *   "status": "successful | failed"
+   * }
    */
   async createPayment(paymentData: PaymentRequest): Promise<PaymentResult> {
     try {
       // 模擬 API 請求延遲
       await delay(1000 + Math.random() * 2000); // 1-3秒隨機延遲
+
+      // 驗證必要欄位
+      if (!paymentData.order_id || !paymentData.amount || !paymentData.description || !paymentData.return_url) {
+        return {
+          success: false,
+          error: 'Missing required fields: order_id, amount, description, return_url'
+        };
+      }
+
+      // 驗證金額
+      if (paymentData.amount <= 0) {
+        return {
+          success: false,
+          error: 'Amount must be greater than 0'
+        };
+      }
 
       // 模擬 API 請求
       console.log('Mock Payment API Request:', {
@@ -36,41 +70,34 @@ export const paymentService = {
           'X-API-Key': MOCK_PAYMENT_API.apiKey,
           'Content-Type': 'application/json'
         },
-        body: paymentData
+        body: {
+          order_id: paymentData.order_id,
+          amount: paymentData.amount,
+          description: paymentData.description,
+          return_url: paymentData.return_url
+        }
       });
 
-      // 模擬不同的付款結果
-      const successRate = 0.8; // 80% 成功率
+      // 模擬不同的付款結果 (80% 成功率)
+      const successRate = 0.8;
       const isSuccess = Math.random() < successRate;
 
-      // 驗證付款資料
-      if (!paymentData.order_id || !paymentData.amount || paymentData.amount <= 0) {
-        return {
-          success: false,
-          error: '付款資料不完整或金額無效'
-        };
-      }
+      const paymentResponse: PaymentResponse = {
+        payment_id: generatePaymentId(),
+        status: isSuccess ? 'successful' : 'failed'
+      };
+
+      console.log(`Mock Payment API Response (${isSuccess ? 'Success' : 'Failed'}):`, {
+        status: 201,
+        body: paymentResponse
+      });
 
       if (isSuccess) {
-        const paymentResponse: PaymentResponse = {
-          payment_id: generatePaymentId(),
-          status: 'successful'
-        };
-
-        console.log('Mock Payment API Response (Success):', paymentResponse);
-
         return {
           success: true,
           data: paymentResponse
         };
       } else {
-        const paymentResponse: PaymentResponse = {
-          payment_id: generatePaymentId(),
-          status: 'failed'
-        };
-
-        console.log('Mock Payment API Response (Failed):', paymentResponse);
-
         return {
           success: false,
           data: paymentResponse,

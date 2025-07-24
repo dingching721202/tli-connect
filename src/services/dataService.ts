@@ -1,5 +1,5 @@
 import { 
-  User, Course, Class, MemberCardPlan,
+  User, Course, Class,
   Membership, Order, ClassTimeslot, ClassAppointment,
   ApiResponse, LoginResponse, BatchBookingResponse
 } from '@/types';
@@ -8,7 +8,6 @@ import {
 import { users as usersData } from '@/data/users';
 import { courses as coursesData } from '@/data/courses';
 import { classes as classesData } from '@/data/classes';
-import { memberCardPlans as memberCardPlansData } from '@/data/member_card_plans';
 import { memberships as membershipsData } from '@/data/memberships';
 import { orders as ordersData } from '@/data/orders';
 import { classTimeslots as classTimeslotsData } from '@/data/class_timeslots';
@@ -18,7 +17,6 @@ import { classAppointments as classAppointmentsData } from '@/data/class_appoint
 const users: User[] = [...usersData] as User[];
 const courses: Course[] = [...coursesData] as Course[];
 const classes: Class[] = [...classesData] as Class[];
-const memberCardPlans: MemberCardPlan[] = [...memberCardPlansData] as MemberCardPlan[];
 const memberships: Membership[] = [...membershipsData] as Membership[];
 const orders: Order[] = [...ordersData] as Order[];
 const classTimeslots: ClassTimeslot[] = [...classTimeslotsData] as ClassTimeslot[];
@@ -111,132 +109,11 @@ export const authService = {
   }
 };
 
-// 會員方案服務 (US02)
-export const membershipService = {
-  // 獲取已發布的會員方案
-  async getPublishedPlans(): Promise<MemberCardPlan[]> {
-    await delay(300);
-    
-    // 合併靜態資料和 localStorage 資料（與 membershipUtils 保持一致）
-    let allPlans = [...memberCardPlans];
-    
-    if (typeof localStorage !== 'undefined') {
-      try {
-        const storedPlans = localStorage.getItem('memberCardPlans');
-        let localStoragePlans = [];
-        
-        if (storedPlans) {
-          localStoragePlans = JSON.parse(storedPlans);
-        } else {
-          // 如果 localStorage 為空，初始化為靜態資料
-          localStoragePlans = JSON.parse(JSON.stringify(memberCardPlans));
-          localStorage.setItem('memberCardPlans', JSON.stringify(localStoragePlans));
-        }
-        
-        // 合併資料，localStorage 優先（會覆蓋相同 ID 的靜態資料）
-        const allPlansMap = new Map();
-        
-        // 先加入靜態資料
-        memberCardPlans.forEach(plan => {
-          allPlansMap.set(plan.id, plan);
-        });
-        
-        // 再加入 localStorage 資料（會覆蓋相同 ID）
-        localStoragePlans.forEach((plan: any) => {
-          allPlansMap.set(plan.id, plan);
-        });
-        
-        allPlans = Array.from(allPlansMap.values());
-      } catch (error) {
-        console.warn('Failed to load localStorage plans:', error);
-      }
-    }
-    
-    return allPlans.filter(plan => plan.status === 'PUBLISHED');
-  },
-  
-  // 獲取特定方案詳情
-  async getPlan(planId: number): Promise<MemberCardPlan | null> {
-    // 合併靜態資料和 localStorage 資料
-    let allPlans = [...memberCardPlans];
-    
-    if (typeof localStorage !== 'undefined') {
-      try {
-        const storedPlans = localStorage.getItem('memberCardPlans');
-        let localStoragePlans = [];
-        
-        if (storedPlans) {
-          localStoragePlans = JSON.parse(storedPlans);
-        } else {
-          // 如果 localStorage 為空，初始化為靜態資料
-          localStoragePlans = JSON.parse(JSON.stringify(memberCardPlans));
-          localStorage.setItem('memberCardPlans', JSON.stringify(localStoragePlans));
-        }
-        
-        // 合併資料，localStorage 優先
-        const allPlansMap = new Map();
-        memberCardPlans.forEach(plan => {
-          allPlansMap.set(plan.id, plan);
-        });
-        localStoragePlans.forEach((plan: any) => {
-          allPlansMap.set(plan.id, plan);
-        });
-        
-        allPlans = Array.from(allPlansMap.values());
-      } catch (error) {
-        console.warn('Failed to load localStorage plans:', error);
-      }
-    }
-    
-    return allPlans.find(plan => plan.id === planId) || null;
-  }
-};
+// 會員方案服務已移除，將重新實作
 
-// 訂單服務 (US03)
+// 訂單服務 (US03) - 會員方案相關功能已移除，將重新實作
 export const orderService = {
-  // 創建訂單
-  async createOrder(userId: number, planId: number): Promise<ApiResponse<Order>> {
-    await delay(800);
-    
-    const plan = await membershipService.getPlan(planId);
-    if (!plan) {
-      return { success: false, error: 'Plan not found' };
-    }
-    
-    const newOrder: Order = {
-      id: generateId(orders),
-      member_card_plan_id: planId,
-      user_id: userId,
-      price: plan.price,
-      status: 'CREATED',
-      created_at: new Date().toISOString()
-    };
-    
-    orders.push(newOrder);
-    
-    // 模擬付款處理 (成功)
-    setTimeout(() => {
-      newOrder.status = 'COMPLETED';
-      
-      // 創建會員資格
-      const newMembership: Membership = {
-        id: generateId(memberships),
-        member_card_id: plan.member_card_id,
-        user_id: userId,
-        duration_in_days: plan.duration_days || (plan.type === 'SEASON' ? 90 : 365),
-        start_time: null,
-        expire_time: null,
-        status: 'PURCHASED',
-        activated: false,
-        activate_expire_time: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 90天內啟用
-        created_at: new Date().toISOString()
-      };
-      
-      memberships.push(newMembership);
-    }, 2000);
-    
-    return { success: true, data: newOrder };
-  }
+  // 創建訂單功能暫時移除，等待會員方案重新實作
 };
 
 // 會員卡服務 (US04)
@@ -245,8 +122,19 @@ export const memberCardService = {
   async activateMemberCard(userId: number, membershipId: number): Promise<ApiResponse<Membership>> {
     await delay(500);
     
+    console.log(`🔍 查找會員卡 - 用戶ID: ${userId}, 會員卡ID: ${membershipId}`);
+    console.log('📋 所有會員資格:', memberships);
+    
     const membership = memberships.find(m => m.id === membershipId && m.user_id === userId);
-    if (!membership || membership.status !== 'PURCHASED') {
+    console.log('🎯 找到的會員資格:', membership);
+    
+    if (!membership) {
+      console.log('❌ 找不到會員資格記錄');
+      return { success: false, error: 'Membership not found or not purchased' };
+    }
+    
+    if (membership.status !== 'PURCHASED') {
+      console.log(`❌ 會員卡狀態不正確: ${membership.status} (需要 PURCHASED)`);
       return { success: false, error: 'Membership not found or not purchased' };
     }
     
@@ -265,12 +153,23 @@ export const memberCardService = {
     membership.start_time = now.toISOString();
     membership.expire_time = new Date(now.getTime() + membership.duration_in_days * 24 * 60 * 60 * 1000).toISOString();
     
+    console.log('✅ 會員卡啟用成功:', membership);
+    
     return { success: true, data: membership };
   },
   
-  // 獲取用戶會員資格
+  // 獲取用戶會員資格 (只返回 ACTIVE 狀態)
   async getUserMembership(userId: number): Promise<Membership | null> {
-    return memberships.find(m => m.user_id === userId && m.status === 'ACTIVE') || null;
+    const activeMembership = memberships.find(m => m.user_id === userId && m.status === 'ACTIVE');
+    console.log(`🔍 getUserMembership - 用戶ID: ${userId}, 找到的 ACTIVE 會員卡:`, activeMembership);
+    return activeMembership || null;
+  },
+
+  // 獲取用戶的待啟用會員卡 (PURCHASED 狀態)
+  async getUserPurchasedMembership(userId: number): Promise<Membership | null> {
+    const purchasedMembership = memberships.find(m => m.user_id === userId && m.status === 'PURCHASED');
+    console.log(`🔍 getUserPurchasedMembership - 用戶ID: ${userId}, 找到的 PURCHASED 會員卡:`, purchasedMembership);
+    return purchasedMembership || null;
   },
   
   // 獲取用戶所有會員資格（包括未啟用的）
@@ -429,7 +328,19 @@ export const dashboardService = {
   async getDashboardData(userId: number) {
     await delay(300);
     
-    const membership = await memberCardService.getUserMembership(userId);
+    console.log(`📊 獲取 Dashboard 資料 - 用戶ID: ${userId}`);
+    
+    // 優先獲取 ACTIVE 會員卡，如果沒有則獲取 PURCHASED 會員卡
+    let membership = await memberCardService.getUserMembership(userId);
+    console.log('🎯 找到的 ACTIVE 會員卡:', membership);
+    
+    if (!membership) {
+      membership = await memberCardService.getUserPurchasedMembership(userId);
+      console.log('🎯 找到的 PURCHASED 會員卡:', membership);
+    }
+    
+    console.log('📋 最終返回的會員資格:', membership);
+    
     const appointments = await bookingService.getUserAppointments(userId);
     
     // 獲取預約的詳細資訊

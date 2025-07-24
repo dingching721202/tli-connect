@@ -2,15 +2,21 @@ export interface MemberCardPlan {
   id: number;
   created_at: string;
   member_card_id: number;
-  type: 'SEASON' | 'YEAR' | 'CORPORATE';
-  name: string;
-  price: string;
-  original_price: string;
-  duration: number;
-  plan_type: 'individual' | 'corporate';
-  features: string[];
+  title: string;
+  user_type: 'individual' | 'corporate'; // 個人、企業
+  duration_type: 'season' | 'annual'; // 季方案、年方案
+  duration_days: number;
+  original_price: string; // 原價
+  sale_price: string; // 特價
+  features?: string[]; // 功能列表
   status: 'DRAFT' | 'PUBLISHED';
-  category: string;
+  popular?: boolean; // 熱門方案標記
+  description?: string; // 方案描述
+  hide_price?: boolean; // 隱藏價格選項
+  cta_options?: {
+    show_payment: boolean; // 顯示立即付款按鈕
+    show_contact: boolean; // 顯示聯繫我們按鈕
+  };
 }
 
 export const memberCardPlans: MemberCardPlan[] = [
@@ -18,68 +24,109 @@ export const memberCardPlans: MemberCardPlan[] = [
     id: 1,
     created_at: "2025-07-14T12:00:00+00:00",
     member_card_id: 1,
-    type: "SEASON",
-    name: "個人季度方案",
-    price: "3000.00",
-    original_price: "3000.00",
-    duration: 3,
-    plan_type: "individual",
+    title: "個人季度方案",
+    user_type: "individual",
+    duration_type: "season",
+    duration_days: 90,
+    original_price: "3500.00",
+    sale_price: "3000.00",
     features: [
       "無限觀看所有學習影片",
       "參加線上團體課程",
       "免費預約課程活動",
-      "24小時客服支援",
-      "學習進度追蹤"
+      "專屬學習進度追蹤",
+      "24/7 線上客服支援"
     ],
-    status: 'PUBLISHED',
-    category: "season"
+    status: "PUBLISHED",
+    popular: false,
+    description: "適合想要短期學習體驗的個人學員",
+    cta_options: {
+      show_payment: true,
+      show_contact: true
+    }
   },
   {
     id: 2,
     created_at: "2025-07-14T12:00:00+00:00",
     member_card_id: 2,
-    type: "YEAR",
-    name: "個人年度方案",
-    price: "10000.00",
+    title: "個人年度方案",
+    user_type: "individual",
+    duration_type: "annual",
+    duration_days: 365,
     original_price: "12000.00",
-    duration: 12,
-    plan_type: "individual",
+    sale_price: "10000.00",
     features: [
       "無限觀看所有學習影片",
       "參加線上團體課程",
       "免費預約課程活動",
-      "24小時優先客服支援",
-      "學習進度追蹤",
-      "專屬學習顧問",
-      "會員專屬活動",
-      "課程資料下載"
+      "專屬學習進度追蹤",
+      "24/7 線上客服支援",
+      "優先預約熱門課程",
+      "專屬學習顧問諮詢",
+      "免費參加特殊講座"
     ],
-    status: 'PUBLISHED',
-    category: "year"
+    status: "PUBLISHED",
+    popular: true,
+    description: "最受歡迎！適合長期學習的個人學員",
+    cta_options: {
+      show_payment: true,
+      show_contact: false
+    }
   },
   {
     id: 3,
     created_at: "2025-07-14T12:00:00+00:00",
     member_card_id: 3,
-    type: "CORPORATE",
-    name: "企業客製方案",
-    price: "0.00",
-    original_price: "0.00",
-    duration: 12,
-    plan_type: "corporate",
+    title: "企業年度方案",
+    user_type: "corporate",
+    duration_type: "annual",
+    duration_days: 365,
+    original_price: "60000.00",
+    sale_price: "50000.00",
     features: [
-      "客製化培訓內容",
-      "專業顧問服務",
-      "團隊學習管理",
-      "詳細學習報告",
-      "彈性課程安排",
-      "企業專屬平台",
-      "多語言支援",
-      "24小時技術支援"
+      "無限員工帳號數量",
+      "企業專屬課程內容",
+      "客製化學習路徑",
+      "企業學習成效報表",
+      "專屬企業客戶經理",
+      "優先技術支援",
+      "企業內訓服務",
+      "批量帳號管理",
+      "API 整合服務"
     ],
-    status: 'PUBLISHED',
-    category: "corporate"
+    status: "PUBLISHED",
+    popular: false,
+    description: "為企業客戶量身打造的完整學習解決方案",
+    cta_options: {
+      show_payment: false,
+      show_contact: true
+    }
+  },
+  {
+    id: 4,
+    created_at: "2025-07-14T12:00:00+00:00",
+    member_card_id: 4,
+    title: "企業季度方案",
+    user_type: "corporate",
+    duration_type: "season",
+    duration_days: 90,
+    original_price: "18000.00",
+    sale_price: "15000.00",
+    features: [
+      "最多50個員工帳號",
+      "企業專屬課程內容",
+      "客製化學習路徑",
+      "企業學習成效報表",
+      "專屬企業客戶經理",
+      "優先技術支援"
+    ],
+    status: "DRAFT",
+    popular: false,
+    description: "適合中小企業的短期培訓方案",
+    hide_price: true,
+    cta_options: {
+      show_payment: false,
+      show_contact: true
+    }
   }
 ];
-
-export default memberCardPlans;

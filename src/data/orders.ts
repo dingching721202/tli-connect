@@ -1,37 +1,18 @@
 export interface Order {
   id: number;
-  created_at: string;
-  member_card_plan_id: number;
-  price: string;
+  plan_id: number; // 會員方案ID
+  user_email?: string; // 非登入用戶需提供email
+  user_name?: string;
+  user_id?: number; // 登入用戶ID (可選)
   status: 'CREATED' | 'COMPLETED' | 'CANCELED';
-  user_id: number;
+  payment_method?: string;
+  payment_id?: string; // 第三方金流交易ID
+  amount: number;
+  created_at: string;
+  updated_at: string;
+  expires_at: string; // 訂單過期時間 (15分鐘)
 }
 
-export const orders: Order[] = [
-  {
-    id: 1,
-    created_at: "2025-07-10T12:00:00+00:00",
-    member_card_plan_id: 1,
-    price: "3000.00",
-    status: "COMPLETED",
-    user_id: 1
-  },
-  {
-    id: 2,
-    created_at: "2025-07-09T12:00:00+00:00",
-    member_card_plan_id: 1,
-    price: "3000.00",
-    status: "COMPLETED",
-    user_id: 2
-  },
-  {
-    id: 3,
-    created_at: "2025-07-12T12:00:00+00:00",
-    member_card_plan_id: 1,
-    price: "3000.00",
-    status: "COMPLETED",
-    user_id: 3
-  }
-];
+export const orders: Order[] = [];
 
 export default orders;

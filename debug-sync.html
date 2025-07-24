@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員方案同步測試</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { border: 1px solid #ddd; padding: 20px; margin: 10px 0; border-radius: 8px; }
+        button { padding: 10px 20px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 4px; white-space: pre-wrap; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; }
+        .plan { border: 1px solid #eee; padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .published { background: #d4edda; }
+        .draft { background: #f8d7da; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 會員方案同步測試</h1>
+        
+        <div class="section">
+            <h2>localStorage 操作</h2>
+            <button onclick="clearLocalStorage()">清空 localStorage</button>
+            <button onclick="initializeData()">初始化資料</button>
+            <button onclick="showLocalStorage()">顯示 localStorage</button>
+        </div>
+
+        <div class="section">
+            <h2>方案狀態測試</h2>
+            <button onclick="togglePlanStatus(1)">切換方案 1 狀態</button>
+            <button onclick="togglePlanStatus(2)">切換方案 2 狀態</button>
+            <button onclick="togglePlanStatus(3)">切換方案 3 狀態</button>
+            <button onclick="refreshPlans()">重新載入方案</button>
+        </div>
+
+        <div class="section">
+            <h2>當前方案狀態</h2>
+            <div id="plans"></div>
+        </div>
+
+        <div class="section">
+            <h2>執行日誌</h2>
+            <button onclick="clearLog()">清空日誌</button>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        // 攔截 console.log 顯示在頁面上
+        const originalLog = console.log;
+        const logElement = document.getElementById('log');
+        
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
+            ).join(' ');
+            logElement.textContent += new Date().toLocaleTimeString() + ' - ' + message + '\n';
+            logElement.scrollTop = logElement.scrollHeight;
+        };
+
+        function clearLog() {
+            logElement.textContent = '';
+        }
+
+        function clearLocalStorage() {
+            localStorage.removeItem('memberCardPlans');
+            localStorage.removeItem('memberCards');
+            console.log('🗑️ localStorage 已清空');
+            refreshPlans();
+        }
+
+        function initializeData() {
+            const staticData = [
+                {
+                    "id": 1,
+                    "created_at": "2025-07-14T12:00:00+00:00",
+                    "member_card_id": 1,
+                    "type": "SEASON",
+                    "name": "個人季度方案",
+                    "price": "3000.00",
+                    "original_price": "3000.00",
+                    "duration": 3,
+                    "plan_type": "individual",
+                    "features": ["無限觀看所有學習影片", "參加線上團體課程", "免費預約課程活動", "24小時客服支援", "學習進度追蹤"],
+                    "status": "PUBLISHED",
+                    "category": "season"
+                },
+                {
+                    "id": 2,
+                    "created_at": "2025-07-14T12:00:00+00:00",
+                    "member_card_id": 2,
+                    "type": "YEAR",
+                    "name": "個人年度方案",
+                    "price": "10000.00",
+                    "original_price": "12000.00",
+                    "duration": 12,
+                    "plan_type": "individual",
+                    "features": ["無限觀看所有學習影片", "參加線上團體課程", "免費預約課程活動", "24小時優先客服支援", "學習進度追蹤", "專屬學習顧問", "會員專屬活動", "課程資料下載"],
+                    "status": "PUBLISHED",
+                    "category": "year"
+                },
+                {
+                    "id": 3,
+                    "created_at": "2025-07-14T12:00:00+00:00",
+                    "member_card_id": 3,
+                    "type": "CORPORATE",
+                    "name": "企業客製方案",
+                    "price": "0.00",
+                    "original_price": "0.00",
+                    "duration": 12,
+                    "plan_type": "corporate",
+                    "features": ["客製化培訓內容", "專業顧問服務", "團隊學習管理", "詳細學習報告", "彈性課程安排", "企業專屬平台", "多語言支援", "24小時技術支援"],
+                    "status": "PUBLISHED",
+                    "category": "corporate"
+                }
+            ];
+            
+            localStorage.setItem('memberCardPlans', JSON.stringify(staticData));
+            console.log('🔧 localStorage 已初始化，方案數量:', staticData.length);
+            refreshPlans();
+        }
+
+        function showLocalStorage() {
+            const data = localStorage.getItem('memberCardPlans');
+            if (data) {
+                const plans = JSON.parse(data);
+                console.log('📦 localStorage 內容:', plans);
+            } else {
+                console.log('⚠️ localStorage 為空');
+            }
+        }
+
+        function togglePlanStatus(planId) {
+            const data = localStorage.getItem('memberCardPlans');
+            if (!data) {
+                console.log('❌ localStorage 為空，請先初始化');
+                return;
+            }
+
+            const plans = JSON.parse(data);
+            const planIndex = plans.findIndex(p => p.id === planId);
+            
+            if (planIndex === -1) {
+                console.log('❌ 找不到方案 ID:', planId);
+                return;
+            }
+
+            const plan = plans[planIndex];
+            const oldStatus = plan.status;
+            plan.status = plan.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
+            
+            localStorage.setItem('memberCardPlans', JSON.stringify(plans));
+            console.log(`🔄 方案 ${plan.name} 狀態已從 ${oldStatus} 改為 ${plan.status}`);
+            
+            // 觸發更新事件
+            window.dispatchEvent(new CustomEvent('membershipPlansUpdated'));
+            console.log('🔔 已觸發 membershipPlansUpdated 事件');
+            
+            refreshPlans();
+        }
+
+        function refreshPlans() {
+            const data = localStorage.getItem('memberCardPlans');
+            const plansElement = document.getElementById('plans');
+            
+            if (!data) {
+                plansElement.innerHTML = '<p>⚠️ localStorage 為空</p>';
+                return;
+            }
+
+            const plans = JSON.parse(data);
+            let html = '';
+            
+            plans.forEach(plan => {
+                const statusClass = plan.status === 'PUBLISHED' ? 'published' : 'draft';
+                html += `
+                    <div class="plan ${statusClass}">
+                        <strong>${plan.name}</strong> 
+                        <span style="float: right;">
+                            狀態: ${plan.status} 
+                            (${plan.status === 'PUBLISHED' ? '已發布' : '草稿'})
+                        </span>
+                        <br>
+                        <small>ID: ${plan.id}, 類型: ${plan.plan_type}, 價格: NT$ ${plan.price}</small>
+                    </div>
+                `;
+            });
+            
+            plansElement.innerHTML = html;
+            console.log('🔄 方案顯示已更新');
+        }
+
+        // 監聽更新事件
+        window.addEventListener('membershipPlansUpdated', function() {
+            console.log('👂 收到 membershipPlansUpdated 事件');
+        });
+
+        // 初始載入
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 頁面載入完成');
+            refreshPlans();
+        });
+    </script>
+</body>
+</html>

@@ -267,7 +267,10 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
             /* 訪客狀態 - 顯示購買會員和登入按鈕 */
             <div className="space-y-3">
               <motion.button
-                onClick={() => router.push('/membership')}
+                onClick={() => {
+                  // router.push('/membership'); // TODO: 重新實作會員方案頁面
+                  console.log('會員方案頁面尚未實作');
+                }}
                 className="w-full py-3 px-6 rounded-lg font-semibold text-center transition-all bg-blue-600 text-white hover:bg-blue-700 shadow-md hover:shadow-lg flex items-center justify-center"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

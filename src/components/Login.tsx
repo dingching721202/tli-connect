@@ -20,9 +20,40 @@ const Login: React.FC = () => {
   const { register, login } = useAuth();
   const router = useRouter();
 
-  // 示範帳號 - 對應新的四個角色
-  const demoAccounts = [
-    { email: 'alice@example.com', name: 'Alice Wang', role: '學生 (STUDENT)' },
+  // 會員卡測試帳號 - 不同會員狀態
+  const membershipTestAccounts = [
+    { 
+      email: 'alice@example.com', 
+      name: 'Alice Wang', 
+      role: '學生 - 已啟用會員卡',
+      status: '✅ ACTIVE',
+      description: '已啟用會員卡，可查看完整功能'
+    },
+    { 
+      email: 'user2@example.com', 
+      name: 'Bob Chen', 
+      role: '學生 - 待啟用會員卡',
+      status: '⏳ PURCHASED',
+      description: '有待啟用會員卡，可測試啟用功能'
+    },
+    { 
+      email: 'charlie@example.com', 
+      name: 'Charlie Lin', 
+      role: '學生 - 已啟用會員卡',
+      status: '✅ ACTIVE',
+      description: '已啟用會員卡，用於測試重複啟用'
+    },
+    { 
+      email: 'david@example.com', 
+      name: 'David Wilson', 
+      role: '學生 - 無會員卡',
+      status: '🚫 無會員卡',
+      description: '完全沒有會員卡，可測試購買流程'
+    }
+  ];
+
+  // 其他角色示範帳號
+  const roleTestAccounts = [
     { email: 'daisy@example.com', name: 'Daisy Hsu', role: '教師 (TEACHER)' },
     { email: 'frank@taiwantech.com', name: 'Frank Liu', role: '企業窗口 (CORPORATE_CONTACT)' },
     { email: 'olivia@example.com', name: 'Olivia Kao', role: '營運 (OPS)' },
@@ -277,7 +308,7 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        {/* 示範帳號 - 只在登入模式顯示 */}
+        {/* 會員卡測試帳號 - 只在登入模式顯示 */}
         {!isRegisterMode && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -285,43 +316,76 @@ const Login: React.FC = () => {
             transition={{ delay: 0.3 }}
             className="mt-8 bg-white rounded-2xl shadow-lg p-6"
           >
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-              快速測試帳號
+            <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">
+              🎯 會員卡測試帳號
             </h3>
             <p className="text-sm text-gray-600 text-center mb-4">
               點擊下方帳號即可快速填入登入資訊 (密碼：password)
             </p>
-            <div className="grid gap-3">
-              {demoAccounts.map((account, index) => (
-                <motion.button
-                  key={account.email}
-                  onClick={() => fillDemoAccount(account.email)}
-                  className="flex items-center justify-between p-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors text-left border border-gray-200 hover:border-blue-300"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                >
-                  <div>
-                    <div className="font-medium text-gray-900">{account.name}</div>
-                    <div className="text-sm text-gray-500">{account.email}</div>
-                  </div>
-                  <span className={`
-                    px-2 py-1 rounded-full text-xs font-medium
-                    ${account.role === '管理員' 
-                      ? 'bg-purple-100 text-purple-800' 
-                      : account.role === '教師'
-                      ? 'bg-green-100 text-green-800'
-                      : account.role === '企業用戶'
-                      ? 'bg-orange-100 text-orange-800'
-                      : 'bg-blue-100 text-blue-800'
-                    }
-                  `}>
-                    {account.role}
-                  </span>
-                </motion.button>
-              ))}
+            
+            {/* 會員卡狀態測試帳號 */}
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">會員卡狀態測試</h4>
+              <div className="grid gap-2">
+                {membershipTestAccounts.map((account, index) => (
+                  <motion.button
+                    key={account.email}
+                    onClick={() => fillDemoAccount(account.email)}
+                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors text-left border border-gray-200 hover:border-blue-300"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-medium text-gray-900">{account.name}</span>
+                        <span className="text-sm font-medium">{account.status}</span>
+                      </div>
+                      <div className="text-xs text-gray-500">{account.email}</div>
+                      <div className="text-xs text-gray-400 mt-1">{account.description}</div>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
+            {/* 其他角色測試帳號 */}
+            <div>
+              <h4 className="text-sm font-medium text-gray-700 mb-3">其他角色測試</h4>
+              <div className="grid gap-2">
+                {roleTestAccounts.map((account, index) => (
+                  <motion.button
+                    key={account.email}
+                    onClick={() => fillDemoAccount(account.email)}
+                    className="flex items-center justify-between p-2 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors text-left border border-gray-200 hover:border-blue-300"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * (index + membershipTestAccounts.length) }}
+                  >
+                    <div>
+                      <div className="font-medium text-gray-900 text-sm">{account.name}</div>
+                      <div className="text-xs text-gray-500">{account.email}</div>
+                    </div>
+                    <span className={`
+                      px-2 py-1 rounded-full text-xs font-medium
+                      ${account.role.includes('TEACHER') 
+                        ? 'bg-green-100 text-green-800' 
+                        : account.role.includes('CORPORATE')
+                        ? 'bg-orange-100 text-orange-800'
+                        : account.role.includes('ADMIN')
+                        ? 'bg-purple-100 text-purple-800'
+                        : 'bg-blue-100 text-blue-800'
+                      }
+                    `}>
+                      {account.role.split(' ')[0]}
+                    </span>
+                  </motion.button>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}

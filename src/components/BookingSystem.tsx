@@ -199,14 +199,16 @@ const BookingSystem: React.FC = () => {
     // Check if user is logged in
     if (!user) {
       alert('歡迎來到 TLI Connect！\n\n加入會員即可享受免費課程預約服務\n即將跳轉到會員方案頁面...');
-      router.push('/membership');
+      // router.push('/membership'); // TODO: 重新實作會員方案頁面
+      console.log('會員方案頁面尚未實作');
       return;
     }
 
     // Check if user has membership for booking (US06.2)
     if (user.role === 'STUDENT' && !hasActiveMembership()) {
       alert('您需要有效的會員資格才能預約課程！\n\n即將跳轉到會員方案頁面...');
-      router.push('/membership');
+      // router.push('/membership'); // TODO: 重新實作會員方案頁面
+      console.log('會員方案頁面尚未實作');
       return;
     }
 
@@ -508,7 +510,10 @@ const BookingSystem: React.FC = () => {
             您需要有效的會員資格才能預約課程。加入會員享受完整學習體驗！
           </p>
           <button
-            onClick={() => router.push('/membership')}
+            onClick={() => {
+              // router.push('/membership'); // TODO: 重新實作會員方案頁面
+              console.log('會員方案頁面尚未實作');
+            }}
             className="bg-yellow-600 text-white px-6 py-2 rounded-lg hover:bg-yellow-700 transition-colors"
           >
             選擇會員方案

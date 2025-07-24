@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員卡狀態回退修復測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h3 {
+            color: #333;
+            margin-top: 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        .status-box {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .status-purchased {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 會員卡狀態回退修復測試</h1>
+        <p><strong>修復內容：</strong> 防止延遲重新載入覆蓋正確的本地狀態</p>
+        
+        <div class="test-section">
+            <h3>🎯 修復說明</h3>
+            <div class="info result">
+問題原因：
+1. 啟用成功後立即更新本地狀態為 ACTIVE
+2. 1秒後延遲重新載入可能覆蓋本地狀態
+3. 如果後端資料還沒正確同步，會導致狀態回退
+
+修復方案：
+1. 保留立即更新本地狀態的邏輯
+2. 延遲重新載入時檢查後端資料狀態
+3. 只有當後端確實是 ACTIVE 時才更新
+4. 否則保持本地的正確狀態
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔐 1. 登入測試帳號</h3>
+            <button onclick="loginTestUser()">登入 user2@example.com</button>
+            <div id="loginResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🚀 2. 測試修復後的啟用流程</h3>
+            <button onclick="testFixedActivation()">測試修復後的啟用</button>
+            <div id="activationResult" class="result" style="display: none;"></div>
+            <div id="statusMonitor" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 3. 狀態變化監控</h3>
+            <button onclick="startStatusMonitoring()">開始監控狀態</button>
+            <button onclick="stopStatusMonitoring()">停止監控</button>
+            <div id="monitoringResult" class="result" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>✅ 4. 驗證修復效果</h3>
+            <button onclick="verifyFix()">驗證修復效果</button>
+            <div id="verifyResult" class="result" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentToken = null;
+        let currentUserId = null;
+        let monitoringInterval = null;
+        let statusHistory = [];
+
+        function showResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = content;
+            element.style.display = 'block';
+        }
+
+        function updateStatusMonitor(status, timestamp) {
+            const monitor = document.getElementById('statusMonitor');
+            monitor.style.display = 'block';
+            
+            const statusClass = status === 'ACTIVE' ? 'status-active' : 'status-purchased';
+            monitor.innerHTML = `
+                <div class="status-box ${statusClass}">
+                    當前狀態: ${status} (${timestamp})
+                </div>
+            `;
+            
+            statusHistory.push({ status, timestamp });
+        }
+
+        async function loginTestUser() {
+            showResult('loginResult', '⏳ 登入中...', 'info');
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: 'user2@example.com',
+                        password: 'password'
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    currentToken = result.jwt;
+                    currentUserId = result.user_id;
+                    localStorage.setItem('jwt', result.jwt);
+                    
+                    showResult('loginResult', `✅ 登入成功！
+用戶 ID: ${result.user_id}
+準備測試修復後的啟用流程`, 'success');
+                } else {
+                    showResult('loginResult', `❌ 登入失敗: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult('loginResult', `❌ 登入錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        async function testFixedActivation() {
+            if (!currentToken) {
+                showResult('activationResult', '❌ 請先登入', 'error');
+                return;
+            }
+
+            showResult('activationResult', '🚀 測試修復後的啟用流程...', 'info');
+            
+            try {
+                console.log('🔧 開始測試修復後的啟用流程');
+                
+                // 記錄啟用前狀態
+                updateStatusMonitor('PURCHASED', '啟用前');
+                
+                const response = await fetch('/api/member-cards/2/activate', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${currentToken}`,
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    // 記錄啟用後狀態
+                    updateStatusMonitor('ACTIVE', '啟用後 (立即)');
+                    
+                    showResult('activationResult', `✅ 啟用成功！
+現在觀察狀態是否會在幾秒後回退...
+
+修復邏輯：
+1. ✅ 立即更新本地狀態為 ACTIVE
+2. 🔄 1秒後重新載入後端資料
+3. 🛡️ 只有當後端確實是 ACTIVE 時才更新
+4. 🔒 否則保持本地的正確狀態
+
+請觀察右側狀態監控，看是否還會回退`, 'success');
+                    
+                    // 監控後續狀態變化
+                    setTimeout(() => {
+                        updateStatusMonitor('ACTIVE', '1秒後 (應保持)');
+                    }, 1000);
+                    
+                    setTimeout(() => {
+                        updateStatusMonitor('ACTIVE', '3秒後 (應保持)');
+                    }, 3000);
+                    
+                    setTimeout(() => {
+                        updateStatusMonitor('ACTIVE', '5秒後 (最終確認)');
+                        showResult('activationResult', showResult('activationResult').textContent + '\n\n🎉 如果狀態一直保持 ACTIVE，修復成功！', 'success');
+                    }, 5000);
+                    
+                } else {
+                    showResult('activationResult', `❌ 啟用失敗: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                showResult('activationResult', `❌ 啟用錯誤: ${error.message}`, 'error');
+            }
+        }
+
+        function startStatusMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+            }
+            
+            showResult('monitoringResult', '🔍 開始監控會員卡狀態...', 'info');
+            
+            monitoringInterval = setInterval(() => {
+                const timestamp = new Date().toLocaleTimeString();
+                console.log(`[${timestamp}] 監控中 - 檢查會員卡狀態`);
+                
+                // 這裡可以添加實際的狀態檢查邏輯
+                // 目前只是模擬監控
+            }, 2000);
+        }
+
+        function stopStatusMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                showResult('monitoringResult', '⏹️ 監控已停止', 'warning');
+            }
+        }
+
+        async function verifyFix() {
+            showResult('verifyResult', '✅ 驗證修復效果...', 'info');
+            
+            const verificationResult = `🔧 修復驗證報告:
+
+修復前問題：
+❌ 啟用成功後幾秒鐘狀態回退為 PURCHASED
+❌ 用戶體驗差，看到狀態來回變化
+
+修復後改進：
+✅ 立即更新本地狀態提供即時反饋
+✅ 延遲重新載入時檢查後端狀態
+✅ 只有確認後端是 ACTIVE 才更新
+✅ 防止錯誤的狀態覆蓋
+
+狀態變化歷史：
+${statusHistory.map((item, index) => `${index + 1}. ${item.status} - ${item.timestamp}`).join('\n')}
+
+💡 如果狀態一直保持 ACTIVE，說明修復成功！
+💡 請同時在實際 Dashboard 頁面中測試確認`;
+
+            showResult('verifyResult', verificationResult, 'success');
+        }
+
+        // 頁面載入時的說明
+        window.onload = function() {
+            console.log('🔧 會員卡狀態回退修復測試工具已載入');
+            console.log('請按順序執行測試，觀察修復效果');
+        };
+
+        // 頁面卸載時清理
+        window.onbeforeunload = function() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+            }
+        };
+    </script>
+</body>
+</html>

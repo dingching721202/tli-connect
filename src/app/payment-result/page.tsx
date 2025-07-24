@@ -43,7 +43,8 @@ const PaymentResultContent = () => {
   };
 
   const handleRetryPayment = () => {
-    router.push('/membership');
+    // router.push('/membership'); // TODO: 重新實作會員方案頁面
+    console.log('會員方案頁面尚未實作');
   };
 
   return (
