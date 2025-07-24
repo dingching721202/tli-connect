@@ -81,6 +81,9 @@ export function updateCourseTemplate(id: string, updates: Partial<CourseTemplate
     
     if (index === -1) return null;
     
+    const oldTemplate = templates[index];
+    const titleChanged = updates.title && updates.title !== oldTemplate.title;
+    
     templates[index] = {
       ...templates[index],
       ...updates,
@@ -88,6 +91,18 @@ export function updateCourseTemplate(id: string, updates: Partial<CourseTemplate
     };
     
     localStorage.setItem('courseTemplates', JSON.stringify(templates));
+    
+    // 如果標題有變更，同步更新課程排程中的標題
+    if (titleChanged) {
+      console.log(`課程模板標題已更新: ${oldTemplate.title} → ${updates.title}`);
+      // 動態導入以避免循環依賴
+      import('./courseScheduleUtils').then(({ syncCourseScheduleTitles }) => {
+        syncCourseScheduleTitles();
+      }).catch(error => {
+        console.error('同步課程排程標題失敗:', error);
+      });
+    }
+    
     return templates[index];
   }
   

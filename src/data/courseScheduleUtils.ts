@@ -3,6 +3,7 @@ export interface CourseSchedule {
   id: string;
   templateId: string; // 關聯到 CourseTemplate
   templateTitle: string; // 冗余字段，便於顯示
+  seriesName?: string; // 系列名稱，用於區分不同班別（如"B班"）
   teacherId: string;
   teacherName: string; // 冗余字段，便於顯示
   timeSlots: TimeSlot[];
@@ -213,4 +214,54 @@ export function calculateEndDate(
 export function getPublishedCourseSchedules(): CourseSchedule[] {
   const schedules = getCourseSchedules();
   return schedules.filter(schedule => schedule.status === 'published');
+}
+
+// 同步課程排程中的模板標題（當課程模板名稱更新時調用）
+export function syncCourseScheduleTitles(): void {
+  if (typeof localStorage === 'undefined') return;
+  
+  try {
+    // 動態導入以避免循環依賴
+    import('./courseTemplateUtils').then(({ getCourseTemplates }) => {
+      const schedules = getCourseSchedules();
+      const templates = getCourseTemplates();
+      let hasUpdates = false;
+      
+      const updatedSchedules = schedules.map(schedule => {
+        const template = templates.find(t => t.id === schedule.templateId);
+        if (template && template.title !== schedule.templateTitle) {
+          console.log(`同步課程排程標題: ${schedule.templateTitle} → ${template.title}`);
+          hasUpdates = true;
+          return {
+            ...schedule,
+            templateTitle: template.title,
+            updatedAt: new Date().toISOString()
+          };
+        }
+        return schedule;
+      });
+      
+      if (hasUpdates) {
+        localStorage.setItem('courseSchedules', JSON.stringify(updatedSchedules));
+        // 觸發更新事件
+        window.dispatchEvent(new CustomEvent('courseSchedulesUpdated'));
+        console.log('課程排程標題同步完成');
+      }
+    });
+  } catch (error) {
+    console.error('同步課程排程標題時發生錯誤:', error);
+  }
+}
+
+// 根據模板ID和系列名稱生成完整的課程標題
+export function generateCourseTitle(templateTitle: string, seriesName?: string): string {
+  if (seriesName && seriesName.trim()) {
+    return `${templateTitle}-${seriesName.trim()}`;
+  }
+  return templateTitle;
+}
+
+// 獲取課程排程的完整標題（包含系列名稱）
+export function getCourseScheduleFullTitle(schedule: CourseSchedule): string {
+  return generateCourseTitle(schedule.templateTitle, schedule.seriesName);
 }

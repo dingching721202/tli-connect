@@ -18,6 +18,8 @@ interface BookingCourse {
   reserved_count: number | undefined;
   status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
   timeslot_id: number;
+  bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled'; // US05新增：預約狀態
+  disabledReason?: string; // US05新增：不可預約原因
 }
 import { bookingService } from '@/services/dataService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -92,21 +94,46 @@ const BookingSystem: React.FC = () => {
   }, []);
 
 
-  // 將課程模組的 BookingCourseSession 轉換為 BookingCourse 格式
+  // 將課程模組的 BookingCourseSession 轉換為 BookingCourse 格式 (US05)
   const convertManagedSessionsToCourses = (sessions: BookingCourseSession[]): BookingCourse[] => {
-    return sessions.map(session => ({
-      id: parseInt(session.id.split('_')[0]) || 0,
-      title: `${session.courseTitle} ${session.sessionTitle}`,
-      date: session.date,
-      timeSlot: `${session.startTime}-${session.endTime}`,
-      teacher: session.teacherName,
-      price: session.price,
-      description: `${session.courseTitle} - 第${session.sessionNumber}課`,
-      capacity: session.capacity,
-      reserved_count: session.currentEnrollments,
-      status: session.status === 'available' ? 'CREATED' : 'CANCELED',
-      timeslot_id: parseInt(session.id.replace(/\D/g, '')) || 0
-    }));
+    return sessions.map(session => {
+      const now = new Date();
+      const courseDateTime = new Date(`${session.date} ${session.startTime}`);
+      const twentyFourHours = 24 * 60 * 60 * 1000;
+      
+      // 判斷預約狀態 (US05)
+      let bookingStatus: 'available' | 'full' | 'locked' | 'cancelled' = 'available';
+      let disabledReason = '';
+      
+      if (session.status === 'cancelled') {
+        bookingStatus = 'cancelled';
+        disabledReason = '課程已取消';
+      } else if (courseDateTime.getTime() - now.getTime() <= twentyFourHours) {
+        // US05.3: 距離開課 < 24h 的時段鎖定
+        bookingStatus = 'locked';
+        disabledReason = '距開課少於24小時';
+      } else if (session.currentEnrollments >= session.capacity) {
+        // US05.2: 額滿時段
+        bookingStatus = 'full';
+        disabledReason = '課程已額滿';
+      }
+      
+      return {
+        id: parseInt(session.id.split('_')[0]) || 0,
+        title: `${session.courseTitle} ${session.sessionTitle}`,
+        date: session.date,
+        timeSlot: `${session.startTime}-${session.endTime}`,
+        teacher: session.teacherName,
+        price: session.price,
+        description: `${session.courseTitle} - 第${session.sessionNumber}課`,
+        capacity: session.capacity,
+        reserved_count: session.currentEnrollments,
+        status: session.status === 'available' ? 'CREATED' : 'CANCELED',
+        timeslot_id: parseInt(session.id.replace(/\D/g, '')) || 0,
+        bookingStatus,
+        disabledReason
+      };
+    });
   };
 
   // 處理課程篩選
@@ -136,23 +163,13 @@ const BookingSystem: React.FC = () => {
     setSelectedDate(date);
     const dateStr = date.toISOString().split('T')[0];
     
-    // 篩選該日期的可預約課程時段 (US05)
+    // 顯示該日期的所有課程時段，包含不可預約的 (US05)
     const filteredCourses = getFilteredCourses();
     const coursesForDate = filteredCourses.filter(course => {
       if (course.date !== dateStr) return false;
       
-      const courseWithStatus = course;
-      
-      // 檢查時段狀態和容量 (US05.1)
-      if (courseWithStatus.status !== 'CREATED') return false;
-      if ((courseWithStatus.reserved_count || 0) >= (courseWithStatus.capacity || 0)) return false;
-      
-      // 檢查是否在24小時內 (US05.3)
-      const courseDateTime = new Date(`${course.date} ${course.timeSlot.split('-')[0]}`);
-      const now = new Date();
-      const twentyFourHours = 24 * 60 * 60 * 1000;
-      
-      if (courseDateTime.getTime() - now.getTime() <= twentyFourHours) return false;
+      // 只過濾掉已取消的課程，其他都顯示 (US05.1)
+      if (course.status === 'CANCELED') return false;
       
       return true;
     });
@@ -160,18 +177,26 @@ const BookingSystem: React.FC = () => {
     setAvailableCourses(coursesForDate);
     setShowCourseSelection(coursesForDate.length > 0);
 
-    // If a specific course was clicked, auto-select it
+    // If a specific course was clicked and it's available, auto-select it
     if (specificCourse) {
-      const courseKey = `${specificCourse.id}-${specificCourse.timeSlot}`;
-      const isSelected = selectedCourses.some(c => `${c.id}-${c.timeSlot}` === courseKey);
-      
-      if (!isSelected) {
-        setSelectedCourses(prev => [...prev, specificCourse]);
+      // 只有可預約的課程才能被選取 (US05)
+      if (specificCourse.bookingStatus === 'available') {
+        const courseKey = `${specificCourse.id}-${specificCourse.timeSlot}`;
+        const isSelected = selectedCourses.some(c => `${c.id}-${c.timeSlot}` === courseKey);
+        
+        if (!isSelected) {
+          setSelectedCourses(prev => [...prev, specificCourse]);
+        }
       }
     }
   };
 
   const handleCourseSelect = (course: BookingCourse) => {
+    // 只允許選擇可預約的課程 (US05)
+    if (course.bookingStatus !== 'available') {
+      return;
+    }
+    
     const courseKey = `${course.id}-${course.timeSlot}`;
     const isSelected = selectedCourses.some(c => `${c.id}-${c.timeSlot}` === courseKey);
     

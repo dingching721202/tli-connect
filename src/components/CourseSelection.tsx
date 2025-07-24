@@ -15,6 +15,8 @@ interface BookingCourse {
   reserved_count: number | undefined;
   status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
   timeslot_id: number;
+  bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled'; // US05新增：預約狀態
+  disabledReason?: string; // US05新增：不可預約原因
 }
 import SafeIcon from './common/SafeIcon';
 
@@ -50,6 +52,10 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
   };
 
   const handleCourseClick = (course: BookingCourse) => {
+    // 只允許選擇可預約的課程 (US05)
+    if (course.bookingStatus !== 'available') {
+      return;
+    }
     onCourseSelect(course);
   };
 
@@ -98,10 +104,21 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
           ) : (
             <div className="space-y-3">
               <h4 className="text-sm font-medium text-gray-600 mb-4">
-                可用課程 ({availableCourses.length}堂)
+                課程列表 ({availableCourses.length}堂)
               </h4>
               {availableCourses.map((course, index) => {
                 const isSelected = isCourseSelected(course);
+                const isDisabled = course.bookingStatus !== 'available';
+                
+                // 根據課程狀態設置樣式 (US05)
+                const getCardStyle = () => {
+                  if (isDisabled) {
+                    return 'border-gray-300 bg-gray-100 cursor-not-allowed opacity-60';
+                  }
+                  return isSelected 
+                    ? 'border-emerald-500 bg-emerald-50 cursor-pointer' 
+                    : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50 cursor-pointer';
+                };
                 
                 return (
                   <motion.div
@@ -110,24 +127,37 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
                     className={`
-                      p-4 rounded-lg border-2 cursor-pointer transition-all duration-200
-                      ${isSelected 
-                        ? 'border-emerald-500 bg-emerald-50' 
-                        : 'border-gray-200 hover:border-emerald-300 hover:bg-emerald-50/50'
-                      }
+                      p-4 rounded-lg border-2 transition-all duration-200
+                      ${getCardStyle()}
                     `}
                     onClick={() => handleCourseClick(course)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    whileHover={!isDisabled ? { scale: 1.02 } : {}}
+                    whileTap={!isDisabled ? { scale: 0.98 } : {}}
+                    title={isDisabled ? course.disabledReason : undefined}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h5 className={`
-                          font-semibold text-base mb-2
-                          ${isSelected ? 'text-emerald-800' : 'text-gray-900'}
-                        `}>
-                          {course.title}
-                        </h5>
+                        <div className="flex items-center justify-between mb-2">
+                          <h5 className={`
+                            font-semibold text-base
+                            ${isSelected ? 'text-emerald-800' : isDisabled ? 'text-gray-500' : 'text-gray-900'}
+                          `}>
+                            {course.title}
+                          </h5>
+                          {/* US05: 狀態標誌 */}
+                          {course.bookingStatus && course.bookingStatus !== 'available' && (
+                            <span className={`
+                              text-xs px-2 py-1 rounded-full font-medium
+                              ${course.bookingStatus === 'full' ? 'bg-gray-200 text-gray-600' :
+                                course.bookingStatus === 'locked' ? 'bg-gray-300 text-gray-700' :
+                                'bg-red-200 text-red-600'}
+                            `}>
+                              {course.bookingStatus === 'full' ? '已額滿' :
+                               course.bookingStatus === 'locked' ? '24h鎖定' :
+                               '已取消'}
+                            </span>
+                          )}
+                        </div>
                         
                         <div className="space-y-2">
                           <div className="flex items-center text-sm text-gray-600">
@@ -146,22 +176,24 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
                         </p>
                       </div>
                       
-                      {/* Selection Indicator */}
-                      <div className={`
-                        ml-4 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center
-                        ${isSelected 
-                          ? 'border-emerald-500 bg-emerald-500' 
-                          : 'border-gray-300'
-                        }
-                      `}>
-                        {isSelected && (
-                          <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            className="w-3 h-3 bg-white rounded-full"
-                          />
-                        )}
-                      </div>
+                      {/* Selection Indicator - 只有可預約的課程顯示 (US05) */}
+                      {!isDisabled && (
+                        <div className={`
+                          ml-4 flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center
+                          ${isSelected 
+                            ? 'border-emerald-500 bg-emerald-500' 
+                            : 'border-gray-300'
+                          }
+                        `}>
+                          {isSelected && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="w-3 h-3 bg-white rounded-full"
+                            />
+                          )}
+                        </div>
+                      )}
                     </div>
                     
                     {/* Course Price Display (even if free) */}

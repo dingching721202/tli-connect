@@ -15,6 +15,8 @@ interface BookingCourse {
   reserved_count: number | undefined;
   status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
   timeslot_id: number;
+  bookingStatus?: 'available' | 'full' | 'locked' | 'cancelled'; // US05新增：預約狀態
+  disabledReason?: string; // US05新增：不可預約原因
 }
 import SafeIcon from './common/SafeIcon';
 
@@ -114,6 +116,11 @@ const Calendar: React.FC<CalendarProps> = ({
   const handleCourseClick = (course: BookingCourse, date: Date, event: React.MouseEvent) => {
     event.stopPropagation();
     
+    // 不可預約的課程不允許點擊 (US05)
+    if (course.bookingStatus !== 'available') {
+      return;
+    }
+    
     // Check if course is already selected
     const isCourseSelected = selectedCourses.some(
       sc => sc.id === course.id && sc.timeSlot === course.timeSlot
@@ -158,28 +165,38 @@ const Calendar: React.FC<CalendarProps> = ({
 
     const { courseName, sessionInfo } = parseCourseName(course.title);
 
-    // 根據課程類型設置顏色
+    // 根據課程狀態和類型設置顏色 (US05)
     const getCourseColor = () => {
+      // US05.2 & US05.3: 不可預約的課程顯示為灰色
+      if (course.bookingStatus === 'full') {
+        return 'bg-gray-300 text-gray-500 cursor-not-allowed opacity-60';
+      } else if (course.bookingStatus === 'locked') {
+        return 'bg-gray-400 text-gray-600 cursor-not-allowed opacity-70';
+      } else if (course.bookingStatus === 'cancelled') {
+        return 'bg-red-200 text-red-600 cursor-not-allowed line-through opacity-50';
+      }
+      
+      // 可預約的課程按類型設置顏色
       if (course.title.includes('中文') || course.title.includes('華語')) {
         return isSelected 
           ? 'bg-blue-500 text-white' 
-          : 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+          : 'bg-blue-100 text-blue-800 hover:bg-blue-200 cursor-pointer';
       } else if (course.title.includes('英文') || course.title.includes('English')) {
         return isSelected 
           ? 'bg-green-500 text-white' 
-          : 'bg-green-100 text-green-800 hover:bg-green-200';
+          : 'bg-green-100 text-green-800 hover:bg-green-200 cursor-pointer';
       } else if (course.title.includes('文化')) {
         return isSelected 
           ? 'bg-purple-500 text-white' 
-          : 'bg-purple-100 text-purple-800 hover:bg-purple-200';
+          : 'bg-purple-100 text-purple-800 hover:bg-purple-200 cursor-pointer';
       } else if (course.title.includes('商業')) {
         return isSelected 
           ? 'bg-orange-500 text-white' 
-          : 'bg-orange-100 text-orange-800 hover:bg-orange-200';
+          : 'bg-orange-100 text-orange-800 hover:bg-orange-200 cursor-pointer';
       }
       return isSelected 
         ? 'bg-gray-500 text-white' 
-        : 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+        : 'bg-gray-100 text-gray-800 hover:bg-gray-200 cursor-pointer';
     };
 
     return (
@@ -189,15 +206,19 @@ const Calendar: React.FC<CalendarProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
         className={`
-          text-xs px-2 py-1.5 rounded-md cursor-pointer transition-all duration-200 
+          text-xs px-2 py-1.5 rounded-md transition-all duration-200 
           ${getCourseColor()}
           ${isMobile ? 'mb-1' : 'mb-0.5'}
           shadow-sm border border-opacity-20 border-gray-400
         `}
         onClick={(e) => handleCourseClick(course, date, e)}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        title={`${course.title} - ${course.teacher} - ${course.timeSlot}`}
+        whileHover={course.bookingStatus === 'available' ? { scale: 1.02 } : {}}
+        whileTap={course.bookingStatus === 'available' ? { scale: 0.98 } : {}}
+        title={
+          course.bookingStatus !== 'available' 
+            ? `${course.title} - ${course.teacher} - ${course.timeSlot} (${course.disabledReason || '不可預約'})`
+            : `${course.title} - ${course.teacher} - ${course.timeSlot}`
+        }
       >
         <div className="font-medium truncate leading-tight">
           {courseName}
@@ -209,15 +230,27 @@ const Calendar: React.FC<CalendarProps> = ({
         )}
         <div className="text-xs opacity-75 flex items-center justify-between mt-0.5">
           <span className="font-medium">{course.timeSlot}</span>
-          {isSelected && (
-            <motion.div
-              initial={{ scale: 0, rotate: -180 }}
-              animate={{ scale: 1, rotate: 0 }}
-              className="text-white"
-            >
-              ✓
-            </motion.div>
-          )}
+          <div className="flex items-center space-x-1">
+            {/* US05: 狀態指示器 */}
+            {course.bookingStatus === 'full' && (
+              <span className="text-xs bg-gray-500 text-white px-1 rounded" title="課程已額滿">滿</span>
+            )}
+            {course.bookingStatus === 'locked' && (
+              <span className="text-xs bg-gray-600 text-white px-1 rounded" title="距開課少於24小時">🔒</span>
+            )}
+            {course.bookingStatus === 'cancelled' && (
+              <span className="text-xs bg-red-500 text-white px-1 rounded" title="課程已取消">取消</span>
+            )}
+            {isSelected && course.bookingStatus === 'available' && (
+              <motion.div
+                initial={{ scale: 0, rotate: -180 }}
+                animate={{ scale: 1, rotate: 0 }}
+                className="text-white"
+              >
+                ✓
+              </motion.div>
+            )}
+          </div>
         </div>
         {course.teacher && course.teacher !== '老師' && (
           <div className="text-xs opacity-70 truncate leading-tight">
@@ -344,7 +377,7 @@ const Calendar: React.FC<CalendarProps> = ({
         {calendarDates.map((date) => renderDateCell(date))}
       </div>
 
-      {/* Legend */}
+      {/* Legend (US05) */}
       <div className="p-4 bg-gray-50 border-t border-gray-200">
         <div className="flex flex-wrap items-center gap-4 text-xs text-gray-600">
           <div className="flex items-center gap-2">
@@ -353,11 +386,23 @@ const Calendar: React.FC<CalendarProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-blue-100 border border-blue-300 rounded-md"></div>
-            <span>有課程</span>
+            <span>可預約</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-blue-500 rounded-md"></div>
             <span>已選課程</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-300 rounded-md"></div>
+            <span>已額滿</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-gray-400 rounded-md"></div>
+            <span>24h內鎖定</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 bg-red-200 rounded-md"></div>
+            <span>已取消</span>
           </div>
         </div>
       </div>
