@@ -1,5 +1,5 @@
 // 課程預約整合模組 - 連接課程模組與預約系統
-import { getManagedCourses } from './courseUtils';
+import { getManagedCourses, ManagedCourse } from './courseUtils';
 import { getTeachers } from './courseUtils';
 
 export interface BookingCourseSession {
@@ -44,7 +44,7 @@ type GeneratedSession = {
 
 // 從課程模組生成預約可用的課程時段
 export function generateBookingSessions(): BookingCourseSession[] {
-  const courses = getManagedCourses();
+  const courses = getSyncedManagedCourses();
   const teachers = getTeachers();
   const sessions: BookingCourseSession[] = [];
 
@@ -235,12 +235,13 @@ function generateDetailedCourseSessions(course: {
   return generatedSessions;
 }
 
-// 獲取課程篩選選項
+// 獲取課程篩選選項（包含同步的課程模組資料）
 export function getCourseFilters(): CourseFilter[] {
-  const courses = getManagedCourses();
+  // 優先從 localStorage 獲取已同步的課程資料
+  const syncedCourses = getSyncedManagedCourses();
   const filters: CourseFilter[] = [];
   
-  courses.forEach(course => {
+  syncedCourses.forEach(course => {
     if (course.status === 'active') {
       filters.push({
         id: course.id!,
@@ -253,6 +254,119 @@ export function getCourseFilters(): CourseFilter[] {
   });
   
   return filters;
+}
+
+// 獲取包含同步資料的管理課程（從 localStorage 和預設資料合併）
+function getSyncedManagedCourses(): ManagedCourse[] {
+  if (typeof localStorage === 'undefined') {
+    return getManagedCourses(); // 伺服器端回退到預設資料
+  }
+  
+  // 獲取同步的課程資料
+  const syncedCoursesStr = localStorage.getItem('courses');
+  if (syncedCoursesStr) {
+    try {
+      const syncedCourses = JSON.parse(syncedCoursesStr);
+      
+      // 將同步資料轉換為 ManagedCourse 格式
+      return syncedCourses.map((course: {
+        id: number | string;
+        template_id?: string;
+        title: string;
+        description: string;
+        teacher_id?: string;
+        teacher?: string;
+        max_students?: number;
+        price?: number;
+        currency?: string;
+        start_date?: string;
+        end_date?: string;
+        location?: string;
+        categories?: string[];
+        tags?: string[];
+        is_active?: boolean;
+        status?: string;
+        enrollment_deadline?: string;
+        materials?: string[];
+        prerequisites?: string;
+        language?: string;
+        level?: string;
+        total_sessions?: number;
+        session_duration?: number;
+        recurring?: boolean;
+        recurring_type?: string;
+        recurring_days?: string[];
+        current_students?: number;
+        waitlist_enabled?: boolean;
+        refund_policy?: string;
+        created_at?: string;
+        updated_at?: string;
+      }) => ({
+        id: course.id?.toString() || course.template_id?.replace('template_', '') || '',
+        title: course.title || '',
+        description: course.description || '',
+        teacher: course.teacher_id || course.teacher || '',
+        capacity: course.max_students || 15,
+        price: course.price || 0,
+        currency: course.currency || 'TWD',
+        startDate: course.start_date || '',
+        endDate: course.end_date || '',
+        startTime: getDefaultStartTime(course.categories?.[0] || ''),
+        endTime: getDefaultEndTime(course.categories?.[0] || ''),
+        location: course.location || '線上課程',
+        category: course.categories?.[0] || '其它',
+        tags: course.tags || [],
+        status: course.is_active && course.status === 'active' ? 'active' : 'draft',
+        enrollmentDeadline: course.enrollment_deadline || '',
+        materials: course.materials || [],
+        prerequisites: course.prerequisites || '',
+        language: course.language || 'chinese',
+        difficulty: course.level || 'beginner',
+        totalSessions: course.total_sessions || 1,
+        sessionDuration: course.session_duration || 90,
+        recurring: course.recurring || false,
+        recurringType: course.recurring_type as 'weekly' | 'biweekly' | 'monthly' || 'weekly',
+        recurringDays: course.recurring_days || [],
+        maxEnrollments: course.max_students || 15,
+        currentEnrollments: course.current_students || 0,
+        waitlistEnabled: course.waitlist_enabled || false,
+        refundPolicy: course.refund_policy || '',
+        createdAt: course.created_at || new Date().toISOString(),
+        updatedAt: course.updated_at || new Date().toISOString()
+      }));
+    } catch (error) {
+      console.error('解析同步課程資料時發生錯誤:', error);
+    }
+  }
+  
+  // 如果沒有同步資料，回退到預設資料
+  return getManagedCourses();
+}
+
+// 根據分類獲取預設開始時間
+function getDefaultStartTime(category: string): string {
+  const timeMap: { [key: string]: string } = {
+    '商業': '19:00',
+    '師資': '19:00', 
+    '英文': '19:00',
+    '文化': '14:00',
+    '中文': '10:00',
+    '其它': '10:00'
+  };
+  return timeMap[category] || '10:00';
+}
+
+// 根據分類獲取預設結束時間
+function getDefaultEndTime(category: string): string {
+  const timeMap: { [key: string]: string } = {
+    '商業': '21:00',
+    '師資': '21:00',
+    '英文': '21:00', 
+    '文化': '15:30',
+    '中文': '11:30',
+    '其它': '11:30'
+  };
+  return timeMap[category] || '11:30';
 }
 
 // 根據篩選條件過濾課程時段

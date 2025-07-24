@@ -23,7 +23,7 @@ interface BookingCourse {
 import { bookingService } from '@/services/dataService';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
-import { FiLoader, FiFilter, FiCheck } from 'react-icons/fi';
+import { FiLoader, FiFilter, FiCheck, FiRefreshCw } from 'react-icons/fi';
 import { 
   generateBookingSessions, 
   getCourseFilters, 
@@ -47,26 +47,50 @@ const BookingSystem: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   // 載入課程時段資料 (US05)
+  const loadTimeslots = async () => {
+    try {
+      setLoading(true);
+      
+      // 只載入課程模組的數據
+      const managedSessions = generateBookingSessions();
+      const filters = getCourseFilters();
+      
+      // 載入課程模組的數據
+      setManagedCourseSessions(managedSessions);
+      setCourseFilters(filters);
+    } catch (error) {
+      console.error('載入課程時段失敗:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadTimeslots = async () => {
-      try {
-        setLoading(true);
-        
-        // 只載入課程模組的數據
-        const managedSessions = generateBookingSessions();
-        const filters = getCourseFilters();
-        
-        // 載入課程模組的數據
-        setManagedCourseSessions(managedSessions);
-        setCourseFilters(filters);
-      } catch (error) {
-        console.error('載入課程時段失敗:', error);
-      } finally {
-        setLoading(false);
+    loadTimeslots();
+  }, []);
+
+  // 監聽視窗焦點變化，當用戶從課程管理返回時重新載入資料
+  useEffect(() => {
+    const handleFocus = () => {
+      // 重新載入課程資料以獲取最新的同步資料
+      loadTimeslots();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    // 監聽 localStorage 變化（當在同一個瀏覽器標籤中操作時）
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'courses' || e.key === 'courseTemplates') {
+        loadTimeslots();
       }
     };
 
-    loadTimeslots();
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
 
@@ -354,6 +378,16 @@ const BookingSystem: React.FC = () => {
                   課程篩選
                 </h3>
                 <div className="flex items-center space-x-2">
+                  <button
+                    onClick={loadTimeslots}
+                    disabled={loading}
+                    className="text-sm text-green-600 hover:text-green-800 font-medium flex items-center space-x-1 disabled:opacity-50"
+                    title="重新載入課程資料"
+                  >
+                    <SafeIcon icon={FiRefreshCw} className={loading ? 'animate-spin' : ''} />
+                    <span>重新整理</span>
+                  </button>
+                  <span className="text-gray-300">|</span>
                   <button
                     onClick={() => setCourseFilters(prev => prev.map(f => ({ ...f, selected: true })))}
                     className="text-sm text-blue-600 hover:text-blue-800 font-medium"
