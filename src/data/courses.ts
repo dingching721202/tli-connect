@@ -3,8 +3,8 @@ export interface Course {
   created_at: string;
   title: string;
   description: string;
-  instructor: string;
-  instructor_id: string;
+  teacher: string;
+  teacher_id: string;
   duration: string;
   price: number;
   original_price: number;
@@ -41,8 +41,8 @@ export const courses: Course[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     title: "基礎英文會話",
     description: "適合初學者的英文會話課程，重點培養日常對話能力",
-    instructor: "Jennifer Smith",
-    instructor_id: "4", // Daisy Hsu - TEACHER
+    teacher: "Jennifer Smith",
+    teacher_id: "teacher_001", // Jennifer Smith - TEACHER
     duration: "8週",
     price: 3200,
     original_price: 3200,
@@ -80,8 +80,8 @@ export const courses: Course[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     title: "基礎中文會話",
     description: "專為外國學生設計的中文會話課程，從基礎發音開始",
-    instructor: "王小明",
-    instructor_id: "5", // Michael Chen - TEACHER
+    teacher: "王小明",
+    teacher_id: "teacher_002", // 王小明 - TEACHER
     duration: "10週",
     price: 4200,
     original_price: 4200,
@@ -119,8 +119,8 @@ export const courses: Course[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     title: "商務英語進階",
     description: "針對商務環境設計的英語課程，包含會議、簡報、談判技巧",
-    instructor: "Michael Johnson",
-    instructor_id: "4", // Daisy Hsu - TEACHER
+    teacher: "Michael Johnson",
+    teacher_id: "teacher_003", // Michael Johnson - TEACHER
     duration: "12週",
     price: 5800,
     original_price: 6200,
@@ -158,8 +158,8 @@ export const courses: Course[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     title: "日語入門",
     description: "日語五十音開始，包含基礎語法與日常會話",
-    instructor: "田中太郎",
-    instructor_id: "5", // Michael Chen - TEACHER
+    teacher: "田中太郎",
+    teacher_id: "teacher_004", // 田中太郎 - TEACHER
     duration: "14週",
     price: 6500,
     original_price: 7000,
@@ -197,8 +197,8 @@ export const courses: Course[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     title: "TOEIC 衝刺班",
     description: "針對TOEIC考試的密集訓練課程，目標分數700+",
-    instructor: "Sarah Wilson",
-    instructor_id: "4", // Daisy Hsu - TEACHER
+    teacher: "Sarah Wilson",
+    teacher_id: "teacher_005", // Sarah Wilson - TEACHER
     duration: "6週",
     price: 4800,
     original_price: 5200,
@@ -236,8 +236,8 @@ export const courses: Course[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     title: "雅思寫作專修",
     description: "專攻IELTS寫作技巧，提升學術寫作能力",
-    instructor: "Dr. Emma Thompson",
-    instructor_id: "5", // Michael Chen - TEACHER
+    teacher: "Dr. Emma Thompson",
+    teacher_id: "teacher_006", // Dr. Emma Thompson - TEACHER
     duration: "8週",
     price: 5200,
     original_price: 5600,

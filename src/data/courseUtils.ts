@@ -1,7 +1,6 @@
 // Import TypeScript data
 import { courses as coursesData } from './courses';
-import { teachers as teachersData } from './teachers';
-import { courses } from './courses'; 
+import { teachers as teachersData } from './teachers'; 
 
 // Raw data interfaces for JSON files
 interface RawCourseData {
@@ -10,8 +9,8 @@ interface RawCourseData {
   updated_at: string;
   title: string;
   description: string;
-  instructor: string;
-  instructor_id: string;
+  teacher: string;
+  teacher_id: string;
   duration: string;
   price: number;
   original_price: number;
@@ -65,8 +64,8 @@ export interface Course {
   id: number;
   title: string;
   description: string;
-  instructor: string;
-  instructor_id: string;
+  teacher: string;
+  teacher_id: string;
   duration: string;
   price: number;
   original_price: number;
@@ -218,8 +217,8 @@ function convertToCourse(data: RawCourseData): Course {
     id: data.id,
     title: data.title,
     description: data.description,
-    instructor: data.instructor,
-    instructor_id: data.instructor_id,
+    teacher: data.teacher,
+    teacher_id: data.teacher_id,
     duration: data.duration,
     price: data.price,
     original_price: data.original_price,
@@ -348,7 +347,7 @@ function convertToManagedCourse(data: RawCourseData): ManagedCourse & {
     id: data.id.toString(),
     title: data.title,
     description: data.description,
-    teacher: data.instructor_id,
+    teacher: data.teacher_id,
     capacity: data.max_students,
     price: data.price,
     currency: data.currency,
@@ -359,7 +358,7 @@ function convertToManagedCourse(data: RawCourseData): ManagedCourse & {
     location: data.location,
     category: mapCategoryToChinese(data.categories?.[0]) || "其它",
     tags: data.tags,
-    status: data.status as 'draft' | 'active' | 'completed' | 'cancelled',
+    status: (data.status === 'active' && data.is_active) ? 'active' : 'draft',
     enrollmentDeadline: data.enrollment_deadline,
     materials: data.materials,
     prerequisites: data.prerequisites,
@@ -381,7 +380,7 @@ function convertToManagedCourse(data: RawCourseData): ManagedCourse & {
       weekdays: getWeekdays(),
       startTime,
       endTime,
-      teacherId: data.instructor_id
+      teacherId: data.teacher_id
     }],
     sessions: generateSessions(),
     excludeDates: [] // 預設無排除日期
@@ -424,7 +423,7 @@ export function searchCourses(query: string): Course[] {
     .filter(course =>
       course.title.toLowerCase().includes(searchTerm) ||
       course.description.toLowerCase().includes(searchTerm) ||
-      course.instructor.toLowerCase().includes(searchTerm) ||
+      course.teacher.toLowerCase().includes(searchTerm) ||
       course.tags.some(tag => tag.toLowerCase().includes(searchTerm))
     )
     .map(convertToCourse);
@@ -454,9 +453,9 @@ export function getCourseCategories(): string[] {
   return Array.from(categories);
 }
 
-export function getCourseInstructors(): string[] {
-  const instructors = new Set(coursesData.map(course => course.instructor));
-  return Array.from(instructors);
+export function getCourseTeachers(): string[] {
+  const teachers = new Set(coursesData.map(course => course.teacher));
+  return Array.from(teachers);
 }
 
 // Managed course functions (from courseData.ts)
@@ -477,8 +476,8 @@ export function addManagedCourse(course: Omit<ManagedCourse, 'id' | 'createdAt' 
       created_at: new Date().toISOString(),
       title: course.title,
       description: course.description,
-      instructor: course.teacher,
-      instructor_id: course.teacher,
+      teacher: course.teacher,
+      teacher_id: course.teacher,
       duration: "待定",
       price: course.price,
       original_price: course.price,
@@ -690,7 +689,7 @@ export function getCoursesByStatus(status: ManagedCourse['status']): ManagedCour
 
 export function getCoursesByTeacher(teacherId: string): ManagedCourse[] {
   return coursesData
-    .filter(course => course.instructor_id === teacherId)
+    .filter(course => course.teacher_id === teacherId)
     .map(convertToManagedCourse);
 }
 

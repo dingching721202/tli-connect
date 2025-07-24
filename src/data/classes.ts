@@ -9,7 +9,7 @@ export interface Class {
   created_at: string;
   course_id: number;
   class_name: string;
-  instructor_id: string;
+  teacher_id: string;
   start_time: string;
   end_time: string;
   capacity: number;
@@ -32,7 +32,7 @@ export const classes: Class[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     course_id: 1,
     class_name: "基礎英文會話 - 第1期",
-    instructor_id: "teacher_001",
+    teacher_id: "teacher_001",
     start_time: "2025-07-15T19:00:00+00:00",
     end_time: "2025-09-12T21:00:00+00:00",
     capacity: 15,
@@ -57,7 +57,7 @@ export const classes: Class[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     course_id: 2,
     class_name: "基礎中文會話 - 第1期",
-    instructor_id: "teacher_002",
+    teacher_id: "teacher_002",
     start_time: "2025-07-16T18:00:00+00:00",
     end_time: "2025-10-12T20:00:00+00:00",
     capacity: 12,
@@ -82,7 +82,7 @@ export const classes: Class[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     course_id: 3,
     class_name: "商務英語進階 - 第1期",
-    instructor_id: "teacher_003",
+    teacher_id: "teacher_003",
     start_time: "2025-08-05T19:30:00+00:00",
     end_time: "2025-10-21T21:30:00+00:00",
     capacity: 20,
@@ -107,7 +107,7 @@ export const classes: Class[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     course_id: 4,
     class_name: "日語入門 - 第1期",
-    instructor_id: "teacher_004",
+    teacher_id: "teacher_004",
     start_time: "2025-08-02T19:00:00+00:00",
     end_time: "2025-11-01T21:00:00+00:00",
     capacity: 18,
@@ -132,7 +132,7 @@ export const classes: Class[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     course_id: 5,
     class_name: "TOEIC 衝刺班 - 第1期",
-    instructor_id: "teacher_005",
+    teacher_id: "teacher_005",
     start_time: "2025-08-03T14:00:00+00:00",
     end_time: "2025-09-08T17:00:00+00:00",
     capacity: 25,
@@ -157,7 +157,7 @@ export const classes: Class[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     course_id: 6,
     class_name: "雅思寫作專修 - 第1期",
-    instructor_id: "teacher_006",
+    teacher_id: "teacher_006",
     start_time: "2025-08-07T18:30:00+00:00",
     end_time: "2025-09-25T21:00:00+00:00",
     capacity: 15,

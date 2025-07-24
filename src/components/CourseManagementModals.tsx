@@ -37,7 +37,7 @@ interface GeneratedSession {
   startTime: string;
   endTime: string;
   teacherId: string | number;
-  instructorName: string;
+  teacherName: string;
   classroom: string;
   materials: string;
 }
@@ -466,7 +466,7 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
                     <td className="px-3 py-2 text-sm text-gray-900">{session.date}</td>
                     <td className="px-3 py-2 text-sm text-gray-900">{session.title}</td>
                     <td className="px-3 py-2 text-sm text-gray-900">{session.startTime}-{session.endTime}</td>
-                    <td className="px-3 py-2 text-sm text-gray-900">{session.instructorName}</td>
+                    <td className="px-3 py-2 text-sm text-gray-900">{session.teacherName}</td>
                   </tr>
                 ))}
               </tbody>

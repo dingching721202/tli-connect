@@ -464,7 +464,7 @@ const UserManagement: React.FC = () => {
       {
         id: 3,
         name: '張老師',
-        email: 'instructor1@example.com',
+        email: 'teacher1@example.com',
         role: 'TEACHER',
         membershipStatus: 'active',
         joinDate: '2023-09-01',
@@ -654,7 +654,7 @@ const UserManagement: React.FC = () => {
 
       switch (filterOption) {
         case 'students': return user.role === 'STUDENT';
-        case 'instructors': return user.role === 'TEACHER';
+        case 'teachers': return user.role === 'TEACHER';
         case 'active_memberships': return user.membershipStatus === 'active';
         case 'expired_memberships': return user.membershipStatus === 'expired';
         case 'expiring_soon': return user.membershipStatus === 'expiring_soon';
@@ -1563,7 +1563,7 @@ const UserManagement: React.FC = () => {
           >
             <option value="all">全部用戶</option>
             <option value="students">學生</option>
-            <option value="instructors">老師</option>
+            <option value="teachers">老師</option>
             <option value="active_memberships">有效會員</option>
             <option value="expired_memberships">已過期會員</option>
             <option value="expiring_soon">即將過期</option>
