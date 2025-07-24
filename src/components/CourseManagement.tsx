@@ -222,22 +222,32 @@ const CourseManagement = () => {
       const coursesData = getManagedCourses();
       const teachersData = getTeachers();
       
+      // 調試: 記錄課程資料
+      console.log('=== 課程模組調試資訊 ===');
+      console.log('載入的課程數量:', coursesData.length);
+      console.log('用戶資訊:', user);
+      console.log('課程資料:', coursesData);
+      
       // 根據用戶角色顯示課程
       if (user) {
         if (user.role === 'ADMIN') {
           // 管理員可以看到所有課程
+          console.log('用戶角色: ADMIN - 顯示所有課程');
           setCourses(coursesData);
         } else if (user.role === 'TEACHER') {
           // 教師只看到自己的課程
           const assignedCourses = coursesData.filter(course => 
             course.teacher === user.id.toString()
           );
+          console.log('用戶角色: TEACHER - 過濾後的課程:', assignedCourses);
           setCourses(assignedCourses);
         } else {
           // 其他角色看到所有課程
+          console.log('用戶角色:', user.role, '- 顯示所有課程');
           setCourses(coursesData);
         }
       } else {
+        console.log('未登入用戶 - 顯示所有課程');
         setCourses(coursesData);
       }
       

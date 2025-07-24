@@ -177,12 +177,20 @@ function mapCategoryToChinese(englishCategory?: string): string {
     'IELTS': '英文',
     'TOEFL': '英文',
     '證照考試': '英文',
+    '英文': '英文',
+    '商務英語': '英文',
+    '學術英語': '英文',
+    '英語檢定': '英文',
     
     // 中文相關
     'Chinese': '中文',
     'Mandarin': '中文',
     '華語': '中文',
     '中文': '中文',
+    
+    // 日語相關
+    'Japanese': '日語',
+    '日語': '日語',
     
     // 文化相關
     'Culture': '文化',
@@ -195,6 +203,7 @@ function mapCategoryToChinese(englishCategory?: string): string {
     'Professional': '商業',
     '商業': '商業',
     '職場': '商業',
+    '職場溝通': '商業',
     
     // 師資相關
     'Teacher Training': '師資',
@@ -202,8 +211,11 @@ function mapCategoryToChinese(englishCategory?: string): string {
     '師資培訓': '師資',
     '教學': '師資',
     
+    // 語言學習通用
+    'Language Learning': '語言學習',
+    '語言學習': '語言學習',
+    
     // 其他
-    'Language Learning': '其它',
     'General': '其它',
     'Others': '其它'
   };
@@ -267,7 +279,9 @@ function convertToManagedCourse(data: RawCourseData): ManagedCourse & {
 } {
   // 根據課程類型生成合適的時間
   const getScheduleTime = () => {
-    if (data.categories.includes('商業') || data.categories.includes('證照考試')) {
+    if (data.categories.includes('商業') || data.categories.includes('證照考試') || 
+        data.categories.includes('商務英語') || data.categories.includes('職場溝通') ||
+        data.categories.includes('英語檢定') || data.categories.includes('學術英語')) {
       return { startTime: "19:00", endTime: "21:00" }; // 晚上時段
     } else if (data.categories.includes('文化') || data.categories.includes('兒童')) {
       return { startTime: "14:00", endTime: "15:30" }; // 下午時段
