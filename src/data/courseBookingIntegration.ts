@@ -1,6 +1,7 @@
 // 課程預約整合模組 - 連接課程模組與預約系統
 import { getManagedCourses, ManagedCourse } from './courseUtils';
 import { getTeachers } from './courseUtils';
+import { getCourseTemplates, CourseTemplate } from './courseTemplateUtils';
 
 export interface BookingCourseSession {
   id: string;
@@ -256,17 +257,65 @@ export function getCourseFilters(): CourseFilter[] {
   return filters;
 }
 
-// 獲取包含同步資料的管理課程（從 localStorage 和預設資料合併）
+// 獲取包含同步資料的管理課程（從課程模組和同步資料合併）
 function getSyncedManagedCourses(): ManagedCourse[] {
   if (typeof localStorage === 'undefined') {
     return getManagedCourses(); // 伺服器端回退到預設資料
   }
   
-  // 獲取同步的課程資料
+  // 1. 首先嘗試從課程模組獲取已發布的模板資料
+  try {
+    const templates = getCourseTemplates();
+    const publishedTemplates = templates.filter((template: CourseTemplate) => template.status === 'published');
+    
+    if (publishedTemplates.length > 0) {
+      console.log('從課程模組獲取到', publishedTemplates.length, '個已發布模板');
+      
+      // 將課程模板轉換為 ManagedCourse 格式
+      return publishedTemplates.map((template: CourseTemplate) => ({
+        id: template.id?.replace('template_', '') || '',
+        title: template.title || '',
+        description: template.description || '',
+        teacher: getTeacherNameFromTemplateCategory(template.category),
+        capacity: 15,
+        price: getPriceFromTemplateCategory(template.category),
+        currency: 'TWD',
+        startDate: '2025-08-01T00:00:00+00:00',
+        endDate: '2025-12-31T23:59:59+00:00',
+        startTime: getDefaultStartTime(template.category),
+        endTime: getDefaultEndTime(template.category),
+        location: '線上課程',
+        category: template.category || '其它',
+        tags: [template.category, template.level],
+        status: 'active' as const,
+        enrollmentDeadline: '2025-07-30T23:59:59+00:00',
+        materials: template.sessions?.map((s) => s.materialLink).filter((link): link is string => Boolean(link)) || [],
+        prerequisites: '無特殊要求',
+        language: getLanguageFromTemplateCategory(template.category),
+        difficulty: mapLevelToEnglish(template.level) as 'beginner' | 'intermediate' | 'advanced',
+        totalSessions: template.totalSessions || 1,
+        sessionDuration: 90,
+        recurring: true,
+        recurringType: 'weekly' as const,
+        recurringDays: getRecurringDaysFromCategory(template.category),
+        maxEnrollments: 15,
+        currentEnrollments: 0,
+        waitlistEnabled: true,
+        refundPolicy: '課程開始前7天可申請退費',
+        createdAt: template.createdAt || new Date().toISOString(),
+        updatedAt: template.updatedAt || new Date().toISOString()
+      }));
+    }
+  } catch (error) {
+    console.error('從課程模組獲取資料時發生錯誤:', error);
+  }
+  
+  // 2. 如果課程模組沒有資料，嘗試從同步的課程資料獲取
   const syncedCoursesStr = localStorage.getItem('courses');
   if (syncedCoursesStr) {
     try {
       const syncedCourses = JSON.parse(syncedCoursesStr);
+      console.log('從同步資料獲取到', syncedCourses.length, '個課程');
       
       // 將同步資料轉換為 ManagedCourse 格式
       return syncedCourses.map((course: {
@@ -339,8 +388,71 @@ function getSyncedManagedCourses(): ManagedCourse[] {
     }
   }
   
-  // 如果沒有同步資料，回退到預設資料
+  // 3. 如果都沒有資料，回退到預設資料
+  console.log('回退到預設課程資料');
   return getManagedCourses();
+}
+
+// 輔助函數 - 針對課程模組的資料映射
+function getTeacherNameFromTemplateCategory(category: string): string {
+  const teacherMap: { [key: string]: string } = {
+    '中文': 'Lisa Chen',
+    '英文': 'James Wilson', 
+    '文化': 'Amy Wu',
+    '商業': 'Michael Brown',
+    '師資': 'Dr. Emily Zhang',
+    '其它': 'Sarah Lee'
+  };
+  return teacherMap[category] || 'Sarah Lee';
+}
+
+function getPriceFromTemplateCategory(category: string): number {
+  const priceMap: { [key: string]: number } = {
+    '中文': 2800,
+    '英文': 3200,
+    '文化': 2500,
+    '商業': 4000,
+    '師資': 5000,
+    '其它': 2500
+  };
+  return priceMap[category] || 2500;
+}
+
+function getLanguageFromTemplateCategory(category: string): string {
+  const languageMap: { [key: string]: string } = {
+    '中文': 'chinese',
+    '英文': 'english',
+    '文化': 'chinese',
+    '商業': 'english',
+    '師資': 'chinese',
+    '其它': 'chinese'
+  };
+  return languageMap[category] || 'chinese';
+}
+
+// 將中文級別映射為英文級別  
+function mapLevelToEnglish(level: string): string {
+  const levelMap: { [key: string]: string } = {
+    '初級': 'beginner',
+    '中級': 'intermediate', 
+    '中高級': 'intermediate',
+    '高級': 'advanced',
+    '不限': 'beginner'
+  };
+  return levelMap[level] || 'beginner';
+}
+
+// 根據分類獲取合適的重複日期
+function getRecurringDaysFromCategory(category: string): string[] {
+  const daysMap: { [key: string]: string[] } = {
+    '中文': ['Monday', 'Wednesday', 'Friday'],
+    '英文': ['Tuesday', 'Thursday'],
+    '文化': ['Saturday'],
+    '商業': ['Monday', 'Wednesday'],
+    '師資': ['Tuesday', 'Thursday'],
+    '其它': ['Saturday']
+  };
+  return daysMap[category] || ['Saturday'];
 }
 
 // 根據分類獲取預設開始時間

@@ -31,6 +31,9 @@ const generateId = (array: { id: number }[]): number => {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// 導入 JWT 工具
+import { jwtUtils } from '@/lib/jwt';
+
 // 用戶相關服務 (US01)
 export const authService = {
   // 註冊用戶
@@ -56,11 +59,18 @@ export const authService = {
     
     users.push(newUser);
     
+    // 生成 JWT token
+    const jwt = jwtUtils.generateToken({
+      userId: newUser.id,
+      email: newUser.email,
+      role: newUser.role
+    });
+    
     // 自動登入
     return {
       success: true,
       user_id: newUser.id,
-      jwt: `jwt_token_${newUser.id}_${Date.now()}`
+      jwt
     };
   },
   
@@ -81,10 +91,17 @@ export const authService = {
       return { success: false, error: 'INVALID_CREDENTIALS' };
     }
     
+    // 生成 JWT token
+    const jwt = jwtUtils.generateToken({
+      userId: user.id,
+      email: user.email,
+      role: user.role
+    });
+    
     return {
       success: true,
       user_id: user.id,
-      jwt: `jwt_token_${user.id}_${Date.now()}`
+      jwt
     };
   },
   
@@ -99,7 +116,7 @@ export const membershipService = {
   // 獲取已發布的會員方案
   async getPublishedPlans(): Promise<MemberCardPlan[]> {
     await delay(300);
-    return memberCardPlans.filter(plan => plan.status === 'PUBLISHED');
+    return memberCardPlans.filter(plan => plan.published === true);
   },
   
   // 獲取特定方案詳情

@@ -90,24 +90,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setLoading(true);
       
-      const response = await authService.register(email, password, name, phone);
+      // 調用 API 路由
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, name, phone }),
+      });
+
+      const data = await response.json();
       
-      if (response.success && response.user_id && response.jwt) {
+      if (response.ok && data.success && data.user_id && data.jwt) {
         // 獲取完整用戶資料
-        const userData = await authService.getUser(response.user_id);
+        const userData = await authService.getUser(data.user_id);
         if (userData) {
           const userWithMembership = await loadUserWithMembership(userData);
           setUser(userWithMembership);
           
           // 保存會話
-          localStorage.setItem('userId', response.user_id.toString());
-          localStorage.setItem('jwt', response.jwt);
+          localStorage.setItem('userId', data.user_id.toString());
+          localStorage.setItem('jwt', data.jwt);
           
           return { success: true, user: userWithMembership };
         }
       }
       
-      return { success: false, error: response.error || '註冊失敗' };
+      // 處理特定錯誤狀態碼
+      let errorMessage = data.error || '註冊失敗';
+      if (response.status === 409 && data.error === 'EMAIL_ALREADY_EXISTS') {
+        errorMessage = 'EMAIL_ALREADY_EXISTS';
+      }
+      
+      return { success: false, error: errorMessage };
     } catch (error) {
       console.error('Registration error:', error);
       return { success: false, error: '註冊失敗，請稍後再試' };
@@ -121,24 +136,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       setLoading(true);
       
-      const response = await authService.login(email, password);
+      // 調用 API 路由
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
       
-      if (response.success && response.user_id && response.jwt) {
+      if (response.ok && data.success && data.user_id && data.jwt) {
         // 獲取完整用戶資料
-        const userData = await authService.getUser(response.user_id);
+        const userData = await authService.getUser(data.user_id);
         if (userData) {
           const userWithMembership = await loadUserWithMembership(userData);
           setUser(userWithMembership);
           
           // 保存會話
-          localStorage.setItem('userId', response.user_id.toString());
-          localStorage.setItem('jwt', response.jwt);
+          localStorage.setItem('userId', data.user_id.toString());
+          localStorage.setItem('jwt', data.jwt);
           
           return { success: true, user: userWithMembership };
         }
       }
       
-      return { success: false, error: response.error || '登入失敗' };
+      // 處理特定錯誤狀態碼
+      let errorMessage = data.error || '登入失敗';
+      if (response.status === 401 && data.error === 'INVALID_CREDENTIALS') {
+        errorMessage = 'INVALID_CREDENTIALS';
+      }
+      
+      return { success: false, error: errorMessage };
     } catch (error) {
       console.error('Login error:', error);
       return { success: false, error: '登入失敗，請稍後再試' };
