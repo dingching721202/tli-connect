@@ -81,7 +81,6 @@ const {
   FiCheckCircle,
   FiBook,
   FiUserCheck,
-  FiMessageSquare,
   FiUser
 } = FiIcons;
 
@@ -704,14 +703,6 @@ const Dashboard = () => {
   };
 
 
-  const handleViewCourseDetails = (courseId: number | string) => {
-    const teacherCourses = getTeacherCourses();
-    const course = teacherCourses.find(c => c.id === courseId);
-    if (course) {
-      setSelectedCourse(course);
-      setShowCourseDetailsModal(true);
-    }
-  };
 
   const handleRequestLeave = (courseId: number | string) => {
     const teacherCourses = getTeacherCourses();

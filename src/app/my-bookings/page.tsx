@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
@@ -61,10 +61,10 @@ export default function MyBookingsPage() {
   const [cancelling, setCancelling] = useState(false);
 
   // 轉換預約資料為 UI 格式的通用函數
-  const convertBookingData = (dashboardData: { upcomingClasses: any[] }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
+  const convertBookingData = (dashboardData: { upcomingClasses: Array<{ appointment?: { id: number; status: string; class_timeslot_id: number }; session: { id: string; date: string; startTime: string; endTime: string; courseTitle: string; sessionTitle: string; teacherName: string; classroom?: string; materials?: string } }> }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
     console.log('🔍 轉換預約資料，總數:', dashboardData.upcomingClasses.length);
     
-    const convertedData = dashboardData.upcomingClasses.map((item: { appointment: any; session: any }) => {
+    const convertedData = dashboardData.upcomingClasses.map((item) => {
       // 使用課程預約日曆系統的真實資料
       const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
       const now = new Date();
@@ -130,7 +130,7 @@ export default function MyBookingsPage() {
   };
 
   // 載入用戶預約資料的通用函數
-  const loadUserBookings = async (showLoading = true) => {
+  const loadUserBookings = useCallback(async (showLoading = true) => {
     if (!user || user.role !== 'STUDENT') {
       if (showLoading) setLoading(false);
       return;
@@ -156,12 +156,12 @@ export default function MyBookingsPage() {
     } finally {
       if (showLoading) setLoading(false);
     }
-  };
+  }, [user, convertBookingData]);
 
   // 載入用戶預約資料 - 使用與Dashboard相同的資料源
   useEffect(() => {
     loadUserBookings();
-  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, loadUserBookings]);
 
   // 監聽頁面焦點變化和 localStorage 變化，重新載入資料
   useEffect(() => {
