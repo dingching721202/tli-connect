@@ -96,11 +96,6 @@ const Calendar: React.FC<CalendarProps> = ({
     return date.getMonth() === currentMonth;
   };
 
-  const isDateSelected = (date: Date) => {
-    return selectedCourses.some(course => 
-      course.date === date.toISOString().split('T')[0]
-    );
-  };
 
   const handleDateClick = (date: Date, event: React.MouseEvent) => {
     // Check if clicking on empty space, date number, or the cell itself

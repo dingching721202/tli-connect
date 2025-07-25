@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Calendar from './Calendar';
@@ -46,7 +46,7 @@ if (typeof String.prototype.hashCode === 'undefined') {
 import { bookingService } from '@/services/dataService';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
-import { FiLoader, FiFilter, FiCheck, FiRefreshCw } from 'react-icons/fi';
+import { FiLoader, FiFilter, FiCheck } from 'react-icons/fi';
 import { 
   generateBookingSessions, 
   getCourseFilters, 
@@ -74,7 +74,7 @@ const BookingSystem: React.FC = () => {
   const isSingleCourseMode = !!courseFilterParam;
 
   // 載入課程時段資料 (US05)
-  const loadTimeslots = async () => {
+  const loadTimeslots = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -125,11 +125,11 @@ const BookingSystem: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseFilterParam, isSingleCourseMode]);
 
   useEffect(() => {
     loadTimeslots();
-  }, []);
+  }, [loadTimeslots]);
 
   // 監聽視窗焦點變化，當用戶從課程管理返回時重新載入資料
   useEffect(() => {
@@ -153,11 +153,11 @@ const BookingSystem: React.FC = () => {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('storage', handleStorageChange);
     };
-  }, []);
+  }, [loadTimeslots]);
 
 
   // 將課程模組的 BookingCourseSession 轉換為 BookingCourse 格式 (US05, US06)
-  const convertManagedSessionsToCourses = (sessions: BookingCourseSession[]): BookingCourse[] => {
+  const convertManagedSessionsToCourses = useCallback((sessions: BookingCourseSession[]): BookingCourse[] => {
     return sessions.map(session => {
       const now = new Date();
       const courseDateTime = new Date(`${session.date} ${session.startTime}`);
@@ -205,7 +205,7 @@ const BookingSystem: React.FC = () => {
         sessionId: session.id // 保留完整的session ID用於選擇邏輯
       };
     });
-  };
+  }, [user]);
 
   // 檢查用戶是否已預約指定時段 (US06)
   const checkUserBooking = (userId: number, timeslotId: number): boolean => {
@@ -213,7 +213,7 @@ const BookingSystem: React.FC = () => {
     
     try {
       const appointments = JSON.parse(localStorage.getItem('classAppointments') || '[]');
-      return appointments.some((appointment: any) => 
+      return appointments.some((appointment: { user_id: number; class_timeslot_id: number; status: string }) => 
         appointment.user_id === userId && 
         appointment.class_timeslot_id === timeslotId && 
         appointment.status === 'CONFIRMED'
@@ -250,7 +250,7 @@ const BookingSystem: React.FC = () => {
     const filteredManagedCourses = convertManagedSessionsToCourses(filteredManagedSessions);
     
     return filteredManagedCourses;
-  }, [courseFilters, managedCourseSessions]);
+  }, [courseFilters, managedCourseSessions, convertManagedSessionsToCourses]);
 
   const handleDateSelect = (date: Date, specificCourse?: BookingCourse) => {
     setSelectedDate(date);

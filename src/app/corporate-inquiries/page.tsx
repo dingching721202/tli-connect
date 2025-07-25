@@ -233,7 +233,7 @@ const CorporateInquiriesPage: React.FC = () => {
               { label: '待處理', count: inquiries.filter(i => i.status === 'pending').length, color: 'yellow', icon: FiClock },
               { label: '進行中', count: inquiries.filter(i => ['contacted', 'quoted'].includes(i.status)).length, color: 'purple', icon: FiUsers },
               { label: '已結案', count: inquiries.filter(i => i.status === 'closed').length, color: 'green', icon: FiCheck }
-            ].map((stat, index) => (
+            ].map((stat) => (
               <div key={`stat-${stat.label}`} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between">
                   <div>

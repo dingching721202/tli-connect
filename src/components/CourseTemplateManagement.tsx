@@ -176,25 +176,6 @@ const CourseTemplateManagement = () => {
     return !value || value.trim() === '';
   };
 
-  // 獲取實際顯示的值（統一設定或個別設定）
-  const getDisplayValue = (session: CourseSession, field: 'title' | 'virtualClassroomLink' | 'materialLink') => {
-    // 直接返回欄位的實際值，讓使用者可以正常編輯
-    const actualValue = session[field] || '';
-    
-    // 只有當欄位完全為空時，才顯示統一設定的值作為 placeholder 效果
-    if (actualValue === '' && isUsingGlobalSetting(session, field)) {
-      if (field === 'title') {
-        return formData.globalSettings?.defaultTitle?.replace('{n}', session.sessionNumber.toString()) || `第 ${session.sessionNumber} 堂課`;
-      } else if (field === 'virtualClassroomLink') {
-        return formData.globalSettings?.defaultVirtualClassroomLink || '';
-      } else if (field === 'materialLink') {
-        return formData.globalSettings?.defaultMaterialLink || '';
-      }
-    }
-    
-    // 返回實際的欄位值
-    return actualValue;
-  };
 
   // 處理課程內容變化
   const handleSessionChange = (sessionIndex: number, field: keyof CourseSession, value: string) => {

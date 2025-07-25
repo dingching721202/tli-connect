@@ -29,7 +29,7 @@ const {
 } = FiIcons;
 
 interface Course {
-  id: number;
+  id: number | string;
   title?: string;
   courseName?: string;
   teacher?: string;
@@ -575,14 +575,14 @@ const Dashboard = () => {
     });
   };
 
-  const handleCancelBooking = (courseId: number, courseName: string) => {
+  const handleCancelBooking = (courseId: number | string, courseName: string) => {
     if (confirm(`確定要取消預約「${courseName}」嗎？`)) {
       alert('✅ 課程預約已成功取消！');
       // Here you would update the state to remove the course
     }
   };
 
-  const handleRequestLeave = (courseId: number) => {
+  const handleRequestLeave = (courseId: number | string) => {
     const course = allTeacherCourses.find(c => c.id === courseId);
     if (course) {
       setSelectedCourse(course);
@@ -823,7 +823,7 @@ const Dashboard = () => {
         >
           <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">快速統計</h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-            {quickStats.map((stat, index) => (
+            {quickStats.map((stat) => (
               <motion.div
                 key={`stat-${stat.label}`}
                 whileHover={{ scale: 1.02, y: -2 }}

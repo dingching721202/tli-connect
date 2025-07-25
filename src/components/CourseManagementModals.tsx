@@ -462,7 +462,7 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {newCourse.generatedSessions.map((session, index) => (
-                  <tr key={`session-${session.sessionNumber || index}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                  <tr key={`session-${index}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                     <td className="px-3 py-2 text-sm text-gray-900">{session.date}</td>
                     <td className="px-3 py-2 text-sm text-gray-900">{session.title}</td>
                     <td className="px-3 py-2 text-sm text-gray-900">{session.startTime}-{session.endTime}</td>

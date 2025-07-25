@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Navigation from "@/components/Navigation";
 import BookingSystem from "@/components/BookingSystem";
 import HeroSection from "@/components/HeroSection";
@@ -8,7 +9,9 @@ export default function Home() {
       <Navigation />
       <HeroSection />
       <div id="booking">
-        <BookingSystem />
+        <Suspense fallback={<div className="p-8 text-center">載入中...</div>}>
+          <BookingSystem />
+        </Suspense>
       </div>
     </div>
   );

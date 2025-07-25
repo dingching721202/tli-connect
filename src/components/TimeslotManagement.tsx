@@ -489,7 +489,7 @@ const TimeslotManagement: React.FC = () => {
                     <td className="px-6 py-4 text-sm text-gray-900">
                       <div className="max-w-xs">
                         <div className="font-medium text-gray-900 truncate">{timeslot.className}</div>
-                        <div className="text-gray-500 text-xs">第 {timeslot.session_number} 堂</div>
+                        <div className="text-gray-500 text-xs">時段 {timeslot.id}</div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -673,11 +673,11 @@ const TimeslotManagement: React.FC = () => {
                     </div>
                     <div>
                       <span className="text-gray-600">課堂編號：</span>
-                      <span className="font-medium">第 {selectedTimeslotForDetail.session_number} 堂</span>
+                      <span className="font-medium">時段 {selectedTimeslotForDetail.id}</span>
                     </div>
                     <div>
                       <span className="text-gray-600">教學地點：</span>
-                      <span className="font-medium">{selectedTimeslotForDetail.location}</span>
+                      <span className="font-medium">{'location' in selectedTimeslotForDetail ? (selectedTimeslotForDetail as ClassTimeslot & { location: string }).location : '未指定'}</span>
                     </div>
                   </div>
                 </div>
@@ -724,11 +724,11 @@ const TimeslotManagement: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-gray-600">剩餘名額：</span>
-                    <span className="font-medium">{selectedTimeslotForDetail.capacity - selectedTimeslotForDetail.bookingCount} 人</span>
+                    <span className="font-medium">{(selectedTimeslotForDetail.capacity || 0) - selectedTimeslotForDetail.bookingCount} 人</span>
                   </div>
                   <div>
                     <span className="text-gray-600">預約率：</span>
-                    <span className="font-medium">{Math.round((selectedTimeslotForDetail.bookingCount / selectedTimeslotForDetail.capacity) * 100)}%</span>
+                    <span className="font-medium">{Math.round((selectedTimeslotForDetail.bookingCount / (selectedTimeslotForDetail.capacity || 1)) * 100)}%</span>
                   </div>
                 </div>
               </div>
@@ -746,7 +746,7 @@ const TimeslotManagement: React.FC = () => {
                   </div>
                   <div>
                     <span className="text-gray-600">最後更新：</span>
-                    <span className="font-medium">{formatDateTime(selectedTimeslotForDetail.updated_at)}</span>
+                    <span className="font-medium">{'updated_at' in selectedTimeslotForDetail ? formatDateTime((selectedTimeslotForDetail as ClassTimeslot & { updated_at: string }).updated_at) : '未知'}</span>
                   </div>
                   <div>
                     <span className="text-gray-600">系統狀態：</span>

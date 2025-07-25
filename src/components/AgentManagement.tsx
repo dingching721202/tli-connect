@@ -15,7 +15,7 @@ const {
 } = FiIcons;
 
 interface Role {
-  id: number;
+  id: string;
   name: string;
   percentage: number;
   description: string;
@@ -33,7 +33,7 @@ interface Agent {
   email: string;
   phone: string;
   agentType: 'agent' | 'consultant' | 'teacher' | 'student';
-  roleId: number;
+  roleId: string;
   roleName: string;
   rolePercentage: number;
   agentCode: string;
@@ -302,7 +302,7 @@ const AgentManagement: React.FC = () => {
       email: 'huang.teacher@example.com',
       phone: '0956-789-012',
       agentType: 'teacher',
-      roleId: 2,
+      roleId: '2',
       roleName: '新進老師',
       rolePercentage: 8,
       agentCode: 'TCH002',
@@ -331,7 +331,7 @@ const AgentManagement: React.FC = () => {
       email: 'wu.student@example.com',
       phone: '0967-890-123',
       agentType: 'student',
-      roleId: 2,
+      roleId: '2',
       roleName: '一般學生',
       rolePercentage: 5,
       agentCode: 'STU002',
@@ -360,7 +360,7 @@ const AgentManagement: React.FC = () => {
       email: 'contact@innovation.com',
       phone: '02-1234-5678',
       agentType: 'teacher',
-      roleId: 2,
+      roleId: '2',
       roleName: '新手代理',
       rolePercentage: 10,
       agentCode: 'AGT002',
@@ -389,7 +389,7 @@ const AgentManagement: React.FC = () => {
       email: 'chen.marketing@example.com',
       phone: '0934-567-890',
       agentType: 'consultant',
-      roleId: 3,
+      roleId: '3',
       roleName: '行銷專員',
       rolePercentage: 7,
       agentCode: 'CON002',
@@ -751,7 +751,7 @@ const AgentManagement: React.FC = () => {
     }
 
     const newRoleData: Role = {
-      id: Math.max(...commissionSettings[agentType].roles.map(r => r.id), 0) + 1,
+      id: (Math.max(...commissionSettings[agentType].roles.map(r => parseInt(r.id)), 0) + 1).toString(),
       ...newRole
     };
 
@@ -768,7 +768,7 @@ const AgentManagement: React.FC = () => {
     alert('✅ 角色已成功新增！');
   };
 
-  const handleDeleteRole = (agentType: string, roleId: number) => {
+  const handleDeleteRole = (agentType: string, roleId: string) => {
     if (confirm('確定要刪除此角色嗎？')) {
       setCommissionSettings(prev => ({
         ...prev,

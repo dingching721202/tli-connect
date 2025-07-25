@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiSave, FiX, FiStar, FiUsers, FiCalendar, FiClock, FiUpload, FiDownload, FiBook, FiSettings } from 'react-icons/fi';
 import Navigation from '@/components/Navigation';
 import SafeIcon from '@/components/common/SafeIcon';
-import { memberCards } from '@/data/member_cards';
+import { memberCards, MemberCard } from '@/data/member_cards';
 import { courses } from '@/data/courses';
 
 interface MemberCardPlan {
@@ -23,6 +23,7 @@ interface MemberCardPlan {
   created_at: string;
   member_card_id: number;
   hide_price?: boolean;
+  activate_deadline_days?: number;
   cta_options?: {
     show_payment: boolean;
     show_contact: boolean;
@@ -56,7 +57,7 @@ const MemberCardPlanManagement: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [showMemberCardModal, setShowMemberCardModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState<MemberCardPlan | null>(null);
-  const [editingMemberCard, setEditingMemberCard] = useState<any | null>(null);
+  const [editingMemberCard, setEditingMemberCard] = useState<MemberCard | null>(null);
   const [activeTab, setActiveTab] = useState<'member-cards' | 'plans'>('member-cards');
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -261,7 +262,7 @@ const MemberCardPlanManagement: React.FC = () => {
   };
 
   // 會員卡管理相關函式
-  const handleOpenMemberCardModal = (card?: any) => {
+  const handleOpenMemberCardModal = (card?: MemberCard) => {
     if (card) {
       setEditingMemberCard(card);
       setMemberCardFormData({
@@ -321,7 +322,7 @@ const MemberCardPlanManagement: React.FC = () => {
     }
   };
 
-  const handleEditMemberCard = (card: any) => {
+  const handleEditMemberCard = (card: MemberCard) => {
     handleOpenMemberCardModal(card);
   };
 

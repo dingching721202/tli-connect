@@ -4,10 +4,11 @@ import { staffService } from '@/services/dataService';
 // POST /api/timeslots/[id]/cancel - 課務取消課程時段 (US08)
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const timeslotId = parseInt(params.id);
+    const { id } = await params;
+    const timeslotId = parseInt(id);
     
     if (isNaN(timeslotId)) {
       return NextResponse.json(
