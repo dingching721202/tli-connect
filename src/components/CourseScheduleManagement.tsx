@@ -555,7 +555,7 @@ const CourseScheduleManagement = () => {
                 <h4 className="text-sm font-medium text-gray-700 mb-2">上課時間：</h4>
                 <div className="space-y-1">
                   {schedule.timeSlots.map((slot, index) => (
-                    <div key={index} className="bg-white rounded-lg p-2 text-xs border">
+                    <div key={`schedule-${schedule.id}-timeslot-${index}`} className="bg-white rounded-lg p-2 text-xs border">
                       <div className="text-gray-800">
                         {slot.weekdays.map(d => getWeekdayName(d)).join('、')} 
                         {' '}

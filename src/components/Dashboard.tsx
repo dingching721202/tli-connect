@@ -270,7 +270,7 @@ const Dashboard = () => {
       }
       
       return {
-        id: item.appointment.id,
+        id: `student-${item.appointment.id}`,
         title: `課程 ${item.timeslot.id}`, // 可以後續改為實際課程名稱
         teacher: '老師', // 可以後續改為實際老師名稱
         date: startTime.toISOString().split('T')[0],
@@ -305,7 +305,7 @@ const Dashboard = () => {
         daysFromNow: 1
       },
       {
-        id: 2,
+        id: 'teacher-2',
         title: '華語文法精修',
         students: '18 位學生',
         date: '2025-01-22',
@@ -316,7 +316,7 @@ const Dashboard = () => {
         daysFromNow: 3
       },
       {
-        id: 3,
+        id: 'teacher-3',
         title: '華語聽力強化',
         students: '22 位學生',
         date: '2025-01-25',
@@ -327,7 +327,7 @@ const Dashboard = () => {
         daysFromNow: 6
       },
       {
-        id: 4,
+        id: 'teacher-4',
         title: '日常華語對話',
         students: '20 位學生',
         date: '2025-01-18',
@@ -338,7 +338,7 @@ const Dashboard = () => {
         daysFromNow: -1
       },
       {
-        id: 5,
+        id: 'teacher-5',
         title: '華語發音矯正',
         students: '15 位學生',
         date: '2025-01-10',
@@ -376,7 +376,7 @@ const Dashboard = () => {
         companyName: '台灣科技股份有限公司'
       },
       {
-        id: 2,
+        id: 'corporate-2',
         studentName: '李小華',
         studentEmail: 'li@taiwantech.com',
         courseName: '華語文法精修',
@@ -391,7 +391,7 @@ const Dashboard = () => {
         companyName: '台灣科技股份有限公司'
       },
       {
-        id: 3,
+        id: 'corporate-3',
         studentName: '王小美',
         studentEmail: 'wang@taiwantech.com',
         courseName: '華語聽力強化',
@@ -406,7 +406,7 @@ const Dashboard = () => {
         companyName: '台灣科技股份有限公司'
       },
       {
-        id: 4,
+        id: 'corporate-4',
         studentName: '林設計師',
         studentEmail: 'lin@taiwantech.com',
         courseName: '商務華語會話',
@@ -443,7 +443,7 @@ const Dashboard = () => {
         companyName: null
       },
       {
-        id: 2,
+        id: 'admin-2',
         studentName: '林小雅',
         studentEmail: 'student2@example.com',
         courseName: '華語文法精修',
@@ -459,7 +459,7 @@ const Dashboard = () => {
       },
       // Corporate member bookings - 台灣科技股份有限公司
       {
-        id: 3,
+        id: 'admin-3',
         studentName: '王小明',
         studentEmail: 'user1@taiwantech.com',
         courseName: '商務華語會話',
@@ -474,7 +474,7 @@ const Dashboard = () => {
         companyName: '台灣科技股份有限公司'
       },
       {
-        id: 4,
+        id: 'admin-4',
         studentName: '李小華',
         studentEmail: 'user2@taiwantech.com',
         courseName: '華語文法精修',
@@ -490,7 +490,7 @@ const Dashboard = () => {
       },
       // Corporate member bookings - 創新軟體有限公司
       {
-        id: 5,
+        id: 'admin-5',
         studentName: '程式設計師A',
         studentEmail: 'dev1@innovation.com',
         courseName: '華語聽力強化',
@@ -506,7 +506,7 @@ const Dashboard = () => {
       },
       // Corporate member bookings - 全球貿易集團
       {
-        id: 6,
+        id: 'admin-6',
         studentName: '業務經理A',
         studentEmail: 'sales1@globaltrade.com',
         courseName: '華語聽力強化',
@@ -521,7 +521,7 @@ const Dashboard = () => {
         companyName: '全球貿易集團'
       },
       {
-        id: 7,
+        id: 'admin-7',
         studentName: '行銷專員',
         studentEmail: 'marketing@globaltrade.com',
         courseName: '商務華語會話',
@@ -537,7 +537,7 @@ const Dashboard = () => {
       },
       // Completed bookings
       {
-        id: 8,
+        id: 'admin-8',
         studentName: '王小明',
         studentEmail: 'student1@example.com',
         courseName: '商務華語會話',
@@ -552,7 +552,7 @@ const Dashboard = () => {
         companyName: null
       },
       {
-        id: 9,
+        id: 'admin-9',
         studentName: '李小華',
         studentEmail: 'user2@taiwantech.com',
         courseName: '華語文法精修',
