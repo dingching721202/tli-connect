@@ -242,7 +242,6 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
             <ul className="text-sm text-green-700 space-y-1">
               <li>• 無限制預約課程</li>
               <li>• 24小時前可免費取消</li>
-              <li>• 專屬會員客服支援</li>
             </ul>
           </div>
         )}

@@ -1,21 +1,35 @@
 import { 
-  User, Course, Class,
-  Membership, ClassTimeslot, ClassAppointment,
+  User, Membership, ClassTimeslot, ClassAppointment,
   ApiResponse, LoginResponse, BatchBookingResponse
 } from '@/types';
+import { generateBookingSessions } from '@/data/courseBookingIntegration';
+
+interface LeaveRequest {
+  id: string;
+  teacherId: number;
+  teacherName: string;
+  teacherEmail: string;
+  sessionId: string;
+  courseName: string;
+  courseDate: string;
+  courseTime: string;
+  reason: string;
+  note?: string;
+  status: 'pending' | 'approved' | 'rejected';
+  createdAt: string;
+  reviewedAt: string | null;
+  reviewerName: string | null;
+  adminNote: string | null;
+}
 
 // TypeScript 資料匯入
 import { users as usersData } from '@/data/users';
-import { courses as coursesData } from '@/data/courses';
-import { classes as classesData } from '@/data/classes';
 import { memberships as membershipsData } from '@/data/memberships';
 import { classTimeslots as classTimeslotsData } from '@/data/class_timeslots';
 import { classAppointments as classAppointmentsData } from '@/data/class_appointments';
 
 // 模擬資料庫
 const users: User[] = [...usersData] as User[];
-const courses: Course[] = [...coursesData] as Course[];
-const classes: Class[] = [...classesData] as Class[];
 const memberships: Membership[] = [...membershipsData] as Membership[];
 const classTimeslots: ClassTimeslot[] = [...classTimeslotsData] as ClassTimeslot[];
 const classAppointments: ClassAppointment[] = [...classAppointmentsData] as ClassAppointment[];
@@ -240,6 +254,17 @@ export const timeslotService = {
 
 // 預約服務 (US06, US07)
 export const bookingService = {
+  // 字符串 hash 函數（與 BookingSystem 中的保持一致）
+  hashString(str: string): number {
+    let hash = 0;
+    if (str.length === 0) return hash;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
+  },
   // 批量預約課程
   async batchBooking(userId: number, timeslotIds: number[]): Promise<BatchBookingResponse> {
     await delay(1000);
@@ -247,9 +272,16 @@ export const bookingService = {
     const now = new Date();
     const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     
-    // 檢查會員資格
-    const membership = await memberCardService.getUserMembership(userId);
+    // 檢查會員資格 - 允許 ACTIVE 和 PURCHASED 狀態的會員預約
+    let membership = await memberCardService.getUserMembership(userId);
     if (!membership) {
+      membership = await memberCardService.getUserPurchasedMembership(userId);
+    }
+    
+    console.log(`🔍 batchBooking - 用戶ID: ${userId}, 會員資格:`, membership);
+    
+    if (!membership) {
+      console.log(`❌ batchBooking - 用戶ID: ${userId} 沒有有效的會員資格`);
       return {
         success: [],
         failed: timeslotIds.map(id => ({ timeslot_id: id, reason: 'MEMBERSHIP_EXPIRED' }))
@@ -259,33 +291,38 @@ export const bookingService = {
     const successBookings: Array<{ timeslot_id: number; booking_id: number }> = [];
     const failedBookings: Array<{ timeslot_id: number; reason: 'FULL' | 'WITHIN_24H' | 'MEMBERSHIP_EXPIRED' }> = [];
     
-    // US06: 從localStorage讀取最新的時段資料，確保與課程模組同步
-    let currentTimeslots = [...classTimeslots];
-    if (typeof localStorage !== 'undefined') {
-      try {
-        const storedTimeslots = localStorage.getItem('classTimeslots');
-        if (storedTimeslots) {
-          currentTimeslots = JSON.parse(storedTimeslots);
-        }
-      } catch (error) {
-        console.error('讀取時段資料失敗:', error);
-      }
-    }
+    // 從課程預約日曆系統獲取時段資訊
+    const allSessions = generateBookingSessions();
     
     for (const timeslotId of timeslotIds) {
-      const timeslot = currentTimeslots.find(t => t.id === timeslotId);
-      if (!timeslot) continue;
+      console.log(`🔍 處理時段ID: ${timeslotId}`);
       
-      const slotStart = new Date(timeslot.start_time);
+      // 根據 timeslotId 查找對應的課程時段
+      const session = allSessions.find(s => {
+        const sessionHashId = s.id.hashCode ? s.id.hashCode() : this.hashString(s.id);
+        return sessionHashId === timeslotId;
+      });
+      
+      if (!session) {
+        console.log(`❌ 找不到時段ID: ${timeslotId}`);
+        failedBookings.push({ timeslot_id: timeslotId, reason: 'FULL' });
+        continue;
+      }
+      
+      console.log(`✅ 找到課程時段:`, session);
+      
+      const slotStart = new Date(`${session.date} ${session.startTime}`);
       
       // 檢查是否在24小時內
       if (slotStart <= twentyFourHoursLater) {
+        console.log(`❌ 時段在24小時內: ${session.date} ${session.startTime}`);
         failedBookings.push({ timeslot_id: timeslotId, reason: 'WITHIN_24H' });
         continue;
       }
       
       // 檢查是否額滿
-      if ((timeslot.reserved_count || 0) >= (timeslot.capacity || 20)) {
+      if (session.currentEnrollments >= session.capacity) {
+        console.log(`❌ 時段已額滿: ${session.currentEnrollments}/${session.capacity}`);
         failedBookings.push({ timeslot_id: timeslotId, reason: 'FULL' });
         continue;
       }
@@ -299,15 +336,8 @@ export const bookingService = {
         created_at: new Date().toISOString()
       };
       
+      console.log(`✅ 創建新預約:`, newAppointment);
       classAppointments.push(newAppointment);
-      
-      // 更新時段的預約人數
-      timeslot.reserved_count = (timeslot.reserved_count || 0) + 1;
-      
-      // US06: 同步更新到localStorage
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem('classTimeslots', JSON.stringify(currentTimeslots));
-      }
       
       successBookings.push({
         timeslot_id: timeslotId,
@@ -322,18 +352,140 @@ export const bookingService = {
   async cancelBooking(userId: number, appointmentId: number): Promise<ApiResponse<boolean>> {
     await delay(500);
     
-    const appointment = classAppointments.find(a => a.id === appointmentId && a.user_id === userId);
-    if (!appointment || appointment.status === 'CANCELED') {
+    console.log('🔥 ===== 開始取消預約調試 =====');
+    console.log('🔍 開始取消預約 - userId:', userId, 'appointmentId:', appointmentId);
+    console.log('📊 內存中的所有預約:', classAppointments);
+    console.log('🔍 參數類型檢查:', {
+      userIdType: typeof userId,
+      userIdValue: userId,
+      appointmentIdType: typeof appointmentId,
+      appointmentIdValue: appointmentId,
+      isUserIdNumber: !isNaN(Number(userId)),
+      isAppointmentIdNumber: !isNaN(Number(appointmentId))
+    });
+    
+    // 先檢查內存中的預約
+    let appointment = classAppointments.find(a => {
+      const matchesId = Number(a.id) === Number(appointmentId);
+      const matchesUser = Number(a.user_id) === Number(userId);
+      console.log('🔍 內存比較預約:', {
+        appointmentData: a,
+        matchesId,
+        matchesUser,
+        idComparison: `${a.id}(${typeof a.id}) === ${appointmentId}(${typeof appointmentId})`,
+        userComparison: `${a.user_id}(${typeof a.user_id}) === ${userId}(${typeof userId})`
+      });
+      return matchesId && matchesUser;
+    });
+    let isFromLocalStorage = false;
+    
+    console.log('📋 內存中的預約查找結果:', appointment);
+    
+    // 如果內存中沒有，檢查 localStorage
+    if (!appointment && typeof localStorage !== 'undefined') {
+      try {
+        const storedAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]') as ClassAppointment[];
+        console.log('💾 localStorage中的所有預約:', storedAppointments);
+        console.log('🔍 搜索條件 - appointmentId:', appointmentId, 'userId:', userId);
+        
+        appointment = storedAppointments.find((a: ClassAppointment) => {
+          // 確保比較時使用正確的數據類型
+          const matchesId = Number(a.id) === Number(appointmentId);
+          const matchesUser = Number(a.user_id) === Number(userId);
+          console.log('🔍 比較預約:', {
+            appointmentData: a,
+            appointmentDataKeys: Object.keys(a || {}),
+            appointmentDataValues: Object.values(a || {}),
+            matchesId,
+            matchesUser,
+            idComparison: `${a.id}(${typeof a.id}) === ${appointmentId}(${typeof appointmentId})`,
+            userComparison: `${a.user_id}(${typeof a.user_id}) === ${userId}(${typeof userId})`
+          });
+          return matchesId && matchesUser;
+        });
+        
+        console.log('📋 localStorage中的預約查找結果:', appointment);
+        isFromLocalStorage = true;
+      } catch (error) {
+        console.error('讀取預約資料失敗:', error);
+      }
+    }
+    
+    if (!appointment) {
+      console.error('❌ 找不到預約記錄:', { userId, appointmentId });
       return { success: false, error: 'Appointment not found' };
     }
     
-    const timeslot = classTimeslots.find(t => t.id === appointment.class_timeslot_id);
-    if (!timeslot) {
+    // 檢查appointment對象的完整性
+    const isValidAppointment = appointment && 
+                              typeof appointment === 'object' &&
+                              'id' in appointment && 
+                              'user_id' in appointment && 
+                              'class_timeslot_id' in appointment && 
+                              'status' in appointment &&
+                              appointment.id != null &&
+                              appointment.user_id != null &&
+                              appointment.class_timeslot_id != null &&
+                              appointment.status != null;
+    
+    if (!isValidAppointment) {
+      console.error('❌ 預約記錄資料不完整或格式錯誤:', {
+        appointment: appointment,
+        appointmentType: typeof appointment,
+        appointmentKeys: appointment ? Object.keys(appointment) : 'null',
+        hasId: appointment && 'id' in appointment,
+        hasUserId: appointment && 'user_id' in appointment,
+        hasTimeslotId: appointment && 'class_timeslot_id' in appointment,
+        hasStatus: appointment && 'status' in appointment
+      });
+      return { success: false, error: 'Appointment data incomplete or invalid' };
+    }
+    
+    console.log('✅ 找到完整的預約記錄:', {
+      appointmentId: appointment.id,
+      userId: appointment.user_id,
+      timeslotId: appointment.class_timeslot_id,
+      status: appointment.status,
+      isFromLocalStorage
+    });
+    
+    // 詳細檢查appointment對象的內容
+    console.log('🔍 檢查appointment對象詳細內容:', {
+      appointment: appointment,
+      appointmentKeys: Object.keys(appointment || {}),
+      appointmentValues: Object.values(appointment || {}),
+      hasId: 'id' in appointment,
+      hasStatus: 'status' in appointment,
+      hasUserId: 'user_id' in appointment,
+      hasTimeslotId: 'class_timeslot_id' in appointment
+    });
+    
+    console.log('🔥 即將檢查appointment.status:', appointment.status, 'type:', typeof appointment.status);
+    console.log('🔥 appointment === CANCELED?', appointment.status === 'CANCELED');
+    
+    if (appointment.status === 'CANCELED') {
+      console.error('❌ 預約已被取消:', {
+        appointmentId: appointment.id || 'missing',
+        status: appointment.status || 'missing',
+        userId: appointment.user_id || 'missing',
+        fullAppointment: appointment
+      });
+      return { success: false, error: 'Appointment already canceled' };
+    }
+    
+    // 從課程預約日曆系統獲取時段資訊來做24小時檢查
+    const allSessions = generateBookingSessions();
+    const session = allSessions.find(s => {
+      const sessionHashId = s.id.hashCode ? s.id.hashCode() : this.hashString(s.id);
+      return sessionHashId === appointment!.class_timeslot_id;
+    });
+    
+    if (!session) {
       return { success: false, error: 'Timeslot not found' };
     }
     
     const now = new Date();
-    const slotStart = new Date(timeslot.start_time);
+    const slotStart = new Date(`${session.date} ${session.startTime}`);
     const twentyFourHours = 24 * 60 * 60 * 1000;
     
     // 檢查是否在24小時內
@@ -343,14 +495,78 @@ export const bookingService = {
     
     // 取消預約
     appointment.status = 'CANCELED';
-    timeslot.reserved_count = Math.max(0, (timeslot.reserved_count || 0) - 1);
+    
+    // 同時更新內存和 localStorage 中的資料
+    // 1. 更新內存中的資料
+    const memoryAppointmentIndex = classAppointments.findIndex(a => Number(a.id) === Number(appointmentId) && Number(a.user_id) === Number(userId));
+    if (memoryAppointmentIndex !== -1) {
+      classAppointments[memoryAppointmentIndex].status = 'CANCELED';
+      console.log('✅ 內存中的預約已更新為CANCELED');
+    }
+    
+    // 2. 更新 localStorage 中的資料
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const storedAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]') as ClassAppointment[];
+        const updatedAppointments = storedAppointments.map((a: ClassAppointment) => 
+          Number(a.id) === Number(appointmentId) && Number(a.user_id) === Number(userId) ? 
+          { ...a, status: 'CANCELED' as const } : a
+        );
+        localStorage.setItem('classAppointments', JSON.stringify(updatedAppointments));
+        console.log('✅ localStorage中的預約已更新為CANCELED');
+        
+        // 觸發自定義事件通知其他組件更新資料
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('bookingsUpdated'));
+        }
+      } catch (error) {
+        console.error('更新預約資料失敗:', error);
+      }
+    }
     
     return { success: true, data: true };
   },
   
   // 獲取用戶預約
   async getUserAppointments(userId: number): Promise<ClassAppointment[]> {
-    return classAppointments.filter(a => a.user_id === userId && a.status === 'CONFIRMED');
+    // 合併內存中的預約和 localStorage 中的預約
+    let allAppointments = [...classAppointments];
+    
+    // 從 localStorage 讀取預約資料
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const storedAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]') as ClassAppointment[];
+        console.log('💾 從localStorage讀取的預約:', storedAppointments);
+        // 合併資料，避免重複
+        const existingIds = new Set(allAppointments.map(a => a.id));
+        const newAppointments = storedAppointments.filter((a: ClassAppointment) => !existingIds.has(a.id));
+        allAppointments = [...allAppointments, ...newAppointments];
+      } catch (error) {
+        console.error('讀取預約資料失敗:', error);
+      }
+    }
+    
+    // 返回所有狀態的預約（CONFIRMED 和 CANCELED），並進行去重
+    const userAppointments = allAppointments.filter(a => a.user_id === userId);
+    
+    // 去重：使用 Map 以 appointment.id 為 key 來去除重複項目
+    const uniqueAppointmentsMap = new Map();
+    userAppointments.forEach(appointment => {
+      const key = `${appointment.id}-${appointment.user_id}`;
+      // 如果已存在相同key，保留較新的或status為CANCELED的（表示最新狀態）
+      if (!uniqueAppointmentsMap.has(key) || 
+          appointment.status === 'CANCELED' || 
+          new Date(appointment.created_at) > new Date(uniqueAppointmentsMap.get(key).created_at)) {
+        uniqueAppointmentsMap.set(key, appointment);
+      }
+    });
+    
+    const deduplicatedAppointments = Array.from(uniqueAppointmentsMap.values());
+    console.log('📋 getUserAppointments 去重前數量:', userAppointments.length);
+    console.log('📋 getUserAppointments 去重後數量:', deduplicatedAppointments.length);
+    console.log('📋 getUserAppointments 返回的去重預約:', deduplicatedAppointments);
+    
+    return deduplicatedAppointments;
   }
 };
 
@@ -380,7 +596,7 @@ export const staffService = {
 
 // Dashboard服務 (US09)
 export const dashboardService = {
-  // 獲取用戶Dashboard資料
+  // 獲取用戶Dashboard資料 - 從課程預約日曆系統獲取真實預約資料
   async getDashboardData(userId: number) {
     await delay(300);
     
@@ -397,33 +613,271 @@ export const dashboardService = {
     
     console.log('📋 最終返回的會員資格:', membership);
     
-    const appointments = await bookingService.getUserAppointments(userId);
-    
-    // 獲取預約的詳細資訊
-    const upcomingClasses = [];
-    for (const appointment of appointments) {
-      const timeslot = classTimeslots.find(t => t.id === appointment.class_timeslot_id);
-      if (timeslot) {
-        const classInfo = classes.find(c => c.id === timeslot.class_id);
-        const courseInfo = courses.find(c => c.id === classInfo?.course_id);
-        
-        upcomingClasses.push({
-          appointment,
-          timeslot,
-          class: classInfo,
-          course: courseInfo
-        });
-      }
-    }
-    
-    // 按時間排序（近到遠）
-    upcomingClasses.sort((a, b) => 
-      new Date(a.timeslot.start_time).getTime() - new Date(b.timeslot.start_time).getTime()
-    );
+    // 從課程預約日曆系統獲取真實預約資料
+    const upcomingClasses = await this.getBookedCoursesFromCalendar(userId);
     
     return {
       membership,
       upcomingClasses
     };
+  },
+
+  // 從課程預約日曆系統獲取已預約的課程
+  async getBookedCoursesFromCalendar(userId: number) {
+    
+    try {
+      // 獲取所有可用的課程時段
+      const allSessions = generateBookingSessions();
+      
+      // 獲取用戶的預約記錄
+      const appointments = await bookingService.getUserAppointments(userId);
+      console.log('📋 getUserAppointments 返回的預約記錄:', appointments);
+      
+      // 記錄不同狀態的預約統計
+      const confirmedAppointments = appointments.filter(a => a.status === 'CONFIRMED');
+      const cancelledAppointments = appointments.filter(a => a.status === 'CANCELED');
+      console.log('✅ CONFIRMED 預約數量:', confirmedAppointments.length, confirmedAppointments.map(a => ({id: a.id, timeslotId: a.class_timeslot_id})));
+      console.log('❌ CANCELED 預約數量:', cancelledAppointments.length, cancelledAppointments.map(a => ({id: a.id, timeslotId: a.class_timeslot_id})));
+      
+      // 將預約記錄與課程時段對應
+      const bookedSessions = [];
+      
+      for (const appointment of appointments) {
+        // 使用 timeslot_id 查找對應的課程時段
+        const session = allSessions.find(s => {
+          const sessionHashId = s.id.hashCode ? s.id.hashCode() : this.hashString(s.id);
+          return sessionHashId === appointment.class_timeslot_id;
+        });
+        
+        if (session) {
+          const bookedSession = {
+            appointment,
+            session,
+            // 添加方便使用的屬性
+            timeslot: {
+              id: appointment.class_timeslot_id,
+              start_time: `${session.date} ${session.startTime}`,
+              end_time: `${session.date} ${session.endTime}`,
+              class_id: session.courseId
+            },
+            class: {
+              id: session.courseId,
+              course_id: session.courseId
+            },
+            course: {
+              id: session.courseId,
+              title: session.courseTitle
+            }
+          };
+          
+          // 調試：檢查appointment資料
+          console.log('📋 找到匹配的課程時段:', {
+            appointmentId: appointment.id,
+            appointmentStatus: appointment.status,
+            sessionTitle: session.courseTitle,
+            timeslotId: appointment.class_timeslot_id
+          });
+          
+          bookedSessions.push(bookedSession);
+        } else {
+          console.warn('⚠️ 找不到匹配的課程時段:', {
+            appointmentId: appointment.id,
+            timeslotId: appointment.class_timeslot_id,
+            appointmentStatus: appointment.status
+          });
+        }
+      }
+      
+      // 按時間排序（近到遠）
+      bookedSessions.sort((a, b) => 
+        new Date(`${a.session.date} ${a.session.startTime}`).getTime() - 
+        new Date(`${b.session.date} ${b.session.startTime}`).getTime()
+      );
+      
+      // 統計各種狀態的預約
+      const statusCounts = {
+        confirmed: bookedSessions.filter(s => s.appointment.status === 'CONFIRMED').length,
+        canceled: bookedSessions.filter(s => s.appointment.status === 'CANCELED').length,
+        total: bookedSessions.length
+      };
+      console.log('📊 getBookedCoursesFromCalendar 狀態統計:', statusCounts);
+      
+      return bookedSessions;
+    } catch (error) {
+      console.error('獲取預約課程失敗:', error);
+      return [];
+    }
+  },
+
+  // 字符串 hash 函數（與 BookingSystem 中的保持一致）
+  hashString(str: string): number {
+    let hash = 0;
+    if (str.length === 0) return hash;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
+  },
+
+  // 獲取老師的課程時段（從課程預約日曆系統）
+  async getTeacherCoursesFromCalendar(teacherId: number) {
+    
+    try {
+      // 獲取所有可用的課程時段
+      const allSessions = generateBookingSessions();
+      
+      // 篩選出該老師的課程時段
+      const teacherSessions = allSessions.filter(session => 
+        session.teacherId.toString() === teacherId.toString()
+      );
+      
+      // 為每個時段獲取學生列表
+      const coursesWithStudents = [];
+      
+      for (const session of teacherSessions) {
+        // 獲取該時段的所有預約
+        const sessionHashId = session.id.hashCode ? session.id.hashCode() : this.hashString(session.id);
+        const appointments = classAppointments.filter(appointment => 
+          appointment.class_timeslot_id === sessionHashId && 
+          appointment.status === 'CONFIRMED'
+        );
+        
+        // 獲取預約學生的詳細資訊
+        const studentList = [];
+        for (const appointment of appointments) {
+          const student = users.find(u => u.id === appointment.user_id);
+          if (student) {
+            studentList.push({
+              id: student.id,
+              name: student.name,
+              email: student.email
+            });
+          }
+        }
+        
+        coursesWithStudents.push({
+          session,
+          studentList,
+          appointmentCount: appointments.length
+        });
+      }
+      
+      // 按時間排序（近到遠）
+      coursesWithStudents.sort((a, b) => 
+        new Date(`${a.session.date} ${a.session.startTime}`).getTime() - 
+        new Date(`${b.session.date} ${b.session.startTime}`).getTime()
+      );
+      
+      return coursesWithStudents;
+    } catch (error) {
+      console.error('獲取老師課程失敗:', error);
+      return [];
+    }
+  }
+};
+
+// 請假管理服務
+export const leaveService = {
+  // 創建請假申請
+  async createLeaveRequest(requestData: {
+    teacherId: number;
+    teacherName: string;
+    teacherEmail: string;
+    sessionId: string;
+    courseName: string;
+    courseDate: string;
+    courseTime: string;
+    reason: string;
+    note?: string;
+  }) {
+    await delay(500);
+    
+    try {
+      // 獲取現有的請假申請
+      const existingRequests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+      
+      // 創建新的請假申請
+      const newRequest = {
+        id: Date.now().toString(),
+        ...requestData,
+        status: 'pending' as const,
+        createdAt: new Date().toISOString(),
+        reviewedAt: null,
+        reviewerName: null,
+        adminNote: null
+      };
+      
+      // 保存到 localStorage
+      existingRequests.push(newRequest);
+      localStorage.setItem('leaveRequests', JSON.stringify(existingRequests));
+      
+      console.log('✅ 請假申請已創建:', newRequest);
+      
+      return { success: true, data: newRequest };
+    } catch (error) {
+      console.error('創建請假申請失敗:', error);
+      return { success: false, error: 'Failed to create leave request' };
+    }
+  },
+
+  // 獲取所有請假申請（管理員用）
+  async getAllLeaveRequests() {
+    await delay(300);
+    
+    try {
+      const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+      return { success: true, data: requests };
+    } catch (error) {
+      console.error('獲取請假申請失敗:', error);
+      return { success: false, error: 'Failed to get leave requests' };
+    }
+  },
+
+  // 審核請假申請（管理員用）
+  async reviewLeaveRequest(requestId: string, status: 'approved' | 'rejected', adminNote?: string, reviewerName?: string) {
+    await delay(500);
+    
+    try {
+      const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+      const requestIndex = requests.findIndex((r: LeaveRequest) => r.id === requestId);
+      
+      if (requestIndex === -1) {
+        return { success: false, error: 'Leave request not found' };
+      }
+      
+      // 更新請假申請狀態
+      requests[requestIndex] = {
+        ...requests[requestIndex],
+        status,
+        reviewedAt: new Date().toISOString(),
+        reviewerName: reviewerName || '管理員',
+        adminNote: adminNote || ''
+      };
+      
+      localStorage.setItem('leaveRequests', JSON.stringify(requests));
+      
+      console.log(`✅ 請假申請已${status === 'approved' ? '批准' : '拒絕'}:`, requests[requestIndex]);
+      
+      return { success: true, data: requests[requestIndex] };
+    } catch (error) {
+      console.error('審核請假申請失敗:', error);
+      return { success: false, error: 'Failed to review leave request' };
+    }
+  },
+
+  // 獲取老師的請假申請
+  async getTeacherLeaveRequests(teacherId: number) {
+    await delay(300);
+    
+    try {
+      const allRequests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+      const teacherRequests = allRequests.filter((r: LeaveRequest) => r.teacherId === teacherId);
+      return { success: true, data: teacherRequests };
+    } catch (error) {
+      console.error('獲取老師請假申請失敗:', error);
+      return { success: false, error: 'Failed to get teacher leave requests' };
+    }
   }
 };

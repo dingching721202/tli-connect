@@ -8,8 +8,65 @@ import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import ReferralSystem from './ReferralSystem';
 import MembershipCard from './MembershipCard';
-import { dashboardService } from '@/services/dataService';
-import { Membership, ClassAppointment, ClassTimeslot, Class, Course as CourseType } from '@/types';
+import { dashboardService, leaveService, bookingService } from '@/services/dataService';
+import { Membership, ClassAppointment } from '@/types';
+
+interface BookedCourse {
+  appointment: ClassAppointment;
+  session: {
+    id: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    courseTitle: string;
+    sessionTitle: string;
+    teacherName: string;
+    courseId: string;
+    capacity: number;
+    currentEnrollments: number;
+    classroom?: string;
+    materials?: string;
+    status?: string;
+  };
+  timeslot: {
+    id: number;
+    start_time: string;
+    end_time: string;
+    class_id: string;
+  };
+  class: {
+    id: string;
+    course_id: string;
+  };
+  course: {
+    id: string;
+    title: string;
+  };
+}
+
+interface TeacherCourse {
+  session: {
+    id: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+    courseTitle: string;
+    sessionTitle: string;
+    teacherName: string;
+    courseId: string;
+    capacity: number;
+    currentEnrollments: number;
+    classroom?: string;
+    materials?: string;
+    status?: string;
+  };
+  studentList: Array<{
+    id: number;
+    name: string;
+    email: string;
+  }>;
+  appointmentCount: number;
+}
 
 const {
   FiCalendar,
@@ -44,33 +101,46 @@ interface Course {
   daysFromNow: number;
   membershipType?: 'individual' | 'corporate';
   companyName?: string | null;
+  // 新增學生相關欄位
+  appointmentId?: number;
+  timeslotId?: number;
+  canCancel?: boolean;
+  // 新增老師相關欄位
+  sessionId?: string;
+  studentList?: Array<{
+    id: number;
+    name: string;
+    email: string;
+  }>;
 }
 
 const Dashboard = () => {
   const { user, hasActiveMembership } = useAuth();
   const [dashboardData, setDashboardData] = useState<{
     membership: Membership | null;
-    upcomingClasses: {
-      appointment: ClassAppointment;
-      timeslot: ClassTimeslot;
-      class: Class | undefined;
-      course: CourseType | undefined;
-    }[];
+    upcomingClasses: BookedCourse[];
   } | null>(null);
+  const [teacherCourses, setTeacherCourses] = useState<TeacherCourse[]>([]);
   const [loading, setLoading] = useState(true);
 
   // 載入 Dashboard 資料 (US09)
   useEffect(() => {
     const loadDashboardData = async () => {
-      if (!user || user.role !== 'STUDENT') {
+      if (!user) {
         setLoading(false);
         return;
       }
 
       try {
         setLoading(true);
-        const data = await dashboardService.getDashboardData(user.id);
-        setDashboardData(data);
+        
+        if (user.role === 'STUDENT') {
+          const data = await dashboardService.getDashboardData(user.id);
+          setDashboardData(data);
+        } else if (user.role === 'TEACHER') {
+          const teacherData = await dashboardService.getTeacherCoursesFromCalendar(user.id);
+          setTeacherCourses(teacherData);
+        }
       } catch (error) {
         console.error('載入 Dashboard 資料失敗:', error);
       } finally {
@@ -80,16 +150,61 @@ const Dashboard = () => {
 
     loadDashboardData();
   }, [user]);
+
+  // 監聽頁面焦點變化和 localStorage 變化，重新載入資料
+  useEffect(() => {
+    const handleFocus = () => {
+      // 當用戶從課程預約頁面返回時重新載入資料
+      if (user?.role === 'STUDENT') {
+        dashboardService.getDashboardData(user.id).then(data => {
+          setDashboardData(data);
+        });
+      } else if (user?.role === 'TEACHER') {
+        dashboardService.getTeacherCoursesFromCalendar(user.id).then(data => {
+          setTeacherCourses(data);
+        });
+      }
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'classAppointments') {
+        handleFocus(); // 重新載入資料
+      }
+    };
+
+    const handleBookingsUpdated = () => {
+      handleFocus(); // 重新載入資料
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('bookingsUpdated', handleBookingsUpdated);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('bookingsUpdated', handleBookingsUpdated);
+    };
+  }, [user]);
   
   // 權限檢查函數
   const [courseTab, setCourseTab] = useState('upcoming'); // 'upcoming' or 'completed'
   const [isReferralOpen, setIsReferralOpen] = useState(false);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [showCourseDetailsModal, setShowCourseDetailsModal] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [leaveForm, setLeaveForm] = useState({
     reason: '',
     note: ''
   });
+  
+  // 取消預約相關狀態
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Course | null>(null);
+  const [cancelForm, setCancelForm] = useState({
+    reason: ''
+  });
+  const [cancelling, setCancelling] = useState(false);
 
   // 會員卡啟用處理函數 (US04)
   const handleActivateMembership = async (membershipId: number) => {
@@ -250,36 +365,69 @@ const Dashboard = () => {
     }
   };
 
-  // 使用真實數據 - 學生預約的課程 (US09)
+  // 使用真實數據 - 學生預約的課程（從課程預約日曆系統）
   const getBookedCourses = (): Course[] => {
     if (!dashboardData?.upcomingClasses || loading) return [];
     
-    const courses = dashboardData.upcomingClasses.map(item => {
-      const startTime = new Date(item.timeslot.start_time);
-      const endTime = new Date(item.timeslot.end_time);
+    console.log('📊 Dashboard getBookedCourses - 原始資料數量:', dashboardData.upcomingClasses.length);
+    
+    // 只處理 CONFIRMED 狀態的預約，過濾掉已取消的預約
+    const confirmedAppointments = dashboardData.upcomingClasses.filter(item => 
+      !item.appointment || item.appointment.status === 'CONFIRMED'
+    );
+    
+    console.log('📊 過濾後的 CONFIRMED 預約數量:', confirmedAppointments.length);
+    
+    const courses = confirmedAppointments.map(item => {
+      // 使用課程預約日曆系統的真實資料
+      const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
       const now = new Date();
       const daysFromNow = Math.ceil((startTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       
       let status: 'upcoming' | 'completed' | 'cancelled';
-      if (item.appointment.status === 'CANCELED') {
-        status = 'cancelled';
-      } else if (startTime < now) {
+      
+      // 由於已經過濾了 CANCELED 預約，這裡只需要判斷 upcoming 還是 completed
+      const endTime = new Date(`${item.session.date} ${item.session.endTime}`);
+      if (endTime < now) {
         status = 'completed';
       } else {
         status = 'upcoming';
       }
       
-      return {
-        id: `student-${item.appointment.id}`,
-        title: `課程 ${item.timeslot.id}`, // 可以後續改為實際課程名稱
-        teacher: '老師', // 可以後續改為實際老師名稱
-        date: startTime.toISOString().split('T')[0],
-        time: `${startTime.toTimeString().slice(0, 5)}-${endTime.toTimeString().slice(0, 5)}`,
+      // 創建唯一的課程ID，結合appointment ID和session信息
+      const uniqueId = item.appointment?.id 
+        ? `student-appointment-${item.appointment.id}` 
+        : `student-session-${item.session.id}-${item.session.date}-${item.session.startTime}`;
+      
+      const courseData = {
+        id: uniqueId,
+        title: `${item.session.courseTitle} - ${item.session.sessionTitle}`,
+        teacher: item.session.teacherName,
+        date: item.session.date,
+        time: `${item.session.startTime}-${item.session.endTime}`,
         status,
-        classroom: 'https://meet.google.com/virtual-classroom',
-        materials: 'https://drive.google.com/materials',
-        daysFromNow
+        classroom: item.session.classroom || '待安排',
+        materials: item.session.materials || '待公佈',
+        daysFromNow,
+        // 新增學生需要的額外資訊
+        appointmentId: item.appointment?.id,
+        timeslotId: item.appointment?.class_timeslot_id,
+        canCancel: status === 'upcoming' && daysFromNow > 1 && item.appointment?.status === 'CONFIRMED'
       };
+      
+      // 調試：檢查appointmentId和appointment狀態
+      console.log('🔍 Dashboard課程資料:', {
+        courseTitle: courseData.title,
+        appointmentId: courseData.appointmentId,
+        appointmentIdType: typeof courseData.appointmentId,
+        appointmentStatus: item.appointment?.status,
+        canCancel: courseData.canCancel,
+        sessionId: item.session.id,
+        fullAppointment: item.appointment,
+        appointmentKeys: item.appointment ? Object.keys(item.appointment) : 'no appointment'
+      });
+      
+      return courseData;
     });
 
     // Sort by date (upcoming first, then by closest date)
@@ -290,66 +438,46 @@ const Dashboard = () => {
     });
   };
 
-  // Mock teacher courses data (similar to student booking system)
+  // 使用真實數據 - 老師的課程（從課程預約日曆系統）
   const getTeacherCourses = (): Course[] => {
-    const courses: Course[] = [
-      {
-        id: 'teacher-1',
-        title: '商務華語會話',
-        students: '25 位學生',
-        date: '2025-01-20',
-        time: '09:00-10:30',
-        status: 'upcoming',
-        classroom: 'https://meet.google.com/abc-def-ghi',
-        materials: 'https://drive.google.com/file/d/example1',
-        daysFromNow: 1
-      },
-      {
-        id: 'teacher-2',
-        title: '華語文法精修',
-        students: '18 位學生',
-        date: '2025-01-22',
-        time: '14:00-15:30',
-        status: 'upcoming',
-        classroom: 'https://meet.google.com/def-ghi-jkl',
-        materials: 'https://drive.google.com/file/d/example2',
-        daysFromNow: 3
-      },
-      {
-        id: 'teacher-3',
-        title: '華語聽力強化',
-        students: '22 位學生',
-        date: '2025-01-25',
-        time: '10:00-11:30',
-        status: 'upcoming',
-        classroom: 'https://meet.google.com/ghi-jkl-mno',
-        materials: 'https://drive.google.com/file/d/example3',
-        daysFromNow: 6
-      },
-      {
-        id: 'teacher-4',
-        title: '日常華語對話',
-        students: '20 位學生',
-        date: '2025-01-18',
-        time: '15:00-16:30',
-        status: 'completed',
-        classroom: 'https://meet.google.com/jkl-mno-pqr',
-        materials: 'https://drive.google.com/file/d/example4',
-        daysFromNow: -1
-      },
-      {
-        id: 'teacher-5',
-        title: '華語發音矯正',
-        students: '15 位學生',
-        date: '2025-01-10',
-        time: '16:00-17:30',
-        status: 'completed',
-        classroom: 'https://meet.google.com/mno-pqr-stu',
-        materials: 'https://drive.google.com/file/d/example5',
-        daysFromNow: -9
+    if (!teacherCourses || loading) return [];
+    
+    const courses = teacherCourses.map(item => {
+      // 使用課程預約日曆系統的真實資料
+      const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
+      const now = new Date();
+      const daysFromNow = Math.ceil((startTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      
+      let status: 'upcoming' | 'completed' | 'cancelled';
+      if (item.session.status === 'cancelled') {
+        status = 'cancelled';
+      } else {
+        // 使用課程結束時間來判斷是否已完成
+        const endTime = new Date(`${item.session.date} ${item.session.endTime}`);
+        if (endTime < now) {
+          status = 'completed';
+        } else {
+          status = 'upcoming';
+        }
       }
-    ];
+      
+      return {
+        id: `teacher-session-${item.session.id}-${item.session.date}-${item.session.startTime}`,
+        title: `${item.session.courseTitle} - ${item.session.sessionTitle}`,
+        students: `${item.appointmentCount} 位學生`,
+        date: item.session.date,
+        time: `${item.session.startTime}-${item.session.endTime}`,
+        status,
+        classroom: item.session.classroom || '待安排',
+        materials: item.session.materials || '待公佈',
+        daysFromNow,
+        // 新增老師需要的額外資訊
+        sessionId: item.session.id,
+        studentList: item.studentList
+      };
+    });
 
+    // Sort by date (upcoming first, then by closest date)
     return courses.sort((a, b) => {
       if (a.status === 'completed' && b.status !== 'completed') return 1;
       if (a.status !== 'completed' && b.status === 'completed') return -1;
@@ -575,58 +703,192 @@ const Dashboard = () => {
     });
   };
 
-  const handleCancelBooking = (courseId: number | string, courseName: string) => {
-    if (confirm(`確定要取消預約「${courseName}」嗎？`)) {
-      alert('✅ 課程預約已成功取消！');
-      // Here you would update the state to remove the course
+
+  const handleViewCourseDetails = (courseId: number | string) => {
+    const teacherCourses = getTeacherCourses();
+    const course = teacherCourses.find(c => c.id === courseId);
+    if (course) {
+      setSelectedCourse(course);
+      setShowCourseDetailsModal(true);
     }
   };
 
   const handleRequestLeave = (courseId: number | string) => {
-    const course = allTeacherCourses.find(c => c.id === courseId);
+    const teacherCourses = getTeacherCourses();
+    const course = teacherCourses.find(c => c.id === courseId);
     if (course) {
       setSelectedCourse(course);
       setShowLeaveModal(true);
     }
   };
 
-  const handleSubmitLeave = () => {
+  const handleSubmitLeave = async () => {
     if (!leaveForm.reason.trim()) {
       alert('請填寫請假原因');
       return;
     }
 
-    if (selectedCourse) {
-      // Create leave request data
-      const leaveRequest = {
-        id: Date.now().toString(),
-        teacherName: user?.name || '未知教師',
-        teacherEmail: user?.email || '',
-        courseName: selectedCourse.title || '未知課程',
-        courseDate: selectedCourse.date,
-        courseTime: selectedCourse.time,
-        leaveReason: leaveForm.reason,
-        requestDate: new Date().toISOString().split('T')[0],
-        status: 'pending' as const,
-        studentCount: parseInt(selectedCourse.students?.split(' ')[0] || '0'),
-        classroom: selectedCourse.classroom,
-        note: leaveForm.note
-      };
-      console.log('Leave request submitted:', leaveRequest);
+    if (selectedCourse && user) {
+      try {
+        // 創建請假申請資料
+        const requestData = {
+          teacherId: user.id,
+          teacherName: user.name || '未知教師',
+          teacherEmail: user.email || '',
+          sessionId: selectedCourse.sessionId || selectedCourse.id.toString(),
+          courseName: selectedCourse.title || '未知課程',
+          courseDate: selectedCourse.date,
+          courseTime: selectedCourse.time,
+          reason: leaveForm.reason,
+          note: leaveForm.note
+        };
 
-      alert(`✅ 請假申請已提交！
-      
+        // 提交請假申請到系統
+        const result = await leaveService.createLeaveRequest(requestData);
+
+        if (result.success && result.data) {
+          alert(`✅ 請假申請已提交成功！
+
 課程：${selectedCourse.title}
 時間：${selectedCourse.date} ${selectedCourse.time}
 原因：${leaveForm.reason}
 
-系統管理員將會審核您的申請，並安排代課老師。
-您可以在「我的請假記錄」中查看申請狀態。`);
+申請編號：${result.data.id}
 
+系統管理員將會審核您的申請，並安排代課老師。
+您可以在管理員的「請假管理」頁面查看申請狀態。`);
+
+          // Reset form and close modal
+          setLeaveForm({ reason: '', note: '' });
+          setShowLeaveModal(false);
+          setSelectedCourse(null);
+        } else {
+          alert('❌ 提交請假申請失敗，請稍後再試。');
+        }
+      } catch (error) {
+        console.error('提交請假申請失敗:', error);
+        alert('❌ 提交請假申請失敗，請稍後再試。');
+      }
+    }
+  };
+
+  // 處理取消預約
+  const handleCancelBooking = (courseId: string | number) => {
+    console.log('🔍 handleCancelBooking - 搜索課程ID:', courseId);
+    console.log('📚 所有預約課程:', allBookedCourses.map(c => ({
+      id: c.id,
+      title: c.title,
+      appointmentId: c.appointmentId,
+      appointmentIdType: typeof c.appointmentId
+    })));
+    
+    const course = allBookedCourses.find(c => c.id === courseId);
+    console.log('🎯 找到的課程:', course);
+    
+    if (course) {
+      console.log('✅ 設定選中的預約:', {
+        courseId: course.id,
+        appointmentId: course.appointmentId,
+        appointmentIdType: typeof course.appointmentId,
+        hasAppointmentId: !!course.appointmentId
+      });
+      setSelectedBooking(course);
+      setShowCancelModal(true);
+    } else {
+      console.error('❌ 找不到對應的課程:', courseId);
+    }
+  };
+
+  const handleSubmitCancel = async () => {
+    if (!cancelForm.reason.trim()) {
+      alert('請填寫取消原因');
+      return;
+    }
+
+    if (selectedBooking && user) {
+      try {
+        setCancelling(true);
+        
+        console.log('🔍 開始取消預約，選中的課程:', selectedBooking);
+        
+        // 檢查appointmentId是否存在
+        if (!selectedBooking.appointmentId) {
+          console.error('❌ 缺少 appointmentId:', selectedBooking);
+          alert('❌ 預約資料不完整，無法取消預約。請重新整理頁面後再試。');
+          setCancelling(false);
+          return;
+        }
+        
+        console.log('📋 準備取消預約 - appointmentId:', selectedBooking.appointmentId, 'type:', typeof selectedBooking.appointmentId);
+        console.log('📋 用戶ID:', user.id, 'type:', typeof user.id);
+        
+        // 確保數據類型正確
+        const appointmentIdNumber = Number(selectedBooking.appointmentId);
+        const userIdNumber = Number(user.id);
+        
+        console.log('📋 轉換後的數據:', {
+          appointmentId: appointmentIdNumber,
+          userId: userIdNumber,
+          appointmentIdType: typeof appointmentIdNumber,
+          userIdType: typeof userIdNumber
+        });
+        
+        // 呼叫取消 API
+        const result = await bookingService.cancelBooking(userIdNumber, appointmentIdNumber);
+        
+        if (result.success) {
+          alert(`✅ 預約已成功取消！
+
+課程：${selectedBooking.title}
+時間：${selectedBooking.date} ${selectedBooking.time}
+取消原因：${cancelForm.reason}`);
+          
+          // 重新載入 Dashboard 資料
+          if (user) {
+            const data = await dashboardService.getDashboardData(user.id);
+            setDashboardData(data);
+          }
+          
+        } else {
+          // 處理錯誤情況
+          console.error('❌ 取消預約失敗:', result);
+          let errorMessage = '取消預約失敗';
+          
+          if (result.error === 'CANNOT_CANCEL_WITHIN_24H') {
+            errorMessage = '無法取消預約：距離開課時間不足24小時，無法取消預約。';
+          } else if (result.error === 'Appointment not found') {
+            errorMessage = `找不到預約記錄或預約已被取消。
+
+調試資訊：
+- 課程：${selectedBooking.title}
+- AppointmentId: ${selectedBooking.appointmentId}
+- TimeslotId: ${selectedBooking.timeslotId}
+
+請重新整理頁面後再試，或聯繫技術支援。`;
+          } else {
+            errorMessage = `取消預約失敗：${result.error || '未知錯誤'}
+
+調試資訊：
+- 課程：${selectedBooking.title}
+- AppointmentId: ${selectedBooking.appointmentId}
+
+請重新整理頁面後再試。`;
+          }
+          
+          alert(`❌ ${errorMessage}`);
+        }
+        
+      } catch (error) {
+        console.error('取消預約錯誤:', error);
+        alert('取消預約過程中發生錯誤，請稍後再試');
+      } finally {
+        setCancelling(false);
+      }
+      
       // Reset form and close modal
-      setLeaveForm({ reason: '', note: '' });
-      setShowLeaveModal(false);
-      setSelectedCourse(null);
+      setCancelForm({ reason: '' });
+      setShowCancelModal(false);
+      setSelectedBooking(null);
     }
   };
 
@@ -842,27 +1104,17 @@ const Dashboard = () => {
 
 
       {/* Course Bookings Dashboard - 手機優化 */}
-      {(user?.role === 'STUDENT' || user?.role === 'TEACHER' || user?.role === 'OPS' || user?.role === 'CORPORATE_CONTACT' || user?.role === 'ADMIN') && (
+      {/* 學生專用的預約區塊 */}
+      {user?.role === 'STUDENT' && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="bg-white rounded-xl shadow-lg border border-gray-100/60 p-4 sm:p-6"
         >
-          {/* Header with Tabs - 手機優化 */}
+          {/* Header with Tabs */}
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-              {user?.role === 'STUDENT'
-                ? '我的課程預約'
-                : user?.role === 'TEACHER'
-                ? '我的課程預約'
-                : user?.role === 'CORPORATE_CONTACT'
-                ? '企業員工課程預約'
-                : user?.role === 'ADMIN'
-                ? '全體會員預約 (管理員)'
-                : '全體會員預約'}
-            </h2>
-            {/* Tab Buttons - 手機優化 */}
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">我的預約</h2>
             <div className="flex bg-gray-100 rounded-lg p-1 w-full sm:w-auto">
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -899,141 +1151,83 @@ const Dashboard = () => {
                   key={course.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
-                  className={`p-3 sm:p-4 rounded-lg border-2 transition-all duration-200 ${
-                    course.status === 'upcoming'
-                      ? 'border-blue-200 bg-blue-50/50'
-                      : 'border-gray-200 bg-gray-50/50'
-                  }`}
+                  className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
                 >
-                  <div className="space-y-3">
-                    {/* Course Title and Status - 手機優化 */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between space-y-2 sm:space-y-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base">
-                          {(user?.role === 'OPS' || user?.role === 'CORPORATE_CONTACT' || user?.role === 'ADMIN') ? course.courseName : course.title}
-                        </h3>
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(course.status)}`}>
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
+                    {/* Left Side - Course Info */}
+                    <div className="flex-1">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                            {course.title}
+                          </h3>
+                          <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                            <div className="flex items-center space-x-1">
+                              <SafeIcon icon={FiCalendar} className="text-xs" />
+                              <span>{formatDate(course.date)} {course.time}</span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <SafeIcon icon={FiUser} className="text-xs" />
+                              <span>{course.teacher}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(course.status)}`}>
                           {getStatusText(course.status)}
                         </span>
-                        {/* Admin and Corporate view: Show membership type badges */}
-                        {(user?.role === 'OPS' || user?.role === 'CORPORATE_CONTACT' || user?.role === 'ADMIN') && (
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {course.status === 'upcoming' && (
                           <>
-                            <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                              course.membershipType === 'corporate' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {course.membershipType === 'corporate' ? '企業會員' : '個人會員'}
-                            </span>
-                            {course.companyName && (
-                              <span className="inline-flex px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-700">
-                                {course.companyName}
-                              </span>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => window.open(course.classroom, '_blank')}
+                              className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
+                            >
+                              <SafeIcon icon={FiExternalLink} className="text-xs" />
+                              <span>進入教室</span>
+                            </motion.button>
+                            
+                            {course.materials && (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => window.open(course.materials, '_blank')}
+                                className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                              >
+                                <SafeIcon icon={FiBook} className="text-xs" />
+                                <span>查看教材</span>
+                              </motion.button>
+                            )}
+                            
+                            {course.canCancel && course.appointmentId && (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => handleCancelBooking(course.id)}
+                                className="flex items-center space-x-1 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                              >
+                                <SafeIcon icon={FiX} className="text-xs" />
+                                <span>取消預約</span>
+                              </motion.button>
                             )}
                           </>
                         )}
-                      </div>
-                    </div>
-
-                    {/* Course Details - 手機優化為垂直排列 */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm text-gray-600">
-                      <div className="flex items-center space-x-1">
-                        <SafeIcon icon={(user?.role === 'OPS' || user?.role === 'CORPORATE_CONTACT' || user?.role === 'ADMIN') ? FiUser : (user?.role === 'STUDENT' ? FiUserCheck : FiUsers)} className="text-xs" />
-                        <span>
-                          {(user?.role === 'OPS' || user?.role === 'CORPORATE_CONTACT' || user?.role === 'ADMIN')
-                            ? `${course.studentName}${user?.role === 'CORPORATE_CONTACT' && course.studentEmail ? ` (${course.studentEmail})` : ''}`
-                            : user?.role === 'STUDENT'
-                            ? course.teacher
-                            : course.students}
-                        </span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <SafeIcon icon={FiCalendar} className="text-xs" />
-                        <span>{formatDate(course.date)}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <SafeIcon icon={FiClock} className="text-xs" />
-                        <span>{course.time}</span>
-                      </div>
-                      {/* Admin view: Show teacher */}
-                      {(user?.role === 'OPS' || user?.role === 'ADMIN') && (
-                        <div className="flex items-center space-x-1">
-                          <SafeIcon icon={FiUserCheck} className="text-xs" />
-                          <span>教師：{course.teacher}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Action Buttons - 手機優化 */}
-                    <div className="flex flex-wrap gap-2">
-                      {course.status === 'upcoming' && (
-                        <>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => window.open(course.classroom, '_blank')}
-                            className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-xs font-medium"
-                            title="進入教室"
-                          >
-                            <SafeIcon icon={FiExternalLink} className="text-xs" />
-                            <span>教室</span>
-                          </motion.button>
+                        
+                        {course.status === 'completed' && course.materials && (
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={() => window.open(course.materials, '_blank')}
-                            className="flex items-center space-x-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-xs font-medium"
-                            title="檢視教材"
+                            className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                           >
                             <SafeIcon icon={FiEye} className="text-xs" />
                             <span>教材</span>
                           </motion.button>
-                          {user?.role === 'STUDENT' ? (
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => handleCancelBooking(course.id, course.title || course.courseName || '未知課程')}
-                              className="flex items-center space-x-1 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-xs font-medium"
-                              title="取消預約"
-                            >
-                              <SafeIcon icon={FiX} className="text-xs" />
-                              <span>取消</span>
-                            </motion.button>
-                          ) : user?.role === 'TEACHER' ? (
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => handleRequestLeave(course.id)}
-                              className="flex items-center space-x-1 px-3 py-1.5 bg-yellow-100 text-yellow-700 rounded-lg hover:bg-yellow-200 transition-colors text-xs font-medium"
-                              title="申請請假"
-                            >
-                              <SafeIcon icon={FiClock} className="text-xs" />
-                              <span>請假</span>
-                            </motion.button>
-                          ) : (
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => alert(`📧 發送訊息給 ${course.studentName}`)}
-                              className="flex items-center space-x-1 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-xs font-medium"
-                              title="聯絡學生"
-                            >
-                              <SafeIcon icon={FiMessageSquare} className="text-xs" />
-                              <span>聯絡</span>
-                            </motion.button>
-                          )}
-                        </>
-                      )}
-                      {course.status === 'completed' && (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => window.open(course.materials, '_blank')}
-                          className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-xs font-medium"
-                          title="檢視教材"
-                        >
-                          <SafeIcon icon={FiEye} className="text-xs" />
-                          <span>教材</span>
-                        </motion.button>
-                      )}
+                        )}
+                      </div>
                     </div>
                   </div>
                 </motion.div>
@@ -1062,7 +1256,7 @@ const Dashboard = () => {
                   )}
                 </p>
                 {courseTab === 'upcoming' && user?.role === 'STUDENT' && (
-                  <Link href="/booking">
+                  <Link href="/#booking">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
@@ -1083,6 +1277,169 @@ const Dashboard = () => {
         isOpen={isReferralOpen} 
         onClose={() => setIsReferralOpen(false)} 
       />
+
+      {/* Course Details Modal */}
+      {showCourseDetailsModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowCourseDetailsModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold">課程詳情</h3>
+              <button
+                onClick={() => setShowCourseDetailsModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <SafeIcon icon={FiX} className="text-xl" />
+              </button>
+            </div>
+
+            {selectedCourse && (
+              <div className="space-y-6">
+                {/* 課程資訊 */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-3">課程資訊</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div><span className="font-medium">課程名稱：</span>{selectedCourse.title}</div>
+                    <div><span className="font-medium">日期：</span>{selectedCourse.date}</div>
+                    <div><span className="font-medium">時間：</span>{selectedCourse.time}</div>
+                    <div><span className="font-medium">教室：</span>{selectedCourse.classroom}</div>
+                    <div className="md:col-span-2"><span className="font-medium">教材：</span>{selectedCourse.materials}</div>
+                  </div>
+                </div>
+
+                {/* 學生列表 */}
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">
+                    預約學生列表 ({selectedCourse.studentList?.length || 0} 人)
+                  </h4>
+                  {selectedCourse.studentList && selectedCourse.studentList.length > 0 ? (
+                    <div className="space-y-2">
+                      {selectedCourse.studentList.map((student, index) => (
+                        <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-blue-600 font-medium text-sm">{index + 1}</span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">{student.name}</div>
+                              <div className="text-sm text-gray-600">{student.email}</div>
+                            </div>
+                          </div>
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => window.open(`mailto:${student.email}`, '_blank')}
+                            className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-xs"
+                          >
+                            聯絡
+                          </motion.button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <SafeIcon icon={FiUsers} className="text-3xl mx-auto mb-2" />
+                      <p>目前尚無學生預約此課程</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* 操作按鈕 */}
+                <div className="flex justify-end space-x-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowCourseDetailsModal(false)}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    關閉
+                  </motion.button>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Cancel Booking Modal */}
+      {showCancelModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowCancelModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold">取消預約</h3>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <SafeIcon icon={FiX} className="text-xl" />
+              </button>
+            </div>
+
+            {selectedBooking && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-medium mb-2">課程資訊</h4>
+                <div className="space-y-1 text-sm text-gray-600">
+                  <div>課程：{selectedBooking.title}</div>
+                  <div>時間：{formatDate(selectedBooking.date)} {selectedBooking.time}</div>
+                  <div>教師：{selectedBooking.teacher}</div>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  取消原因 <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  value={cancelForm.reason}
+                  onChange={(e) => setCancelForm({...cancelForm, reason: e.target.value})}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="請詳細說明取消預約的原因..."
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={handleSubmitCancel}
+                disabled={cancelling}
+                className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {cancelling ? '取消中...' : '確認取消'}
+              </button>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                disabled={cancelling}
+                className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors disabled:cursor-not-allowed"
+              >
+                保留預約
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
 
       {/* Leave Request Modal */}
       {showLeaveModal && (

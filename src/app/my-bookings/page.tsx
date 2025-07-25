@@ -6,7 +6,7 @@ import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
 import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { bookingService, timeslotService } from '@/services/dataService';
+import { bookingService, dashboardService } from '@/services/dataService';
 import { } from '@/types';
 
 const {
@@ -60,70 +60,136 @@ export default function MyBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
 
-  // 載入用戶預約資料
-  useEffect(() => {
-    const loadUserBookings = async () => {
-      if (!user || user.role !== 'STUDENT') {
-        setLoading(false);
-        return;
+  // 轉換預約資料為 UI 格式的通用函數
+  const convertBookingData = (dashboardData: { upcomingClasses: any[] }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
+    console.log('🔍 轉換預約資料，總數:', dashboardData.upcomingClasses.length);
+    
+    const convertedData = dashboardData.upcomingClasses.map((item: { appointment: any; session: any }) => {
+      // 使用課程預約日曆系統的真實資料
+      const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
+      const now = new Date();
+      const daysFromNow = Math.ceil((startTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      
+      let status: 'upcoming' | 'completed' | 'cancelled';
+      if (item.appointment?.status === 'CANCELED') {
+        status = 'cancelled';
+        console.log('📅 發現已取消課程:', item.session.courseTitle, '- 預約狀態:', item.appointment.status);
+      } else {
+        // 使用課程結束時間來判斷是否已完成
+        const endTime = new Date(`${item.session.date} ${item.session.endTime}`);
+        if (endTime < now) {
+          status = 'completed';
+        } else {
+          status = 'upcoming';
+        }
       }
+      
+      const converted = {
+        id: `student-${item.appointment?.id || item.session.id}`,
+        courseName: `${item.session.courseTitle} - ${item.session.sessionTitle}`,
+        courseDate: item.session.date,
+        courseTime: `${item.session.startTime}-${item.session.endTime}`,
+        status,
+        classroom: item.session.classroom,
+        materials: item.session.materials,
+        instructorName: item.session.teacherName,
+        instructorEmail: 'teacher@tli.com', // 可以後續從老師資料獲取
+        daysFromNow,
+        bookingDate: item.appointment?.created_at?.split('T')[0] || item.session.date,
+        note: '真實課程預約',
+        // 新增取消相關資訊
+        canCancel: status === 'upcoming' && daysFromNow > 1,
+        appointmentId: item.appointment?.id,
+        timeslotId: item.appointment?.class_timeslot_id
+      } as Booking & { canCancel: boolean; appointmentId: number; timeslotId: number };
+      
+      console.log('✅ 轉換課程:', converted.courseName, '狀態:', converted.status);
+      return converted;
+    });
+    
+    // 統計各種狀態的數量
+    const statusCounts = {
+      upcoming: convertedData.filter(item => item.status === 'upcoming').length,
+      completed: convertedData.filter(item => item.status === 'completed').length,
+      cancelled: convertedData.filter(item => item.status === 'cancelled').length
+    };
+    console.log('📊 狀態統計:', statusCounts);
+    
+    // 详细显示已取消的课程
+    const cancelledCourses = convertedData.filter(item => item.status === 'cancelled');
+    if (cancelledCourses.length > 0) {
+      console.log('❌ 已取消的課程詳情:', cancelledCourses.map(c => ({
+        id: c.id,
+        courseName: c.courseName,
+        appointmentId: c.appointmentId,
+        status: c.status
+      })));
+    }
+    
+    return convertedData;
+  };
 
-      try {
-        setLoading(true);
-        const appointments = await bookingService.getUserAppointments(user.id);
-        const timeslots = await timeslotService.getAllTimeslots();
-        
-        // 轉換為 UI 格式
-        const bookingData = await Promise.all(
-          appointments.map(async (appointment) => {
-            const timeslot = timeslots.find(t => t.id === appointment.class_timeslot_id);
-            if (!timeslot) return null;
-            
-            const startTime = new Date(timeslot.start_time);
-            const endTime = new Date(timeslot.end_time);
-            const now = new Date();
-            const daysFromNow = Math.ceil((startTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-            
-            // 決定狀態
-            let status: 'upcoming' | 'completed' | 'cancelled';
-            if (appointment.status === 'CANCELED') {
-              status = 'cancelled';
-            } else if (startTime < now) {
-              status = 'completed';
-            } else {
-              status = 'upcoming';
-            }
-            
-            return {
-              id: appointment.id.toString(),
-              courseName: `課程 ${timeslot.id}`, // 可以後續改為實際課程名稱
-              courseDate: startTime.toISOString().split('T')[0],
-              courseTime: `${startTime.toTimeString().slice(0, 5)}-${endTime.toTimeString().slice(0, 5)}`,
-              status,
-              classroom: 'https://meet.google.com/virtual-classroom',
-              instructorName: '老師', // 可以後續改為實際老師名稱
-              instructorEmail: 'teacher@tli.com',
-              daysFromNow,
-              bookingDate: appointment.created_at.split('T')[0],
-              note: '線上課程',
-              // 新增取消相關資訊
-              canCancel: status === 'upcoming' && daysFromNow > 1, // 超過24小時才能取消
-              appointmentId: appointment.id,
-              timeslotId: timeslot.id
-            } as Booking & { canCancel: boolean; appointmentId: number; timeslotId: number };
-          })
-        );
-        
-        const validBookings = bookingData.filter(Boolean) as Booking[];
-        setBookings(validBookings);
-      } catch (error) {
-        console.error('載入預約資料失敗:', error);
-      } finally {
-        setLoading(false);
+  // 載入用戶預約資料的通用函數
+  const loadUserBookings = async (showLoading = true) => {
+    if (!user || user.role !== 'STUDENT') {
+      if (showLoading) setLoading(false);
+      return;
+    }
+
+    try {
+      if (showLoading) setLoading(true);
+      
+      console.log('📥 開始載入用戶預約資料 - 用戶ID:', user.id);
+      
+      // 使用 dashboardService 獲取預約資料，確保與Dashboard一致
+      const dashboardData = await dashboardService.getDashboardData(user.id);
+      
+      console.log('📋 Dashboard原始資料:', dashboardData);
+      console.log('📅 upcomingClasses數量:', dashboardData.upcomingClasses.length);
+      
+      // 轉換為 UI 格式
+      const bookingData = convertBookingData(dashboardData);
+      console.log('🔄 設置預約資料，總數:', bookingData.length);
+      setBookings(bookingData);
+    } catch (error) {
+      console.error('載入預約資料失敗:', error);
+    } finally {
+      if (showLoading) setLoading(false);
+    }
+  };
+
+  // 載入用戶預約資料 - 使用與Dashboard相同的資料源
+  useEffect(() => {
+    loadUserBookings();
+  }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 監聽頁面焦點變化和 localStorage 變化，重新載入資料
+  useEffect(() => {
+    const handleFocus = () => {
+      // 當用戶從課程預約頁面返回時重新載入資料
+      console.log('🔄 頁面重新獲得焦點，重新載入預約資料');
+      loadUserBookings(false);
+    };
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'classAppointments') {
+        handleFocus(); // 重新載入資料
       }
     };
 
-    loadUserBookings();
+    const handleBookingsUpdated = () => {
+      handleFocus(); // 重新載入資料
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('bookingsUpdated', handleBookingsUpdated);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('bookingsUpdated', handleBookingsUpdated);
+    };
   }, [user]);
 
   // Check if user is student or instructor
@@ -235,56 +301,18 @@ export default function MyBookingsPage() {
         const result = await bookingService.cancelBooking(user.id, bookingWithExtras.appointmentId);
         
         if (result.success) {
+          console.log('✅ 取消預約成功，準備重新載入資料');
+          
+          // 重新載入預約資料 - 使用統一的載入函數
+          console.log('🔄 開始重新載入預約資料...');
+          await loadUserBookings(false);
+          console.log('✅ 預約資料重新載入完成');
+          
           alert(`✅ 預約已成功取消！
 
 課程：${selectedBooking.courseName}
 時間：${selectedBooking.courseDate} ${selectedBooking.courseTime}
 取消原因：${cancelForm.reason}`);
-          
-          // 重新載入預約資料
-          const appointments = await bookingService.getUserAppointments(user.id);
-          const timeslots = await timeslotService.getAllTimeslots();
-          
-          const bookingData = await Promise.all(
-            appointments.map(async (appointment) => {
-              const timeslot = timeslots.find(t => t.id === appointment.class_timeslot_id);
-              if (!timeslot) return null;
-              
-              const startTime = new Date(timeslot.start_time);
-              const endTime = new Date(timeslot.end_time);
-              const now = new Date();
-              const daysFromNow = Math.ceil((startTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-              
-              let status: 'upcoming' | 'completed' | 'cancelled';
-              if (appointment.status === 'CANCELED') {
-                status = 'cancelled';
-              } else if (startTime < now) {
-                status = 'completed';
-              } else {
-                status = 'upcoming';
-              }
-              
-              return {
-                id: appointment.id.toString(),
-                courseName: `課程 ${timeslot.id}`,
-                courseDate: startTime.toISOString().split('T')[0],
-                courseTime: `${startTime.toTimeString().slice(0, 5)}-${endTime.toTimeString().slice(0, 5)}`,
-                status,
-                classroom: 'https://meet.google.com/virtual-classroom',
-                instructorName: '老師',
-                instructorEmail: 'teacher@tli.com',
-                daysFromNow,
-                bookingDate: appointment.created_at.split('T')[0],
-                note: '線上課程',
-                canCancel: status === 'upcoming' && daysFromNow > 1,
-                appointmentId: appointment.id,
-                timeslotId: timeslot.id
-              } as Booking & { canCancel: boolean; appointmentId: number; timeslotId: number };
-            })
-          );
-          
-          const validBookings = bookingData.filter(Boolean) as Booking[];
-          setBookings(validBookings);
           
         } else {
           // 處理錯誤情況
@@ -555,9 +583,28 @@ export default function MyBookingsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6"
         >
-          {[
+          {(user?.role === 'STUDENT' ? [
+            { 
+              label: '即將開始', 
+              count: bookings.filter(b => b.status === 'upcoming').length,
+              color: 'text-blue-600 bg-blue-50 border-blue-200',
+              icon: FiClock
+            },
+            { 
+              label: '已完成', 
+              count: bookings.filter(b => b.status === 'completed').length,
+              color: 'text-green-600 bg-green-50 border-green-200',
+              icon: FiCheckCircle
+            },
+            { 
+              label: '已取消', 
+              count: bookings.filter(b => b.status === 'cancelled').length,
+              color: 'text-red-600 bg-red-50 border-red-200',
+              icon: FiX
+            }
+          ] : [
             { 
               label: '即將開始', 
               count: bookings.filter(b => b.status === 'upcoming' && !b.leaveReason).length,
@@ -582,7 +629,7 @@ export default function MyBookingsPage() {
               color: 'text-yellow-600 bg-yellow-50 border-yellow-200',
               icon: FiMessageSquare
             }
-          ].map((stat) => (
+          ]).map((stat) => (
             <motion.div
               key={stat.label}
               whileHover={{ scale: 1.02, y: -2 }}
@@ -736,18 +783,20 @@ export default function MyBookingsPage() {
                     )}
 
                     <div className="flex flex-wrap gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                          setSelectedBooking(booking);
-                          setShowDetailModal(true);
-                        }}
-                        className="flex items-center space-x-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
-                      >
-                        <SafeIcon icon={FiEye} className="text-xs" />
-                        <span>查看詳情</span>
-                      </motion.button>
+                      {user?.role === 'TEACHER' && (
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => {
+                            setSelectedBooking(booking);
+                            setShowDetailModal(true);
+                          }}
+                          className="flex items-center space-x-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+                        >
+                          <SafeIcon icon={FiEye} className="text-xs" />
+                          <span>查看詳情</span>
+                        </motion.button>
+                      )}
                       
                       {booking.status === 'upcoming' && !booking.leaveReason && (
                         <>
@@ -760,6 +809,18 @@ export default function MyBookingsPage() {
                             <SafeIcon icon={FiExternalLink} className="text-xs" />
                             <span>進入教室</span>
                           </motion.button>
+                          
+                          {booking.materials && (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => window.open(booking.materials, '_blank')}
+                              className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                            >
+                              <SafeIcon icon={FiBook} className="text-xs" />
+                              <span>查看教材</span>
+                            </motion.button>
+                          )}
                           
                           {user?.role === 'STUDENT' && (() => {
                             const bookingWithExtras = booking as Booking & { canCancel: boolean };
@@ -799,18 +860,6 @@ export default function MyBookingsPage() {
                         >
                           <SafeIcon icon={FiX} className="text-xs" />
                           <span>取消申請</span>
-                        </motion.button>
-                      )}
-                      
-                      {booking.materials && (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => window.open(booking.materials, '_blank')}
-                          className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-                        >
-                          <SafeIcon icon={FiBook} className="text-xs" />
-                          <span>教材</span>
                         </motion.button>
                       )}
                     </div>
@@ -881,31 +930,13 @@ export default function MyBookingsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     取消原因 <span className="text-red-500">*</span>
                   </label>
-                  <select
+                  <textarea
                     value={cancelForm.reason}
                     onChange={(e) => setCancelForm({...cancelForm, reason: e.target.value})}
+                    rows={4}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">請選擇取消原因</option>
-                    <option value="臨時有事">臨時有事</option>
-                    <option value="身體不適">身體不適</option>
-                    <option value="工作衝突">工作衝突</option>
-                    <option value="家庭因素">家庭因素</option>
-                    <option value="時間不合適">時間不合適</option>
-                    <option value="其他個人因素">其他個人因素</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    詳細說明
-                  </label>
-                  <textarea
-                    value={cancelForm.note}
-                    onChange={(e) => setCancelForm({...cancelForm, note: e.target.value})}
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="請詳細說明取消原因（選填）..."
+                    placeholder="請詳細說明取消預約的原因..."
+                    required
                   />
                 </div>
               </div>

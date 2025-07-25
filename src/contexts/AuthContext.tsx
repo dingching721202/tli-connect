@@ -72,7 +72,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // 載入用戶會員資料
   const loadUserWithMembership = async (userData: DataUser): Promise<User> => {
-    const membership = await memberCardService.getUserMembership(userData.id);
+    // 優先獲取 ACTIVE 會員卡，如果沒有則獲取 PURCHASED 會員卡
+    let membership = await memberCardService.getUserMembership(userData.id);
+    if (!membership) {
+      membership = await memberCardService.getUserPurchasedMembership(userData.id);
+    }
     
     return {
       id: userData.id,
@@ -210,7 +214,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) return false;
     if (user.role !== 'STUDENT') return true; // 非學生角色總是有權限
     
-    return user.membership?.status === 'ACTIVE';
+    // 允許 ACTIVE 和 PURCHASED 狀態的會員預約
+    return user.membership?.status === 'ACTIVE' || user.membership?.status === 'PURCHASED';
   };
 
   // 刷新會員資料
@@ -218,7 +223,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) return;
     
     try {
-      const membership = await memberCardService.getUserMembership(user.id);
+      // 優先獲取 ACTIVE 會員卡，如果沒有則獲取 PURCHASED 會員卡
+      let membership = await memberCardService.getUserMembership(user.id);
+      if (!membership) {
+        membership = await memberCardService.getUserPurchasedMembership(user.id);
+      }
       setUser(prev => prev ? { ...prev, membership } : null);
     } catch (error) {
       console.error('Error refreshing membership:', error);
