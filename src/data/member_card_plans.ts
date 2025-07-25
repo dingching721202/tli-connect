@@ -13,6 +13,7 @@ export interface MemberCardPlan {
   popular?: boolean; // 熱門方案標記
   description?: string; // 方案描述
   hide_price?: boolean; // 隱藏價格選項
+  activate_deadline_days?: number; // 啟用期限天數（預設30天）
   cta_options?: {
     show_payment: boolean; // 顯示立即付款按鈕
     show_contact: boolean; // 顯示聯繫我們按鈕
@@ -40,6 +41,7 @@ export const memberCardPlans: MemberCardPlan[] = [
     status: "PUBLISHED",
     popular: false,
     description: "適合想要短期學習體驗的個人學員",
+    activate_deadline_days: 30,
     cta_options: {
       show_payment: true,
       show_contact: true
@@ -68,6 +70,7 @@ export const memberCardPlans: MemberCardPlan[] = [
     status: "PUBLISHED",
     popular: true,
     description: "最受歡迎！適合長期學習的個人學員",
+    activate_deadline_days: 30,
     cta_options: {
       show_payment: true,
       show_contact: false
@@ -97,6 +100,7 @@ export const memberCardPlans: MemberCardPlan[] = [
     status: "PUBLISHED",
     popular: false,
     description: "為企業客戶量身打造的完整學習解決方案",
+    activate_deadline_days: 30,
     cta_options: {
       show_payment: false,
       show_contact: true
@@ -124,6 +128,7 @@ export const memberCardPlans: MemberCardPlan[] = [
     popular: false,
     description: "適合中小企業的短期培訓方案",
     hide_price: true,
+    activate_deadline_days: 30,
     cta_options: {
       show_payment: false,
       show_contact: true

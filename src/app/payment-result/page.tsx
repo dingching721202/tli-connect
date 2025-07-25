@@ -32,33 +32,15 @@ const PaymentResultContent = () => {
             const orderData = await orderResponse.json();
             const order = orderData.data;
             
-            // 只有當訂單狀態為 COMPLETED 時才創建會員卡
+            // 檢查訂單狀態
             if (order.status === 'COMPLETED') {
-              // 嘗試創建會員卡
-              const memberCardResponse = await fetch('/api/member-cards', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  order_id: orderId,
-                  plan_id: order.plan_id,
-                  user_email: order.user_email,
-                  user_name: order.user_name,
-                  user_id: order.user_id
-                }),
-              });
-              
-              if (memberCardResponse.ok) {
-                setMemberCardGenerated(true);
-                setPaymentStatus('success');
-              } else {
-                console.error('會員卡創建失敗');
-                setPaymentStatus('success'); // 付款成功但會員卡創建失敗
-              }
+              // 付款完成，會員卡已在付款時自動創建（PURCHASED 狀態）
+              setMemberCardGenerated(true);
+              setPaymentStatus('success');
+              console.log('✅ 付款成功，會員卡已創建為 PURCHASED 狀態，等待用戶啟用');
             } else {
-              // 訂單狀態不是 COMPLETED，不能創建會員卡
-              console.error('訂單狀態無效，無法創建會員卡:', order.status);
+              // 訂單狀態不是 COMPLETED
+              console.error('訂單狀態無效:', order.status);
               setPaymentStatus('failed');
             }
           } else {
@@ -125,7 +107,7 @@ const PaymentResultContent = () => {
                 <p className="text-gray-600 mb-6">
                   恭喜您成功購買會員方案！
                   {memberCardGenerated 
-                    ? '您的會員卡已經生成，可以開始享受會員權益。'
+                    ? '您的會員卡已經生成，請前往 Dashboard 啟用會員卡以開始使用。'
                     : '系統正在處理您的會員資格，請稍候片刻。'
                   }
                 </p>
@@ -134,10 +116,10 @@ const PaymentResultContent = () => {
                   <div className="text-sm text-green-800">
                     <p className="font-medium mb-1">✅ 付款處理完成</p>
                     <p className={`font-medium mb-1 ${memberCardGenerated ? '' : 'text-yellow-600'}`}>
-                      {memberCardGenerated ? '✅ 會員卡已生成' : '⏳ 會員卡生成中...'}
+                      {memberCardGenerated ? '✅ 會員卡已生成 (PURCHASED 狀態)' : '⏳ 會員卡生成中...'}
                     </p>
-                    <p className={`font-medium ${memberCardGenerated ? '' : 'text-gray-500'}`}>
-                      {memberCardGenerated ? '✅ 可以開始預約課程' : '待會員卡生成後即可預約課程'}
+                    <p className={`font-medium ${memberCardGenerated ? 'text-orange-600' : 'text-gray-500'}`}>
+                      {memberCardGenerated ? '🔄 請前往 Dashboard 啟用會員卡' : '待會員卡生成後需要手動啟用'}
                     </p>
                   </div>
                 </div>

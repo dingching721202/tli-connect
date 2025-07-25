@@ -2,9 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiSave, FiX, FiStar, FiUsers, FiCalendar, FiClock, FiUpload, FiDownload } from 'react-icons/fi';
+import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiSave, FiX, FiStar, FiUsers, FiCalendar, FiClock, FiUpload, FiDownload, FiBook, FiSettings } from 'react-icons/fi';
 import Navigation from '@/components/Navigation';
 import SafeIcon from '@/components/common/SafeIcon';
+import { memberCards } from '@/data/member_cards';
+import { courses } from '@/data/courses';
 
 interface MemberCardPlan {
   id: number;
@@ -39,6 +41,8 @@ interface FormData {
   popular: boolean;
   description: string;
   hide_price: boolean;
+  activate_deadline_days: number;
+  member_card_id: number;
   cta_options: {
     show_payment: boolean;
     show_contact: boolean;
@@ -47,9 +51,13 @@ interface FormData {
 
 const MemberCardPlanManagement: React.FC = () => {
   const [plans, setPlans] = useState<MemberCardPlan[]>([]);
+  const [memberCardsData, setMemberCardsData] = useState(memberCards);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [showMemberCardModal, setShowMemberCardModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState<MemberCardPlan | null>(null);
+  const [editingMemberCard, setEditingMemberCard] = useState<any | null>(null);
+  const [activeTab, setActiveTab] = useState<'member-cards' | 'plans'>('member-cards');
   const [formData, setFormData] = useState<FormData>({
     title: '',
     user_type: 'individual',
@@ -62,10 +70,17 @@ const MemberCardPlanManagement: React.FC = () => {
     popular: false,
     description: '',
     hide_price: false,
+    activate_deadline_days: 30,
+    member_card_id: memberCards[0]?.id || 1,
     cta_options: {
       show_payment: true,
       show_contact: false
     }
+  });
+
+  const [memberCardFormData, setMemberCardFormData] = useState({
+    name: '',
+    available_course_ids: [] as number[]
   });
 
   useEffect(() => {
@@ -108,6 +123,8 @@ const MemberCardPlanManagement: React.FC = () => {
         popular: plan.popular || false,
         description: plan.description || '',
         hide_price: plan.hide_price || false,
+        activate_deadline_days: plan.activate_deadline_days || 30,
+        member_card_id: plan.member_card_id,
         cta_options: plan.cta_options || {
           show_payment: true,
           show_contact: false
@@ -127,6 +144,8 @@ const MemberCardPlanManagement: React.FC = () => {
         popular: false,
         description: '',
         hide_price: false,
+        activate_deadline_days: 30,
+        member_card_id: memberCardsData[0]?.id || 1,
         cta_options: {
           show_payment: true,
           show_contact: false
@@ -241,6 +260,111 @@ const MemberCardPlanManagement: React.FC = () => {
     setFormData({ ...formData, features: newFeatures });
   };
 
+  // 會員卡管理相關函式
+  const handleOpenMemberCardModal = (card?: any) => {
+    if (card) {
+      setEditingMemberCard(card);
+      setMemberCardFormData({
+        name: card.name,
+        available_course_ids: card.available_course_ids
+      });
+    } else {
+      setEditingMemberCard(null);
+      setMemberCardFormData({
+        name: '',
+        available_course_ids: []
+      });
+    }
+    setShowMemberCardModal(true);
+  };
+
+  const handleCloseMemberCardModal = () => {
+    setShowMemberCardModal(false);
+    setEditingMemberCard(null);
+  };
+
+  const handleSaveMemberCard = () => {
+    try {
+      const newMemberCardsData = [...memberCardsData];
+      
+      if (editingMemberCard) {
+        // 編輯模式
+        const index = newMemberCardsData.findIndex(card => card.id === editingMemberCard.id);
+        if (index !== -1) {
+          newMemberCardsData[index] = {
+            ...newMemberCardsData[index],
+            name: memberCardFormData.name,
+            available_course_ids: memberCardFormData.available_course_ids
+          };
+        }
+      } else {
+        // 新增模式
+        const newId = Math.max(...newMemberCardsData.map(card => card.id), 0) + 1;
+        const newCard = {
+          id: newId,
+          created_at: new Date().toISOString(),
+          name: memberCardFormData.name,
+          available_course_ids: memberCardFormData.available_course_ids
+        };
+        newMemberCardsData.push(newCard);
+      }
+      
+      setMemberCardsData(newMemberCardsData);
+      handleCloseMemberCardModal();
+      
+      // 顯示成功訊息
+      const action = editingMemberCard ? '更新' : '新增';
+      alert(`會員卡「${memberCardFormData.name}」已成功${action}！`);
+    } catch (error) {
+      console.error('儲存會員卡失敗:', error);
+      alert('操作失敗，請稍後再試。');
+    }
+  };
+
+  const handleEditMemberCard = (card: any) => {
+    handleOpenMemberCardModal(card);
+  };
+
+  const handleDeleteMemberCard = (cardId: number) => {
+    const cardToDelete = memberCardsData.find(card => card.id === cardId);
+    if (!cardToDelete) return;
+    
+    // 檢查是否有方案使用此會員卡
+    const relatedPlans = plans.filter(plan => plan.member_card_id === cardId);
+    if (relatedPlans.length > 0) {
+      alert(`無法刪除會員卡「${cardToDelete.name}」，因為有 ${relatedPlans.length} 個方案正在使用此會員卡。\n\n請先刪除或修改相關方案後再進行操作。`);
+      return;
+    }
+    
+    if (confirm(`確定要刪除會員卡「${cardToDelete.name}」嗎？`)) {
+      const newMemberCardsData = memberCardsData.filter(card => card.id !== cardId);
+      setMemberCardsData(newMemberCardsData);
+      alert(`會員卡「${cardToDelete.name}」已成功刪除！`);
+    }
+  };
+
+  const handleCourseSelection = (courseId: number, checked: boolean) => {
+    const newCourseIds = checked
+      ? [...memberCardFormData.available_course_ids, courseId]
+      : memberCardFormData.available_course_ids.filter(id => id !== courseId);
+    
+    setMemberCardFormData({
+      ...memberCardFormData,
+      available_course_ids: newCourseIds
+    });
+  };
+
+  const handleSelectAllCourses = (checked: boolean) => {
+    const newCourseIds = checked ? courses.map(course => course.id) : [];
+    setMemberCardFormData({
+      ...memberCardFormData,
+      available_course_ids: newCourseIds
+    });
+  };
+
+  const isAllCoursesSelected = memberCardFormData.available_course_ids.length === courses.length;
+  const isSomeCoursesSelected = memberCardFormData.available_course_ids.length > 0 && memberCardFormData.available_course_ids.length < courses.length;
+
   const getPlanTypeConfig = (userType: string, durationType: string) => {
     if (userType === 'individual' && durationType === 'season') {
       return {
@@ -324,80 +448,222 @@ const MemberCardPlanManagement: React.FC = () => {
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">會員卡方案管理</h1>
-            <p className="text-gray-600 mt-2">管理所有會員卡方案，包括個人和企業方案</p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">會員卡方案管理</h1>
+          <p className="text-gray-600">管理會員卡類型和對應的方案設定</p>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg mb-8 w-fit">
           <button
-            onClick={() => handleOpenModal()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            onClick={() => setActiveTab('member-cards')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'member-cards'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
           >
-            <SafeIcon icon={FiPlus} />
-            <span>新增方案</span>
+            會員卡管理
+          </button>
+          <button
+            onClick={() => setActiveTab('plans')}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              activeTab === 'plans'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+            }`}
+          >
+            方案管理
           </button>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <SafeIcon icon={FiUsers} className="text-blue-600" />
+        {/* Content based on active tab */}
+        {activeTab === 'member-cards' ? (
+          // 會員卡管理區塊
+          <div>
+            {/* Member Cards Header */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">會員卡類型管理</h2>
+                <p className="text-gray-600 text-sm mt-1">管理會員卡類型及其可存取的課程</p>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">總方案數</p>
-                <p className="text-2xl font-bold text-gray-900">{plans.length}</p>
-              </div>
+              <button
+                onClick={() => handleOpenMemberCardModal()}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
+              >
+                <SafeIcon icon={FiPlus} />
+                <span>新增會員卡</span>
+              </button>
             </div>
-          </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <SafeIcon icon={FiEye} className="text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">已發布</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {plans.filter(p => p.status === 'PUBLISHED').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <SafeIcon icon={FiEyeOff} className="text-yellow-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">草稿</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {plans.filter(p => p.status === 'DRAFT').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-lg p-6 shadow-sm">
-            <div className="flex items-center">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <SafeIcon icon={FiStar} className="text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">熱門方案</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {plans.filter(p => p.popular).length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {plans.map((plan) => {
-            const config = getPlanTypeConfig(plan.user_type, plan.duration_type);
-            const Icon = config.icon;
-            const discount = calculateDiscount(plan.original_price, plan.sale_price);
+            {/* Member Cards Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="flex items-center">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <SafeIcon icon={FiBook} className="text-green-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">會員卡類型</p>
+                    <p className="text-2xl font-bold text-gray-900">{memberCardsData.length}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="flex items-center">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <SafeIcon icon={FiUsers} className="text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">可用課程</p>
+                    <p className="text-2xl font-bold text-gray-900">{courses.length}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="flex items-center">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <SafeIcon icon={FiSettings} className="text-purple-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">關聯方案</p>
+                    <p className="text-2xl font-bold text-gray-900">{plans.length}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Member Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {memberCardsData.map((card) => (
+                <motion.div
+                  key={card.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-white rounded-lg p-6 shadow-sm border hover:shadow-md transition-all duration-300"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">{card.name}</h3>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEditMemberCard(card)}
+                        className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50 transition-colors"
+                      >
+                        <SafeIcon icon={FiEdit2} size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMemberCard(card.id)}
+                        className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                      >
+                        <SafeIcon icon={FiTrash2} size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 mb-2">可存取課程 ({card.available_course_ids.length})</p>
+                    <div className="space-y-1">
+                      {card.available_course_ids.slice(0, 3).map((courseId) => {
+                        const course = courses.find(c => c.id === courseId);
+                        return course ? (
+                          <div key={courseId} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                            {course.title}
+                          </div>
+                        ) : null;
+                      })}
+                      {card.available_course_ids.length > 3 && (
+                        <div className="text-xs text-gray-500">
+                          還有 {card.available_course_ids.length - 3} 個課程...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="text-xs text-gray-500">
+                    關聯方案: {plans.filter(p => p.member_card_id === card.id).length} 個
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          // 方案管理區塊 (原有內容)
+          <div>
+            {/* Plans Header */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">方案管理</h2>
+                <p className="text-gray-600 text-sm mt-1">管理會員方案的價格、功能和銷售設定</p>
+              </div>
+              <button
+                onClick={() => handleOpenModal()}
+                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+              >
+                <SafeIcon icon={FiPlus} />
+                <span>新增方案</span>
+              </button>
+            </div>
+
+            {/* Plans Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="flex items-center">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <SafeIcon icon={FiUsers} className="text-blue-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">總方案數</p>
+                    <p className="text-2xl font-bold text-gray-900">{plans.length}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="flex items-center">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <SafeIcon icon={FiEye} className="text-green-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">已發布</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {plans.filter(p => p.status === 'PUBLISHED').length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="flex items-center">
+                  <div className="p-2 bg-yellow-100 rounded-lg">
+                    <SafeIcon icon={FiEyeOff} className="text-yellow-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">草稿</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {plans.filter(p => p.status === 'DRAFT').length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-6 shadow-sm">
+                <div className="flex items-center">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <SafeIcon icon={FiStar} className="text-purple-600" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">熱門方案</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {plans.filter(p => p.popular).length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Plans Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {plans.map((plan) => {
+                const config = getPlanTypeConfig(plan.user_type, plan.duration_type);
+                const Icon = config.icon;
+                const discount = calculateDiscount(plan.original_price, plan.sale_price);
 
             return (
               <motion.div
@@ -420,26 +686,23 @@ const MemberCardPlanManagement: React.FC = () => {
                     <span>{config.label}</span>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => toggleStatus(plan)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 flex items-center space-x-1 ${
-                        plan.status === 'PUBLISHED'
-                          ? 'bg-green-100 text-green-700 hover:bg-green-200 border border-green-200'
-                          : 'bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200'
-                      }`}
-                      title={plan.status === 'PUBLISHED' ? '點擊取消發布，變成草稿' : '點擊發布方案'}
-                    >
-                      <SafeIcon 
-                        icon={plan.status === 'PUBLISHED' ? FiDownload : FiUpload} 
-                        size={12}
-                      />
-                      <span>{plan.status === 'PUBLISHED' ? '取消發布' : '發布'}</span>
-                    </button>
+                    <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                      plan.status === 'PUBLISHED'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-yellow-100 text-yellow-800'
+                    }`}>
+                      {plan.status === 'PUBLISHED' ? '已發布' : '草稿'}
+                    </span>
                   </div>
                 </div>
 
                 {/* Content */}
                 <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.title}</h3>
+                <div className="mb-3">
+                  <span className="inline-flex items-center px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">
+                    🎫 {memberCardsData.find(card => card.id === plan.member_card_id)?.name || '未知會員卡'}
+                  </span>
+                </div>
                 <p className="text-gray-600 text-sm mb-4">{plan.description}</p>
                 <p className="text-gray-600 mb-4">有效期限：{formatDuration(plan.duration_days)}</p>
                 
@@ -506,15 +769,8 @@ const MemberCardPlanManagement: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Status Badge */}
+                {/* Options Badge */}
                 <div className="mb-4 flex items-center flex-wrap gap-2">
-                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                    plan.status === 'PUBLISHED'
-                      ? 'bg-green-100 text-green-800'
-                      : 'bg-yellow-100 text-yellow-800'
-                  }`}>
-                    {plan.status === 'PUBLISHED' ? '已發布' : '草稿'}
-                  </span>
                   {plan.hide_price && (
                     <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
                       🔒 隱藏價格
@@ -537,27 +793,29 @@ const MemberCardPlanManagement: React.FC = () => {
                 </div>
 
                 {/* CTA Actions Preview */}
-                <div className="mb-4">
-                  <p className="text-xs font-medium text-gray-600 mb-2">用戶可見的按鈕：</p>
-                  <div className="flex space-x-2">
-                    {plan.cta_options?.show_payment && (
-                      <button
-                        disabled
-                        className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm font-medium opacity-75 cursor-not-allowed"
-                      >
-                        💳 購買方案
-                      </button>
-                    )}
-                    {plan.cta_options?.show_contact && (
-                      <button
-                        disabled
-                        className="flex-1 bg-green-600 text-white py-2 px-3 rounded-lg text-sm font-medium opacity-75 cursor-not-allowed"
-                      >
-                        📞 聯繫我們
-                      </button>
-                    )}
+                {(plan.cta_options?.show_payment || plan.cta_options?.show_contact) && (
+                  <div className="mb-4">
+                    <p className="text-xs font-medium text-gray-600 mb-2">用戶可見的按鈕：</p>
+                    <div className="flex space-x-2">
+                      {plan.cta_options?.show_payment && (
+                        <button
+                          disabled
+                          className="flex-1 bg-blue-600 text-white py-2 px-3 rounded-lg text-sm font-medium opacity-75 cursor-not-allowed"
+                        >
+                          💳 立即付款
+                        </button>
+                      )}
+                      {plan.cta_options?.show_contact && (
+                        <button
+                          disabled
+                          className="flex-1 bg-green-600 text-white py-2 px-3 rounded-lg text-sm font-medium opacity-75 cursor-not-allowed"
+                        >
+                          📞 聯繫我們
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Management Actions */}
                 <div className="flex space-x-2">
@@ -565,7 +823,7 @@ const MemberCardPlanManagement: React.FC = () => {
                     onClick={() => toggleStatus(plan)}
                     className={`flex-1 py-2 px-3 rounded-lg transition-colors flex items-center justify-center space-x-1 text-sm font-medium ${
                       plan.status === 'PUBLISHED'
-                        ? 'bg-orange-600 text-white hover:bg-orange-700'
+                        ? 'bg-gray-400 text-white hover:bg-gray-500'
                         : 'bg-green-600 text-white hover:bg-green-700'
                     }`}
                   >
@@ -593,21 +851,155 @@ const MemberCardPlanManagement: React.FC = () => {
           })}
         </div>
 
-        {/* Empty State */}
-        {plans.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg mb-4">尚未建立任何會員卡方案</p>
-            <button
-              onClick={() => handleOpenModal()}
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              建立第一個方案
-            </button>
+            {/* Empty State */}
+            {plans.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-gray-500 text-lg mb-4">尚未建立任何會員卡方案</p>
+                <button
+                  onClick={() => handleOpenModal()}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  建立第一個方案
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
 
-      {/* Modal */}
+      {/* Member Card Modal */}
+      <AnimatePresence>
+        {showMemberCardModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            onClick={handleCloseMemberCardModal}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-900">
+                  {editingMemberCard ? '編輯會員卡' : '新增會員卡'}
+                </h2>
+                <button
+                  onClick={handleCloseMemberCardModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <SafeIcon icon={FiX} />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Member Card Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    會員卡名稱 *
+                  </label>
+                  <input
+                    type="text"
+                    value={memberCardFormData.name}
+                    onChange={(e) => setMemberCardFormData({ ...memberCardFormData, name: e.target.value })}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="請輸入會員卡名稱"
+                  />
+                </div>
+
+                {/* Available Courses */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    可存取課程 *
+                  </label>
+                  <div className="bg-gray-50 rounded-lg p-4 max-h-64 overflow-y-auto">
+                    {/* Select All Option */}
+                    <div className="border-b border-gray-200 pb-2 mb-3">
+                      <label className="flex items-center space-x-2 p-2 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={isAllCoursesSelected}
+                          ref={(input) => {
+                            if (input) input.indeterminate = isSomeCoursesSelected;
+                          }}
+                          onChange={(e) => handleSelectAllCourses(e.target.checked)}
+                          className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                        />
+                        <span className="text-sm font-medium text-gray-700">全選</span>
+                        <span className="text-xs text-gray-500">({memberCardFormData.available_course_ids.length}/{courses.length})</span>
+                      </label>
+                    </div>
+                    
+                    {/* Individual Course Options */}
+                    <div className="space-y-2">
+                      {courses.map((course) => (
+                        <label key={course.id} className="flex items-center space-x-3 p-2 hover:bg-white rounded-lg transition-colors">
+                          <input
+                            type="checkbox"
+                            checked={memberCardFormData.available_course_ids.includes(course.id)}
+                            onChange={(e) => handleCourseSelection(course.id, e.target.checked)}
+                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                          />
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{course.title}</p>
+                            <p className="text-xs text-gray-500">{course.language} • {course.level}</p>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    選中的課程將可以被此會員卡的用戶存取
+                  </p>
+                </div>
+
+                {/* Selected Courses Summary */}
+                {memberCardFormData.available_course_ids.length > 0 && (
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-blue-900 mb-2">
+                      已選擇課程 ({memberCardFormData.available_course_ids.length})
+                    </h4>
+                    <div className="flex flex-wrap gap-2">
+                      {memberCardFormData.available_course_ids.map((courseId) => {
+                        const course = courses.find(c => c.id === courseId);
+                        return course ? (
+                          <span key={courseId} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                            {course.title}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                <button
+                  onClick={handleCloseMemberCardModal}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleSaveMemberCard}
+                  disabled={!memberCardFormData.name.trim() || memberCardFormData.available_course_ids.length === 0}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center space-x-2"
+                >
+                  <SafeIcon icon={FiSave} />
+                  <span>儲存</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Plan Modal */}
       <AnimatePresence>
         {showModal && (
           <motion.div
@@ -650,6 +1042,26 @@ const MemberCardPlanManagement: React.FC = () => {
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="請輸入方案名稱"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      連動會員卡 *
+                    </label>
+                    <select
+                      value={formData.member_card_id}
+                      onChange={(e) => setFormData({ ...formData, member_card_id: parseInt(e.target.value) })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      {memberCardsData.map((card) => (
+                        <option key={card.id} value={card.id}>
+                          {card.name}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      選擇此方案對應的會員卡類型
+                    </p>
                   </div>
 
                   <div>
@@ -698,6 +1110,23 @@ const MemberCardPlanManagement: React.FC = () => {
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="請輸入有效天數"
                     />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      啟用期限 (天) *
+                    </label>
+                    <input
+                      type="number"
+                      value={formData.activate_deadline_days}
+                      onChange={(e) => setFormData({ ...formData, activate_deadline_days: parseInt(e.target.value) })}
+                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="請輸入啟用期限天數"
+                      min="1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      購買後必須在此期限內啟用會員卡（預設30天）
+                    </p>
                   </div>
                 </div>
 

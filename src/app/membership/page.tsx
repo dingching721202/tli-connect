@@ -131,11 +131,10 @@ const MembershipPage: React.FC = () => {
       const orderData = await orderResponse.json();
       const orderId = orderData.data.id;
 
-      // 使用 Mock 金流 API 格式
-      const paymentResponse = await fetch('/v1/payments', {
+      // 使用正確的付款 API 端點
+      const paymentResponse = await fetch('/api/payment/create', {
         method: 'POST',
         headers: {
-          'X-API-Key': 'test_api_key',
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -162,30 +161,11 @@ const MembershipPage: React.FC = () => {
 
       const paymentData = await paymentResponse.json();
       
-      if (paymentData.status === 'successful') {
-        // 付款成功，更新訂單狀態為 COMPLETED
-        const updateResponse = await fetch(`/api/orders/${orderId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            status: 'COMPLETED',
-            payment_id: paymentData.payment_id
-          }),
-        });
-
-        if (updateResponse.ok) {
-          // 顯示成交通知
-          alert('付款成功！您的會員資格已啟用。');
-          // 跳轉到完成頁面
-          window.location.href = `/payment-result?payment_id=${paymentData.payment_id}&status=success&order_id=${orderId}`;
-        } else {
-          console.error('更新訂單狀態失敗');
-          alert('付款成功但系統處理異常，請聯繫客服。');
-        }
+      if (paymentData.success && paymentData.data.payment_url) {
+        // 付款請求成功，跳轉到付款頁面
+        window.location.href = paymentData.data.payment_url;
       } else {
-        // 付款失敗，更新訂單狀態為 CANCELED
+        // 付款請求失敗，更新訂單狀態為 CANCELED
         await fetch(`/api/orders/${orderId}`, {
           method: 'PATCH',
           headers: {
@@ -195,7 +175,7 @@ const MembershipPage: React.FC = () => {
             status: 'CANCELED'
           }),
         });
-        throw new Error('付款失敗');
+        throw new Error('付款請求失敗');
       }
     } catch (error) {
       console.error('購買失敗:', error);
@@ -243,11 +223,10 @@ const MembershipPage: React.FC = () => {
           const orderData = await orderResponse.json();
           const orderId = orderData.data.id;
 
-          // 使用 Mock 金流 API 格式
-          const paymentResponse = await fetch('/v1/payments', {
+          // 使用正確的付款 API 端點
+          const paymentResponse = await fetch('/api/payment/create', {
             method: 'POST',
             headers: {
-              'X-API-Key': 'test_api_key',
               'Content-Type': 'application/json',
             },
             body: JSON.stringify({
@@ -273,26 +252,11 @@ const MembershipPage: React.FC = () => {
 
           const paymentData = await paymentResponse.json();
           
-          if (paymentData.status === 'successful') {
-            const updateResponse = await fetch(`/api/orders/${orderId}`, {
-              method: 'PATCH',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                status: 'COMPLETED',
-                payment_id: paymentData.payment_id
-              }),
-            });
-
-            if (updateResponse.ok) {
-              alert('付款成功！您的會員資格已啟用。');
-              window.location.href = `/payment-result?payment_id=${paymentData.payment_id}&status=success&order_id=${orderId}`;
-            } else {
-              console.error('更新訂單狀態失敗');
-              alert('付款成功但系統處理異常，請聯繫客服。');
-            }
+          if (paymentData.success && paymentData.data.payment_url) {
+            // 付款請求成功，跳轉到付款頁面
+            window.location.href = paymentData.data.payment_url;
           } else {
+            // 付款請求失敗，更新訂單狀態為 CANCELED
             await fetch(`/api/orders/${orderId}`, {
               method: 'PATCH',
               headers: {
@@ -302,7 +266,7 @@ const MembershipPage: React.FC = () => {
                 status: 'CANCELED'
               }),
             });
-            throw new Error('付款失敗');
+            throw new Error('付款請求失敗');
           }
         } catch (error) {
           console.error('購買失敗:', error);

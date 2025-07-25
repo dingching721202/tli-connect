@@ -17,5 +17,17 @@ export const memberCards: MemberCard[] = [
     created_at: "2025-07-14T12:00:00+00:00",
     name: "Annual All Access Pass",
     available_course_ids: [1, 2]
+  },
+  {
+    id: 3,
+    created_at: "2025-07-14T12:00:00+00:00",
+    name: "Corporate Annual Pass",
+    available_course_ids: [1, 2]
+  },
+  {
+    id: 4,
+    created_at: "2025-07-14T12:00:00+00:00",
+    name: "Corporate Season Pass",
+    available_course_ids: [2]
   }
 ];

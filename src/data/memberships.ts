@@ -48,6 +48,18 @@ export const memberships: Membership[] = [
     user_id: 3,
     status: 'ACTIVE' as const
   },
+  {
+    id: 4,
+    created_at: "2025-07-25T12:00:00+00:00",
+    member_card_id: 2,
+    duration_in_days: 365,
+    start_time: null,
+    expire_time: null,
+    activated: false,
+    activate_expire_time: "2025-08-24T12:00:00+00:00", // 30天內需啟用
+    user_id: 1, // 用戶1有一張待啟用的年度會員卡
+    status: 'PURCHASED' as const
+  },
   // 新增：完全沒有會員卡的用戶 (user_id: 4)
   // 用於測試「尚未購買會員方案」的情況
 ];

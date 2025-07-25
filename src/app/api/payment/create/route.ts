@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { paymentService } from '@/services/paymentService';
 import { orderStore } from '@/lib/orderStore';
+import { memberCardPlanStore } from '@/lib/memberCardPlanStore';
+import { memberships } from '@/data/memberships';
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,11 +53,49 @@ export async function POST(request: NextRequest) {
 
     if (paymentResult.success && paymentResult.data) {
       // 模擬金流成功，更新訂單狀態
-      orderStore.updateOrderStatus(
+      const updatedOrder = orderStore.updateOrderStatus(
         order_id, 
         'COMPLETED', 
         paymentResult.data.payment_id
       );
+
+      // 付款成功後自動創建會員卡（PURCHASED 狀態，需要手動啟用）
+      if (updatedOrder && updatedOrder.plan_id) {
+        try {
+          // 根據訂單中的 plan_id 獲取會員方案
+          const plan = memberCardPlanStore.getPlanById(updatedOrder.plan_id);
+          
+          if (plan) {
+            // 生成新的會員卡ID
+            const newMembershipId = Math.max(...memberships.map(m => m.id), 0) + 1;
+            
+            // 創建對應的會員資格記錄 - 狀態為 PURCHASED，需要手動啟用
+            const activateDeadlineDays = plan.activate_deadline_days || 30; // 使用方案設定的啟用期限，預設30天
+            const newMembership = {
+              id: newMembershipId,
+              created_at: new Date().toISOString(),
+              member_card_id: plan.member_card_id,
+              duration_in_days: plan.duration_days,
+              start_time: null,  // 等待用戶啟用
+              expire_time: null,
+              activated: false,
+              activate_expire_time: new Date(Date.now() + activateDeadlineDays * 24 * 60 * 60 * 1000).toISOString(),
+              user_id: updatedOrder.user_id || 999, // 暫時用戶ID，實際應用中需要真實用戶ID
+              status: 'PURCHASED' as const
+            };
+            
+            // 保存會員資格記錄
+            memberships.push(newMembership);
+            
+            console.log('💳 會員卡創建成功 (PURCHASED 狀態):', newMembership);
+          } else {
+            console.error('❌ 找不到會員方案:', updatedOrder.plan_id);
+          }
+        } catch (membershipError) {
+          console.error('❌ 創建會員卡失敗:', membershipError);
+          // 即使會員卡創建失敗，付款依然成功，不影響主流程
+        }
+      }
 
       return NextResponse.json({
         success: true,
