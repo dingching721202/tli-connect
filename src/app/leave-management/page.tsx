@@ -64,7 +64,7 @@ export default function LeaveManagementPage() {
   // Mock data - 模擬請假申請數據
   const leaveRequests: LeaveRequest[] = [
     {
-      id: '1',
+      id: 'leave-1',
       teacherName: '張老師',
       teacherEmail: 'teacher.zhang@tli.com',
       courseName: '商務華語會話',
@@ -111,7 +111,7 @@ export default function LeaveManagementPage() {
   // Mock student cancellation records
   const studentCancellations: StudentCancellation[] = [
     {
-      id: '1',
+      id: 'cancel-1',
       studentName: '王小明',
       studentEmail: 'student1@example.com',
       courseName: '商務華語會話',
@@ -158,7 +158,7 @@ export default function LeaveManagementPage() {
   // Mock available teachers
   const availableTeachers: Teacher[] = [
     {
-      id: '1',
+      id: 'teacher-1',
       name: '陳老師',
       email: 'teacher.chen@tli.com',
       specialties: ['商務華語', '華語會話'],

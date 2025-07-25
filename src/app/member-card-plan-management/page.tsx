@@ -756,7 +756,7 @@ const MemberCardPlanManagement: React.FC = () => {
                   <p className="text-sm font-medium text-gray-700 mb-2">功能特色：</p>
                   <div className="space-y-1">
                     {plan.features.slice(0, 3).map((feature, index) => (
-                      <div key={index} className="flex items-center space-x-2 text-sm text-gray-600">
+                      <div key={`feature-${feature}-${index}`} className="flex items-center space-x-2 text-sm text-gray-600">
                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                         <span className="truncate">{feature}</span>
                       </div>
@@ -1180,7 +1180,7 @@ const MemberCardPlanManagement: React.FC = () => {
                   </label>
                   <div className="space-y-2">
                     {formData.features.map((feature, index) => (
-                      <div key={index} className="flex items-center space-x-2">
+                      <div key={`form-feature-${index}`} className="flex items-center space-x-2">
                         <input
                           type="text"
                           value={feature}

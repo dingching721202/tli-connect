@@ -6,10 +6,11 @@ import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
 import CourseTemplateManagement from './CourseTemplateManagement';
 import CourseScheduleManagement from './CourseScheduleManagement';
+import TimeslotManagement from './TimeslotManagement';
 
-const { FiBook, FiCalendar, FiInfo } = FiIcons;
+const { FiBook, FiCalendar, FiClock, FiInfo } = FiIcons;
 
-type TabType = 'template' | 'schedule';
+type TabType = 'template' | 'schedule' | 'timeslot';
 
 const NewCourseManagement = () => {
   const [activeTab, setActiveTab] = useState<TabType>('template');
@@ -28,6 +29,13 @@ const NewCourseManagement = () => {
       icon: FiCalendar,
       description: '為課程安排上課時間',
       color: 'purple'
+    },
+    {
+      id: 'timeslot' as TabType,
+      label: '時段管理',
+      icon: FiClock,
+      description: '管理課程時段與取消課程',
+      color: 'red'
     }
   ];
 
@@ -40,6 +48,10 @@ const NewCourseManagement = () => {
       schedule: {
         active: 'bg-purple-600 text-white border-purple-600',
         inactive: 'bg-white text-purple-600 border-purple-200 hover:bg-purple-50'
+      },
+      timeslot: {
+        active: 'bg-red-600 text-white border-red-600',
+        inactive: 'bg-white text-red-600 border-red-200 hover:bg-red-50'
       }
     };
     
@@ -55,7 +67,9 @@ const NewCourseManagement = () => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">課程系統管理</h1>
               <p className="text-sm text-gray-600">
-                {activeTab === 'template' ? '建立課程內容與結構' : '安排課程時間與教師'}
+                {activeTab === 'template' ? '建立課程內容與結構' : 
+                 activeTab === 'schedule' ? '安排課程時間與教師' : 
+                 '管理課程時段與處理課程取消'}
               </p>
             </div>
             
@@ -63,7 +77,8 @@ const NewCourseManagement = () => {
             <div className="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg">
               <SafeIcon icon={FiInfo} className="text-blue-600 text-sm" />
               <span className="text-xs text-blue-700">
-                先在「課程模組」發布課程，再到「日曆排程」安排時間
+                {activeTab === 'timeslot' ? '課務人員可在此取消課程時段並通知學員' :
+                 '先在「課程模組」發布課程，再到「日曆排程」安排時間'}
               </span>
             </div>
           </div>
@@ -88,7 +103,10 @@ const NewCourseManagement = () => {
                 <div className="text-left">
                   <div className="text-base font-semibold">{tab.label}</div>
                   <div className={`text-xs ${
-                    activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'
+                    activeTab === tab.id ? 
+                      (tab.id === 'template' ? 'text-blue-100' : 
+                       tab.id === 'schedule' ? 'text-purple-100' : 'text-red-100') 
+                      : 'text-gray-500'
                   }`}>
                     {tab.description}
                   </div>
@@ -109,6 +127,7 @@ const NewCourseManagement = () => {
         >
           {activeTab === 'template' && <CourseTemplateManagement />}
           {activeTab === 'schedule' && <CourseScheduleManagement />}
+          {activeTab === 'timeslot' && <TimeslotManagement />}
         </motion.div>
       </div>
     </div>

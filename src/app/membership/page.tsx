@@ -414,7 +414,7 @@ const MembershipPage: React.FC = () => {
                   <h4 className="text-lg font-semibold text-gray-900 mb-4">方案特色</h4>
                   <div className="space-y-3">
                     {(plan.features ?? []).slice(0, 5).map((feature, index) => (
-                      <div key={index} className="flex items-center space-x-3">
+                      <div key={`feature-${feature}-${index}`} className="flex items-center space-x-3">
                         <SafeIcon icon={FiCheck} className="text-green-500 w-5 h-5 flex-shrink-0" />
                         <span className="text-gray-700 text-sm">{feature}</span>
                       </div>

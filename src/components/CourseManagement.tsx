@@ -1257,7 +1257,7 @@ const CourseManagement = () => {
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {generateCourseSessions().map((session, index) => (
-                            <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                            <tr key={`course-session-${session.sessionNumber || index}`} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                               <td className="px-3 py-2 text-sm text-gray-900">
                                 {formatDateWithWeekday(session.date)}
                               </td>

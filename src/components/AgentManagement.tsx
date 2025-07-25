@@ -116,41 +116,41 @@ const AgentManagement: React.FC = () => {
       name: '代理',
       totalCommission: 25,
       roles: [
-        { id: 1, name: '資深代理', percentage: 15, description: '具備豐富經驗的代理' },
-        { id: 2, name: '新手代理', percentage: 10, description: '剛加入的代理' }
+        { id: 'agent-1', name: '資深代理', percentage: 15, description: '具備豐富經驗的代理' },
+        { id: 'agent-2', name: '新手代理', percentage: 10, description: '剛加入的代理' }
       ]
     },
     'consultant': {
       name: '顧問',
       totalCommission: 20,
       roles: [
-        { id: 1, name: '業務經理', percentage: 8, description: '負責業務開發的顧問' },
-        { id: 2, name: '客服專員', percentage: 5, description: '負責客戶服務的顧問' },
-        { id: 3, name: '行銷專員', percentage: 7, description: '負責行銷推廣的顧問' }
+        { id: 'consultant-1', name: '業務經理', percentage: 8, description: '負責業務開發的顧問' },
+        { id: 'consultant-2', name: '客服專員', percentage: 5, description: '負責客戶服務的顧問' },
+        { id: 'consultant-3', name: '行銷專員', percentage: 7, description: '負責行銷推廣的顧問' }
       ]
     },
     'teacher': {
       name: '老師',
       totalCommission: 15,
       roles: [
-        { id: 1, name: '資深老師', percentage: 12, description: '具備教學經驗的老師' },
-        { id: 2, name: '新進老師', percentage: 8, description: '剛加入的老師' }
+        { id: 'teacher-1', name: '資深老師', percentage: 12, description: '具備教學經驗的老師' },
+        { id: 'teacher-2', name: '新進老師', percentage: 8, description: '剛加入的老師' }
       ]
     },
     'student': {
       name: '學生',
       totalCommission: 10,
       roles: [
-        { id: 1, name: '優秀學生', percentage: 8, description: '表現優秀的學生' },
-        { id: 2, name: '一般學生', percentage: 5, description: '一般學生推薦' }
+        { id: 'student-1', name: '優秀學生', percentage: 8, description: '表現優秀的學生' },
+        { id: 'student-2', name: '一般學生', percentage: 5, description: '一般學生推薦' }
       ]
     },
     'corporate_contact': {
       name: '企業窗口',
       totalCommission: 12,
       roles: [
-        { id: 1, name: '資深窗口', percentage: 10, description: '經驗豐富的企業窗口' },
-        { id: 2, name: '一般窗口', percentage: 8, description: '一般企業窗口' }
+        { id: 'corporate-1', name: '資深窗口', percentage: 10, description: '經驗豐富的企業窗口' },
+        { id: 'corporate-2', name: '一般窗口', percentage: 8, description: '一般企業窗口' }
       ]
     }
   });
@@ -186,7 +186,7 @@ const AgentManagement: React.FC = () => {
       email: 'zhang.teacher@example.com',
       phone: '0912-345-678',
       agentType: 'teacher',
-      roleId: 1,
+      roleId: 'teacher-1',
       roleName: '資深代理',
       rolePercentage: 15,
       agentCode: 'AGT001',
@@ -215,7 +215,7 @@ const AgentManagement: React.FC = () => {
       email: 'wang.sales@example.com',
       phone: '0923-456-789',
       agentType: 'consultant',
-      roleId: 1,
+      roleId: 'consultant-1',
       roleName: '業務經理',
       rolePercentage: 8,
       agentCode: 'CON001',
@@ -244,7 +244,7 @@ const AgentManagement: React.FC = () => {
       email: 'chen.teacher@example.com',
       phone: '0934-567-890',
       agentType: 'teacher',
-      roleId: 1,
+      roleId: 'teacher-1',
       roleName: '資深老師',
       rolePercentage: 12,
       agentCode: 'TCH001',
@@ -273,7 +273,7 @@ const AgentManagement: React.FC = () => {
       email: 'lin.student@example.com',
       phone: '0945-678-901',
       agentType: 'student',
-      roleId: 1,
+      roleId: 'student-1',
       roleName: '優秀學生',
       rolePercentage: 8,
       agentCode: 'STU001',
@@ -643,14 +643,14 @@ const AgentManagement: React.FC = () => {
       return;
     }
 
-    const selectedRole = commissionSettings['agent'].roles.find(role => role.id === parseInt(newAgent.roleId));
+    const selectedRole = commissionSettings['agent'].roles.find(role => role.id === newAgent.roleId);
     
     const agentCode = generateAgentCode('agent');
     const agentData: Agent = {
       id: Math.max(...mockAgents.map(a => a.id), 0) + 1,
       ...newAgent,
       agentType: 'agent',
-      roleId: parseInt(newAgent.roleId),
+      roleId: newAgent.roleId,
       roleName: selectedRole?.name || '',
       rolePercentage: selectedRole?.percentage || 0,
       agentCode: agentCode,

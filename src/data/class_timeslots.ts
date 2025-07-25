@@ -8,8 +8,8 @@ export interface ClassTimeslot {
   end_time: string;
   status: 'AVAILABLE' | 'CREATED' | 'CANCELED';
   location: string;
-  max_participants: number;
-  current_participants: number;
+  capacity: number;
+  reserved_count: number;
   updated_at: string;
 }
 
@@ -22,10 +22,10 @@ export const classTimeslots: ClassTimeslot[] = [
     session_number: 1,
     start_time: "2025-07-16T19:00:00+00:00",
     end_time: "2025-07-16T21:00:00+00:00",
-    status: "AVAILABLE",
+    status: "CREATED",
     location: "線上會議室A",
-    max_participants: 15,
-    current_participants: 12,
+    capacity: 15,
+    reserved_count: 12,
     updated_at: "2025-07-20T00:00:00Z"
   },
   {
@@ -36,10 +36,10 @@ export const classTimeslots: ClassTimeslot[] = [
     session_number: 2,
     start_time: "2025-07-18T19:00:00+00:00",
     end_time: "2025-07-18T21:00:00+00:00",
-    status: "AVAILABLE",
+    status: "CREATED",
     location: "線上會議室A",
-    max_participants: 15,
-    current_participants: 12,
+    capacity: 15,
+    reserved_count: 12,
     updated_at: "2025-07-20T00:00:00Z"
   },
   {
@@ -50,10 +50,10 @@ export const classTimeslots: ClassTimeslot[] = [
     session_number: 3,
     start_time: "2025-07-23T19:00:00+00:00",
     end_time: "2025-07-23T21:00:00+00:00",
-    status: "AVAILABLE",
+    status: "CREATED",
     location: "線上會議室A",
-    max_participants: 15,
-    current_participants: 12,
+    capacity: 15,
+    reserved_count: 12,
     updated_at: "2025-07-20T00:00:00Z"
   },
   {
@@ -64,10 +64,10 @@ export const classTimeslots: ClassTimeslot[] = [
     session_number: 1,
     start_time: "2025-07-16T18:00:00+00:00",
     end_time: "2025-07-16T20:00:00+00:00",
-    status: "AVAILABLE",
+    status: "CREATED",
     location: "台北教室201",
-    max_participants: 12,
-    current_participants: 8,
+    capacity: 12,
+    reserved_count: 8,
     updated_at: "2025-07-20T00:00:00Z"
   },
   {
@@ -76,12 +76,12 @@ export const classTimeslots: ClassTimeslot[] = [
     class_id: 2,
     lesson_id: 9,
     session_number: 2,
-    start_time: "2025-07-19T18:00:00+00:00",
-    end_time: "2025-07-19T20:00:00+00:00",
-    status: "AVAILABLE",
+    start_time: "2025-07-26T14:00:00+00:00", // 24小時內的課程，用於測試取消限制
+    end_time: "2025-07-26T16:00:00+00:00",
+    status: "CREATED",
     location: "台北教室201",
-    max_participants: 12,
-    current_participants: 8,
+    capacity: 12,
+    reserved_count: 8,
     updated_at: "2025-07-20T00:00:00Z"
   },
   {
@@ -92,10 +92,10 @@ export const classTimeslots: ClassTimeslot[] = [
     session_number: 1,
     start_time: "2025-08-05T19:30:00+00:00",
     end_time: "2025-08-05T21:30:00+00:00",
-    status: "AVAILABLE",
+    status: "CREATED",
     location: "線上會議室B",
-    max_participants: 20,
-    current_participants: 16,
+    capacity: 20,
+    reserved_count: 16,
     updated_at: "2025-07-20T00:00:00Z"
   },
   {
@@ -106,10 +106,10 @@ export const classTimeslots: ClassTimeslot[] = [
     session_number: 1,
     start_time: "2025-08-02T19:00:00+00:00",
     end_time: "2025-08-02T21:00:00+00:00",
-    status: "AVAILABLE",
+    status: "CREATED",
     location: "台北教室301",
-    max_participants: 18,
-    current_participants: 14,
+    capacity: 18,
+    reserved_count: 14,
     updated_at: "2025-07-20T00:00:00Z"
   },
   {
@@ -120,10 +120,10 @@ export const classTimeslots: ClassTimeslot[] = [
     session_number: 1,
     start_time: "2025-08-03T14:00:00+00:00",
     end_time: "2025-08-03T17:00:00+00:00",
-    status: "AVAILABLE",
+    status: "CREATED",
     location: "台北教室大廳",
-    max_participants: 25,
-    current_participants: 22,
+    capacity: 25,
+    reserved_count: 22,
     updated_at: "2025-07-20T00:00:00Z"
   },
   {
@@ -134,10 +134,10 @@ export const classTimeslots: ClassTimeslot[] = [
     session_number: 2,
     start_time: "2025-08-04T14:00:00+00:00",
     end_time: "2025-08-04T17:00:00+00:00",
-    status: "AVAILABLE",
+    status: "CREATED",
     location: "台北教室大廳",
-    max_participants: 25,
-    current_participants: 22,
+    capacity: 25,
+    reserved_count: 22,
     updated_at: "2025-07-20T00:00:00Z"
   },
   {
@@ -148,10 +148,24 @@ export const classTimeslots: ClassTimeslot[] = [
     session_number: 1,
     start_time: "2025-08-07T18:30:00+00:00",
     end_time: "2025-08-07T21:00:00+00:00",
-    status: "AVAILABLE",
+    status: "CREATED",
     location: "線上會議室C",
-    max_participants: 15,
-    current_participants: 11,
+    capacity: 15,
+    reserved_count: 11,
+    updated_at: "2025-07-20T00:00:00Z"
+  },
+  {
+    id: 11,
+    created_at: "2025-07-14T12:00:00+00:00",
+    class_id: 7,
+    lesson_id: 8,
+    session_number: 1,
+    start_time: "2025-08-10T10:00:00+00:00",
+    end_time: "2025-08-10T12:00:00+00:00",
+    status: "CANCELED", // 已取消的時段，用於展示取消功能效果
+    location: "台北教室301",
+    capacity: 20,
+    reserved_count: 8,
     updated_at: "2025-07-20T00:00:00Z"
   }
 ];

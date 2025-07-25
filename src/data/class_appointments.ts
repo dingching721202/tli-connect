@@ -27,6 +27,34 @@ export const classAppointments: ClassAppointment[] = [
     class_timeslot_id: 3,
     status: "CONFIRMED",
     user_id: 3
+  },
+  {
+    id: 4,
+    created_at: "2025-07-14T12:00:00+00:00",
+    class_timeslot_id: 4,
+    status: "CANCELED",
+    user_id: 1
+  },
+  {
+    id: 5,
+    created_at: "2025-07-14T12:00:00+00:00",
+    class_timeslot_id: 5,
+    status: "CONFIRMED",
+    user_id: 1
+  },
+  {
+    id: 6,
+    created_at: "2025-07-14T12:00:00+00:00",
+    class_timeslot_id: 11,
+    status: "CANCELED", // 時段被取消時，相關預約也被自動取消
+    user_id: 1
+  },
+  {
+    id: 7,
+    created_at: "2025-07-14T12:00:00+00:00",
+    class_timeslot_id: 11,
+    status: "CANCELED", // 時段被取消時，相關預約也被自動取消
+    user_id: 3
   }
 ];
 

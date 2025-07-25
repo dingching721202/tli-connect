@@ -234,7 +234,7 @@ const CorporateInquiriesPage: React.FC = () => {
               { label: '進行中', count: inquiries.filter(i => ['contacted', 'quoted'].includes(i.status)).length, color: 'purple', icon: FiUsers },
               { label: '已結案', count: inquiries.filter(i => i.status === 'closed').length, color: 'green', icon: FiCheck }
             ].map((stat, index) => (
-              <div key={index} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div key={`stat-${stat.label}`} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">{stat.label}</p>
@@ -527,7 +527,7 @@ const CorporateInquiriesPage: React.FC = () => {
                         <span className="text-gray-600 block mb-2">培訓項目：</span>
                         <div className="flex flex-wrap gap-2">
                           {selectedInquiry.trainingNeeds.map((need, index) => (
-                            <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">
+                            <span key={`need-${need}-${index}`} className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">
                               {need}
                             </span>
                           ))}

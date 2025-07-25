@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FiCalendar, FiClock, FiUser, FiAlertTriangle, FiX, FiEye, FiSearch, FiFilter } from 'react-icons/fi';
+import { FiCalendar, FiClock, FiUser, FiAlertTriangle, FiX, FiEye, FiSearch, FiFilter, FiInfo } from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { timeslotService, staffService } from '@/services/dataService';
@@ -11,6 +11,7 @@ import { ClassTimeslot } from '@/types';
 interface TimeslotWithDetails extends ClassTimeslot {
   bookingCount: number;
   canCancel: boolean;
+  timeStatus: 'pending' | 'completed';
 }
 
 const TimeslotManagement: React.FC = () => {
@@ -18,15 +19,17 @@ const TimeslotManagement: React.FC = () => {
   const [timeslots, setTimeslots] = useState<TimeslotWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'CREATED' | 'CANCELED'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'completed' | 'CANCELED'>('all');
   const [dateFilter, setDateFilter] = useState('');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedTimeslot, setSelectedTimeslot] = useState<TimeslotWithDetails | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedTimeslotForDetail, setSelectedTimeslotForDetail] = useState<TimeslotWithDetails | null>(null);
 
   // 載入課程時段資料
   useEffect(() => {
-    if (!user || user.role !== 'OPS') {
+    if (!user || !['OPS', 'ADMIN'].includes(user.role)) {
       setLoading(false);
       return;
     }
@@ -35,17 +38,33 @@ const TimeslotManagement: React.FC = () => {
         setLoading(true);
         const allTimeslots = await timeslotService.getAllTimeslots();
         
-        // 為每個時段計算預約數量和取消權限
+        // 為每個時段計算預約數量、取消權限和時間狀態
         const enrichedTimeslots: TimeslotWithDetails[] = allTimeslots.map(timeslot => {
           const now = new Date();
           const slotStart = new Date(timeslot.start_time);
+          const slotEnd = new Date(timeslot.end_time);
           const canCancel = timeslot.status === 'CREATED' && slotStart > now;
+          const timeStatus: 'pending' | 'completed' = slotEnd < now ? 'completed' : 'pending';
           
           return {
             ...timeslot,
             bookingCount: timeslot.reserved_count || 0,
-            canCancel
+            canCancel,
+            timeStatus
           };
+        });
+
+        // 按照距離現在時間排序（越靠近的越上面）
+        enrichedTimeslots.sort((a, b) => {
+          const now = new Date();
+          const aTime = new Date(a.start_time);
+          const bTime = new Date(b.start_time);
+          
+          // 計算與現在時間的距離（絕對值）
+          const aDiff = Math.abs(aTime.getTime() - now.getTime());
+          const bDiff = Math.abs(bTime.getTime() - now.getTime());
+          
+          return aDiff - bDiff;
         });
         
         setTimeslots(enrichedTimeslots);
@@ -60,12 +79,12 @@ const TimeslotManagement: React.FC = () => {
   }, [user]);
 
   // 檢查用戶權限
-  if (!user || user.role !== 'OPS') {
+  if (!user || !['OPS', 'ADMIN'].includes(user.role)) {
     return (
       <div className="text-center py-12">
         <SafeIcon icon={FiAlertTriangle} className="text-6xl text-red-400 mx-auto mb-4" />
         <h3 className="text-lg font-medium text-gray-900 mb-2">權限不足</h3>
-        <p className="text-gray-600">此功能僅限課務人員使用</p>
+        <p className="text-gray-600">此功能僅限課務人員和管理員使用</p>
       </div>
     );
   }
@@ -73,8 +92,16 @@ const TimeslotManagement: React.FC = () => {
   // 過濾時段
   const filteredTimeslots = timeslots.filter(timeslot => {
     // 狀態過濾
-    if (statusFilter !== 'all' && timeslot.status !== statusFilter) {
-      return false;
+    if (statusFilter !== 'all') {
+      if (statusFilter === 'pending' && timeslot.timeStatus !== 'pending') {
+        return false;
+      }
+      if (statusFilter === 'completed' && timeslot.timeStatus !== 'completed') {
+        return false;
+      }
+      if (statusFilter === 'CANCELED' && timeslot.status !== 'CANCELED') {
+        return false;
+      }
     }
 
     // 日期過濾
@@ -125,13 +152,28 @@ const TimeslotManagement: React.FC = () => {
         const enrichedTimeslots: TimeslotWithDetails[] = allTimeslots.map(timeslot => {
           const now = new Date();
           const slotStart = new Date(timeslot.start_time);
+          const slotEnd = new Date(timeslot.end_time);
           const canCancel = timeslot.status === 'CREATED' && slotStart > now;
+          const timeStatus: 'pending' | 'completed' = slotEnd < now ? 'completed' : 'pending';
           
           return {
             ...timeslot,
             bookingCount: timeslot.reserved_count || 0,
-            canCancel
+            canCancel,
+            timeStatus
           };
+        });
+
+        // 按照距離現在時間排序（越靠近的越上面）
+        enrichedTimeslots.sort((a, b) => {
+          const now = new Date();
+          const aTime = new Date(a.start_time);
+          const bTime = new Date(b.start_time);
+          
+          const aDiff = Math.abs(aTime.getTime() - now.getTime());
+          const bDiff = Math.abs(bTime.getTime() - now.getTime());
+          
+          return aDiff - bDiff;
         });
         
         setTimeslots(enrichedTimeslots);
@@ -174,21 +216,31 @@ const TimeslotManagement: React.FC = () => {
   };
 
   // 獲取狀態顏色
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'CREATED': return 'text-green-700 bg-green-50 border-green-200';
-      case 'CANCELED': return 'text-red-700 bg-red-50 border-red-200';
-      default: return 'text-gray-700 bg-gray-50 border-gray-200';
+  const getStatusColor = (timeslot: TimeslotWithDetails) => {
+    if (timeslot.status === 'CANCELED') {
+      return 'text-red-700 bg-red-50 border-red-200';
     }
+    if (timeslot.timeStatus === 'completed') {
+      return 'text-gray-700 bg-gray-50 border-gray-200';
+    }
+    return 'text-green-700 bg-green-50 border-green-200';
   };
 
   // 獲取狀態文字
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'CREATED': return '正常';
-      case 'CANCELED': return '已取消';
-      default: return '未知';
+  const getStatusText = (timeslot: TimeslotWithDetails) => {
+    if (timeslot.status === 'CANCELED') {
+      return '已取消';
     }
+    if (timeslot.timeStatus === 'completed') {
+      return '已上課';
+    }
+    return '待上課';
+  };
+
+  // 處理查看詳情
+  const handleViewDetail = (timeslot: TimeslotWithDetails) => {
+    setSelectedTimeslotForDetail(timeslot);
+    setShowDetailModal(true);
   };
 
   return (
@@ -220,7 +272,8 @@ const TimeslotManagement: React.FC = () => {
           className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
           <option value="all">全部狀態</option>
-          <option value="CREATED">正常</option>
+          <option value="pending">待上課</option>
+          <option value="completed">已上課</option>
           <option value="CANCELED">已取消</option>
         </select>
 
@@ -260,10 +313,20 @@ const TimeslotManagement: React.FC = () => {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-green-600">{timeslots.filter(t => t.status === 'CREATED').length}</div>
-              <div className="text-sm text-gray-600">正常時段</div>
+              <div className="text-2xl font-bold text-blue-600">{timeslots.filter(t => t.timeStatus === 'pending' && t.status !== 'CANCELED').length}</div>
+              <div className="text-sm text-gray-600">待上課</div>
             </div>
-            <SafeIcon icon={FiClock} className="text-2xl text-green-600" />
+            <SafeIcon icon={FiClock} className="text-2xl text-blue-600" />
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg border border-gray-200 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-2xl font-bold text-gray-600">{timeslots.filter(t => t.timeStatus === 'completed' && t.status !== 'CANCELED').length}</div>
+              <div className="text-sm text-gray-600">已上課</div>
+            </div>
+            <SafeIcon icon={FiUser} className="text-2xl text-gray-600" />
           </div>
         </div>
         
@@ -339,8 +402,8 @@ const TimeslotManagement: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(timeslot.status)}`}>
-                        {getStatusText(timeslot.status)}
+                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(timeslot)}`}>
+                        {getStatusText(timeslot)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -348,6 +411,7 @@ const TimeslotManagement: React.FC = () => {
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
+                          onClick={() => handleViewDetail(timeslot)}
                           className="flex items-center space-x-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
                           title="查看詳情"
                         >
@@ -447,6 +511,153 @@ const TimeslotManagement: React.FC = () => {
                 className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors disabled:cursor-not-allowed"
               >
                 保留時段
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* 時段詳情模態框 */}
+      {showDetailModal && selectedTimeslotForDetail && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowDetailModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold">時段詳細資訊</h3>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <SafeIcon icon={FiX} className="text-xl" />
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {/* 基本資訊 */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <SafeIcon icon={FiCalendar} className="mr-2 text-blue-600" />
+                  基本資訊
+                </h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">時段 ID：</span>
+                    <span className="font-medium">#{selectedTimeslotForDetail.id}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">課程 ID：</span>
+                    <span className="font-medium">{selectedTimeslotForDetail.class_id}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">課堂編號：</span>
+                    <span className="font-medium">第 {selectedTimeslotForDetail.session_number} 堂</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">教學地點：</span>
+                    <span className="font-medium">{selectedTimeslotForDetail.location}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 時間資訊 */}
+              <div className="bg-blue-50 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <SafeIcon icon={FiClock} className="mr-2 text-blue-600" />
+                  時間資訊
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-600">開始時間：</span>
+                    <span className="font-medium">{formatDateTime(selectedTimeslotForDetail.start_time)} {formatTime(selectedTimeslotForDetail.start_time)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">結束時間：</span>
+                    <span className="font-medium">{formatDateTime(selectedTimeslotForDetail.end_time)} {formatTime(selectedTimeslotForDetail.end_time)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">課程狀態：</span>
+                    <span className={`inline-flex px-2 py-1 text-xs rounded-full border ${getStatusColor(selectedTimeslotForDetail)}`}>
+                      {getStatusText(selectedTimeslotForDetail)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 預約資訊 */}
+              <div className="bg-green-50 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <SafeIcon icon={FiUser} className="mr-2 text-green-600" />
+                  預約資訊
+                </h4>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-600">課程容量：</span>
+                    <span className="font-medium">{selectedTimeslotForDetail.capacity} 人</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">目前預約：</span>
+                    <span className="font-medium">{selectedTimeslotForDetail.bookingCount} 人</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">剩餘名額：</span>
+                    <span className="font-medium">{selectedTimeslotForDetail.capacity - selectedTimeslotForDetail.bookingCount} 人</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">預約率：</span>
+                    <span className="font-medium">{Math.round((selectedTimeslotForDetail.bookingCount / selectedTimeslotForDetail.capacity) * 100)}%</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 系統資訊 */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <SafeIcon icon={FiInfo} className="mr-2 text-gray-600" />
+                  系統資訊
+                </h4>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-600">建立時間：</span>
+                    <span className="font-medium">{formatDateTime(selectedTimeslotForDetail.created_at)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">最後更新：</span>
+                    <span className="font-medium">{formatDateTime(selectedTimeslotForDetail.updated_at)}</span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">系統狀態：</span>
+                    <span className={`font-medium ${
+                      selectedTimeslotForDetail.status === 'CREATED' ? 'text-green-600' :
+                      selectedTimeslotForDetail.status === 'CANCELED' ? 'text-red-600' : 'text-gray-600'
+                    }`}>
+                      {selectedTimeslotForDetail.status}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600">可否取消：</span>
+                    <span className={`font-medium ${selectedTimeslotForDetail.canCancel ? 'text-green-600' : 'text-red-600'}`}>
+                      {selectedTimeslotForDetail.canCancel ? '是' : '否'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+              >
+                關閉
               </button>
             </div>
           </motion.div>

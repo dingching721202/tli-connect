@@ -294,7 +294,7 @@ const Dashboard = () => {
   const getTeacherCourses = (): Course[] => {
     const courses: Course[] = [
       {
-        id: 1,
+        id: 'teacher-1',
         title: '商務華語會話',
         students: '25 位學生',
         date: '2025-01-20',
@@ -361,7 +361,7 @@ const Dashboard = () => {
   const getCorporateCourses = (): Course[] => {
     return [
       {
-        id: 1,
+        id: 'corporate-1',
         studentName: '張小明',
         studentEmail: 'zhang@taiwantech.com',
         courseName: '商務華語會話',
@@ -428,7 +428,7 @@ const Dashboard = () => {
     const bookings: Course[] = [
       // Individual member bookings
       {
-        id: 1,
+        id: 'admin-1',
         studentName: '王小明',
         studentEmail: 'student1@example.com',
         courseName: '華語文法精修',
@@ -825,7 +825,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {quickStats.map((stat, index) => (
               <motion.div
-                key={index}
+                key={`stat-${stat.label}`}
                 whileHover={{ scale: 1.02, y: -2 }}
                 className="bg-white rounded-xl p-4 sm:p-6 shadow-lg border border-gray-100/60"
               >
