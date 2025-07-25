@@ -516,15 +516,6 @@ const BookingSystem: React.FC = () => {
                   {isSingleCourseMode ? '課程資訊' : '課程篩選'}
                 </h3>
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={loadTimeslots}
-                    disabled={loading}
-                    className="text-sm text-green-600 hover:text-green-800 font-medium flex items-center space-x-1 disabled:opacity-50"
-                    title="重新載入課程資料"
-                  >
-                    <SafeIcon icon={FiRefreshCw} className={loading ? 'animate-spin' : ''} />
-                    <span>重新整理</span>
-                  </button>
                   {!isSingleCourseMode && (
                     <>
                       <span className="text-gray-300">|</span>

@@ -10,6 +10,12 @@ export interface CourseTemplate {
   level: '不限' | '初級' | '中級' | '中高級' | '高級';
   totalSessions: number;
   capacity: number; // 滿班人數
+  // 統一設定 - 作為所有課程的預設值
+  globalSettings?: {
+    defaultTitle?: string; // 統一課程標題模板，例如 "第{n}課"
+    defaultVirtualClassroomLink?: string; // 統一虛擬教室連結
+    defaultMaterialLink?: string; // 統一教材連結
+  };
   sessions: CourseSession[];
   status: 'draft' | 'published';
   createdAt: string;
@@ -21,6 +27,10 @@ export interface CourseSession {
   title: string;
   virtualClassroomLink?: string;
   materialLink?: string; // 可以是 URL 或 PDF 路徑
+  // 如果這些欄位為空或未特別設定，則自動使用 globalSettings 中的預設值
+  useGlobalTitle?: boolean; // 是否使用統一標題（預設 true）
+  useGlobalClassroom?: boolean; // 是否使用統一虛擬教室（預設 true）
+  useGlobalMaterial?: boolean; // 是否使用統一教材（預設 true）
 }
 
 // 獲取所有課程模板

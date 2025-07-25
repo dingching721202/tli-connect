@@ -38,9 +38,14 @@ const CourseTemplateManagement = () => {
     level: '不限',
     totalSessions: 1,
     capacity: 20, // 預設滿班人數
+    globalSettings: {
+      defaultTitle: '第{n}課',
+      defaultVirtualClassroomLink: '',
+      defaultMaterialLink: ''
+    },
     sessions: [{
       sessionNumber: 1,
-      title: '第 1 堂課',
+      title: '',
       virtualClassroomLink: '',
       materialLink: ''
     }],
@@ -70,9 +75,14 @@ const CourseTemplateManagement = () => {
         level: '不限',
         totalSessions: 1,
         capacity: 20,
+        globalSettings: {
+          defaultTitle: '第{n}課',
+          defaultVirtualClassroomLink: '',
+          defaultMaterialLink: ''
+        },
         sessions: [{
           sessionNumber: 1,
-          title: '第 1 堂課',
+          title: '',
           virtualClassroomLink: '',
           materialLink: ''
         }],
@@ -93,9 +103,14 @@ const CourseTemplateManagement = () => {
       level: '不限',
       totalSessions: 1,
       capacity: 20,
+      globalSettings: {
+        defaultTitle: '第{n}課',
+        defaultVirtualClassroomLink: '',
+        defaultMaterialLink: ''
+      },
       sessions: [{
         sessionNumber: 1,
-        title: '第 1 堂課',
+        title: '',
         virtualClassroomLink: '',
         materialLink: ''
       }],
@@ -107,12 +122,17 @@ const CourseTemplateManagement = () => {
   const handleTotalSessionsChange = (total: number) => {
     const newSessions = Array.from({ length: total }, (_, index) => {
       const existingSession = formData.sessions?.[index];
-      return existingSession || {
-        sessionNumber: index + 1,
-        title: `第 ${index + 1} 堂課`,
-        virtualClassroomLink: '',
-        materialLink: ''
-      };
+      if (existingSession) {
+        return existingSession;
+      } else {
+        // 新增的課程預設為空，會自動使用統一設定
+        return {
+          sessionNumber: index + 1,
+          title: '',
+          virtualClassroomLink: '',
+          materialLink: ''
+        };
+      }
     });
     
     setFormData(prev => ({
@@ -120,6 +140,60 @@ const CourseTemplateManagement = () => {
       totalSessions: total,
       sessions: newSessions
     }));
+  };
+
+  // 處理統一設定變更
+  const handleGlobalSettingChange = (field: keyof NonNullable<CourseTemplate['globalSettings']>, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      globalSettings: {
+        ...prev.globalSettings,
+        [field]: value
+      }
+    }));
+  };
+
+  // 應用統一設定到所有課程（清空所有個別設定）
+  const applyGlobalSettingsToAllSessions = () => {
+    const updatedSessions = formData.sessions.map(session => ({
+      ...session,
+      // 清空個別設定，讓統一設定生效
+      title: '',
+      virtualClassroomLink: '',
+      materialLink: ''
+    }));
+
+    setFormData(prev => ({
+      ...prev,
+      sessions: updatedSessions
+    }));
+  };
+
+  // 判斷是否使用統一設定（欄位有內容就是獨立設定，空的就用統一設定）
+  const isUsingGlobalSetting = (session: CourseSession, field: 'title' | 'virtualClassroomLink' | 'materialLink') => {
+    const value = session[field];
+    // 所有欄位都是：空的就是使用統一設定
+    return !value || value.trim() === '';
+  };
+
+  // 獲取實際顯示的值（統一設定或個別設定）
+  const getDisplayValue = (session: CourseSession, field: 'title' | 'virtualClassroomLink' | 'materialLink') => {
+    // 直接返回欄位的實際值，讓使用者可以正常編輯
+    const actualValue = session[field] || '';
+    
+    // 只有當欄位完全為空時，才顯示統一設定的值作為 placeholder 效果
+    if (actualValue === '' && isUsingGlobalSetting(session, field)) {
+      if (field === 'title') {
+        return formData.globalSettings?.defaultTitle?.replace('{n}', session.sessionNumber.toString()) || `第 ${session.sessionNumber} 堂課`;
+      } else if (field === 'virtualClassroomLink') {
+        return formData.globalSettings?.defaultVirtualClassroomLink || '';
+      } else if (field === 'materialLink') {
+        return formData.globalSettings?.defaultMaterialLink || '';
+      }
+    }
+    
+    // 返回實際的欄位值
+    return actualValue;
   };
 
   // 處理課程內容變化
@@ -152,6 +226,7 @@ const CourseTemplateManagement = () => {
       level: formData.level || '不限',
       totalSessions: formData.totalSessions || 1,
       capacity: formData.capacity || 20,
+      globalSettings: formData.globalSettings,
       sessions: formData.sessions || [],
       status
     };
@@ -366,7 +441,7 @@ const CourseTemplateManagement = () => {
                 <h4 className="text-sm font-medium text-gray-700 mb-2">課程內容：</h4>
                 <div className="space-y-1 max-h-20 overflow-y-auto">
                   {template.sessions.slice(0, 3).map((session, index) => (
-                    <div key={`${template.id}-session-${session.sessionNumber || index}`} className="flex items-center space-x-2 text-xs text-gray-600">
+                    <div key={`${template.id}-session-${index}`} className="flex items-center space-x-2 text-xs text-gray-600">
                       <span className="w-4 h-4 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-bold">
                         {session.sessionNumber}
                       </span>
@@ -570,12 +645,67 @@ const CourseTemplateManagement = () => {
                   </div>
                 </div>
 
+                {/* Global Settings */}
+                <div className="bg-purple-50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="font-semibold text-gray-900">統一設定</h4>
+                    <button
+                      onClick={applyGlobalSettingsToAllSessions}
+                      className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                      套用到所有課程
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">
+                    設定整個課程的統一資訊。
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        統一課程標題模板
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.globalSettings?.defaultTitle || ''}
+                        onChange={(e) => handleGlobalSettingChange('defaultTitle', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="例：第{n}課 - 基礎會話"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">使用 {'{n}'} 代表課程編號</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        統一虛擬教室連結
+                      </label>
+                      <input
+                        type="url"
+                        value={formData.globalSettings?.defaultVirtualClassroomLink || ''}
+                        onChange={(e) => handleGlobalSettingChange('defaultVirtualClassroomLink', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="https://meet.google.com/..."
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        統一教材連結
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.globalSettings?.defaultMaterialLink || ''}
+                        onChange={(e) => handleGlobalSettingChange('defaultMaterialLink', e.target.value)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="教材連結或檔案路徑"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Course Content */}
                 <div className="bg-green-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-4">課程內容設置</h4>
                   <div className="space-y-4">
                     {(formData.sessions || []).map((session, index) => (
-                      <div key={`form-session-${session.sessionNumber || index}-${Date.now()}`} className="bg-white rounded-lg p-4 border border-green-200">
+                      <div key={`form-session-${index}`} className="bg-white rounded-lg p-4 border border-green-200">
                         <h5 className="font-medium text-gray-900 mb-3">第 {session.sessionNumber} 堂課</h5>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
@@ -584,10 +714,14 @@ const CourseTemplateManagement = () => {
                             </label>
                             <input
                               type="text"
-                              value={session.title}
+                              value={session.title || ''}
                               onChange={(e) => handleSessionChange(index, 'title', e.target.value)}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="請輸入課程標題"
+                              placeholder={
+                                isUsingGlobalSetting(session, 'title') 
+                                  ? (formData.globalSettings?.defaultTitle?.replace('{n}', session.sessionNumber.toString()) || `第 ${session.sessionNumber} 堂課`)
+                                  : "請輸入課程標題"
+                              }
                             />
                           </div>
                           <div>
@@ -599,7 +733,11 @@ const CourseTemplateManagement = () => {
                               value={session.virtualClassroomLink || ''}
                               onChange={(e) => handleSessionChange(index, 'virtualClassroomLink', e.target.value)}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="https://meet.google.com/..."
+                              placeholder={
+                                isUsingGlobalSetting(session, 'virtualClassroomLink') && formData.globalSettings?.defaultVirtualClassroomLink
+                                  ? formData.globalSettings.defaultVirtualClassroomLink
+                                  : "https://meet.google.com/..."
+                              }
                             />
                           </div>
                           <div>
@@ -611,7 +749,11 @@ const CourseTemplateManagement = () => {
                               value={session.materialLink || ''}
                               onChange={(e) => handleSessionChange(index, 'materialLink', e.target.value)}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="教材連結或檔案路徑"
+                              placeholder={
+                                isUsingGlobalSetting(session, 'materialLink') && formData.globalSettings?.defaultMaterialLink
+                                  ? formData.globalSettings.defaultMaterialLink
+                                  : "教材連結或檔案路徑"
+                              }
                             />
                           </div>
                         </div>

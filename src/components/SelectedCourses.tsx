@@ -160,7 +160,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
                   <div className="space-y-3">
                     {groupedCourses[date].map((course, index) => (
                       <motion.div
-                        key={`${course.id}-${course.timeSlot}`}
+                        key={course.sessionId || `${course.id}-${course.timeslot_id}-${course.date}-${course.timeSlot}`}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}

@@ -48,7 +48,7 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
 
   const isCourseSelected = (course: BookingCourse) => {
     return selectedCourses.some(sc => 
-      (sc.sessionId || `${sc.id}-${sc.timeSlot}`) === (course.sessionId || `${course.id}-${course.timeSlot}`)
+      (sc.sessionId || `${sc.id}-${sc.timeslot_id}-${sc.date}-${sc.timeSlot}`) === (course.sessionId || `${course.id}-${course.timeslot_id}-${course.date}-${course.timeSlot}`)
     );
   };
 
@@ -126,7 +126,7 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
                 
                 return (
                   <motion.div
-                    key={course.sessionId || `${course.id}-${course.timeSlot}`}
+                    key={course.sessionId || `${course.id}-${course.timeslot_id}-${course.date}-${course.timeSlot}`}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: index * 0.1 }}
@@ -200,18 +200,6 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
                       )}
                     </div>
                     
-                    {/* Course Price Display (even if free) */}
-                    <div className="mt-3 pt-3 border-t border-gray-200">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-500">課程費用</span>
-                        <span className={`
-                          text-lg font-bold
-                          ${isSelected ? 'text-blue-600' : 'text-gray-900'}
-                        `}>
-                          {course.price === 0 ? '會員免費' : `NT$ ${course.price.toLocaleString()}`}
-                        </span>
-                      </div>
-                    </div>
                   </motion.div>
                 );
               })}
@@ -219,24 +207,6 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
           )}
         </div>
 
-        {/* Footer */}
-        {availableCourses.length > 0 && (
-          <div className="px-4 sm:px-6 pb-4 sm:pb-6">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <div className="flex items-center justify-center">
-                <div>
-                  <p className="text-sm font-medium text-blue-800 text-center">
-                    已選擇 {selectedCourses.filter(sc => 
-                      availableCourses.some(ac => 
-                        (ac.sessionId || `${ac.id}-${ac.timeSlot}`) === (sc.sessionId || `${sc.id}-${sc.timeSlot}`)
-                      )
-                    ).length} / {availableCourses.length} 堂課程
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </motion.div>
     </AnimatePresence>
   );

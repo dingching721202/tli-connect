@@ -17,11 +17,11 @@ const Navigation: React.FC = () => {
   const navigationItems = [
     { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'OPS', 'CORPORATE_CONTACT', 'ADMIN'] },
     { name: '用戶管理', href: '/user-management', icon: FiUsers, roles: ['OPS', 'ADMIN'] },
+    { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['OPS', 'ADMIN'] },
     { name: '課程預約', href: '/', icon: FiBook, roles: ['guest', 'STUDENT'] },
     { name: '會員方案', href: '/membership', icon: FiShare2, roles: ['guest', 'STUDENT'] },
     { name: '我的預約', href: '/my-bookings', icon: FiCalendar, roles: ['STUDENT', 'TEACHER'] },
     { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['TEACHER', 'OPS', 'ADMIN'] },
-    { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['OPS', 'ADMIN'] },
     { name: '會員卡方案管理', href: '/member-card-plan-management', icon: FiSettings, roles: ['OPS', 'ADMIN'] },
     { name: '企業詢價管理', href: '/corporate-inquiries', icon: FiBriefcase, roles: ['OPS', 'ADMIN'] },
     { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['OPS', 'ADMIN'] },
