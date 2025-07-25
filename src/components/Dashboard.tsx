@@ -704,14 +704,6 @@ const Dashboard = () => {
 
 
 
-  const handleRequestLeave = (courseId: number | string) => {
-    const teacherCourses = getTeacherCourses();
-    const course = teacherCourses.find(c => c.id === courseId);
-    if (course) {
-      setSelectedCourse(course);
-      setShowLeaveModal(true);
-    }
-  };
 
   const handleSubmitLeave = async () => {
     if (!leaveForm.reason.trim()) {

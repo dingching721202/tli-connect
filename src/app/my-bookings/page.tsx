@@ -61,7 +61,7 @@ export default function MyBookingsPage() {
   const [cancelling, setCancelling] = useState(false);
 
   // 轉換預約資料為 UI 格式的通用函數
-  const convertBookingData = (dashboardData: { upcomingClasses: Array<{ appointment?: { id: number; status: string; class_timeslot_id: number }; session: { id: string; date: string; startTime: string; endTime: string; courseTitle: string; sessionTitle: string; teacherName: string; classroom?: string; materials?: string } }> }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
+  const convertBookingData = useCallback((dashboardData: { upcomingClasses: Array<{ appointment?: { id: number; status: string; class_timeslot_id: number; created_at: string }; session: { id: string; date: string; startTime: string; endTime: string; courseTitle: string; sessionTitle: string; teacherName: string; classroom?: string; materials?: string } }> }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
     console.log('🔍 轉換預約資料，總數:', dashboardData.upcomingClasses.length);
     
     const convertedData = dashboardData.upcomingClasses.map((item) => {
@@ -127,7 +127,7 @@ export default function MyBookingsPage() {
     }
     
     return convertedData;
-  };
+  }, []);
 
   // 載入用戶預約資料的通用函數
   const loadUserBookings = useCallback(async (showLoading = true) => {
@@ -156,7 +156,7 @@ export default function MyBookingsPage() {
     } finally {
       if (showLoading) setLoading(false);
     }
-  }, [user, convertBookingData]);
+  }, [user]);
 
   // 載入用戶預約資料 - 使用與Dashboard相同的資料源
   useEffect(() => {
