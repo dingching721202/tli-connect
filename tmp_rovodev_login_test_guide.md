@@ -17,7 +17,7 @@
 
 | 帳號 | 姓名 | 角色 | 用途 |
 |------|------|------|------|
-| `daisy@example.com` | Daisy Hsu | 教師 | 測試教師功能 |
+| `teacher@example.com` | 王老師 | 教師 | password | 測試教師功能 |
 | `frank@taiwantech.com` | Frank Liu | 企業窗口 | 測試企業管理功能 |
 | `olivia@example.com` | Olivia Kao | 營運 | 測試營運管理功能 |
 | `admin@example.com` | Admin User | 管理員 | 測試管理員功能 |

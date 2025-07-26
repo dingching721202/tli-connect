@@ -210,7 +210,7 @@ function generateDetailedCourseSessions(course: {
   const excludeSet = new Set(excludeDates || []);
   const generatedSessions: GeneratedSession[] = [];
   
-  // 處理多個排程時段（如果課程有多個日曆排程）
+  // 處理多個排程時段（如果課程有多個課程排程）
   globalSchedules.forEach((schedule, scheduleIndex) => {
     const classDays = schedule.weekdays.map((day: string) => parseInt(day));
     const currentDate = new Date(start);
@@ -288,7 +288,7 @@ function getSyncedManagedCourses(): ManagedCourse[] {
     return getManagedCourses(); // 伺服器端回退到預設資料
   }
   
-  // 1. 從課程排程模組獲取已發布的排程（這些包含實際的日曆安排）
+  // 1. 從課程排程模組獲取已發布的排程（這些包含實際的課程安排）
   try {
     const schedules = getPublishedCourseSchedules();
     const templates = getCourseTemplates();

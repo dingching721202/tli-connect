@@ -164,7 +164,7 @@ export async function GET(request: NextRequest) {
 | 角色 | Email | 姓名 |
 |------|-------|------|
 | 學生 | alice@example.com | Alice Wang |
-| 教師 | daisy@example.com | Daisy Hsu |
+| 教師 | teacher@example.com | 王老師 | password |
 | 營運 | olivia@example.com | Olivia Kao |
 | 管理員 | admin@example.com | Admin User |
 | 企業窗口 | frank@taiwantech.com | Frank Liu |

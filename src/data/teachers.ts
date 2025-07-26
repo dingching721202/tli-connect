@@ -42,8 +42,8 @@ export const teachers: Teacher[] = [
   {
     id: "teacher_002",
     created_at: "2024-01-15T00:00:00Z",
-    name: "王小明",
-    email: "wang@tliconnect.com",
+    name: "王老師",
+    email: "teacher@example.com",
     phone: "+886-2-2345-6789",
     bio: "中文教學專家，致力於讓外國學生輕鬆學會中文",
     specialties: ["中文會話", "繁體字教學", "台灣文化"],
@@ -51,7 +51,7 @@ export const teachers: Teacher[] = [
     experience: 8,
     rating: 4.6,
     is_active: true,
-    profile_image: "/images/teachers/wang-xiaoming.jpg",
+    profile_image: "/images/teachers/wang-teacher.jpg",
     certifications: ["中文教師資格證", "對外漢語教學證書"],
     education: [
       "台灣大學中國文學系碩士",

@@ -618,6 +618,12 @@ export function deleteManagedCourse(id: string): boolean {
     
     existingCourses.splice(courseIndex, 1);
     localStorage.setItem('courses', JSON.stringify(existingCourses));
+    
+    // 觸發課程更新事件，通知其他組件
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('coursesUpdated'));
+    }
+    
     return true;
   }
   

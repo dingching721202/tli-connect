@@ -695,51 +695,6 @@ const TeacherManagement: React.FC = () => {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">專業領域</label>
-                    <div className="space-y-2">
-                      {newTeacher.expertise.map((exp, index) => (
-                        <div key={index} className="flex space-x-2">
-                          <select
-                            value={exp}
-                            onChange={(e) => {
-                              const newExpertise = [...newTeacher.expertise];
-                              newExpertise[index] = e.target.value;
-                              setNewTeacher({...newTeacher, expertise: newExpertise});
-                            }}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                          >
-                            <option value="">選擇專業領域</option>
-                            {EXPERTISE_OPTIONS.map(option => (
-                              <option key={option} value={option}>{option}</option>
-                            ))}
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newExpertise = newTeacher.expertise.filter((_, i) => i !== index);
-                              setNewTeacher({...newTeacher, expertise: newExpertise});
-                            }}
-                            className="px-2 py-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                          >
-                            <SafeIcon icon={FiX} />
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setNewTeacher({
-                            ...newTeacher, 
-                            expertise: [...newTeacher.expertise, '']
-                          });
-                        }}
-                        className="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-green-500 hover:text-green-600 transition-colors"
-                      >
-                        + 新增專業領域
-                      </button>
-                    </div>
-                  </div>
-                  <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">年資</label>
                     <select
                       value={newTeacher.experience}
@@ -751,51 +706,6 @@ const TeacherManagement: React.FC = () => {
                         <option key={option} value={option}>{option}</option>
                       ))}
                     </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">資格認證</label>
-                    <div className="space-y-2">
-                      {newTeacher.qualification.map((qual, index) => (
-                        <div key={index} className="flex space-x-2">
-                          <select
-                            value={qual}
-                            onChange={(e) => {
-                              const newQualification = [...newTeacher.qualification];
-                              newQualification[index] = e.target.value;
-                              setNewTeacher({...newTeacher, qualification: newQualification});
-                            }}
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                          >
-                            <option value="">選擇資格認證</option>
-                            {QUALIFICATION_OPTIONS.map(option => (
-                              <option key={option} value={option}>{option}</option>
-                            ))}
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newQualification = newTeacher.qualification.filter((_, i) => i !== index);
-                              setNewTeacher({...newTeacher, qualification: newQualification});
-                            }}
-                            className="px-2 py-2 text-red-600 hover:bg-red-50 rounded transition-colors"
-                          >
-                            <SafeIcon icon={FiX} />
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setNewTeacher({
-                            ...newTeacher, 
-                            qualification: [...newTeacher.qualification, '']
-                          });
-                        }}
-                        className="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-green-500 hover:text-green-600 transition-colors"
-                      >
-                        + 新增資格認證
-                      </button>
-                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">外語能力</label>
@@ -853,6 +763,96 @@ const TeacherManagement: React.FC = () => {
                         className="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-green-500 hover:text-green-600 transition-colors"
                       >
                         + 新增語言能力
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">專業領域</label>
+                    <div className="space-y-2">
+                      {newTeacher.expertise.map((exp, index) => (
+                        <div key={index} className="flex space-x-2">
+                          <select
+                            value={exp}
+                            onChange={(e) => {
+                              const newExpertise = [...newTeacher.expertise];
+                              newExpertise[index] = e.target.value;
+                              setNewTeacher({...newTeacher, expertise: newExpertise});
+                            }}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          >
+                            <option value="">選擇專業領域</option>
+                            {EXPERTISE_OPTIONS.map(option => (
+                              <option key={option} value={option}>{option}</option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newExpertise = newTeacher.expertise.filter((_, i) => i !== index);
+                              setNewTeacher({...newTeacher, expertise: newExpertise});
+                            }}
+                            className="px-2 py-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <SafeIcon icon={FiX} />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewTeacher({
+                            ...newTeacher, 
+                            expertise: [...newTeacher.expertise, '']
+                          });
+                        }}
+                        className="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-green-500 hover:text-green-600 transition-colors"
+                      >
+                        + 新增專業領域
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">資格認證</label>
+                    <div className="space-y-2">
+                      {newTeacher.qualification.map((qual, index) => (
+                        <div key={index} className="flex space-x-2">
+                          <select
+                            value={qual}
+                            onChange={(e) => {
+                              const newQualification = [...newTeacher.qualification];
+                              newQualification[index] = e.target.value;
+                              setNewTeacher({...newTeacher, qualification: newQualification});
+                            }}
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                          >
+                            <option value="">選擇資格認證</option>
+                            {QUALIFICATION_OPTIONS.map(option => (
+                              <option key={option} value={option}>{option}</option>
+                            ))}
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newQualification = newTeacher.qualification.filter((_, i) => i !== index);
+                              setNewTeacher({...newTeacher, qualification: newQualification});
+                            }}
+                            className="px-2 py-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                          >
+                            <SafeIcon icon={FiX} />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewTeacher({
+                            ...newTeacher, 
+                            qualification: [...newTeacher.qualification, '']
+                          });
+                        }}
+                        className="w-full px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-green-500 hover:text-green-600 transition-colors"
+                      >
+                        + 新增資格認證
                       </button>
                     </div>
                   </div>

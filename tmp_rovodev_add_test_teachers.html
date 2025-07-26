@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>添加測試教師</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .success { color: green; font-weight: bold; margin: 10px 0; }
+        .info { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        .teacher-card { background: #fff; border: 1px solid #ddd; border-radius: 8px; padding: 15px; margin: 10px 0; }
+        .teacher-name { font-size: 18px; font-weight: bold; color: #333; }
+        .teacher-email { color: #666; }
+        .teacher-details { margin-top: 10px; font-size: 14px; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>添加測試教師到教師管理</h1>
+        
+        <div class="info">
+            <h3>將要添加的測試教師：</h3>
+            
+            <div class="teacher-card">
+                <div class="teacher-name">👨‍🏫 王老師 (主要測試帳號)</div>
+                <div class="teacher-email">📧 teacher@example.com</div>
+                <div class="teacher-details">
+                    🔑 密碼: password<br>
+                    📚 專業: 商務華語、生活華語<br>
+                    ⭐ 評分: 4.8 | 👥 學生: 156人 | 📖 完成課程: 89門
+                </div>
+            </div>
+
+            <div class="teacher-card">
+                <div class="teacher-name">👩‍🏫 李老師</div>
+                <div class="teacher-email">📧 li@example.com</div>
+                <div class="teacher-details">
+                    🔑 密碼: password<br>
+                    📚 專業: 日常會話、HSK準備<br>
+                    ⭐ 評分: 4.6 | 👥 學生: 98人 | 📖 完成課程: 67門
+                </div>
+            </div>
+
+            <div class="teacher-card">
+                <div class="teacher-name">👨‍🏫 張老師</div>
+                <div class="teacher-email">📧 zhang@example.com</div>
+                <div class="teacher-details">
+                    🔑 密碼: password<br>
+                    📚 專業: 兒童華語、青少年華語<br>
+                    ⭐ 評分: 4.9 | 👥 學生: 203人 | 📖 完成課程: 134門
+                </div>
+            </div>
+        </div>
+
+        <button onclick="addTestTeachers()">🚀 添加所有測試教師</button>
+        <button onclick="addSingleTeacher('wang')">➕ 只添加王老師</button>
+        <button onclick="showCurrentTeachers()">👀 查看當前教師</button>
+        <button onclick="clearAllTeachers()">🗑️ 清空所有教師</button>
+
+        <div id="result"></div>
+
+        <script>
+            const testTeachers = [
+                {
+                    id: 1,
+                    name: '王老師',
+                    email: 'teacher@example.com',
+                    phone: '0912-345-678',
+                    status: 'active',
+                    joinDate: '2024-01-15',
+                    lastLogin: '2024-12-20',
+                    teachingCategory: ['中文', '商業'],
+                    expertise: ['商務華語', '生活華語'],
+                    experience: '3-5年',
+                    qualification: ['TOCFL認證', '華語教學能力證書'],
+                    bio: '專精商務華語教學，擁有豐富的企業培訓經驗。',
+                    languages: ['中文(母語)', '英文(流利)'],
+                    teachingHours: 520,
+                    rating: 4.8,
+                    totalStudents: 156,
+                    completedCourses: 89,
+                    accountStatus: 'verified',
+                    salary: 60000,
+                    contractType: 'full-time',
+                    address: '台北市信義區信義路五段7號',
+                    emergencyContact: '王小明',
+                    emergencyPhone: '0987-654-321',
+                    role: 'TEACHER',
+                    avatar: 'https://www.gravatar.com/avatar/?d=mp&s=32',
+                    password: 'password'
+                },
+                {
+                    id: 2,
+                    name: '李老師',
+                    email: 'li@example.com',
+                    phone: '0923-456-789',
+                    status: 'active',
+                    joinDate: '2024-03-10',
+                    lastLogin: '2024-12-19',
+                    teachingCategory: ['中文'],
+                    expertise: ['日常會話', 'HSK準備'],
+                    experience: '3-5年',
+                    qualification: ['HSK考官證書'],
+                    bio: '專注於日常會話和HSK考試準備，教學方式活潑有趣。',
+                    languages: ['中文(母語)', '日文(中等)'],
+                    teachingHours: 320,
+                    rating: 4.6,
+                    totalStudents: 98,
+                    completedCourses: 67,
+                    accountStatus: 'verified',
+                    salary: 45000,
+                    contractType: 'part-time',
+                    address: '台北市大安區敦化南路二段216號',
+                    emergencyContact: '李美華',
+                    emergencyPhone: '0912-987-654',
+                    role: 'TEACHER',
+                    avatar: 'https://www.gravatar.com/avatar/?d=mp&s=32',
+                    password: 'password'
+                },
+                {
+                    id: 3,
+                    name: '張老師',
+                    email: 'zhang@example.com',
+                    phone: '0934-567-890',
+                    status: 'active',
+                    joinDate: '2023-09-01',
+                    lastLogin: '2024-11-15',
+                    teachingCategory: ['中文', '文化'],
+                    expertise: ['兒童華語', '青少年華語'],
+                    experience: '6-10年',
+                    qualification: ['兒童華語教學證書', 'TESOL認證'],
+                    bio: '專門教授兒童和青少年華語，深受學生喜愛。',
+                    languages: ['中文(母語)', '英文(流利)', '韓文(初級)'],
+                    teachingHours: 680,
+                    rating: 4.9,
+                    totalStudents: 203,
+                    completedCourses: 134,
+                    accountStatus: 'verified',
+                    salary: 55000,
+                    contractType: 'full-time',
+                    address: '新北市板橋區中山路一段161號',
+                    emergencyContact: '張大明',
+                    emergencyPhone: '0956-123-456',
+                    role: 'TEACHER',
+                    avatar: 'https://www.gravatar.com/avatar/?d=mp&s=32',
+                    password: 'password'
+                }
+            ];
+
+            function addTestTeachers() {
+                localStorage.setItem('teachers', JSON.stringify(testTeachers));
+                
+                // 觸發更新事件
+                window.dispatchEvent(new CustomEvent('teachersUpdated'));
+                
+                document.getElementById('result').innerHTML = `
+                    <div class="success">
+                        ✅ 成功添加 ${testTeachers.length} 位測試教師！
+                        <br><br>
+                        <strong>主要測試帳號：</strong><br>
+                        📧 teacher@example.com<br>
+                        🔑 password<br>
+                        <br>
+                        請刷新教師管理頁面查看結果。
+                    </div>
+                `;
+            }
+
+            function addSingleTeacher(teacherType) {
+                let currentTeachers = [];
+                const existingData = localStorage.getItem('teachers');
+                if (existingData) {
+                    currentTeachers = JSON.parse(existingData);
+                }
+
+                if (teacherType === 'wang') {
+                    const wangTeacher = testTeachers[0]; // 王老師
+                    
+                    // 檢查是否已存在
+                    const exists = currentTeachers.find(t => t.email === wangTeacher.email);
+                    if (!exists) {
+                        currentTeachers.push(wangTeacher);
+                        localStorage.setItem('teachers', JSON.stringify(currentTeachers));
+                        window.dispatchEvent(new CustomEvent('teachersUpdated'));
+                        
+                        document.getElementById('result').innerHTML = `
+                            <div class="success">
+                                ✅ 成功添加王老師！<br>
+                                📧 teacher@example.com<br>
+                                🔑 password
+                            </div>
+                        `;
+                    } else {
+                        document.getElementById('result').innerHTML = `
+                            <div style="color: orange;">
+                                ⚠️ 王老師已存在，無需重複添加。
+                            </div>
+                        `;
+                    }
+                }
+            }
+
+            function showCurrentTeachers() {
+                const currentData = localStorage.getItem('teachers');
+                if (currentData) {
+                    const teachers = JSON.parse(currentData);
+                    let html = '<h3>📋 當前教師列表：</h3>';
+                    if (teachers.length === 0) {
+                        html += '<div>目前沒有教師數據</div>';
+                    } else {
+                        teachers.forEach((teacher, index) => {
+                            html += `
+                                <div class="teacher-card">
+                                    <strong>${index + 1}. ${teacher.name}</strong><br>
+                                    📧 ${teacher.email}<br>
+                                    📱 ${teacher.phone}<br>
+                                    🏷️ ${teacher.status}
+                                </div>
+                            `;
+                        });
+                    }
+                    document.getElementById('result').innerHTML = html;
+                } else {
+                    document.getElementById('result').innerHTML = '<div>📭 localStorage 中沒有教師數據</div>';
+                }
+            }
+
+            function clearAllTeachers() {
+                localStorage.removeItem('teachers');
+                window.dispatchEvent(new CustomEvent('teachersUpdated'));
+                document.getElementById('result').innerHTML = '<div class="success">🗑️ 所有教師數據已清除！</div>';
+            }
+
+            // 頁面載入時顯示當前數據
+            window.onload = function() {
+                showCurrentTeachers();
+            };
+        </script>
+    </div>
+</body>
+</html>

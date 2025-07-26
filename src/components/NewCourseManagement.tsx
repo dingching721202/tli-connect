@@ -25,7 +25,7 @@ const NewCourseManagement = () => {
     },
     {
       id: 'schedule' as TabType,
-      label: '日曆排程',
+      label: '課程排程',
       icon: FiCalendar,
       description: '為課程安排上課時間',
       color: 'purple'
@@ -78,7 +78,7 @@ const NewCourseManagement = () => {
               <SafeIcon icon={FiInfo} className="text-blue-600 text-sm" />
               <span className="text-xs text-blue-700">
                 {activeTab === 'timeslot' ? '課務人員可在此取消課程時段並通知學員' :
-                 '先在「課程模組」發布課程，再到「日曆排程」安排時間'}
+                 '先在「課程模組」發布課程，再到「課程排程」安排時間'}
               </span>
             </div>
           </div>

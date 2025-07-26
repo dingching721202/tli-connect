@@ -1,4 +1,4 @@
-// 日曆排程模組 - 專注於課程時間安排
+// 課程排程模組 - 專注於課程時間安排
 export interface CourseSchedule {
   id: string;
   templateId: string; // 關聯到 CourseTemplate

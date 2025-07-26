@@ -1,4 +1,4 @@
-// 課程預約工具函數 - 使用日曆排程數據
+// 課程預約工具函數 - 使用課程排程數據
 import {
   getPublishedCourseSchedules
 } from './courseScheduleUtils';

@@ -20,11 +20,8 @@ import {
   CourseTemplate,
   getPublishedCourseTemplates
 } from '@/data/courseTemplateUtils';
-import {
-  Teacher,
-  getTeachers,
-  addTeacher
-} from '@/data/courseUtils';
+import { teacherDataService, Teacher } from '@/data/teacherData';
+import TeacherFormModal from './TeacherFormModal';
 
 const {
   FiCalendar, FiPlus, FiTrash2, FiEdit2, FiSearch,
@@ -74,23 +71,18 @@ const CourseScheduleManagement = () => {
     status: 'draft'
   });
 
-  // 新教師表單狀態
-  const [newTeacher, setNewTeacher] = useState({
-    name: '',
-    email: '',
-    specialties: ''
-  });
 
   // 載入數據
   useEffect(() => {
     const loadData = () => {
       const allSchedules = getCourseSchedules();
       const publishedTemplates = getPublishedCourseTemplates();
-      const allTeachers = getTeachers();
+      const allTeachers = teacherDataService.getAllTeachers();
       
       setSchedules(allSchedules);
       setTemplates(publishedTemplates);
-      setTeachers(allTeachers);
+      // 只顯示在職狀態的老師
+      setTeachers(allTeachers.filter(teacher => teacher.status === 'active'));
     };
     
     loadData();
@@ -100,9 +92,15 @@ const CourseScheduleManagement = () => {
       loadData();
     };
 
+    const handleTeachersUpdated = () => {
+      loadData();
+    };
+
     window.addEventListener('courseSchedulesUpdated', handleUpdate);
+    window.addEventListener('teachersUpdated', handleTeachersUpdated);
     return () => {
       window.removeEventListener('courseSchedulesUpdated', handleUpdate);
+      window.removeEventListener('teachersUpdated', handleTeachersUpdated);
     };
   }, []);
 
@@ -176,7 +174,7 @@ const CourseScheduleManagement = () => {
   // 處理教師選擇
   const handleTeacherSelect = (teacherId: string) => {
     if (teacherId) {
-      const teacher = teachers.find(t => t.id === teacherId);
+      const teacher = teachers.find(t => String(t.id) === teacherId);
       if (teacher) {
         const updatedData = {
           ...formData,
@@ -315,33 +313,11 @@ const CourseScheduleManagement = () => {
     }));
   };
 
-  // 新增教師
-  const handleAddTeacher = () => {
-    if (!newTeacher.name || !newTeacher.email) {
-      alert('請填寫教師姓名和電子郵件');
-      return;
-    }
-    
-    const teacherData = addTeacher({
-      name: newTeacher.name,
-      email: newTeacher.email,
-      phone: '',
-      bio: '',
-      specialties: newTeacher.specialties ? newTeacher.specialties.split(',').map(s => s.trim()) : [],
-      languages: [],
-      experience: 0,
-      rating: 5.0,
-      is_active: true,
-      certifications: [],
-      education: [],
-      teaching_philosophy: ''
-    });
-    
-    setTeachers(prev => [...prev, teacherData]);
-    setShowAddTeacherModal(false);
-    setNewTeacher({ name: '', email: '', specialties: '' });
-    
-    alert('✅ 教師已成功新增！');
+  // 處理新增教師成功
+  const handleTeacherAddSuccess = () => {
+    // 重新載入教師列表
+    const updatedTeachers = teacherDataService.getAllTeachers();
+    setTeachers(updatedTeachers.filter(teacher => teacher.status === 'active'));
   };
 
   // 儲存課程排程
@@ -456,7 +432,7 @@ const CourseScheduleManagement = () => {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">日曆排程</h2>
+          <h2 className="text-2xl font-bold text-gray-900">課程排程</h2>
           <p className="text-gray-600 mt-1">為已發布的課程安排上課時間</p>
         </div>
         <button
@@ -679,7 +655,7 @@ const CourseScheduleManagement = () => {
                         >
                           <option value="">請選擇教師</option>
                           {teachers.map((teacher) => (
-                            <option key={teacher.id} value={teacher.id}>
+                            <option key={teacher.id} value={String(teacher.id)}>
                               {teacher.name}
                             </option>
                           ))}
@@ -688,6 +664,7 @@ const CourseScheduleManagement = () => {
                           type="button"
                           onClick={() => setShowAddTeacherModal(true)}
                           className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                          title="新增教師"
                         >
                           <SafeIcon icon={FiPlus} />
                         </button>
@@ -961,74 +938,11 @@ const CourseScheduleManagement = () => {
       )}
 
       {/* Add Teacher Modal */}
-      {showAddTeacherModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full">
-            <div className="bg-gradient-to-r from-purple-600 to-indigo-700 text-white p-6 rounded-t-xl">
-              <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold">新增教師</h3>
-                <button onClick={() => setShowAddTeacherModal(false)}>
-                  <SafeIcon icon={FiX} className="text-white text-xl" />
-                </button>
-              </div>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    教師姓名 *
-                  </label>
-                  <input
-                    type="text"
-                    value={newTeacher.name}
-                    onChange={(e) => setNewTeacher(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="請輸入教師姓名"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    電子郵件 *
-                  </label>
-                  <input
-                    type="email"
-                    value={newTeacher.email}
-                    onChange={(e) => setNewTeacher(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="請輸入電子郵件"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    專業領域
-                  </label>
-                  <input
-                    type="text"
-                    value={newTeacher.specialties}
-                    onChange={(e) => setNewTeacher(prev => ({ ...prev, specialties: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="例：商務華語、華語文法（用逗號分隔）"
-                  />
-                </div>
-                <div className="flex space-x-3 pt-4">
-                  <button
-                    onClick={handleAddTeacher}
-                    className="flex-1 bg-gradient-to-r from-purple-600 to-indigo-700 text-white py-3 px-4 rounded-lg hover:shadow-lg transition-all duration-300 font-medium"
-                  >
-                    新增教師
-                  </button>
-                  <button
-                    onClick={() => setShowAddTeacherModal(false)}
-                    className="px-6 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-                  >
-                    取消
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <TeacherFormModal
+        isOpen={showAddTeacherModal}
+        onClose={() => setShowAddTeacherModal(false)}
+        onSuccess={handleTeacherAddSuccess}
+      />
     </div>
   );
 };

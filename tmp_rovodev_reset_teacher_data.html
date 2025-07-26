@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>重置教師數據</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; }
+        button { padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .success { color: green; font-weight: bold; }
+        .info { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>重置教師數據工具</h1>
+        
+        <div class="info">
+            <h3>當前問題：</h3>
+            <p>教師管理中顯示的郵件地址與測試帳號不一致，可能是 localStorage 中保存了舊數據。</p>
+        </div>
+
+        <div class="info">
+            <h3>正確的測試教師數據：</h3>
+            <pre>
+王老師: teacher@example.com (密碼: password)
+李老師: li@example.com (密碼: password)  
+張老師: zhang@example.com (密碼: password)
+            </pre>
+        </div>
+
+        <button onclick="resetTeacherData()">重置教師數據</button>
+        <button onclick="showCurrentData()">查看當前數據</button>
+        <button onclick="clearAllData()">清除所有 localStorage</button>
+
+        <div id="result"></div>
+
+        <script>
+            function resetTeacherData() {
+                const correctTeachers = [
+                    {
+                        id: 1,
+                        name: '王老師',
+                        email: 'teacher@example.com',
+                        phone: '0912-345-678',
+                        status: 'active',
+                        joinDate: '2024-01-15',
+                        lastLogin: '2024-12-20',
+                        teachingCategory: ['中文', '商業'],
+                        expertise: ['商務華語', '生活華語'],
+                        experience: '3-5年',
+                        qualification: ['TOCFL認證', '華語教學能力證書'],
+                        bio: '專精商務華語教學，擁有豐富的企業培訓經驗。',
+                        languages: ['中文(母語)', '英文(流利)'],
+                        teachingHours: 520,
+                        rating: 4.8,
+                        totalStudents: 156,
+                        completedCourses: 89,
+                        accountStatus: 'verified',
+                        salary: 60000,
+                        contractType: 'full-time',
+                        address: '台北市信義區信義路五段7號',
+                        emergencyContact: '王小明',
+                        emergencyPhone: '0987-654-321',
+                        role: 'TEACHER',
+                        avatar: 'https://www.gravatar.com/avatar/?d=mp&s=32',
+                        password: 'password'
+                    },
+                    {
+                        id: 2,
+                        name: '李老師',
+                        email: 'li@example.com',
+                        phone: '0923-456-789',
+                        status: 'active',
+                        joinDate: '2024-03-10',
+                        lastLogin: '2024-12-19',
+                        teachingCategory: ['中文'],
+                        expertise: ['日常會話', 'HSK準備'],
+                        experience: '3-5年',
+                        qualification: ['HSK考官證書'],
+                        bio: '專注於日常會話和HSK考試準備，教學方式活潑有趣。',
+                        languages: ['中文(母語)', '日文(中等)'],
+                        teachingHours: 320,
+                        rating: 4.6,
+                        totalStudents: 98,
+                        completedCourses: 67,
+                        accountStatus: 'verified',
+                        salary: 45000,
+                        contractType: 'part-time',
+                        address: '台北市大安區敦化南路二段216號',
+                        emergencyContact: '李美華',
+                        emergencyPhone: '0912-987-654',
+                        role: 'TEACHER',
+                        avatar: 'https://www.gravatar.com/avatar/?d=mp&s=32',
+                        password: 'password'
+                    },
+                    {
+                        id: 3,
+                        name: '張老師',
+                        email: 'zhang@example.com',
+                        phone: '0934-567-890',
+                        status: 'active',
+                        joinDate: '2023-09-01',
+                        lastLogin: '2024-11-15',
+                        teachingCategory: ['中文', '文化'],
+                        expertise: ['兒童華語', '青少年華語'],
+                        experience: '6-10年',
+                        qualification: ['兒童華語教學證書', 'TESOL認證'],
+                        bio: '專門教授兒童和青少年華語，深受學生喜愛。',
+                        languages: ['中文(母語)', '英文(流利)', '韓文(初級)'],
+                        teachingHours: 680,
+                        rating: 4.9,
+                        totalStudents: 203,
+                        completedCourses: 134,
+                        accountStatus: 'verified',
+                        salary: 55000,
+                        contractType: 'full-time',
+                        address: '新北市板橋區中山路一段161號',
+                        emergencyContact: '張大明',
+                        emergencyPhone: '0956-123-456',
+                        role: 'TEACHER',
+                        avatar: 'https://www.gravatar.com/avatar/?d=mp&s=32',
+                        password: 'password'
+                    }
+                ];
+
+                localStorage.setItem('teachers', JSON.stringify(correctTeachers));
+                
+                // 觸發更新事件
+                window.dispatchEvent(new CustomEvent('teachersUpdated'));
+                
+                document.getElementById('result').innerHTML = '<div class="success">✅ 教師數據已重置為正確的測試數據！請刷新教師管理頁面。</div>';
+            }
+
+            function showCurrentData() {
+                const currentData = localStorage.getItem('teachers');
+                if (currentData) {
+                    const teachers = JSON.parse(currentData);
+                    let html = '<h3>當前 localStorage 中的教師數據：</h3><pre>';
+                    teachers.forEach(teacher => {
+                        html += `${teacher.name}: ${teacher.email}\n`;
+                    });
+                    html += '</pre>';
+                    document.getElementById('result').innerHTML = html;
+                } else {
+                    document.getElementById('result').innerHTML = '<div>localStorage 中沒有教師數據</div>';
+                }
+            }
+
+            function clearAllData() {
+                localStorage.clear();
+                document.getElementById('result').innerHTML = '<div class="success">✅ 所有 localStorage 數據已清除！</div>';
+            }
+
+            // 頁面載入時顯示當前數據
+            window.onload = function() {
+                showCurrentData();
+            };
+        </script>
+    </div>
+</body>
+</html>

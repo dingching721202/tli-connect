@@ -251,7 +251,8 @@ const CourseManagement = () => {
         setCourses(coursesData);
       }
       
-      setTeachers(teachersData);
+      // 只顯示在職狀態的老師
+      setTeachers(teachersData.filter(teacher => teacher.isActive));
     };
     loadData();
   }, [isTeacher, user]);

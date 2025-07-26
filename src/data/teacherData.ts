@@ -45,7 +45,7 @@ const defaultTeachers: Teacher[] = [
   {
     id: 1,
     name: '王老師',
-    email: 'wang.teacher@tli.com',
+    email: 'teacher@example.com',
     phone: '0912-345-678',
     status: 'active',
     joinDate: '2024-01-15',
@@ -67,12 +67,13 @@ const defaultTeachers: Teacher[] = [
     emergencyContact: '王小明',
     emergencyPhone: '0987-654-321',
     role: 'TEACHER',
-    avatar: 'https://www.gravatar.com/avatar/?d=mp&s=32'
+    avatar: 'https://www.gravatar.com/avatar/?d=mp&s=32',
+    password: 'password'
   },
   {
     id: 2,
     name: '李老師',
-    email: 'li.teacher@tli.com',
+    email: 'li@example.com',
     phone: '0923-456-789',
     status: 'active',
     joinDate: '2024-03-10',
@@ -94,12 +95,13 @@ const defaultTeachers: Teacher[] = [
     emergencyContact: '李美華',
     emergencyPhone: '0912-987-654',
     role: 'TEACHER',
-    avatar: 'https://www.gravatar.com/avatar/?d=mp&s=32'
+    avatar: 'https://www.gravatar.com/avatar/?d=mp&s=32',
+    password: 'password'
   },
   {
     id: 3,
     name: '張老師',
-    email: 'zhang.teacher@tli.com',
+    email: 'zhang@example.com',
     phone: '0934-567-890',
     status: 'active',
     joinDate: '2023-09-01',
@@ -121,7 +123,8 @@ const defaultTeachers: Teacher[] = [
     emergencyContact: '張大明',
     emergencyPhone: '0956-123-456',
     role: 'TEACHER',
-    avatar: 'https://www.gravatar.com/avatar/?d=mp&s=32'
+    avatar: 'https://www.gravatar.com/avatar/?d=mp&s=32',
+    password: 'password'
   }
 ];
 
@@ -147,7 +150,14 @@ class TeacherDataService {
       try {
         const storedTeachers = localStorage.getItem('teachers');
         if (storedTeachers) {
-          this.teachers = JSON.parse(storedTeachers);
+          const parsed = JSON.parse(storedTeachers);
+          // 如果 localStorage 是空數組，重新載入默認數據
+          if (Array.isArray(parsed) && parsed.length === 0) {
+            this.teachers = [...defaultTeachers];
+            this.saveTeachers();
+          } else {
+            this.teachers = parsed;
+          }
         } else {
           this.teachers = [...defaultTeachers];
           this.saveTeachers();
@@ -155,6 +165,7 @@ class TeacherDataService {
       } catch (error) {
         console.error('Error loading teachers:', error);
         this.teachers = [...defaultTeachers];
+        this.saveTeachers();
       }
     } else {
       this.teachers = [...defaultTeachers];

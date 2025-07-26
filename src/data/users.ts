@@ -37,10 +37,10 @@ export const users: User[] = [
     created_at: "2025-07-14T12:00:00+00:00"
   },
   {
-    name: "Daisy Hsu",
-    email: "daisy@example.com",
+    name: "王老師",
+    email: "teacher@example.com",
     phone: "0900-777-888",
-    password: "hashed_pw4",
+    password: "password",
     role: "TEACHER",
     id: 4,
     created_at: "2025-07-14T12:00:00+00:00"
