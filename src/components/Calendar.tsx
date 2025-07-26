@@ -239,7 +239,7 @@ const Calendar: React.FC<CalendarProps> = ({
             )}
           </div>
         </div>
-        {course.teacher && course.teacher !== '老師' && (
+        {course.teacher && course.teacher !== '老師' && course.teacher !== '未指定' && course.teacher !== '未指定教師' && (
           <div className="text-xs opacity-70 truncate leading-tight">
             {course.teacher}
           </div>

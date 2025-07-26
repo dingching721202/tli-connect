@@ -47,7 +47,9 @@ type GeneratedSession = {
 // 從課程模組生成預約可用的課程時段
 export function generateBookingSessions(): BookingCourseSession[] {
   const courses = getSyncedManagedCourses();
-  const teachers = getTeachers();
+  // 統一使用教師管理系統
+  const { teacherDataService } = require('./teacherData');
+  const teachers = teacherDataService.getAllTeachers();
   const sessions: BookingCourseSession[] = [];
 
   courses.forEach(course => {
@@ -60,7 +62,27 @@ export function generateBookingSessions(): BookingCourseSession[] {
     courseSessions.forEach((session, index) => {
       // 優先使用排程中的教師ID（如果存在），回退到課程的教師
       const teacherId = session.teacherId || course.teacher;
-      const teacher = teachers.find(t => t.id.toString() === teacherId.toString());
+      
+      // 統一使用教師管理系統查找教師
+      let teacher = null;
+      let teacherName = '未指定';
+      
+      if (teacherId) {
+        // 教師管理系統使用數字 ID
+        const numericTeacherId = typeof teacherId === 'number' ? teacherId : Number(teacherId);
+        teacher = teachers.find(t => t.id === numericTeacherId);
+        
+        if (teacher) {
+          teacherName = teacher.name;
+        } else {
+          console.warn(`找不到教師 ${teacherId}，課程: ${course.title}`, {
+            sessionTeacherId: session.teacherId,
+            courseTeacher: course.teacher,
+            finalTeacherId: teacherId,
+            availableTeachers: teachers.map(t => ({ id: t.id, name: t.name }))
+          });
+        }
+      }
       
       sessions.push({
         id: `${course.id}_session_${index + 1}`,
@@ -72,7 +94,7 @@ export function generateBookingSessions(): BookingCourseSession[] {
         startTime: session.startTime,
         endTime: session.endTime,
         teacherId: teacherId,
-        teacherName: teacher?.name || '未指定',
+        teacherName: teacherName,
         classroom: session.classroom || course.location || 'Online',
         materials: session.materials || course.materials?.join(', ') || '',
         category: course.category,
@@ -297,10 +319,20 @@ function getSyncedManagedCourses(): ManagedCourse[] {
     console.log('獲取到', schedules.length, '個已發布的課程排程');
     console.log('獲取到', publishedTemplates.length, '個已發布的課程模板');
     
+    // 過濾掉對應模板已被刪除的排程
+    const validSchedules = schedules.filter(schedule => {
+      const template = templates.find(t => t.id === schedule.templateId);
+      return template && template.status === 'published';
+    });
+    
+    if (validSchedules.length !== schedules.length) {
+      console.log(`過濾掉 ${schedules.length - validSchedules.length} 個無效排程（對應模板已刪除或未發布）`);
+    }
+    
     const managedCourses: ManagedCourse[] = [];
     
     // 2. 優先處理有排程的課程（這些有實際的日曆安排）
-    schedules.forEach((schedule) => {
+    validSchedules.forEach((schedule) => {
       const template = templates.find(t => t.id === schedule.templateId);
       if (template && template.status === 'published') {
         // 每個排程創建一個 ManagedCourse，這樣多個排程就會顯示多個課程實例
@@ -393,14 +425,14 @@ function getSyncedManagedCourses(): ManagedCourse[] {
     
     // 3. 如果有已發布的模板但沒有對應的排程，也要顯示（用預設排程）
     publishedTemplates.forEach((template: CourseTemplate) => {
-      const hasSchedule = schedules.some(s => s.templateId === template.id);
+      const hasSchedule = validSchedules.some(s => s.templateId === template.id);
       if (!hasSchedule) {
         // 沒有排程的模板使用預設設定
         const defaultManagedCourse = {
           id: template.id?.replace('template_', '') || '',
           title: template.title || '',
           description: template.description || '',
-          teacher: getTeacherNameFromTemplateCategory(template.category),
+          teacher: getTeacherIdFromTemplateCategory(template.category),
           capacity: 15,
           price: getPriceFromTemplateCategory(template.category),
           currency: 'TWD',
@@ -442,7 +474,7 @@ function getSyncedManagedCourses(): ManagedCourse[] {
           weekdays: getRecurringDaysFromCategory(template.category),
           startTime: getDefaultStartTime(template.category),
           endTime: getDefaultEndTime(template.category),
-          teacherId: getTeacherNameFromTemplateCategory(template.category)
+          teacherId: getTeacherIdFromTemplateCategory(template.category)
         }];
         
         (defaultManagedCourse as unknown as { 
@@ -470,15 +502,31 @@ function getSyncedManagedCourses(): ManagedCourse[] {
     console.error('從課程模組獲取資料時發生錯誤:', error);
   }
   
-  // 2. 如果課程模組沒有資料，嘗試從同步的課程資料獲取
+  // 2. 如果課程模組沒有資料，嘗試從同步的課程資料獲取（但要過濾掉已刪除的模板）
   const syncedCoursesStr = localStorage.getItem('courses');
   if (syncedCoursesStr) {
     try {
       const syncedCourses = JSON.parse(syncedCoursesStr);
       console.log('從同步資料獲取到', syncedCourses.length, '個課程');
       
+      // 獲取當前有效的課程模板ID列表
+      const currentTemplates = getCourseTemplates();
+      const validTemplateIds = new Set(currentTemplates.map(t => t.id));
+      
+      // 過濾掉對應模板已被刪除的課程
+      const validSyncedCourses = syncedCourses.filter((course: { template_id?: string; id: number | string }) => {
+        if (course.template_id) {
+          return validTemplateIds.has(course.template_id);
+        }
+        // 檢查是否有對應的模板ID（通過ID推導）
+        const templateId = `template_${course.id}`;
+        return validTemplateIds.has(templateId);
+      });
+      
+      console.log(`過濾後剩餘 ${validSyncedCourses.length} 個有效課程`);
+      
       // 將同步資料轉換為 ManagedCourse 格式
-      return syncedCourses.map((course: {
+      return validSyncedCourses.map((course: {
         id: number | string;
         template_id?: string;
         title: string;
@@ -548,22 +596,73 @@ function getSyncedManagedCourses(): ManagedCourse[] {
     }
   }
   
-  // 3. 如果都沒有資料，回退到預設資料
-  console.log('回退到預設課程資料');
-  return getManagedCourses();
+  // 3. 如果都沒有資料，檢查是否有課程模板存在，只有完全沒有模板時才回退到預設資料
+  const currentTemplates = getCourseTemplates();
+  if (currentTemplates.length === 0) {
+    console.log('沒有課程模板，回退到預設課程資料');
+    return getManagedCourses();
+  } else {
+    console.log('有課程模板但沒有課程資料，返回空列表（避免已刪除課程復原）');
+    return [];
+  }
 }
 
-// 輔助函數 - 針對課程模組的資料映射
+// 輔助函數 - 針對課程模組的資料映射（使用教師管理系統）
 function getTeacherNameFromTemplateCategory(category: string): string {
-  const teacherMap: { [key: string]: string } = {
-    '中文': 'Lisa Chen',
-    '英文': 'James Wilson', 
-    '文化': 'Amy Wu',
-    '商業': 'Michael Brown',
-    '師資': 'Dr. Emily Zhang',
-    '其它': 'Sarah Lee'
-  };
-  return teacherMap[category] || 'Sarah Lee';
+  try {
+    const { teacherDataService } = require('./teacherData');
+    const teachers = teacherDataService.getAllTeachers();
+    
+    // 根據分類映射到教師專長，找到對應的教師
+    const categoryMap: { [key: string]: string[] } = {
+      '中文': ['中文會話', '繁體字教學', '台灣文化'],
+      '英文': ['商務英語', '簡報技巧', '談判英語'], 
+      '文化': ['台灣文化', '中華文化'],
+      '商業': ['商務英語', '職場溝通'],
+      '師資': ['教學方法', '師資培訓'],
+      '其它': []
+    };
+    
+    const targetSkills = categoryMap[category] || [];
+    const teacher = teachers.find(t => 
+      t.status === 'active' && 
+      targetSkills.some(skill => t.expertise.includes(skill))
+    );
+    
+    return teacher?.name || '未指定教師';
+  } catch (error) {
+    console.error('獲取教師名稱失敗:', error);
+    return '未指定教師';
+  }
+}
+
+// 根據分類獲取教師ID（使用教師管理系統）
+function getTeacherIdFromTemplateCategory(category: string): number {
+  try {
+    const { teacherDataService } = require('./teacherData');
+    const teachers = teacherDataService.getAllTeachers();
+    
+    // 根據分類映射到教師專長，找到對應的教師
+    const categoryMap: { [key: string]: string[] } = {
+      '中文': ['中文會話', '繁體字教學', '台灣文化'],
+      '英文': ['商務英語', '簡報技巧', '談判英語'], 
+      '文化': ['台灣文化', '中華文化'],
+      '商業': ['商務英語', '職場溝通'],
+      '師資': ['教學方法', '師資培訓'],
+      '其它': []
+    };
+    
+    const targetSkills = categoryMap[category] || [];
+    const teacher = teachers.find(t => 
+      t.status === 'active' && 
+      targetSkills.some(skill => t.expertise.includes(skill))
+    );
+    
+    return teacher?.id || 1; // 默認返回第一個教師的ID
+  } catch (error) {
+    console.error('獲取教師ID失敗:', error);
+    return 1; // 默認返回ID 1
+  }
 }
 
 function getPriceFromTemplateCategory(category: string): number {

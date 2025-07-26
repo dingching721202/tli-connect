@@ -597,11 +597,21 @@ export const staffService = {
 // Dashboard服務 (US09)
 export const dashboardService = {
   // 獲取用戶Dashboard資料 - 從課程預約日曆系統獲取真實預約資料
-  async getDashboardData(userId: number) {
+  async getDashboardData(userId: number, userRole?: string) {
     await delay(300);
     
-    console.log(`📊 獲取 Dashboard 資料 - 用戶ID: ${userId}`);
+    console.log(`📊 獲取 Dashboard 資料 - 用戶ID: ${userId}, 角色: ${userRole}`);
     
+    // 如果是教師，獲取學生預約其課程的資料
+    if (userRole === 'TEACHER') {
+      const upcomingClasses = await this.getTeacherBookings(userId);
+      return {
+        membership: null, // 教師不需要會員資格
+        upcomingClasses
+      };
+    }
+    
+    // 學生的原有邏輯
     // 優先獲取 ACTIVE 會員卡，如果沒有則獲取 PURCHASED 會員卡
     let membership = await memberCardService.getUserMembership(userId);
     console.log('🎯 找到的 ACTIVE 會員卡:', membership);
@@ -620,6 +630,91 @@ export const dashboardService = {
       membership,
       upcomingClasses
     };
+  },
+
+  // 獲取教師的預約課程資料
+  async getTeacherBookings(teacherId: number) {
+    try {
+      console.log(`👨‍🏫 獲取教師 ${teacherId} 的預約資料`);
+      
+      // 獲取所有可用的課程時段
+      const allSessions = generateBookingSessions();
+      console.log('📅 所有課程時段數量:', allSessions.length);
+      
+      // 獲取所有預約記錄
+      const allAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]');
+      console.log('📋 所有預約記錄數量:', allAppointments.length);
+      
+      // 獲取教師資料以匹配教師ID
+      const { teacherDataService } = require('../data/teacherData');
+      let teacher = teacherDataService.getTeacherById(teacherId);
+      
+      // 如果通過ID找不到，嘗試通過用戶資料匹配
+      if (!teacher) {
+        const user = users.find(u => u.id === teacherId && u.role === 'TEACHER');
+        if (user) {
+          // 通過email匹配教師管理系統中的教師
+          const allTeachers = teacherDataService.getAllTeachers();
+          teacher = allTeachers.find(t => t.email === user.email);
+          console.log(`通過email ${user.email} 找到教師:`, teacher?.name);
+        }
+      }
+      
+      if (!teacher) {
+        console.warn(`找不到教師 ID: ${teacherId}`);
+        return [];
+      }
+      
+      console.log('👨‍🏫 找到教師:', teacher.name);
+      
+      // 找出與該教師相關的課程時段
+      const teacherSessions = allSessions.filter(session => {
+        // 比較教師名稱或ID
+        return session.teacherName === teacher.name || 
+               session.teacherId === teacherId ||
+               session.teacherId === teacherId.toString();
+      });
+      
+      console.log(`📚 教師 ${teacher.name} 的課程時段數量:`, teacherSessions.length);
+      
+      // 找出學生預約了該教師課程的記錄
+      const teacherBookings = [];
+      
+      for (const session of teacherSessions) {
+        const sessionHashId = session.id.hashCode ? session.id.hashCode() : this.hashString(session.id);
+        
+        // 找出預約了此時段的學生
+        const sessionAppointments = allAppointments.filter(appointment => 
+          appointment.class_timeslot_id === sessionHashId && 
+          appointment.status === 'CONFIRMED'
+        );
+        
+        if (sessionAppointments.length > 0) {
+          // 獲取學生資訊
+          for (const appointment of sessionAppointments) {
+            const student = users.find(u => u.id === appointment.user_id);
+            
+            teacherBookings.push({
+              appointment,
+              session,
+              student: student ? {
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                phone: student.phone || ''
+              } : null
+            });
+          }
+        }
+      }
+      
+      console.log(`👥 教師 ${teacher.name} 的學生預約數量:`, teacherBookings.length);
+      
+      return teacherBookings;
+    } catch (error) {
+      console.error('獲取教師預約資料失敗:', error);
+      return [];
+    }
   },
 
   // 從課程預約日曆系統獲取已預約的課程

@@ -131,9 +131,66 @@ export default function MyBookingsPage() {
     return convertedData;
   }, []);
 
+  // 轉換教師預約資料為 UI 格式的函數
+  const convertTeacherBookingData = useCallback((dashboardData: { upcomingClasses: Array<{ appointment: { id: number; status: string; class_timeslot_id: number; created_at: string }; session: { id: string; date: string; startTime: string; endTime: string; courseTitle: string; sessionTitle: string; teacherName: string; classroom?: string; materials?: string }; student: { id: number; name: string; email: string; phone: string } | null }> }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
+    console.log('🔍 轉換教師預約資料，總數:', dashboardData.upcomingClasses.length);
+    
+    const convertedData = dashboardData.upcomingClasses.map((item) => {
+      const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
+      const now = new Date();
+      const daysFromNow = Math.ceil((startTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      
+      let status: 'upcoming' | 'completed' | 'cancelled';
+      if (item.appointment?.status === 'CANCELED') {
+        status = 'cancelled';
+      } else {
+        const endTime = new Date(`${item.session.date} ${item.session.endTime}`);
+        if (endTime < now) {
+          status = 'completed';
+        } else {
+          status = 'upcoming';
+        }
+      }
+      
+      const converted = {
+        id: `teacher-${item.appointment?.id || item.session.id}`,
+        courseName: `${item.session.courseTitle} - ${item.session.sessionTitle}`,
+        courseDate: item.session.date,
+        courseTime: `${item.session.startTime}-${item.session.endTime}`,
+        status,
+        classroom: item.session.classroom || '線上教室',
+        materials: item.session.materials,
+        // 教師視角：顯示學生資訊
+        studentName: item.student?.name || '未知學生',
+        studentEmail: item.student?.email || '',
+        studentPhone: item.student?.phone || '',
+        studentCount: 1, // 一個預約記錄對應一個學生
+        membershipType: 'individual' as const, // 可以後續擴展
+        daysFromNow,
+        bookingDate: item.appointment?.created_at || '',
+        // UI 控制
+        canCancel: false, // 教師通常不能直接取消學生的預約
+        appointmentId: item.appointment?.id || 0,
+        timeslotId: item.appointment?.class_timeslot_id || 0
+      };
+      
+      console.log('👨‍🏫 轉換教師預約項目:', {
+        courseName: converted.courseName,
+        studentName: converted.studentName,
+        status: converted.status,
+        daysFromNow: converted.daysFromNow
+      });
+      
+      return converted;
+    });
+    
+    console.log('👥 教師預約資料轉換完成，總數:', convertedData.length);
+    return convertedData;
+  }, []);
+
   // 載入用戶預約資料的通用函數
   const loadUserBookings = useCallback(async (showLoading = true) => {
-    if (!user || user.role !== 'STUDENT') {
+    if (!user || !['STUDENT', 'TEACHER'].includes(user.role)) {
       if (showLoading) setLoading(false);
       return;
     }
@@ -141,18 +198,29 @@ export default function MyBookingsPage() {
     try {
       if (showLoading) setLoading(true);
       
-      console.log('📥 開始載入用戶預約資料 - 用戶ID:', user.id);
+      console.log('📥 開始載入用戶預約資料 - 用戶ID:', user.id, '角色:', user.role);
       
-      // 使用 dashboardService 獲取預約資料，確保與Dashboard一致
-      const dashboardData = await dashboardService.getDashboardData(user.id);
-      
-      console.log('📋 Dashboard原始資料:', dashboardData);
-      console.log('📅 upcomingClasses數量:', dashboardData.upcomingClasses.length);
-      
-      // 轉換為 UI 格式
-      const bookingData = convertBookingData(dashboardData);
-      console.log('🔄 設置預約資料，總數:', bookingData.length);
-      setBookings(bookingData);
+      if (user.role === 'TEACHER') {
+        // 教師：載入學生預約其課程的資料
+        const dashboardData = await dashboardService.getDashboardData(user.id, 'TEACHER');
+        console.log('👨‍🏫 教師 Dashboard 原始資料:', dashboardData);
+        
+        // 轉換教師預約資料為UI格式
+        const teacherBookingData = convertTeacherBookingData(dashboardData);
+        console.log('🔄 設置教師預約資料，總數:', teacherBookingData.length);
+        setBookings(teacherBookingData);
+      } else {
+        // 學生：使用原有邏輯
+        const dashboardData = await dashboardService.getDashboardData(user.id);
+        
+        console.log('📋 Dashboard原始資料:', dashboardData);
+        console.log('📅 upcomingClasses數量:', dashboardData.upcomingClasses.length);
+        
+        // 轉換為 UI 格式
+        const bookingData = convertBookingData(dashboardData);
+        console.log('🔄 設置預約資料，總數:', bookingData.length);
+        setBookings(bookingData);
+      }
     } catch (error) {
       console.error('載入預約資料失敗:', error);
     } finally {

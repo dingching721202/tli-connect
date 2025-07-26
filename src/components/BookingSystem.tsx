@@ -142,16 +142,31 @@ const BookingSystem: React.FC = () => {
     
     // 監聽 localStorage 變化（當在同一個瀏覽器標籤中操作時）
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'courses' || e.key === 'courseTemplates') {
+      if (e.key === 'courses' || e.key === 'courseTemplates' || e.key === 'courseSchedules') {
         loadTimeslots();
       }
     };
 
+    // 監聽課程模組的自定義事件（即時同步）
+    const handleCourseTemplatesUpdate = (e: CustomEvent) => {
+      console.log('檢測到課程模組更新:', e.detail);
+      loadTimeslots();
+    };
+
+    // 監聽預約更新事件
+    const handleBookingsUpdate = () => {
+      loadTimeslots();
+    };
+
     window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('courseTemplatesUpdated', handleCourseTemplatesUpdate as EventListener);
+    window.addEventListener('bookingsUpdated', handleBookingsUpdate);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('courseTemplatesUpdated', handleCourseTemplatesUpdate as EventListener);
+      window.removeEventListener('bookingsUpdated', handleBookingsUpdate);
     };
   }, [loadTimeslots]);
 

@@ -37,11 +37,19 @@ export interface CourseSession {
 export function getCourseTemplates(): CourseTemplate[] {
   if (typeof localStorage !== 'undefined') {
     const templates = localStorage.getItem('courseTemplates');
-    const userTemplates = templates ? JSON.parse(templates) : [];
     
-    // 如果沒有用戶創建的模板，返回從預設課程轉換的模板
-    if (userTemplates.length === 0) {
+    // 檢查是否曾經初始化過課程模板
+    const hasInitialized = localStorage.getItem('courseTemplatesInitialized');
+    
+    if (templates) {
+      // 有模板數據，直接返回（包括空陣列，表示用戶已刪除所有模板）
+      return JSON.parse(templates);
+    } else if (!hasInitialized) {
+      // 首次使用，從預設課程轉換模板並標記為已初始化
       const defaultTemplates = getDefaultCourseTemplates();
+      
+      localStorage.setItem('courseTemplates', JSON.stringify(defaultTemplates));
+      localStorage.setItem('courseTemplatesInitialized', 'true');
       
       // 同步已發布的預設模板到預約系統
       defaultTemplates.forEach(template => {
@@ -51,9 +59,10 @@ export function getCourseTemplates(): CourseTemplate[] {
       });
       
       return defaultTemplates;
+    } else {
+      // 已初始化但沒有模板數據，表示用戶已刪除所有模板
+      return [];
     }
-    
-    return userTemplates;
   }
   
   // 伺服器端或無 localStorage 時返回預設模板
@@ -128,6 +137,45 @@ export function deleteCourseTemplate(id: string): boolean {
     
     if (filteredTemplates.length !== templates.length) {
       localStorage.setItem('courseTemplates', JSON.stringify(filteredTemplates));
+      
+      // 同時清理相關的課程排程和同步課程數據
+      try {
+        // 清理課程排程
+        const schedules = JSON.parse(localStorage.getItem('courseSchedules') || '[]');
+        const filteredSchedules = schedules.filter((schedule: { templateId: string }) => 
+          schedule.templateId !== id
+        );
+        
+        if (filteredSchedules.length !== schedules.length) {
+          localStorage.setItem('courseSchedules', JSON.stringify(filteredSchedules));
+          console.log(`清理了 ${schedules.length - filteredSchedules.length} 個相關的課程排程`);
+        }
+        
+        // 清理同步的課程數據
+        const courses = JSON.parse(localStorage.getItem('courses') || '[]');
+        const filteredCourses = courses.filter((course: { template_id?: string; id: number | string }) => {
+          // 根據 template_id 或推導的 template ID 過濾
+          if (course.template_id && course.template_id === id) {
+            return false;
+          }
+          // 檢查是否匹配推導的模板ID
+          const templateId = `template_${course.id}`;
+          return templateId !== id;
+        });
+        
+        if (filteredCourses.length !== courses.length) {
+          localStorage.setItem('courses', JSON.stringify(filteredCourses));
+          console.log(`清理了 ${courses.length - filteredCourses.length} 個相關的同步課程數據`);
+        }
+      } catch (error) {
+        console.error('清理相關數據時發生錯誤:', error);
+      }
+      
+      // 觸發自定義事件通知其他組件數據已更新
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('courseTemplatesUpdated', { detail: { action: 'delete', templateId: id } }));
+      }
+      
       return true;
     }
   }
@@ -217,30 +265,62 @@ export function syncTemplateToBookingSystem(template: CourseTemplate): void {
   localStorage.setItem('courses', JSON.stringify(existingCourses));
 }
 
-// 根據分類獲取合適的教師名稱
+// 根據分類獲取合適的教師名稱（使用教師管理系統）
 function getTeacherNameFromCategory(category: string): string {
-  const teacherMap: { [key: string]: string } = {
-    '中文': 'Lisa Chen',
-    '英文': 'James Wilson', 
-    '文化': 'Amy Wu',
-    '商業': 'Michael Brown',
-    '師資': 'Dr. Emily Zhang',
-    '其它': 'Sarah Lee'
-  };
-  return teacherMap[category] || 'Sarah Lee';
+  try {
+    const { teacherDataService } = require('./teacherData');
+    const teachers = teacherDataService.getAllTeachers();
+    
+    // 根據分類映射到教師專長，找到對應的教師
+    const categoryMap: { [key: string]: string[] } = {
+      '中文': ['中文會話', '繁體字教學', '台灣文化'],
+      '英文': ['商務英語', '簡報技巧', '談判英語'], 
+      '文化': ['台灣文化', '中華文化'],
+      '商業': ['商務英語', '職場溝通'],
+      '師資': ['教學方法', '師資培訓'],
+      '其它': []
+    };
+    
+    const targetSkills = categoryMap[category] || [];
+    const teacher = teachers.find(t => 
+      t.status === 'active' && 
+      targetSkills.some(skill => t.expertise.includes(skill))
+    );
+    
+    return teacher?.name || '未指定教師';
+  } catch (error) {
+    console.error('獲取教師名稱失敗:', error);
+    return '未指定教師';
+  }
 }
 
-// 根據分類獲取合適的教師ID
-function getTeacherIdFromCategory(category: string): string {
-  const teacherIdMap: { [key: string]: string } = {
-    '中文': 'teacher_001',
-    '英文': 'teacher_002',
-    '文化': 'teacher_003', 
-    '商業': 'teacher_004',
-    '師資': 'teacher_005',
-    '其它': 'teacher_006'
-  };
-  return teacherIdMap[category] || 'teacher_006';
+// 根據分類獲取合適的教師ID（使用教師管理系統）
+function getTeacherIdFromCategory(category: string): number {
+  try {
+    const { teacherDataService } = require('./teacherData');
+    const teachers = teacherDataService.getAllTeachers();
+    
+    // 根據分類映射到教師專長，找到對應的教師
+    const categoryMap: { [key: string]: string[] } = {
+      '中文': ['中文會話', '繁體字教學', '台灣文化'],
+      '英文': ['商務英語', '簡報技巧', '談判英語'], 
+      '文化': ['台灣文化', '中華文化'],
+      '商業': ['商務英語', '職場溝通'],
+      '師資': ['教學方法', '師資培訓'],
+      '其它': []
+    };
+    
+    const targetSkills = categoryMap[category] || [];
+    const teacher = teachers.find(t => 
+      t.status === 'active' && 
+      targetSkills.some(skill => t.expertise.includes(skill))
+    );
+    
+    return teacher?.id || 1; // 默認返回第一個教師的ID
+  } catch (error) {
+    console.error('獲取教師ID失敗:', error);
+    return 1; // 默認返回ID 1
+  }
 }
 
 // 根據分類獲取合適的價格

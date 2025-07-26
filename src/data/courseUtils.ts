@@ -1,6 +1,6 @@
 // Import TypeScript data
 import { courses as coursesData } from './courses';
-import { teachers as teachersData } from './teachers'; 
+ 
 
 // Raw data interfaces for JSON files
 interface RawCourseData {
@@ -40,24 +40,6 @@ interface RawCourseData {
   waitlist_enabled: boolean;
 }
 
-interface RawTeacherData {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  bio: string;
-  specialties: string[];
-  languages: string[];
-  experience: number;
-  rating: number;
-  is_active: boolean;
-  profile_image?: string;
-  certifications: string[];
-  education: string[];
-  teaching_philosophy: string;
-  created_at: string;
-  updated_at: string;
-}
 
 // Type definitions based on the original files
 export interface Course {
@@ -131,24 +113,6 @@ export interface ManagedCourse {
   updatedAt: string;
 }
 
-export interface Teacher {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  bio: string;
-  specialties: string[];
-  languages: string[];
-  experience: number;
-  rating: number;
-  is_active: boolean;
-  profile_image?: string;
-  certifications: string[];
-  education: string[];
-  teaching_philosophy: string;
-  created_at: string;
-  updated_at: string;
-}
 
 export interface CourseSession {
   id: string;
@@ -630,75 +594,6 @@ export function deleteManagedCourse(id: string): boolean {
   return false;
 }
 
-// Teacher management functions
-export function getTeachers(): Teacher[] {
-  return teachersData as Teacher[];
-}
-
-export function getTeacherById(id: string): Teacher | null {
-  return teachersData.find(teacher => teacher.id === id) as Teacher || null;
-}
-
-export function addTeacher(teacher: Omit<Teacher, 'id' | 'created_at' | 'updated_at'>): Teacher {
-  if (typeof localStorage !== 'undefined') {
-    const existingTeachers = JSON.parse(localStorage.getItem('teachers') || JSON.stringify(teachersData));
-    const newTeacher = {
-      ...teacher,
-      id: `teacher_${Date.now()}`,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-    existingTeachers.push(newTeacher);
-    localStorage.setItem('teachers', JSON.stringify(existingTeachers));
-    return newTeacher as Teacher;
-  }
-  
-  const newTeacher: Teacher = {
-    ...teacher,
-    id: `teacher_${Date.now()}`,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-  return newTeacher;
-}
-
-export function updateTeacher(id: string, updates: Partial<Teacher>): Teacher | null {
-  if (typeof localStorage !== 'undefined') {
-    const existingTeachers = JSON.parse(localStorage.getItem('teachers') || JSON.stringify(teachersData));
-    const teacherIndex = existingTeachers.findIndex((teacher: RawTeacherData) => teacher.id === id);
-    
-    if (teacherIndex === -1) {
-      return null;
-    }
-    
-    existingTeachers[teacherIndex] = {
-      ...existingTeachers[teacherIndex],
-      ...updates,
-      updated_at: new Date().toISOString()
-    };
-    localStorage.setItem('teachers', JSON.stringify(existingTeachers));
-    return existingTeachers[teacherIndex] as Teacher;
-  }
-  
-  return null;
-}
-
-export function deleteTeacher(id: string): boolean {
-  if (typeof localStorage !== 'undefined') {
-    const existingTeachers = JSON.parse(localStorage.getItem('teachers') || JSON.stringify(teachersData));
-    const teacherIndex = existingTeachers.findIndex((teacher: RawTeacherData) => teacher.id === id);
-    
-    if (teacherIndex === -1) {
-      return false;
-    }
-    
-    existingTeachers.splice(teacherIndex, 1);
-    localStorage.setItem('teachers', JSON.stringify(existingTeachers));
-    return true;
-  }
-  
-  return false;
-}
 
 // Utility functions
 export function getCoursesByStatus(status: ManagedCourse['status']): ManagedCourse[] {

@@ -7,14 +7,12 @@ import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   ManagedCourse,
-  Teacher,
   getManagedCourses,
-  getTeachers,
   addManagedCourse,
   updateManagedCourse,
-  deleteManagedCourse,
-  addTeacher
+  deleteManagedCourse
 } from '@/data/courseUtils';
+import { teacherDataService, Teacher } from '@/data/teacherData';
 
 const {
   FiBook,
@@ -220,7 +218,7 @@ const CourseManagement = () => {
   useEffect(() => {
     const loadData = () => {
       const coursesData = getManagedCourses();
-      const teachersData = getTeachers();
+      const teachersData = teacherDataService.getAllTeachers();
       
       // 調試: 記錄課程資料
       console.log('=== 課程模組調試資訊 ===');
@@ -477,19 +475,20 @@ const CourseManagement = () => {
       return;
     }
     
-    const newTeacherData = addTeacher({
+    const newTeacherData = teacherDataService.addTeacher({
       name: newTeacher.name,
       email: newTeacher.email,
       phone: newTeacher.phone || '',
       bio: newTeacher.bio || '',
-      specialties: newTeacher.specialties || [],
+      teachingCategory: newTeacher.specialties || [],
+      expertise: newTeacher.specialties || [],
+      experience: (newTeacher.experience || 0).toString() + '年',
+      qualification: newTeacher.certifications || [],
       languages: newTeacher.languages || [],
-      experience: newTeacher.experience || 0,
-      rating: newTeacher.rating || 5.0,
-      is_active: true,
-      certifications: newTeacher.certifications || [],
-      education: [],
-      teaching_philosophy: ''
+      joinDate: new Date().toISOString(),
+      status: 'active' as const,
+      contractType: 'part-time' as const,
+      salary: 0
     });
     
     setTeachers(prev => [...prev, newTeacherData]);
