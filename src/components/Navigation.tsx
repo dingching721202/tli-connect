@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { FiMenu, FiX, FiUser, FiLogOut, FiBook, FiUsers, FiSettings, FiBookOpen, FiUserPlus, FiShare2, FiBriefcase, FiClock, FiCalendar } from 'react-icons/fi';
+import { FiMenu, FiX, FiUser, FiLogOut, FiBook, FiUsers, FiSettings, FiBookOpen, FiUserPlus, FiShare2, FiBriefcase, FiClock, FiCalendar, FiUserCheck } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
 
@@ -16,7 +16,8 @@ const Navigation: React.FC = () => {
 
   const navigationItems = [
     { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'OPS', 'CORPORATE_CONTACT', 'ADMIN'] },
-    { name: '用戶管理', href: '/user-management', icon: FiUsers, roles: ['OPS', 'ADMIN'] },
+    { name: '會員管理', href: '/member-management', icon: FiUsers, roles: ['OPS', 'ADMIN'] },
+    { name: '教師管理', href: '/teacher-management', icon: FiUserCheck, roles: ['OPS', 'ADMIN'] },
     { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['OPS', 'ADMIN'] },
     { name: '課程預約', href: '/', icon: FiBook, roles: ['guest', 'STUDENT'] },
     { name: '會員方案', href: '/membership', icon: FiShare2, roles: ['guest', 'STUDENT'] },

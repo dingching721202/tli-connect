@@ -48,6 +48,7 @@ interface Booking {
 
 export default function MyBookingsPage() {
   const { user } = useAuth();
+  const [selectedMainTab, setSelectedMainTab] = useState<'bookings' | 'leave'>('bookings');
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed' | 'cancelled' | 'all' | 'pending' | 'approved' | 'rejected'>('upcoming');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -59,6 +60,7 @@ export default function MyBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
+  const [studentList, setStudentList] = useState<Array<{name: string; email: string; phone?: string}>>([]);
 
   // 轉換預約資料為 UI 格式的通用函數
   const convertBookingData = useCallback((dashboardData: { upcomingClasses: Array<{ appointment?: { id: number; status: string; class_timeslot_id: number; created_at: string }; session: { id: string; date: string; startTime: string; endTime: string; courseTitle: string; sessionTitle: string; teacherName: string; classroom?: string; materials?: string } }> }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
@@ -210,6 +212,12 @@ export default function MyBookingsPage() {
 
 
   const filteredBookings = bookings.filter(booking => {
+    // First filter by main tab (for teachers)
+    if (user?.role === 'TEACHER') {
+      if (selectedMainTab === 'bookings' && booking.leaveReason) return false;
+      if (selectedMainTab === 'leave' && !booking.leaveReason) return false;
+    }
+    
     if (selectedTab === 'all') return true;
     return booking.status === selectedTab;
   });
@@ -267,6 +275,21 @@ export default function MyBookingsPage() {
         // Here you would update the request status
       }
     }
+  };
+
+  // Get student list for a booking (mock data for now)
+  const getStudentListForBooking = (bookingId: string) => {
+    // Mock student data - in real implementation, this would fetch from localStorage or API
+    const mockStudents = [
+      { name: '王小明', email: 'wang@example.com', phone: '0912-345-678' },
+      { name: '李小華', email: 'li@example.com', phone: '0923-456-789' },
+      { name: '張小美', email: 'zhang@example.com' }
+    ];
+    
+    const booking = bookings.find(b => b.id === bookingId);
+    const studentCount = booking?.studentCount || 1;
+    
+    return mockStudents.slice(0, studentCount);
   };
 
   const handleCancelBooking = (bookingId: string) => {
@@ -435,19 +458,9 @@ export default function MyBookingsPage() {
                   ) : (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-blue-600">學生姓名：</span>
-                        <span className="font-medium">{selectedBooking.studentName}</span>
+                        <span className="text-blue-600">學生人數：</span>
+                        <span className="font-medium">{selectedBooking.studentCount || 1} 位</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-600">聯絡信箱：</span>
-                        <span>{selectedBooking.studentEmail}</span>
-                      </div>
-                      {selectedBooking.studentPhone && (
-                        <div className="flex justify-between">
-                          <span className="text-blue-600">聯絡電話：</span>
-                          <span>{selectedBooking.studentPhone}</span>
-                        </div>
-                      )}
                       <div className="flex justify-between">
                         <span className="text-blue-600">會員類型：</span>
                         <span>{selectedBooking.membershipType === 'corporate' ? '企業會員' : '個人會員'}</span>
@@ -468,6 +481,36 @@ export default function MyBookingsPage() {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* 學生清單 (for teachers viewing bookings) */}
+            {user?.role === 'TEACHER' && !selectedBooking.leaveReason && studentList.length > 0 && (
+              <div className="p-4 bg-green-50 rounded-lg">
+                <h4 className="font-medium mb-3 text-green-900">預約學生清單</h4>
+                <div className="space-y-3">
+                  {studentList.map((student, index) => (
+                    <div key={index} className="bg-white p-3 rounded border">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <div className="font-medium text-gray-900">{student.name}</div>
+                          <div className="text-sm text-gray-600">{student.email}</div>
+                          {student.phone && (
+                            <div className="text-sm text-gray-600">{student.phone}</div>
+                          )}
+                        </div>
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={() => window.open(`mailto:${student.email}`, '_blank')}
+                          className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200 transition-colors"
+                        >
+                          聯絡
+                        </motion.button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -571,7 +614,7 @@ export default function MyBookingsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">我的預約與請假</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{user?.role === 'TEACHER' ? '我的預約' : '我的預約與請假'}</h1>
           <p className="text-gray-600">
             {user?.role === 'STUDENT' 
               ? '查看您預約的課程和上課詳情' 
@@ -579,57 +622,30 @@ export default function MyBookingsPage() {
           </p>
         </motion.div>
 
-        {/* Statistics */}
+        {/* Statistics Dashboard */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6"
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6"
         >
-          {(user?.role === 'STUDENT' ? [
+          {[
             { 
               label: '即將開始', 
-              count: bookings.filter(b => b.status === 'upcoming').length,
+              count: user?.role === 'STUDENT' 
+                ? bookings.filter(b => b.status === 'upcoming').length
+                : bookings.filter(b => b.status === 'upcoming' && !b.leaveReason).length,
               color: 'text-blue-600 bg-blue-50 border-blue-200',
               icon: FiClock
             },
             { 
               label: '已完成', 
-              count: bookings.filter(b => b.status === 'completed').length,
+              count: user?.role === 'STUDENT' 
+                ? bookings.filter(b => b.status === 'completed').length
+                : bookings.filter(b => b.status === 'completed' && !b.leaveReason).length,
               color: 'text-green-600 bg-green-50 border-green-200',
               icon: FiCheckCircle
-            },
-            { 
-              label: '已取消', 
-              count: bookings.filter(b => b.status === 'cancelled').length,
-              color: 'text-red-600 bg-red-50 border-red-200',
-              icon: FiX
             }
-          ] : [
-            { 
-              label: '即將開始', 
-              count: bookings.filter(b => b.status === 'upcoming' && !b.leaveReason).length,
-              color: 'text-blue-600 bg-blue-50 border-blue-200',
-              icon: FiClock
-            },
-            { 
-              label: '已完成', 
-              count: bookings.filter(b => b.status === 'completed' && !b.leaveReason).length,
-              color: 'text-green-600 bg-green-50 border-green-200',
-              icon: FiCheckCircle
-            },
-            { 
-              label: '已取消', 
-              count: bookings.filter(b => b.status === 'cancelled' && !b.leaveReason).length,
-              color: 'text-red-600 bg-red-50 border-red-200',
-              icon: FiX
-            },
-            { 
-              label: '待審核請假', 
-              count: bookings.filter(b => b.status === 'pending' && b.leaveReason).length,
-              color: 'text-yellow-600 bg-yellow-50 border-yellow-200',
-              icon: FiMessageSquare
-            }
-          ]).map((stat) => (
+          ].map((stat) => (
             <motion.div
               key={stat.label}
               whileHover={{ scale: 1.02, y: -2 }}
@@ -646,7 +662,50 @@ export default function MyBookingsPage() {
           ))}
         </motion.div>
 
-        {/* Tab Navigation */}
+
+        {/* Main Tab Navigation for Teachers */}
+        {user?.role === 'TEACHER' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <div className="flex bg-white rounded-lg shadow-sm border border-gray-200 p-1">
+              <motion.button
+                onClick={() => {
+                  setSelectedMainTab('bookings');
+                  setSelectedTab('upcoming');
+                }}
+                className={`flex-1 px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                  selectedMainTab === 'bookings'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                預約
+              </motion.button>
+              <motion.button
+                onClick={() => {
+                  setSelectedMainTab('leave');
+                  setSelectedTab('pending');
+                }}
+                className={`flex-1 px-6 py-3 rounded-md text-sm font-medium transition-all duration-200 ${
+                  selectedMainTab === 'leave'
+                    ? 'bg-blue-600 text-white shadow-sm'
+                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                請假
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Sub Tab Navigation */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -675,17 +734,35 @@ export default function MyBookingsPage() {
                 </motion.button>
               ))
             ) : (
-              [
-                { key: 'upcoming', label: '即將開課', count: bookings.filter(b => b.status === 'upcoming' && !b.leaveReason).length },
-                { key: 'completed', label: '已完成課程', count: bookings.filter(b => b.status === 'completed' && !b.leaveReason).length },
-                { key: 'pending', label: '待審核請假', count: bookings.filter(b => b.status === 'pending' && b.leaveReason).length },
-                { key: 'approved', label: '已批准請假', count: bookings.filter(b => b.status === 'approved' && b.leaveReason).length },
-                { key: 'rejected', label: '已拒絕請假', count: bookings.filter(b => b.status === 'rejected' && b.leaveReason).length },
-                { key: 'all', label: '全部', count: bookings.length }
+              // Teacher tabs - show different tabs based on selectedMainTab
+              selectedMainTab === 'bookings' ? [
+                { key: 'upcoming', label: '即將開始', count: bookings.filter(b => b.status === 'upcoming' && !b.leaveReason).length },
+                { key: 'completed', label: '已完成', count: bookings.filter(b => b.status === 'completed' && !b.leaveReason).length },
+                { key: 'cancelled', label: '已取消', count: bookings.filter(b => b.status === 'cancelled' && !b.leaveReason).length },
+                { key: 'all', label: '全部', count: bookings.filter(b => !b.leaveReason).length }
               ].map((tab) => (
                 <motion.button
                   key={tab.key}
-                  onClick={() => setSelectedTab(tab.key as 'upcoming' | 'completed' | 'cancelled' | 'all' | 'pending' | 'approved' | 'rejected')}
+                  onClick={() => setSelectedTab(tab.key as 'upcoming' | 'completed' | 'cancelled' | 'all')}
+                  className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                    selectedTab === tab.key
+                      ? 'bg-blue-600 text-white shadow-sm'
+                      : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  {tab.label} ({tab.count})
+                </motion.button>
+              )) : [
+                { key: 'pending', label: '待審核請假', count: bookings.filter(b => b.status === 'pending' && b.leaveReason).length },
+                { key: 'approved', label: '已批准請假', count: bookings.filter(b => b.status === 'approved' && b.leaveReason).length },
+                { key: 'rejected', label: '已拒絕請假', count: bookings.filter(b => b.status === 'rejected' && b.leaveReason).length },
+                { key: 'all', label: '全部', count: bookings.filter(b => b.leaveReason).length }
+              ].map((tab) => (
+                <motion.button
+                  key={tab.key}
+                  onClick={() => setSelectedTab(tab.key as 'pending' | 'approved' | 'rejected' | 'all')}
                   className={`flex-1 px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                     selectedTab === tab.key
                       ? 'bg-blue-600 text-white shadow-sm'
@@ -740,7 +817,7 @@ export default function MyBookingsPage() {
                             <span>
                               {user?.role === 'STUDENT' 
                                 ? booking.instructorName 
-                                : (booking.leaveReason ? `${booking.studentCount} 位學生` : booking.studentName)}
+                                : (booking.leaveReason ? `${booking.studentCount || 1} 位學生` : `${booking.studentCount || 1} 位學生`)}
                             </span>
                           </div>
                           {user?.role === 'TEACHER' && !booking.leaveReason && booking.membershipType && (
@@ -789,6 +866,9 @@ export default function MyBookingsPage() {
                           whileTap={{ scale: 0.95 }}
                           onClick={() => {
                             setSelectedBooking(booking);
+                            if (user?.role === 'TEACHER' && !booking.leaveReason) {
+                              setStudentList(getStudentListForBooking(booking.id));
+                            }
                             setShowDetailModal(true);
                           }}
                           className="flex items-center space-x-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
@@ -836,6 +916,17 @@ export default function MyBookingsPage() {
                               </motion.button>
                             );
                           })()}
+                          
+                          {user?.role === 'TEACHER' && !booking.leaveReason && (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="flex items-center space-x-1 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm"
+                            >
+                              <SafeIcon icon={FiMessageSquare} className="text-xs" />
+                              <span>申請請假</span>
+                            </motion.button>
+                          )}
                           
                           {user?.role === 'TEACHER' && booking.studentEmail && (
                             <motion.button

@@ -18,7 +18,7 @@ interface User {
   id: number;
   name: string;
   email: string;
-  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT';
+  role: 'STUDENT' | 'CORPORATE_CONTACT';
   membershipType?: 'individual' | 'corporate' | null;
   membershipStatus: 'active' | 'expired' | 'expiring_soon' | 'inactive';
   joinDate: string;
@@ -53,7 +53,7 @@ interface NewUser {
   // 基本資訊 (所有角色必要)
   name: string;
   email: string;
-  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'OPS' | 'CORPORATE_CONTACT';
+  role: 'STUDENT' | 'CORPORATE_CONTACT';
   phone: string;
   password: string;
   confirmPassword: string;
@@ -139,7 +139,7 @@ interface MockPlanUser extends PlanUser {
   joinDate: string;
 }
 
-const UserManagement: React.FC = () => {
+const MemberManagement: React.FC = () => {
   const {} = useAuth();
   const [membershipFilter, setMembershipFilter] = useState<'all' | 'individual' | 'corporate' | 'corporate_companies'>('all');
   const [selectedCompany, setSelectedCompany] = useState('all');
@@ -206,7 +206,7 @@ const UserManagement: React.FC = () => {
     status: 'active' as 'active' | 'inactive' | 'expired'
   });
 
-  // 新增用戶表單狀態
+  // 新增會員表單狀態
   const [newUser, setNewUser] = useState<NewUser>({
     // 基本資訊
     name: '',
@@ -460,40 +460,6 @@ const UserManagement: React.FC = () => {
           daysRemaining: 5,
           isExpiringSoon: true
         }
-      },
-      {
-        id: 3,
-        name: '張老師',
-        email: 'teacher1@example.com',
-        role: 'TEACHER',
-        membershipStatus: 'active',
-        joinDate: '2023-09-01',
-        lastLogin: '2024-12-20',
-        lastActivity: '2024-12-20',
-        companyName: '',
-        phone: '0934-567-890',
-        level: '',
-        expertise: '商務華語',
-        experience: '5年',
-        department: '',
-        membership: null
-      },
-      {
-        id: 4,
-        name: '陳管理員',
-        email: 'admin@example.com',
-        role: 'OPS',
-        membershipStatus: 'active',
-        joinDate: '2023-01-01',
-        lastLogin: '2024-12-20',
-        lastActivity: '2024-12-20',
-        companyName: '',
-        phone: '0945-678-901',
-        level: '',
-        expertise: '',
-        experience: '',
-        department: '',
-        membership: null
       }
     ];
 
@@ -563,8 +529,7 @@ const UserManagement: React.FC = () => {
   const getRoleName = (role: string): string => {
     switch (role) {
       case 'STUDENT': return '學生';
-      case 'TEACHER': return '老師';
-      case 'OPS': return '管理員';
+      case 'CORPORATE_CONTACT': return '企業窗口';
       default: return role;
     }
   };
@@ -572,8 +537,7 @@ const UserManagement: React.FC = () => {
   const getRoleColor = (role: string): string => {
     switch (role) {
       case 'STUDENT': return 'bg-blue-100 text-blue-800';
-      case 'TEACHER': return 'bg-green-100 text-green-800';
-      case 'OPS': return 'bg-purple-100 text-purple-800';
+      case 'CORPORATE_CONTACT': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -625,15 +589,13 @@ const UserManagement: React.FC = () => {
   };
 
   const getUserIcon = (user: User) => {
-    if (user.role === 'TEACHER') return FaGraduationCap;
-    if (user.role === 'OPS') return FiShield;
+    if (user.role === 'CORPORATE_CONTACT') return FiBriefcase;
     if (user.membershipType === 'corporate') return FiBriefcase;
     return FiUser;
   };
 
   const getUserIconColor = (user: User): string => {
-    if (user.role === 'TEACHER') return 'bg-green-500';
-    if (user.role === 'OPS') return 'bg-purple-500';
+    if (user.role === 'CORPORATE_CONTACT') return 'bg-purple-500';
     if (user.membershipType === 'corporate') return 'bg-indigo-500';
     return 'bg-blue-500';
   };
@@ -654,7 +616,7 @@ const UserManagement: React.FC = () => {
 
       switch (filterOption) {
         case 'students': return user.role === 'STUDENT';
-        case 'teachers': return user.role === 'TEACHER';
+        case 'corporate_contacts': return user.role === 'CORPORATE_CONTACT';
         case 'active_memberships': return user.membershipStatus === 'active';
         case 'expired_memberships': return user.membershipStatus === 'expired';
         case 'expiring_soon': return user.membershipStatus === 'expiring_soon';
@@ -666,7 +628,7 @@ const UserManagement: React.FC = () => {
     return users;
   };
 
-  // 新增用戶功能
+  // 新增會員功能
   const validateUserForm = (): string[] => {
     const errors: string[] = [];
 
@@ -704,16 +666,6 @@ const UserManagement: React.FC = () => {
 
       if (newUser.membershipType === 'individual' && !newUser.membershipPlan) {
         errors.push('會員方案（個人會員必填）');
-      }
-    } else if (newUser.role === 'TEACHER') {
-      // 講師必填欄位驗證可以根據需要添加
-      // 例如：專業領域、教學經驗等是否為必填
-    } else if (newUser.role === 'OPS') {
-      if (!newUser.position?.trim()) {
-        errors.push('職位（管理員必填）');
-      }
-      if (!newUser.accessLevel) {
-        errors.push('權限等級（管理員必填）');
       }
     } else if (newUser.role === 'CORPORATE_CONTACT') {
       if (!newUser.companyRole?.trim()) {
@@ -1113,7 +1065,7 @@ const UserManagement: React.FC = () => {
       // 更新企業列表
       setCompanies(getCompanies());
       
-      // 如果是從新增用戶頁面來的，自動選中新增的企業
+      // 如果是從新增會員頁面來的，自動選中新增的企業
       if (showAddUserModal && newUser.membershipType === 'corporate') {
         setNewUser(prev => ({
           ...prev,
@@ -1432,20 +1384,20 @@ const UserManagement: React.FC = () => {
 
     const timestamp = new Date().toISOString().slice(0, 10);
     const filterText = membershipFilter === 'all' ? '全部' : membershipFilter === 'individual' ? '個人會員' : '企業會員';
-    link.setAttribute('download', `TLI用戶管理_${filterText}_${timestamp}.csv`);
+    link.setAttribute('download', `TLI會員管理_${filterText}_${timestamp}.csv`);
 
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
-    alert(`✅ CSV檔案匯出成功！\n\n檔案名稱：TLI用戶管理_${filterText}_${timestamp}.csv\n匯出筆數：${filteredUsers.length} 筆`);
+    alert(`✅ CSV檔案匯出成功！\n\n檔案名稱：TLI會員管理_${filterText}_${timestamp}.csv\n匯出筆數：${filteredUsers.length} 筆`);
   };
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <h2 className="text-2xl font-bold text-gray-900">用戶管理</h2>
+        <h2 className="text-2xl font-bold text-gray-900">會員管理</h2>
         <div className="flex space-x-3">
           <motion.button
             whileHover={{ scale: 1.02 }}
@@ -1454,7 +1406,7 @@ const UserManagement: React.FC = () => {
             className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             <SafeIcon icon={FiUserPlus} className="text-sm" />
-            <span>新增用戶</span>
+            <span>新增會員</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.02 }}
@@ -1561,9 +1513,9 @@ const UserManagement: React.FC = () => {
             onChange={(e) => setFilterOption(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           >
-            <option value="all">全部用戶</option>
+            <option value="all">全部會員</option>
             <option value="students">學生</option>
-            <option value="teachers">老師</option>
+            <option value="corporate_contacts">企業窗口</option>
             <option value="active_memberships">有效會員</option>
             <option value="expired_memberships">已過期會員</option>
             <option value="expiring_soon">即將過期</option>
@@ -2306,7 +2258,7 @@ const UserManagement: React.FC = () => {
         </div>
       )}
 
-      {/* 新增用戶Modal */}
+      {/* 新增會員Modal */}
       {showAddUserModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <motion.div
@@ -2316,7 +2268,7 @@ const UserManagement: React.FC = () => {
           >
             <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-t-xl">
               <div className="flex justify-between items-center">
-                <h3 className="text-xl font-bold">新增用戶</h3>
+                <h3 className="text-xl font-bold">新增會員</h3>
                 <button onClick={() => setShowAddUserModal(false)}>
                   <SafeIcon icon={FiX} className="text-white text-xl hover:bg-white/20 rounded-lg p-1 transition-colors" />
                 </button>
@@ -2369,13 +2321,11 @@ const UserManagement: React.FC = () => {
                       </label>
                       <select
                         value={newUser.role}
-                        onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value as 'STUDENT' | 'TEACHER' | 'OPS' | 'OPS' | 'CORPORATE_CONTACT' }))}
+                        onChange={(e) => setNewUser(prev => ({ ...prev, role: e.target.value as 'STUDENT' | 'CORPORATE_CONTACT' }))}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         required
                       >
                         <option value="STUDENT">學生</option>
-                        <option value="TEACHER">老師</option>
-                        <option value="OPS">管理員</option>
                         <option value="CORPORATE_CONTACT">企業窗口</option>
                       </select>
                     </div>
@@ -2518,7 +2468,7 @@ const UserManagement: React.FC = () => {
                 )}
 
                 {/* 老師專業資訊 - 只有老師才顯示 */}
-                {newUser.role === 'TEACHER' && (
+                {false && (
                   <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-200">
                     <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                       <SafeIcon icon={FaGraduationCap} className="mr-2 text-yellow-600" />
@@ -2570,7 +2520,7 @@ const UserManagement: React.FC = () => {
                 )}
 
                 {/* 管理員權限設定 - 只有管理員才顯示 */}
-                {newUser.role === 'OPS' && (
+                {false && (
                   <div className="bg-gradient-to-r from-red-50 to-rose-50 rounded-xl p-6 border border-red-200">
                     <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                       <SafeIcon icon={FiShield} className="mr-2 text-red-600" />
@@ -2608,7 +2558,7 @@ const UserManagement: React.FC = () => {
                       <div className="md:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">特殊權限</label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          {['用戶管理', '課程模組', '內容審核', '系統設定', '數據分析', '財務管理', '營運報告', '安全監控'].map((permission) => (
+                          {['會員管理', '課程模組', '內容審核', '系統設定', '數據分析', '財務管理', '營運報告', '安全監控'].map((permission) => (
                             <label key={permission} className="flex items-center space-x-2">
                               <input
                                 type="checkbox"
@@ -2639,7 +2589,7 @@ const UserManagement: React.FC = () => {
                 )}
 
                 {/* 顧問專業設定 - 只有顧問才顯示 */}
-                {newUser.role === 'OPS' && (
+                {false && (
                   <div className="bg-gradient-to-r from-indigo-50 to-blue-50 rounded-xl p-6 border border-indigo-200">
                     <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                       <SafeIcon icon={FiBriefcase} className="mr-2 text-indigo-600" />
@@ -2803,7 +2753,7 @@ const UserManagement: React.FC = () => {
                     type="submit"
                     className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-4 px-6 rounded-xl hover:shadow-lg transition-all duration-300 font-bold text-lg"
                   >
-                    新增用戶
+                    新增會員
                   </motion.button>
                   <button
                     type="button"
@@ -2890,13 +2840,11 @@ const UserManagement: React.FC = () => {
                       </label>
                       <select
                         value={editUser.role}
-                        onChange={(e) => setEditUser(prev => ({ ...prev, role: e.target.value as 'STUDENT' | 'TEACHER' | 'OPS' }))}
+                        onChange={(e) => setEditUser(prev => ({ ...prev, role: e.target.value as 'STUDENT' | 'CORPORATE_CONTACT' }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                         required
                       >
                         <option value="STUDENT">學生</option>
-                        <option value="TEACHER">老師</option>
-                        <option value="OPS">管理員</option>
                         <option value="CORPORATE_CONTACT">企業窗口</option>
                       </select>
                     </div>
@@ -3020,7 +2968,7 @@ const UserManagement: React.FC = () => {
                 )}
 
                 {/* 老師專業資訊 */}
-                {editUser.role === 'TEACHER' && (
+                {false && (
                   <div className="bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl p-6 border border-yellow-200">
                     <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                       <SafeIcon icon={FaGraduationCap} className="mr-2 text-yellow-600" />
@@ -3820,4 +3768,4 @@ const UserManagement: React.FC = () => {
   );
 };
 
-export default UserManagement;
+export default MemberManagement;

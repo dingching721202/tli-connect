@@ -248,7 +248,7 @@ export function getCorporateStatistics() {
   };
 }
 
-// Additional functions required by UserManagement component
+// Additional functions required by MemberManagement component
 export function getCompanies(): Company[] {
   return corporateClients.map(client => ({
     id: client.id,
