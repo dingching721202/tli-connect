@@ -10,6 +10,9 @@ import SelectedCourses from './SelectedCourses';
 interface BookingCourse {
   id: number;
   title: string;
+  courseTitle?: string;   // 課程名稱（班名）
+  sessionTitle?: string;  // 課次標題
+  sessionNumber?: number; // 課次編號（Lesson N 的 N）
   date: string;
   timeSlot: string;
   teacher: string;
@@ -206,6 +209,9 @@ const BookingSystem: React.FC = () => {
       return {
         id: session.id.hashCode(), // 使用完整session ID的hash作為數字ID
         title: `${session.courseTitle} ${session.sessionTitle}`,
+        courseTitle: session.courseTitle,
+        sessionTitle: session.sessionTitle,
+        sessionNumber: session.sessionNumber,
         date: session.date,
         timeSlot: `${session.startTime}-${session.endTime}`,
         teacher: session.teacherName,

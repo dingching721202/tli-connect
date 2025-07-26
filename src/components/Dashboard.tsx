@@ -20,6 +20,7 @@ interface BookedCourse {
     endTime: string;
     courseTitle: string;
     sessionTitle: string;
+    sessionNumber?: number;
     teacherName: string;
     courseId: string;
     capacity: number;
@@ -52,6 +53,7 @@ interface TeacherCourse {
     endTime: string;
     courseTitle: string;
     sessionTitle: string;
+    sessionNumber?: number;
     teacherName: string;
     courseId: string;
     capacity: number;
@@ -119,7 +121,7 @@ const Dashboard = () => {
     membership: Membership | null;
     upcomingClasses: BookedCourse[];
   } | null>(null);
-  const [teacherCourses, setTeacherCourses] = useState<TeacherCourse[]>([]);
+  // 移除不再使用的 teacherCourses state，教師現在使用 dashboardData
   const [loading, setLoading] = useState(true);
 
   // 載入 Dashboard 資料 (US09)
@@ -137,8 +139,9 @@ const Dashboard = () => {
           const data = await dashboardService.getDashboardData(user.id);
           setDashboardData(data);
         } else if (user.role === 'TEACHER') {
-          const teacherData = await dashboardService.getTeacherCoursesFromCalendar(user.id);
-          setTeacherCourses(teacherData);
+          // 🔧 教師也使用 getDashboardData，與我的預約頁面保持一致
+          const data = await dashboardService.getDashboardData(user.id, 'TEACHER');
+          setDashboardData(data);
         }
       } catch (error) {
         console.error('載入 Dashboard 資料失敗:', error);
@@ -159,8 +162,9 @@ const Dashboard = () => {
           setDashboardData(data);
         });
       } else if (user?.role === 'TEACHER') {
-        dashboardService.getTeacherCoursesFromCalendar(user.id).then(data => {
-          setTeacherCourses(data);
+        // 🔧 教師也使用相同的數據載入方式
+        dashboardService.getDashboardData(user.id, 'TEACHER').then(data => {
+          setDashboardData(data);
         });
       }
     };
@@ -315,11 +319,38 @@ const Dashboard = () => {
     }
 
     if (user?.role === 'TEACHER') {
+      // 🔧 使用教師管理系統的真實數據
+      const { teacherDataService } = require('../data/teacherData');
+      const teacherInSystem = teacherDataService.getTeacherByEmail(user.email);
+      
+      // 從教師課程數據計算統計（如果已載入）
+      const allCourses = getTeacherCourses() || [];
+      const upcomingCourses = allCourses.filter(c => c.status === 'upcoming');
+      const completedCourses = allCourses.filter(c => c.status === 'completed');
+      
+      // 計算本月課程
+      const currentMonth = new Date().getMonth();
+      const currentYear = new Date().getFullYear();
+      const thisMonthCourses = allCourses.filter(c => {
+        const courseDate = new Date(c.date);
+        return courseDate.getMonth() === currentMonth && courseDate.getFullYear() === currentYear;
+      });
+      
+      // 計算總學生人數（從課程中的學生列表去重）
+      const allStudentEmails = new Set();
+      allCourses.forEach(course => {
+        if (course.studentList && Array.isArray(course.studentList)) {
+          course.studentList.forEach(student => {
+            if (student.email) allStudentEmails.add(student.email);
+          });
+        }
+      });
+      
       return [
-        { label: '教授課程', value: '15', icon: FiBook },
-        { label: '學生人數', value: '48', icon: FiUsers },
-        { label: '本月課程', value: '22', icon: FiCalendar },
-        { label: '評分', value: '4.8', icon: FiAward }
+        { label: '教授課程', value: allCourses.length.toString(), icon: FiBook },
+        { label: '學生人數', value: allStudentEmails.size.toString(), icon: FiUsers },
+        { label: '本月課程', value: thisMonthCourses.length.toString(), icon: FiCalendar },
+        { label: '評分', value: teacherInSystem?.rating?.toFixed(1) || '0.0', icon: FiAward }
       ];
     }
 
@@ -400,7 +431,10 @@ const Dashboard = () => {
       
       const courseData = {
         id: uniqueId,
-        title: `${item.session.courseTitle} - ${item.session.sessionTitle}`,
+        title: `${item.session.courseTitle} - Lesson ${item.session.sessionNumber || 1} - ${item.session.sessionTitle}`,
+        courseTitle: item.session.courseTitle,
+        sessionTitle: item.session.sessionTitle,
+        sessionNumber: item.session.sessionNumber,
         teacher: item.session.teacherName,
         date: item.session.date,
         time: `${item.session.startTime}-${item.session.endTime}`,
@@ -437,44 +471,55 @@ const Dashboard = () => {
     });
   };
 
-  // 使用真實數據 - 老師的課程（從課程預約日曆系統）
+  // 🔧 使用與「我的預約」頁面相同的數據源
   const getTeacherCourses = (): Course[] => {
-    if (!teacherCourses || loading) return [];
+    if (!dashboardData || loading) return [];
     
-    const courses = teacherCourses.map(item => {
-      // 使用課程預約日曆系統的真實資料
-      const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
-      const now = new Date();
-      const daysFromNow = Math.ceil((startTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    // 使用與 my-bookings 頁面相同的數據轉換邏輯
+    const convertTeacherData = (data: any) => {
+      if (!data.upcomingClasses) return [];
       
-      let status: 'upcoming' | 'completed' | 'cancelled';
-      if (item.session.status === 'cancelled') {
-        status = 'cancelled';
-      } else {
-        // 使用課程結束時間來判斷是否已完成
-        const endTime = new Date(`${item.session.date} ${item.session.endTime}`);
-        if (endTime < now) {
-          status = 'completed';
+      return data.upcomingClasses.map((item: any) => {
+        const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
+        const now = new Date();
+        const daysFromNow = Math.ceil((startTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        
+        let status: 'upcoming' | 'completed' | 'cancelled';
+        if (item.appointment?.status === 'CANCELED') {
+          status = 'cancelled';
         } else {
-          status = 'upcoming';
+          const endTime = new Date(`${item.session.date} ${item.session.endTime}`);
+          // 🔧 修改：只有已開課的課程結束後才變成已完成
+          if (endTime < now && item.session.bookingStatus === 'opened') {
+            status = 'completed';
+          } else {
+            status = 'upcoming';
+          }
         }
-      }
-      
-      return {
-        id: `teacher-session-${item.session.id}-${item.session.date}-${item.session.startTime}`,
-        title: `${item.session.courseTitle} - ${item.session.sessionTitle}`,
-        students: `${item.appointmentCount} 位學生`,
-        date: item.session.date,
-        time: `${item.session.startTime}-${item.session.endTime}`,
-        status,
-        classroom: item.session.classroom || '待安排',
-        materials: item.session.materials || '待公佈',
-        daysFromNow,
-        // 新增老師需要的額外資訊
-        sessionId: item.session.id,
-        studentList: item.studentList
-      };
-    });
+        
+        return {
+          id: `teacher-${item.appointment?.id || item.session.id}`,
+          title: `${item.session.courseTitle} - Lesson ${item.session.sessionNumber || 1} - ${item.session.sessionTitle}`,
+          courseTitle: item.session.courseTitle,
+          sessionTitle: item.session.sessionTitle,
+          sessionNumber: item.session.sessionNumber,
+          students: item.session.bookingStatus === 'opened' ? '1 位學生' : '0 位學生', // 🔧 顯示學生數字
+          date: item.session.date,
+          time: `${item.session.startTime}-${item.session.endTime}`,
+          status,
+          classroom: item.session.classroom || '線上教室',
+          materials: item.session.materials || '待公佈',
+          daysFromNow,
+          // 教師專用欄位
+          studentName: item.student?.name || (item.session.bookingStatus === 'pending' ? '待開課' : '未安排學生'),
+          studentEmail: item.student?.email || '',
+          studentCount: item.session.bookingStatus === 'opened' ? 1 : 0, // 🔧 根據狀態設定學生數量
+          appointmentId: item.appointment?.id || 0
+        };
+      });
+    };
+
+    const courses = convertTeacherData(dashboardData);
 
     // Sort by date (upcoming first, then by closest date)
     return courses.sort((a, b) => {
@@ -486,13 +531,17 @@ const Dashboard = () => {
 
   // 企業窗口專用：企業員工課程數據
   const getCorporateCourses = (): Course[] => {
+    // 🔧 使用教師管理系統獲取教師資料
+    const { teacherDataService } = require('../data/teacherData');
+    const teachers = teacherDataService.getAllTeachers();
+    
     return [
       {
         id: 'corporate-1',
         studentName: '張小明',
         studentEmail: 'zhang@taiwantech.com',
         courseName: '商務華語會話',
-        teacher: '張老師',
+        teacher: teachers[0]?.name || '王老師',
         date: '2025-01-15',
         time: '14:00-15:30',
         status: 'upcoming' as const,
@@ -507,7 +556,7 @@ const Dashboard = () => {
         studentName: '李小華',
         studentEmail: 'li@taiwantech.com',
         courseName: '華語文法精修',
-        teacher: '王老師',
+        teacher: teachers[1]?.name || '李老師',
         date: '2025-01-16',
         time: '10:00-11:30',
         status: 'upcoming' as const,
@@ -522,7 +571,7 @@ const Dashboard = () => {
         studentName: '王小美',
         studentEmail: 'wang@taiwantech.com',
         courseName: '華語聽力強化',
-        teacher: '陳老師',
+        teacher: teachers[2]?.name || '張老師',
         date: '2025-01-17',
         time: '16:00-17:30',
         status: 'upcoming' as const,
@@ -537,7 +586,7 @@ const Dashboard = () => {
         studentName: '林設計師',
         studentEmail: 'lin@taiwantech.com',
         courseName: '商務華語會話',
-        teacher: '張老師',
+        teacher: teachers[0]?.name || '王老師',
         date: '2025-01-10',
         time: '14:00-15:30',
         status: 'completed' as const,
@@ -552,6 +601,10 @@ const Dashboard = () => {
 
   // 管理員專用：全體會員預約數據
   const getAllMemberBookings = (): Course[] => {
+    // 🔧 使用教師管理系統獲取教師資料
+    const { teacherDataService } = require('../data/teacherData');
+    const teachers = teacherDataService.getAllTeachers();
+    
     const bookings: Course[] = [
       // Individual member bookings
       {
@@ -559,7 +612,7 @@ const Dashboard = () => {
         studentName: '王小明',
         studentEmail: 'student1@example.com',
         courseName: '華語文法精修',
-        teacher: '王老師',
+        teacher: teachers[0]?.name || '王老師',
         date: '2025-01-20',
         time: '09:00-10:30',
         status: 'upcoming',
@@ -574,7 +627,7 @@ const Dashboard = () => {
         studentName: '林小雅',
         studentEmail: 'student2@example.com',
         courseName: '華語文法精修',
-        teacher: '王老師',
+        teacher: teachers[0]?.name || '王老師',
         date: '2025-01-22',
         time: '14:00-15:30',
         status: 'upcoming',
@@ -590,7 +643,7 @@ const Dashboard = () => {
         studentName: '王小明',
         studentEmail: 'user1@taiwantech.com',
         courseName: '商務華語會話',
-        teacher: '張老師',
+        teacher: teachers[2]?.name || '張老師',
         date: '2025-01-21',
         time: '10:00-11:30',
         status: 'upcoming',
@@ -605,7 +658,7 @@ const Dashboard = () => {
         studentName: '李小華',
         studentEmail: 'user2@taiwantech.com',
         courseName: '華語文法精修',
-        teacher: '王老師',
+        teacher: teachers[0]?.name || '王老師',
         date: '2025-01-23',
         time: '15:00-16:30',
         status: 'upcoming',
@@ -621,7 +674,7 @@ const Dashboard = () => {
         studentName: '程式設計師A',
         studentEmail: 'dev1@innovation.com',
         courseName: '華語聽力強化',
-        teacher: '張老師',
+        teacher: teachers[2]?.name || '張老師',
         date: '2025-01-24',
         time: '11:00-12:30',
         status: 'upcoming',
@@ -637,7 +690,7 @@ const Dashboard = () => {
         studentName: '業務經理A',
         studentEmail: 'sales1@globaltrade.com',
         courseName: '華語聽力強化',
-        teacher: '張老師',
+        teacher: teachers[2]?.name || '張老師',
         date: '2025-01-25',
         time: '09:00-10:30',
         status: 'upcoming',
@@ -652,7 +705,7 @@ const Dashboard = () => {
         studentName: '行銷專員',
         studentEmail: 'marketing@globaltrade.com',
         courseName: '商務華語會話',
-        teacher: '張老師',
+        teacher: teachers[2]?.name || '張老師',
         date: '2025-01-26',
         time: '14:00-15:30',
         status: 'upcoming',
@@ -668,7 +721,7 @@ const Dashboard = () => {
         studentName: '王小明',
         studentEmail: 'student1@example.com',
         courseName: '商務華語會話',
-        teacher: '張老師',
+        teacher: teachers[2]?.name || '張老師',
         date: '2025-01-15',
         time: '09:00-10:30',
         status: 'completed',
@@ -683,7 +736,7 @@ const Dashboard = () => {
         studentName: '李小華',
         studentEmail: 'user2@taiwantech.com',
         courseName: '華語文法精修',
-        teacher: '王老師',
+        teacher: teachers[0]?.name || '王老師',
         date: '2025-01-10',
         time: '14:00-15:30',
         status: 'completed',
@@ -884,18 +937,30 @@ const Dashboard = () => {
     });
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, course?: any) => {
     switch (status) {
-      case 'upcoming': return 'text-blue-700 bg-blue-50';
+      case 'upcoming': 
+        // 🔧 教師看到：根據學生數量顯示不同顏色
+        if (user?.role === 'TEACHER' && course) {
+          return course.studentCount > 0 
+            ? 'text-green-700 bg-green-50 border-green-200'  // 已開課 - 淺綠色
+            : 'text-red-700 bg-red-50 border-red-200';       // 待開課 - 淺紅色
+        }
+        return 'text-blue-700 bg-blue-50';
       case 'completed': return 'text-gray-600 bg-gray-50';
       case 'cancelled': return 'text-red-600 bg-red-50';
       default: return 'text-gray-600 bg-gray-50';
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: string, course?: any) => {
     switch (status) {
-      case 'upcoming': return '預約中';
+      case 'upcoming': 
+        // 🔧 教師看到：根據學生數量顯示"待開課"或"已開課"
+        if (user?.role === 'TEACHER' && course) {
+          return course.studentCount > 0 ? '已開課' : '待開課';
+        }
+        return '預約中';
       case 'completed': return '已完成';
       case 'cancelled': return '已取消';
       default: return '未知';
@@ -1087,8 +1152,8 @@ const Dashboard = () => {
 
 
       {/* Course Bookings Dashboard - 手機優化 */}
-      {/* 學生專用的預約區塊 */}
-      {user?.role === 'STUDENT' && (
+      {/* 學生和教師共用的預約區塊 */}
+      {(user?.role === 'STUDENT' || user?.role === 'TEACHER') && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1141,26 +1206,48 @@ const Dashboard = () => {
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            {course.title}
-                          </h3>
+                          <div className="mb-1">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              {course.courseTitle || course.title.split(' - ')[0]}
+                            </h3>
+                            {course.sessionTitle && (
+                              <div className="text-sm text-gray-600 mt-1">
+                                Lesson {course.sessionNumber || 1} - {course.sessionTitle}
+                              </div>
+                            )}
+                          </div>
                           <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                             <div className="flex items-center space-x-1">
                               <SafeIcon icon={FiCalendar} className="text-xs" />
                               <span>{formatDate(course.date)} {course.time}</span>
                             </div>
                             <div className="flex items-center space-x-1">
-                              <SafeIcon icon={FiUser} className="text-xs" />
-                              <span>{course.teacher}</span>
+                              <SafeIcon icon={user?.role === 'STUDENT' ? FiUser : FiUsers} className="text-xs" />
+                              <span>
+                                {user?.role === 'TEACHER' 
+                                  ? course.students || '待安排學生' 
+                                  : course.teacher
+                                }
+                              </span>
                             </div>
                           </div>
                         </div>
-                        <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(course.status)}`}>
-                          {getStatusText(course.status)}
+                        <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(course.status, course)}`}>
+                          {getStatusText(course.status, course)}
                         </span>
                       </div>
 
+                      {/* Action Buttons */}
                       <div className="flex flex-wrap gap-2">
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="flex items-center space-x-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
+                        >
+                          <SafeIcon icon={FiEye} className="text-xs" />
+                          <span>查看詳情</span>
+                        </motion.button>
+
                         {course.status === 'upcoming' && (
                           <>
                             <motion.button
@@ -1184,8 +1271,19 @@ const Dashboard = () => {
                                 <span>查看教材</span>
                               </motion.button>
                             )}
+
+                            {user?.role === 'TEACHER' && (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                className="flex items-center space-x-1 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm"
+                              >
+                                <SafeIcon icon={FiCalendar} className="text-xs" />
+                                <span>申請請假</span>
+                              </motion.button>
+                            )}
                             
-                            {course.canCancel && course.appointmentId && (
+                            {course.canCancel && course.appointmentId && user?.role === 'STUDENT' && (
                               <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}

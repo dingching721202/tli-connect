@@ -6,6 +6,9 @@ import { FiChevronLeft, FiChevronRight, FiCalendar } from 'react-icons/fi';
 interface BookingCourse {
   id: number;
   title: string;
+  courseTitle?: string;   // 課程名稱（班名）
+  sessionTitle?: string;  // 課次標題
+  sessionNumber?: number; // 課次編號（Lesson N 的 N）
   date: string;
   timeSlot: string;
   teacher: string;
@@ -141,25 +144,9 @@ const Calendar: React.FC<CalendarProps> = ({
       (sc.sessionId || `${sc.id}-${sc.timeSlot}`) === (course.sessionId || `${course.id}-${course.timeSlot}`)
     );
 
-    // 解析課程標題以提取課程信息
-    const parseCourseName = (title: string) => {
-      // 檢查是否為課程模組系統的課程格式
-      if (title.includes('第') && title.includes('課')) {
-        const parts = title.split(' ');
-        if (parts.length >= 2) {
-          return {
-            courseName: parts[0],
-            sessionInfo: parts.slice(1).join(' ')
-          };
-        }
-      }
-      return {
-        courseName: title,
-        sessionInfo: ''
-      };
-    };
-
-    const { courseName, sessionInfo } = parseCourseName(course.title);
+    // 直接使用分離的欄位顯示課程信息
+    const courseName = course.courseTitle || course.title;
+    const sessionInfo = course.sessionTitle || '';
 
     // 根據課程狀態設置統一顏色 (US05, US06)
     const getCourseColor = () => {
@@ -190,7 +177,7 @@ const Calendar: React.FC<CalendarProps> = ({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: index * 0.05 }}
         className={`
-          text-xs px-2 py-1.5 rounded-md transition-all duration-200 
+          text-xs px-2 py-2 rounded-md transition-all duration-200 flex flex-col 
           ${getCourseColor()}
           ${isMobile ? 'mb-1' : 'mb-0.5'}
           shadow-sm border border-opacity-20 border-gray-400
@@ -204,46 +191,52 @@ const Calendar: React.FC<CalendarProps> = ({
             : `${course.title} - ${course.teacher} - ${course.timeSlot}`
         }
       >
-        <div className="font-medium truncate leading-tight">
+        {/* 課程名稱（班名） */}
+        <div className="font-medium text-xs leading-tight mb-1">
           {courseName}
         </div>
-        {sessionInfo && (
-          <div className="text-xs opacity-90 truncate leading-tight">
-            {sessionInfo}
-          </div>
-        )}
-        <div className="text-xs opacity-75 flex items-center justify-between mt-0.5">
-          <span className="font-medium">{course.timeSlot}</span>
-          <div className="flex items-center space-x-1">
-            {/* US05 & US06: 狀態指示器 */}
-            {course.bookingStatus === 'booked' && (
-              <span className="text-xs bg-green-700 text-white px-1 rounded" title="已預約">✓</span>
-            )}
-            {course.bookingStatus === 'full' && (
-              <span className="text-xs bg-gray-500 text-white px-1 rounded" title="課程已額滿">滿</span>
-            )}
-            {course.bookingStatus === 'locked' && (
-              <span className="text-xs bg-gray-600 text-white px-1 rounded" title="距開課少於24小時">🔒</span>
-            )}
-            {course.bookingStatus === 'cancelled' && (
-              <span className="text-xs bg-red-500 text-white px-1 rounded" title="課程已取消">取消</span>
-            )}
-            {isSelected && course.bookingStatus === 'available' && (
-              <motion.div
-                initial={{ scale: 0, rotate: -180 }}
-                animate={{ scale: 1, rotate: 0 }}
-                className="text-white"
-              >
-                ✓
-              </motion.div>
-            )}
-          </div>
+        
+        {/* Lesson 編號 */}
+        <div className="text-xs opacity-90 leading-tight mb-1">
+          Lesson {course.sessionNumber || 1}
         </div>
+        
+        {/* 時間 */}
+        <div className="text-xs opacity-80 font-medium mb-1">
+          {course.timeSlot}
+        </div>
+        
+        {/* 教師 */}
         {course.teacher && course.teacher !== '老師' && course.teacher !== '未指定' && course.teacher !== '未指定教師' && (
-          <div className="text-xs opacity-70 truncate leading-tight">
+          <div className="text-xs opacity-70 leading-tight mb-1">
             {course.teacher}
           </div>
         )}
+        
+        {/* 狀態指示器 */}
+        <div className="flex items-center justify-end space-x-1 mt-auto">
+          {course.bookingStatus === 'booked' && (
+            <span className="text-xs bg-green-700 text-white px-1 rounded" title="已預約">✓</span>
+          )}
+          {course.bookingStatus === 'full' && (
+            <span className="text-xs bg-gray-500 text-white px-1 rounded" title="課程已額滿">滿</span>
+          )}
+          {course.bookingStatus === 'locked' && (
+            <span className="text-xs bg-gray-600 text-white px-1 rounded" title="距開課少於24小時">🔒</span>
+          )}
+          {course.bookingStatus === 'cancelled' && (
+            <span className="text-xs bg-red-500 text-white px-1 rounded" title="課程已取消">取消</span>
+          )}
+          {isSelected && course.bookingStatus === 'available' && (
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              className="text-white"
+            >
+              ✓
+            </motion.div>
+          )}
+        </div>
       </motion.div>
     );
   };
@@ -259,7 +252,7 @@ const Calendar: React.FC<CalendarProps> = ({
       <motion.div
         key={dateStr}
         className={`
-          relative p-2 min-h-[100px] border border-gray-200 cursor-pointer
+          relative p-2 min-h-[120px] border border-gray-200 cursor-pointer
           transition-all duration-200 hover:bg-gray-50
           ${isToday ? 'bg-blue-50 border-blue-300' : ''}
           ${!isCurrentMonth ? 'text-gray-400 bg-gray-50' : ''}

@@ -6,6 +6,9 @@ import { FiX, FiClock, FiUser, FiBook } from 'react-icons/fi';
 interface BookingCourse {
   id: number;
   title: string;
+  courseTitle?: string;   // 課程名稱（班名）
+  sessionTitle?: string;  // 課次標題
+  sessionNumber?: number; // 課次編號（Lesson N 的 N）
   date: string;
   timeSlot: string;
   teacher: string;
@@ -142,12 +145,24 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
-                          <h5 className={`
-                            font-semibold text-base
-                            ${isSelected ? 'text-blue-800' : isDisabled ? 'text-gray-500' : 'text-gray-900'}
-                          `}>
-                            {course.title}
-                          </h5>
+                          <div className="space-y-1">
+                            {/* 課程名稱 */}
+                            <h5 className={`
+                              font-semibold text-base
+                              ${isSelected ? 'text-blue-800' : isDisabled ? 'text-gray-500' : 'text-gray-900'}
+                            `}>
+                              {course.courseTitle || course.title}
+                            </h5>
+                            {/* Lesson 編號 + 詳細標題 */}
+                            {course.sessionTitle && (
+                              <div className={`
+                                text-sm
+                                ${isSelected ? 'text-blue-700' : isDisabled ? 'text-gray-400' : 'text-gray-600'}
+                              `}>
+                                Lesson {course.sessionNumber || 1} - {course.sessionTitle}
+                              </div>
+                            )}
+                          </div>
                           {/* US05: 狀態標誌 */}
                           {course.bookingStatus && course.bookingStatus !== 'available' && (
                             <span className={`
@@ -174,10 +189,6 @@ const CourseSelection: React.FC<CourseSelectionProps> = ({
                             <span>{course.teacher}</span>
                           </div>
                         </div>
-                        
-                        <p className="text-sm text-gray-600 mt-3 leading-relaxed">
-                          {course.description}
-                        </p>
                       </div>
                       
                       {/* Selection Indicator - 只有可預約的課程顯示 (US05) */}

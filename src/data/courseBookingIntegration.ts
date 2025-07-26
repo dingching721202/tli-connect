@@ -42,6 +42,7 @@ type GeneratedSession = {
   classroom: string;
   materials: string;
   teacherId?: string | number;
+  sessionNumber?: number;
 };
 
 // 從課程模組生成預約可用的課程時段
@@ -84,12 +85,15 @@ export function generateBookingSessions(): BookingCourseSession[] {
         }
       }
       
+      const finalSessionNumber = session.sessionNumber || (index + 1);
+      console.log(`生成預約時段: ${course.title}, session: ${session.title}, sessionNumber: ${session.sessionNumber}, finalSessionNumber: ${finalSessionNumber}`);
+      
       sessions.push({
         id: `${course.id}_session_${index + 1}`,
         courseId: course.id,
         courseTitle: course.title,
-        sessionNumber: index + 1,
-        sessionTitle: session.title || `第${index + 1}課`,
+        sessionNumber: finalSessionNumber,
+        sessionTitle: session.title || `Lesson ${finalSessionNumber}`,
         date: session.date,
         startTime: session.startTime,
         endTime: session.endTime,
@@ -167,17 +171,17 @@ function generateCourseSessionsFromManagedCourse(course: {
       date: startDate,
       startTime: startTime || '09:00',
       endTime: endTime || '17:00',
-      title: '第1課',
+      title: 'Lesson 1',
       classroom: course.location || 'Online',
       materials: course.materials?.join(', ') || ''
     });
   } else {
-    // 重複課程，根據 recurringDays 生成時段
+    // 重複課程，根據 recurringDays 按順序生成時段（Lesson 1, 2, 3...）
     const classDays = recurringDays?.map(day => parseInt(day)) || [1, 3, 5]; // 預設週一、三、五
-    const currentDate = new Date(start);
-    let sessionIndex = 0;
+    let currentDate = new Date(start);
+    let sessionCount = 0;
     
-    while (currentDate <= end && sessionIndex < totalSessions) {
+    while (currentDate <= end && sessionCount < totalSessions) {
       const dayOfWeek = currentDate.getDay();
       const dateStr = currentDate.getFullYear() + '-' + 
         String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -188,12 +192,13 @@ function generateCourseSessionsFromManagedCourse(course: {
           date: dateStr,
           startTime: startTime || '09:00',
           endTime: endTime || '17:00',
-          title: `第${sessionIndex + 1}課`,
+          title: `Lesson ${sessionCount + 1}`, // 按順序編號課程
           classroom: course.location || 'Online',
-          materials: course.materials?.join(', ') || ''
+          materials: course.materials?.join(', ') || '',
+          sessionNumber: sessionCount + 1 // 傳遞正確的 sessionNumber
         });
         
-        sessionIndex++;
+        sessionCount++; // 按順序遞增
       }
       
       currentDate.setDate(currentDate.getDate() + 1);
@@ -203,7 +208,7 @@ function generateCourseSessionsFromManagedCourse(course: {
   return generatedSessions;
 }
 
-// 使用課程模組的完整排程邏輯（複製自 CourseManagement.tsx）
+// 使用課程排程模組的正確邏輯，確保課程按順序排列（不是重複排課）
 function generateDetailedCourseSessions(course: {
   startDate: string;
   endDate: string;
@@ -223,60 +228,78 @@ function generateDetailedCourseSessions(course: {
 }) {
   const { startDate, endDate, totalSessions, globalSchedules, sessions, excludeDates } = course;
   
-  if (!startDate || !endDate || !globalSchedules?.[0]?.weekdays?.length || !sessions?.length) {
+  if (!startDate || !endDate || !globalSchedules?.length || !sessions?.length) {
     return [];
   }
   
   const start = new Date(startDate);
-  const end = new Date(endDate);
   const excludeSet = new Set(excludeDates || []);
   const generatedSessions: GeneratedSession[] = [];
   
-  // 處理多個排程時段（如果課程有多個課程排程）
-  globalSchedules.forEach((schedule, scheduleIndex) => {
-    const classDays = schedule.weekdays.map((day: string) => parseInt(day));
-    const currentDate = new Date(start);
-    let sessionIndex = 0;
-    
-    console.log(`處理排程 ${scheduleIndex + 1}/${globalSchedules.length}:`, {
-      weekdays: classDays,
-      startTime: schedule.startTime,
-      endTime: schedule.endTime,
-      teacherId: schedule.teacherId
+  // 收集所有時間段的上課日
+  const allClassDays: { day: number; schedule: typeof globalSchedules[0] }[] = [];
+  globalSchedules.forEach(schedule => {
+    schedule.weekdays.forEach((dayStr: string) => {
+      allClassDays.push({
+        day: parseInt(dayStr),
+        schedule: schedule
+      });
     });
+  });
+  
+  // 按星期排序（確保穩定的順序）
+  allClassDays.sort((a, b) => a.day - b.day);
+  
+  let currentDate = new Date(start);
+  let sessionCount = 0;
+  
+  console.log(`生成順序課程時段，總共 ${totalSessions} 堂課，包含 ${globalSchedules.length} 個時間段:`, {
+    schedules: globalSchedules.map(s => ({
+      weekdays: s.weekdays,
+      startTime: s.startTime,
+      endTime: s.endTime,
+      teacherId: s.teacherId
+    })),
+    allClassDays: allClassDays.map(d => ({ day: d.day, time: `${d.schedule.startTime}-${d.schedule.endTime}` }))
+  });
+  
+  // 按順序生成課程時段（Lesson 1, Lesson 2, Lesson 3...）
+  while (sessionCount < totalSessions) {
+    const dayOfWeek = currentDate.getDay();
+    const dateStr = currentDate.getFullYear() + '-' + 
+      String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(currentDate.getDate()).padStart(2, '0');
     
-    // 為每個排程生成對應的課程時段
-    while (currentDate <= end && sessionIndex < totalSessions) {
-      const dayOfWeek = currentDate.getDay();
-      const dateStr = currentDate.getFullYear() + '-' + 
-        String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(currentDate.getDate()).padStart(2, '0');
+    // 檢查這一天是否有上課時段且不在排除日期中
+    if (!excludeSet.has(dateStr)) {
+      const matchingClassDay = allClassDays.find(cd => cd.day === dayOfWeek);
       
-      if (classDays.includes(dayOfWeek) && !excludeSet.has(dateStr)) {
-        const sessionContent = sessions[sessionIndex % sessions.length];
+      if (matchingClassDay) {
+        // 使用對應的課程內容（按順序，不是循環）
+        const sessionContent = sessions[sessionCount] || sessions[sessions.length - 1]; // 如果課程內容不夠，使用最後一個
         
         generatedSessions.push({
           date: dateStr,
-          startTime: schedule.startTime,
-          endTime: schedule.endTime,
-          title: `${sessionContent.title}${globalSchedules.length > 1 ? ` (班別${scheduleIndex + 1})` : ''}`,
+          startTime: matchingClassDay.schedule.startTime,
+          endTime: matchingClassDay.schedule.endTime,
+          title: sessionContent.title || `Lesson ${sessionCount + 1}`, // 確保有標題
           classroom: sessionContent.classroom,
           materials: sessionContent.materials,
-          teacherId: schedule.teacherId
+          teacherId: matchingClassDay.schedule.teacherId,
+          sessionNumber: sessionContent.sessionNumber || (sessionCount + 1) // 傳遞正確的 sessionNumber
         });
         
-        sessionIndex++;
+        sessionCount++;
+        console.log(`生成第 ${sessionCount} 堂課: ${dateStr} ${matchingClassDay.schedule.startTime}-${matchingClassDay.schedule.endTime} ${sessionContent.title} (Lesson ${sessionContent.sessionNumber || sessionCount})`);
       }
-      
-      currentDate.setDate(currentDate.getDate() + 1);
     }
     
-    console.log(`排程 ${scheduleIndex + 1} 生成了 ${sessionIndex} 個時段`);
-  });
+    currentDate.setDate(currentDate.getDate() + 1);
+  }
   
-  console.log(`總共生成 ${generatedSessions.length} 個課程時段`);
+  console.log(`總共生成 ${generatedSessions.length} 個順序課程時段`);
   return generatedSessions.sort((a, b) => {
-    // 先按日期排序，再按時間排序
+    // 按日期排序，如果同一天則按時間排序
     const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
     if (dateCompare !== 0) return dateCompare;
     return a.startTime.localeCompare(b.startTime);
@@ -410,11 +433,13 @@ function getSyncedManagedCourses(): ManagedCourse[] {
             title: string;
             classroom: string;
             materials: string;
+            sessionNumber: number;
           }>;
         }).sessions = template.sessions.map((session, index) => ({
           title: session.title,
           classroom: session.virtualClassroomLink || '線上教室',
-          materials: session.materialLink || `第${index + 1}課教材`
+          materials: session.materialLink || `Lesson ${index + 1} Materials`,
+          sessionNumber: session.sessionNumber || (index + 1)
         }));
         
         (managedCourse as unknown as { excludeDates: string[] }).excludeDates = schedule.excludeDates || [];
@@ -482,11 +507,13 @@ function getSyncedManagedCourses(): ManagedCourse[] {
             title: string;
             classroom: string;
             materials: string;
+            sessionNumber: number;
           }>;
         }).sessions = template.sessions.map((session, index) => ({
           title: session.title,
           classroom: session.virtualClassroomLink || '線上教室',
-          materials: session.materialLink || `第${index + 1}課教材`
+          materials: session.materialLink || `Lesson ${index + 1} Materials`,
+          sessionNumber: session.sessionNumber || (index + 1)
         }));
         
         (defaultManagedCourse as unknown as { excludeDates: string[] }).excludeDates = [];
@@ -770,7 +797,7 @@ export function formatSessionDisplay(session: BookingCourseSession): string {
   
   const difficulty = difficultyMap[session.difficulty as keyof typeof difficultyMap] || session.difficulty;
   
-  return `${session.courseTitle} ${difficulty} 第${session.sessionNumber}課 ${session.startTime}-${session.endTime}`;
+  return `${session.courseTitle} ${difficulty} Lesson ${session.sessionNumber} ${session.startTime}-${session.endTime}`;
 }
 
 // 獲取課程類別顏色

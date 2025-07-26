@@ -135,7 +135,7 @@ const CourseManagement = () => {
       teacherId: ''
     }],
     sessions: [{
-      title: '第 1 堂課',
+      title: 'Lesson 1',
       classroom: '',
       materials: ''
     }],
@@ -195,7 +195,7 @@ const CourseManagement = () => {
         teacherId: ''
       }],
       sessions: [{
-        title: '第 1 堂課',
+        title: 'Lesson 1',
         classroom: '',
         materials: ''
       }],
@@ -289,7 +289,7 @@ const CourseManagement = () => {
     // 創建或調整課程內容陣列
     const newSessions = Array.from({ length: newTotal }, (_, index) => 
       newCourse.sessions?.[index] || {
-        title: `第 ${index + 1} 堂課`,
+        title: `Lesson ${index + 1}`,
         classroom: '',
         materials: ''
       }
@@ -1175,7 +1175,7 @@ const CourseManagement = () => {
                   <div className="space-y-4">
                     {(newCourse.sessions || []).map((session, sessionIndex) => (
                       <div key={`session-${sessionIndex}`} className="bg-white rounded-lg p-4 border border-green-200">
-                        <h5 className="font-semibold text-gray-900 mb-3">第 {sessionIndex + 1} 堂課</h5>
+                        <h5 className="font-semibold text-gray-900 mb-3">Lesson {sessionIndex + 1}</h5>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">

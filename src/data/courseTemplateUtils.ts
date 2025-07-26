@@ -12,7 +12,7 @@ export interface CourseTemplate {
   capacity: number; // 滿班人數
   // 統一設定 - 作為所有課程的預設值
   globalSettings?: {
-    defaultTitle?: string; // 統一課程標題模板，例如 "第{n}課"
+    defaultTitle?: string; // 統一課程標題模板，例如 "Lesson {n}"
     defaultVirtualClassroomLink?: string; // 統一虛擬教室連結
     defaultMaterialLink?: string; // 統一教材連結
   };
@@ -242,7 +242,7 @@ export function syncTemplateToBookingSystem(template: CourseTemplate): void {
     status: template.status === 'published' ? 'active' : 'draft',
     tags: [template.category, template.level],
     prerequisites: "無特殊要求",
-    materials: template.sessions.map(session => session.materialLink || `第${session.sessionNumber}課教材`).filter(Boolean),
+    materials: template.sessions.map(session => session.materialLink || `Lesson ${session.sessionNumber} Materials`).filter(Boolean),
     refund_policy: "課程開始前7天可申請退費",
     start_date: "2025-08-01T00:00:00+00:00",
     end_date: "2025-12-31T23:59:59+00:00",
@@ -411,7 +411,7 @@ function getDefaultCourseTemplates(): CourseTemplate[] {
       for (let i = 1; i <= totalSessions; i++) {
         sessions.push({
           sessionNumber: i,
-          title: `第${i}課`,
+          title: `Lesson ${i}`,
           virtualClassroomLink: 'https://meet.google.com/course-session',
           materialLink: ''
         });

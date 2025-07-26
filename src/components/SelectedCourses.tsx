@@ -6,6 +6,9 @@ import { FiTrash2, FiCalendar, FiClock, FiUser, FiCheck, FiCreditCard, FiLogIn }
 interface BookingCourse {
   id: number;
   title: string;
+  courseTitle?: string;   // 課程名稱（班名）
+  sessionTitle?: string;  // 課次標題
+  sessionNumber?: number; // 課次編號（Lesson N 的 N）
   date: string;
   timeSlot: string;
   teacher: string;
@@ -169,19 +172,24 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <h5 className="font-semibold text-gray-900 mb-2">
-                              {course.title}
-                            </h5>
-                            
-                            <div className="space-y-1 mb-3">
-                              <div className="flex items-center text-sm text-gray-600">
-                                <SafeIcon icon={FiClock} size={14} className="mr-2" />
-                                <span>{course.timeSlot}</span>
+                            <div className="space-y-1 mb-2">
+                              {/* 課程名稱 */}
+                              <h5 className="font-semibold text-gray-900">
+                                {course.courseTitle || course.title}
+                              </h5>
+                              {/* Lesson 編號 + 詳細標題 */}
+                              {course.sessionTitle && (
+                                <div className="text-sm text-gray-600">
+                                  Lesson {course.sessionNumber || 1} - {course.sessionTitle}
+                                </div>
+                              )}
+                              {/* 時間 */}
+                              <div className="text-sm text-gray-600">
+                                {course.timeSlot}
                               </div>
-                              
-                              <div className="flex items-center text-sm text-gray-600">
-                                <SafeIcon icon={FiUser} size={14} className="mr-2" />
-                                <span>{course.teacher}</span>
+                              {/* 教師 */}
+                              <div className="text-sm text-gray-600">
+                                {course.teacher}
                               </div>
                             </div>
 

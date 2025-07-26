@@ -677,7 +677,7 @@ export const dashboardService = {
       
       console.log(`📚 教師 ${teacher.name} 的課程時段數量:`, teacherSessions.length);
       
-      // 找出學生預約了該教師課程的記錄
+      // 🔧 修改：顯示教師所有課程時段，不論是否有學生預約
       const teacherBookings = [];
       
       for (const session of teacherSessions) {
@@ -690,13 +690,16 @@ export const dashboardService = {
         );
         
         if (sessionAppointments.length > 0) {
-          // 獲取學生資訊
+          // 有學生預約：狀態為"已開課"
           for (const appointment of sessionAppointments) {
             const student = users.find(u => u.id === appointment.user_id);
             
             teacherBookings.push({
               appointment,
-              session,
+              session: {
+                ...session,
+                bookingStatus: 'opened' // 已開課
+              },
               student: student ? {
                 id: student.id,
                 name: student.name,
@@ -705,6 +708,16 @@ export const dashboardService = {
               } : null
             });
           }
+        } else {
+          // 🔧 新增：無學生預約，狀態為"待開課"
+          teacherBookings.push({
+            appointment: null, // 沒有預約記錄
+            session: {
+              ...session,
+              bookingStatus: 'pending' // 待開課
+            },
+            student: null // 沒有學生
+          });
         }
       }
       
@@ -823,9 +836,24 @@ export const dashboardService = {
       // 獲取所有可用的課程時段
       const allSessions = generateBookingSessions();
       
+      // 🔧 修復：解決用戶系統和教師管理系統的ID不一致問題
+      // 用戶系統：王老師 id=4，教師管理系統：王老師 id=1
+      const { teacherDataService } = require('../data/teacherData');
+      const currentUser = users.find(u => u.id === teacherId);
+      
+      let actualTeacherId = teacherId;
+      if (currentUser && currentUser.role === 'TEACHER') {
+        // 根據姓名和email在教師系統中找到對應的教師
+        const teacherInSystem = teacherDataService.getTeacherByEmail(currentUser.email);
+        if (teacherInSystem) {
+          actualTeacherId = teacherInSystem.id;
+          console.log(`🔄 用戶ID ${teacherId} (${currentUser.name}) 映射到教師系統ID ${actualTeacherId}`);
+        }
+      }
+      
       // 篩選出該老師的課程時段
       const teacherSessions = allSessions.filter(session => 
-        session.teacherId.toString() === teacherId.toString()
+        session.teacherId.toString() === actualTeacherId.toString()
       );
       
       // 為每個時段獲取學生列表
@@ -834,10 +862,20 @@ export const dashboardService = {
       for (const session of teacherSessions) {
         // 獲取該時段的所有預約
         const sessionHashId = session.id.hashCode ? session.id.hashCode() : this.hashString(session.id);
+        console.log(`📊 檢查課程時段 ID 匹配:`, {
+          sessionId: session.id,
+          sessionHashId,
+          courseTitle: session.courseTitle,
+          teacherId: session.teacherId,
+          availableAppointmentIds: classAppointments.map(a => a.class_timeslot_id)
+        });
+        
         const appointments = classAppointments.filter(appointment => 
           appointment.class_timeslot_id === sessionHashId && 
           appointment.status === 'CONFIRMED'
         );
+        
+        console.log(`🔍 找到 ${appointments.length} 個預約，時段ID: ${sessionHashId}`);
         
         // 獲取預約學生的詳細資訊
         const studentList = [];

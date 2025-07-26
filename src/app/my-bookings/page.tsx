@@ -18,6 +18,9 @@ const {
 interface Booking {
   id: string;
   courseName: string;
+  courseTitle?: string;  // 班名
+  sessionTitle?: string; // 課名
+  sessionNumber?: number; // 課次編號
   courseDate: string;
   courseTime: string;
   status: 'upcoming' | 'completed' | 'cancelled' | 'pending' | 'approved' | 'rejected'; // Added leave request statuses
@@ -88,7 +91,10 @@ export default function MyBookingsPage() {
       
       const converted = {
         id: `student-${item.appointment?.id || item.session.id}`,
-        courseName: `${item.session.courseTitle} - ${item.session.sessionTitle}`,
+        courseName: `${item.session.courseTitle} - Lesson ${item.session.sessionNumber || 1} - ${item.session.sessionTitle}`,
+        courseTitle: item.session.courseTitle,
+        sessionTitle: item.session.sessionTitle,
+        sessionNumber: item.session.sessionNumber,
         courseDate: item.session.date,
         courseTime: `${item.session.startTime}-${item.session.endTime}`,
         status,
@@ -145,7 +151,8 @@ export default function MyBookingsPage() {
         status = 'cancelled';
       } else {
         const endTime = new Date(`${item.session.date} ${item.session.endTime}`);
-        if (endTime < now) {
+        // 🔧 修改：只有已開課的課程結束後才變成已完成
+        if (endTime < now && item.session.bookingStatus === 'opened') {
           status = 'completed';
         } else {
           status = 'upcoming';
@@ -154,17 +161,20 @@ export default function MyBookingsPage() {
       
       const converted = {
         id: `teacher-${item.appointment?.id || item.session.id}`,
-        courseName: `${item.session.courseTitle} - ${item.session.sessionTitle}`,
+        courseName: `${item.session.courseTitle} - Lesson ${item.session.sessionNumber || 1} - ${item.session.sessionTitle}`,
+        courseTitle: item.session.courseTitle,
+        sessionTitle: item.session.sessionTitle,
+        sessionNumber: item.session.sessionNumber,
         courseDate: item.session.date,
         courseTime: `${item.session.startTime}-${item.session.endTime}`,
         status,
         classroom: item.session.classroom || '線上教室',
         materials: item.session.materials,
         // 教師視角：顯示學生資訊
-        studentName: item.student?.name || '未知學生',
+        studentName: item.student?.name || (item.session.bookingStatus === 'pending' ? '待開課' : '未知學生'),
         studentEmail: item.student?.email || '',
         studentPhone: item.student?.phone || '',
-        studentCount: 1, // 一個預約記錄對應一個學生
+        studentCount: item.session.bookingStatus === 'opened' ? 1 : 0, // 🔧 根據狀態設定學生數量
         membershipType: 'individual' as const, // 可以後續擴展
         daysFromNow,
         bookingDate: item.appointment?.created_at || '',
@@ -299,9 +309,16 @@ export default function MyBookingsPage() {
     });
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, booking?: any) => {
     switch (status) {
-      case 'upcoming': return 'text-blue-700 bg-blue-50 border-blue-200';
+      case 'upcoming': 
+        // 🔧 教師看到：根據學生數量顯示不同顏色
+        if (user?.role === 'TEACHER' && booking) {
+          return booking.studentCount > 0 
+            ? 'text-green-700 bg-green-50 border-green-200'  // 已開課 - 淺綠色
+            : 'text-red-700 bg-red-50 border-red-200';       // 待開課 - 淺紅色
+        }
+        return 'text-blue-700 bg-blue-50 border-blue-200';
       case 'completed': return 'text-green-700 bg-green-50 border-green-200';
       case 'cancelled': return 'text-red-700 bg-red-50 border-red-200';
       case 'pending': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
@@ -311,9 +328,14 @@ export default function MyBookingsPage() {
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: string, booking?: any) => {
     switch (status) {
-      case 'upcoming': return '即將開始';
+      case 'upcoming': 
+        // 🔧 教師看到：根據學生數量顯示"待開課"或"已開課"
+        if (user?.role === 'TEACHER' && booking) {
+          return booking.studentCount > 0 ? '已開課' : '待開課';
+        }
+        return '即將開始';
       case 'completed': return '已完成';
       case 'cancelled': return '已取消';
       case 'pending': return '待審核';
@@ -345,19 +367,28 @@ export default function MyBookingsPage() {
     }
   };
 
-  // Get student list for a booking (mock data for now)
+  // Get student list for a booking - 根據實際預約資料獲取學生清單
   const getStudentListForBooking = (bookingId: string) => {
-    // Mock student data - in real implementation, this would fetch from localStorage or API
-    const mockStudents = [
-      { name: '王小明', email: 'wang@example.com', phone: '0912-345-678' },
-      { name: '李小華', email: 'li@example.com', phone: '0923-456-789' },
-      { name: '張小美', email: 'zhang@example.com' }
-    ];
-    
     const booking = bookings.find(b => b.id === bookingId);
-    const studentCount = booking?.studentCount || 1;
     
-    return mockStudents.slice(0, studentCount);
+    if (!booking || booking.studentCount === 0) {
+      return []; // 待開課課程沒有學生
+    }
+    
+    // 🔧 對於已開課的課程，從 booking 資料中提取學生資訊
+    // 確保 studentName 不是狀態文字（如"待開課"、"未知學生"）
+    if (booking.studentName && 
+        booking.studentEmail && 
+        booking.studentName !== '待開課' && 
+        booking.studentName !== '未知學生') {
+      return [{
+        name: booking.studentName,
+        email: booking.studentEmail,
+        phone: booking.studentPhone || ''
+      }];
+    }
+    
+    return []; // 如果沒有有效學生資訊則返回空陣列
   };
 
   const handleCancelBooking = (bookingId: string) => {
@@ -461,23 +492,18 @@ export default function MyBookingsPage() {
             <div className="p-4 bg-gray-50 rounded-lg">
               <h4 className="font-medium mb-3 text-gray-900">課程資訊</h4>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
+                <div>
                   <span className="text-gray-600">課程名稱：</span>
-                  <span className="font-medium">{selectedBooking.courseName}</span>
+                  <div className="font-medium mt-1 break-words">{selectedBooking.courseName}</div>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">上課時間：</span>
                   <span>{formatDate(selectedBooking.courseDate)} {selectedBooking.courseTime}</span>
                 </div>
-                {selectedBooking.leaveReason ? (
+                {selectedBooking.leaveReason && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">學生人數：</span>
                     <span>{selectedBooking.studentCount} 位</span>
-                  </div>
-                ) : (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">預約日期：</span>
-                    <span>{formatDate(selectedBooking.bookingDate)}</span>
                   </div>
                 )}
               </div>
@@ -506,41 +532,18 @@ export default function MyBookingsPage() {
                   )}
                 </div>
               </div>
-            ) : (
+            ) : user?.role === 'STUDENT' && (
               <div className="p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium mb-3 text-blue-900">
-                  {user?.role === 'STUDENT' ? '教師資訊' : '學生資訊'}
-                </h4>
+                <h4 className="font-medium mb-3 text-blue-900">教師資訊</h4>
                 <div className="space-y-2 text-sm">
-                  {user?.role === 'STUDENT' ? (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-blue-600">教師姓名：</span>
-                        <span className="font-medium">{selectedBooking.instructorName}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-600">聯絡信箱：</span>
-                        <span>{selectedBooking.instructorEmail}</span>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-blue-600">學生人數：</span>
-                        <span className="font-medium">{selectedBooking.studentCount || 1} 位</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-blue-600">會員類型：</span>
-                        <span>{selectedBooking.membershipType === 'corporate' ? '企業會員' : '個人會員'}</span>
-                      </div>
-                      {selectedBooking.companyName && (
-                        <div className="flex justify-between">
-                          <span className="text-blue-600">公司名稱：</span>
-                          <span>{selectedBooking.companyName}</span>
-                        </div>
-                      )}
-                    </>
-                  )}
+                  <div className="flex justify-between">
+                    <span className="text-blue-600">教師姓名：</span>
+                    <span className="font-medium">{selectedBooking.instructorName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-blue-600">聯絡信箱：</span>
+                    <span>{selectedBooking.instructorEmail}</span>
+                  </div>
                   {selectedBooking.note && !selectedBooking.leaveReason && (
                     <div className="mt-3">
                       <div className="text-blue-600 mb-1">備註：</div>
@@ -556,7 +559,10 @@ export default function MyBookingsPage() {
             {/* 學生清單 (for teachers viewing bookings) */}
             {user?.role === 'TEACHER' && !selectedBooking.leaveReason && studentList.length > 0 && (
               <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="font-medium mb-3 text-green-900">預約學生清單</h4>
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="font-medium text-green-900">學生名單</h4>
+                  <span className="text-sm text-green-700">學生人數：{studentList.length}人</span>
+                </div>
                 <div className="space-y-3">
                   {studentList.map((student, index) => (
                     <div key={index} className="bg-white p-3 rounded border">
@@ -568,14 +574,6 @@ export default function MyBookingsPage() {
                             <div className="text-sm text-gray-600">{student.phone}</div>
                           )}
                         </div>
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => window.open(`mailto:${student.email}`, '_blank')}
-                          className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs hover:bg-blue-200 transition-colors"
-                        >
-                          聯絡
-                        </motion.button>
                       </div>
                     </div>
                   ))}
@@ -601,7 +599,7 @@ export default function MyBookingsPage() {
                     selectedBooking.status === 'approved' ? 'text-green-900' :
                     selectedBooking.status === 'rejected' ? 'text-red-900' : 'text-yellow-900'
                   }`}>
-                    審核狀態：{getStatusText(selectedBooking.status)}
+                    審核狀態：{getStatusText(selectedBooking.status, selectedBooking)}
                   </h4>
                 </div>
                 
@@ -872,9 +870,16 @@ export default function MyBookingsPage() {
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {booking.courseName}
-                        </h3>
+                        <div className="mb-1">
+                          <h3 className="text-lg font-semibold text-gray-900">
+                            {booking.courseTitle || booking.courseName.split(' - ')[0]}
+                          </h3>
+                          {booking.sessionTitle && (
+                            <div className="text-sm text-gray-600 mt-1">
+                              Lesson {booking.sessionNumber || 1} - {booking.sessionTitle}
+                            </div>
+                          )}
+                        </div>
                         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                           <div className="flex items-center space-x-1">
                             <SafeIcon icon={FiCalendar} className="text-xs" />
@@ -885,15 +890,10 @@ export default function MyBookingsPage() {
                             <span>
                               {user?.role === 'STUDENT' 
                                 ? booking.instructorName 
-                                : (booking.leaveReason ? `${booking.studentCount || 1} 位學生` : `${booking.studentCount || 1} 位學生`)}
+                                : `${booking.studentCount} 位學生`}
                             </span>
                           </div>
-                          {user?.role === 'TEACHER' && !booking.leaveReason && booking.membershipType && (
-                            <div className="flex items-center space-x-1">
-                              <SafeIcon icon={FiMapPin} className="text-xs" />
-                              <span>{booking.membershipType === 'corporate' ? '企業會員' : '個人會員'}</span>
-                            </div>
-                          )}
+                          {/* 移除會員類型顯示 */}
                           {user?.role === 'TEACHER' && booking.leaveReason && (
                             <div className="flex items-center space-x-1">
                               <SafeIcon icon={FiMessageSquare} className="text-xs" />
@@ -902,8 +902,8 @@ export default function MyBookingsPage() {
                           )}
                         </div>
                       </div>
-                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(booking.status)}`}>
-                        {getStatusText(booking.status)}
+                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(booking.status, booking)}`}>
+                        {getStatusText(booking.status, booking)}
                       </span>
                     </div>
 
@@ -996,17 +996,6 @@ export default function MyBookingsPage() {
                             </motion.button>
                           )}
                           
-                          {user?.role === 'TEACHER' && booking.studentEmail && (
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => window.open(`mailto:${booking.studentEmail}`, '_blank')}
-                              className="flex items-center space-x-1 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm"
-                            >
-                              <SafeIcon icon={FiMail} className="text-xs" />
-                              <span>聯絡學生</span>
-                            </motion.button>
-                          )}
                         </>
                       )}
 

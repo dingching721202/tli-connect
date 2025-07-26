@@ -39,7 +39,7 @@ const CourseTemplateManagement = () => {
     totalSessions: 1,
     capacity: 20, // 預設滿班人數
     globalSettings: {
-      defaultTitle: '第{n}課',
+      defaultTitle: '',
       defaultVirtualClassroomLink: '',
       defaultMaterialLink: ''
     },
@@ -76,7 +76,7 @@ const CourseTemplateManagement = () => {
         totalSessions: 1,
         capacity: 20,
         globalSettings: {
-          defaultTitle: '第{n}課',
+          defaultTitle: '',
           defaultVirtualClassroomLink: '',
           defaultMaterialLink: ''
         },
@@ -104,7 +104,7 @@ const CourseTemplateManagement = () => {
       totalSessions: 1,
       capacity: 20,
       globalSettings: {
-        defaultTitle: '第{n}課',
+        defaultTitle: '',
         defaultVirtualClassroomLink: '',
         defaultMaterialLink: ''
       },
@@ -153,14 +153,37 @@ const CourseTemplateManagement = () => {
     }));
   };
 
-  // 應用統一設定到所有課程（清空所有個別設定）
-  const applyGlobalSettingsToAllSessions = () => {
+  // 應用統一課程標題到所有課程
+  const applyGlobalTitleToAllSessions = () => {
     const updatedSessions = formData.sessions.map(session => ({
       ...session,
-      // 清空個別設定，讓統一設定生效
-      title: '',
-      virtualClassroomLink: '',
-      materialLink: ''
+      title: '' // 清空個別設定，讓統一設定生效
+    }));
+
+    setFormData(prev => ({
+      ...prev,
+      sessions: updatedSessions
+    }));
+  };
+
+  // 應用統一虛擬教室連結到所有課程
+  const applyGlobalClassroomToAllSessions = () => {
+    const updatedSessions = formData.sessions.map(session => ({
+      ...session,
+      virtualClassroomLink: '' // 清空個別設定，讓統一設定生效
+    }));
+
+    setFormData(prev => ({
+      ...prev,
+      sessions: updatedSessions
+    }));
+  };
+
+  // 應用統一教材連結到所有課程
+  const applyGlobalMaterialToAllSessions = () => {
+    const updatedSessions = formData.sessions.map(session => ({
+      ...session,
+      materialLink: '' // 清空個別設定，讓統一設定生效
     }));
 
     setFormData(prev => ({
@@ -191,7 +214,7 @@ const CourseTemplateManagement = () => {
   // 儲存課程模板
   const handleSaveTemplate = (status: 'draft' | 'published' = 'draft') => {
     if (!formData.title?.trim()) {
-      alert('請填寫課程標題');
+      alert('請填寫課程名稱');
       return;
     }
 
@@ -543,7 +566,7 @@ const CourseTemplateManagement = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="md:col-span-2">
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        課程標題 *
+                        課程名稱 *
                       </label>
                       <input
                         type="text"
@@ -628,36 +651,45 @@ const CourseTemplateManagement = () => {
 
                 {/* Global Settings */}
                 <div className="bg-purple-50 rounded-lg p-4">
-                  <div className="flex justify-between items-center mb-4">
+                  <div className="mb-4">
                     <h4 className="font-semibold text-gray-900">統一設定</h4>
-                    <button
-                      onClick={applyGlobalSettingsToAllSessions}
-                      className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
-                    >
-                      套用到所有課程
-                    </button>
                   </div>
                   <p className="text-sm text-gray-600 mb-4">
                     設定整個課程的統一資訊。
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        統一課程標題模板
-                      </label>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          課程標題
+                        </label>
+                        <button
+                          onClick={applyGlobalTitleToAllSessions}
+                          className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors"
+                        >
+                          套用到所有
+                        </button>
+                      </div>
                       <input
                         type="text"
                         value={formData.globalSettings?.defaultTitle || ''}
                         onChange={(e) => handleGlobalSettingChange('defaultTitle', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="例：第{n}課 - 基礎會話"
+                        placeholder="課程標題"
                       />
-                      <p className="text-xs text-gray-500 mt-1">使用 {'{n}'} 代表課程編號</p>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        統一虛擬教室連結
-                      </label>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          虛擬教室
+                        </label>
+                        <button
+                          onClick={applyGlobalClassroomToAllSessions}
+                          className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors"
+                        >
+                          套用到所有
+                        </button>
+                      </div>
                       <input
                         type="url"
                         value={formData.globalSettings?.defaultVirtualClassroomLink || ''}
@@ -667,9 +699,17 @@ const CourseTemplateManagement = () => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        統一教材連結
-                      </label>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          教材連結
+                        </label>
+                        <button
+                          onClick={applyGlobalMaterialToAllSessions}
+                          className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors"
+                        >
+                          套用到所有
+                        </button>
+                      </div>
                       <input
                         type="text"
                         value={formData.globalSettings?.defaultMaterialLink || ''}
@@ -687,22 +727,18 @@ const CourseTemplateManagement = () => {
                   <div className="space-y-4">
                     {(formData.sessions || []).map((session, index) => (
                       <div key={`form-session-${index}`} className="bg-white rounded-lg p-4 border border-green-200">
-                        <h5 className="font-medium text-gray-900 mb-3">第 {session.sessionNumber} 堂課</h5>
+                        <h5 className="font-medium text-gray-900 mb-3">Lesson {session.sessionNumber}</h5>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              課程標題 *
+                              課程主題
                             </label>
                             <input
                               type="text"
                               value={session.title || ''}
                               onChange={(e) => handleSessionChange(index, 'title', e.target.value)}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder={
-                                isUsingGlobalSetting(session, 'title') 
-                                  ? (formData.globalSettings?.defaultTitle?.replace('{n}', session.sessionNumber.toString()) || `第 ${session.sessionNumber} 堂課`)
-                                  : "請輸入課程標題"
-                              }
+                              placeholder="課程標題"
                             />
                           </div>
                           <div>

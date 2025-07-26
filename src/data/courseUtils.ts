@@ -285,7 +285,7 @@ function convertToManagedCourse(data: RawCourseData): ManagedCourse & {
       ];
       for (let i = 0; i < sessionCount; i++) {
         sessions.push({
-          title: `第${i + 1}課：${chineseTopics[i] || '進階練習'}`,
+          title: `Lesson ${i + 1}: ${chineseTopics[i] || 'Advanced Practice'}`,
           classroom: 'https://meet.google.com/chinese-class',
           materials: `華語教材第${i + 1}章`
         });
@@ -309,7 +309,7 @@ function convertToManagedCourse(data: RawCourseData): ManagedCourse & {
       // 日語或其他語言
       for (let i = 0; i < sessionCount; i++) {
         sessions.push({
-          title: `第${i + 1}課：基礎學習`,
+          title: `Lesson ${i + 1}: Basic Learning`,
           classroom: 'https://meet.google.com/language-class',
           materials: `教材第${i + 1}章`
         });
