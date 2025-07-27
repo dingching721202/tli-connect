@@ -35,7 +35,7 @@ const NewCourseManagement = () => {
       label: '時段管理',
       icon: FiClock,
       description: '管理課程時段與取消課程',
-      color: 'red'
+      color: 'green'
     }
   ];
 
@@ -50,8 +50,8 @@ const NewCourseManagement = () => {
         inactive: 'bg-white text-purple-600 border-purple-200 hover:bg-purple-50'
       },
       timeslot: {
-        active: 'bg-red-600 text-white border-red-600',
-        inactive: 'bg-white text-red-600 border-red-200 hover:bg-red-50'
+        active: 'bg-green-600 text-white border-green-600',
+        inactive: 'bg-white text-green-600 border-green-200 hover:bg-green-50'
       }
     };
     
@@ -105,7 +105,7 @@ const NewCourseManagement = () => {
                   <div className={`text-xs ${
                     activeTab === tab.id ? 
                       (tab.id === 'template' ? 'text-blue-100' : 
-                       tab.id === 'schedule' ? 'text-purple-100' : 'text-red-100') 
+                       tab.id === 'schedule' ? 'text-purple-100' : 'text-green-100') 
                       : 'text-gray-500'
                   }`}>
                     {tab.description}

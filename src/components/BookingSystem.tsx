@@ -27,25 +27,17 @@ interface BookingCourse {
   sessionId?: string; // 完整的session ID用於選擇邏輯
 }
 
-// 添加字符串hashCode方法
-declare global {
-  interface String {
-    hashCode(): number;
+// Hash function for generating timeslot IDs
+const hashString = (str: string): number => {
+  let hash = 0;
+  if (str.length === 0) return hash;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
   }
-}
-
-if (typeof String.prototype.hashCode === 'undefined') {
-  String.prototype.hashCode = function() {
-    let hash = 0;
-    if (this.length === 0) return hash;
-    for (let i = 0; i < this.length; i++) {
-      const char = this.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return Math.abs(hash);
-  };
-}
+  return Math.abs(hash);
+};
 import { bookingService } from '@/services/dataService';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
@@ -132,7 +124,7 @@ const BookingSystem: React.FC = () => {
 
   useEffect(() => {
     loadTimeslots();
-  }, [loadTimeslots]);
+  }, [courseFilterParam, isSingleCourseMode]);
 
   // 監聽視窗焦點變化，當用戶從課程管理返回時重新載入資料
   useEffect(() => {
@@ -171,7 +163,7 @@ const BookingSystem: React.FC = () => {
       window.removeEventListener('courseTemplatesUpdated', handleCourseTemplatesUpdate as EventListener);
       window.removeEventListener('bookingsUpdated', handleBookingsUpdate);
     };
-  }, [loadTimeslots]);
+  }, []); // Remove loadTimeslots dependency to prevent infinite loop
 
 
   // 將課程模組的 BookingCourseSession 轉換為 BookingCourse 格式 (US05, US06)
@@ -180,7 +172,7 @@ const BookingSystem: React.FC = () => {
       const now = new Date();
       const courseDateTime = new Date(`${session.date} ${session.startTime}`);
       const twentyFourHours = 24 * 60 * 60 * 1000;
-      const timeslotId = session.id.hashCode();
+      const timeslotId = hashString(session.id);
       
       // 檢查用戶是否已預約此時段 (US06)
       const isBookedByUser = user ? checkUserBooking(user.id, timeslotId) : false;
@@ -207,7 +199,7 @@ const BookingSystem: React.FC = () => {
       }
       
       return {
-        id: session.id.hashCode(), // 使用完整session ID的hash作為數字ID
+        id: hashString(session.id), // 使用完整session ID的hash作為數字ID
         title: `${session.courseTitle} ${session.sessionTitle}`,
         courseTitle: session.courseTitle,
         sessionTitle: session.sessionTitle,
