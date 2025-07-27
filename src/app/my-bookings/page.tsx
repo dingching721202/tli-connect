@@ -6,7 +6,7 @@ import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
 import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { bookingService, dashboardService } from '@/services/dataService';
+import { bookingService, dashboardService, leaveService } from '@/services/dataService';
 import { } from '@/types';
 import { getCourseLinksForLesson, parseCourseNameAndLesson } from '@/utils/courseLinksUtils';
 
@@ -65,6 +65,13 @@ export default function MyBookingsPage() {
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
   const [studentList, setStudentList] = useState<Array<{name: string; email: string; phone?: string}>>([]);
+  
+  // 請假相關狀態
+  const [showLeaveModal, setShowLeaveModal] = useState(false);
+  const [isViewMode, setIsViewMode] = useState(false);
+  const [leaveForm, setLeaveForm] = useState({
+    reason: ''
+  });
 
   // 轉換預約資料為 UI 格式的通用函數
   const convertBookingData = useCallback((dashboardData: { upcomingClasses: Array<{ appointment?: { id: number; status: string; class_timeslot_id: number; created_at: string }; session: { id: string; date: string; startTime: string; endTime: string; courseTitle: string; sessionTitle: string; teacherName: string; classroom?: string; materials?: string } }> }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
@@ -118,7 +125,7 @@ export default function MyBookingsPage() {
     
     // 統計各種狀態的數量
     const statusCounts = {
-      upcoming: convertedData.filter(item => item.status === 'upcoming').length,
+      upcoming: convertedData.filter(item => item.status === 'upcoming' && item.leaveStatus !== 'approved').length,
       completed: convertedData.filter(item => item.status === 'completed').length,
       cancelled: convertedData.filter(item => item.status === 'cancelled').length
     };
@@ -218,8 +225,95 @@ export default function MyBookingsPage() {
         
         // 轉換教師預約資料為UI格式
         const teacherBookingData = convertTeacherBookingData(dashboardData);
-        console.log('🔄 設置教師預約資料，總數:', teacherBookingData.length);
-        setBookings(teacherBookingData);
+        
+        // 載入並整合請假記錄到現有預約中
+        const leaveResult = await leaveService.getAllLeaveRequests();
+        let enhancedBookings = [...teacherBookingData];
+        
+        if (leaveResult.success && leaveResult.data) {
+          // 過濾出這個教師的請假記錄
+          const teacherLeaveRequests = leaveResult.data.filter((request: {
+            teacherId: number;
+            id: string;
+            courseName: string;
+            courseDate: string;
+            courseTime: string;
+            status: string;
+            classroom?: string;
+            teacherName: string;
+            teacherEmail: string;
+            studentCount?: number;
+            leaveReason: string;
+            requestDate: string;
+            note?: string;
+            substituteTeacher?: { name: string; email: string } | null;
+          }) => 
+            request.teacherId === user.id
+          );
+          
+          // 在現有預約記錄上添加請假狀態，而不是創建新記錄
+          enhancedBookings = teacherBookingData.map(booking => {
+            // 尋找對應的請假記錄
+            const matchingLeaveRequest = teacherLeaveRequests.find(request => 
+              request.courseName.includes(booking.courseName.split(' - ')[0]) &&
+              request.courseDate === booking.courseDate &&
+              request.courseTime === booking.courseTime
+            );
+            
+            if (matchingLeaveRequest) {
+              // 如果有對應的請假記錄，添加請假狀態到原預約記錄
+              return {
+                ...booking,
+                // 請假相關欄位
+                leaveStatus: matchingLeaveRequest.status,
+                leaveReason: matchingLeaveRequest.leaveReason,
+                requestDate: matchingLeaveRequest.requestDate,
+                substituteTeacher: matchingLeaveRequest.substituteTeacher || null,
+                leaveId: matchingLeaveRequest.id
+              };
+            }
+            
+            return booking;
+          });
+          
+          // 添加那些沒有對應預約記錄的請假記錄（以防萬一）
+          const unmatchedLeaveRequests = teacherLeaveRequests.filter(request => 
+            !enhancedBookings.some(booking => 
+              request.courseName.includes(booking.courseName.split(' - ')[0]) &&
+              request.courseDate === booking.courseDate &&
+              request.courseTime === booking.courseTime
+            )
+          );
+          
+          const additionalLeaveBookings = unmatchedLeaveRequests.map((request) => ({
+            id: `leave-${request.id}`,
+            courseName: request.courseName,
+            courseDate: request.courseDate,
+            courseTime: request.courseTime,
+            status: 'upcoming' as const,
+            classroom: request.classroom || '線上教室',
+            materials: '',
+            instructorName: request.teacherName,
+            instructorEmail: request.teacherEmail,
+            studentCount: request.studentCount || 0,
+            studentName: `${request.studentCount || 0}位學生`,
+            studentEmail: '',
+            // 請假特有欄位
+            leaveStatus: request.status,
+            leaveReason: request.leaveReason,
+            requestDate: request.requestDate,
+            note: request.note,
+            substituteTeacher: request.substituteTeacher || null,
+            leaveId: request.id,
+            // UI 計算欄位
+            daysFromNow: Math.ceil((new Date(`${request.courseDate} ${request.courseTime.split('-')[0]}`).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
+          }));
+          
+          enhancedBookings = [...enhancedBookings, ...additionalLeaveBookings];
+        }
+        
+        console.log('🔄 設置教師預約+請假狀態資料，總數:', enhancedBookings.length);
+        setBookings(enhancedBookings);
       } else {
         // 學生：使用原有邏輯
         const dashboardData = await dashboardService.getDashboardData(user.id);
@@ -293,10 +387,28 @@ export default function MyBookingsPage() {
   const filteredBookings = bookings.filter(booking => {
     // First filter by main tab (for teachers)
     if (user?.role === 'TEACHER') {
-      if (selectedMainTab === 'bookings' && booking.leaveReason) return false;
-      if (selectedMainTab === 'leave' && !booking.leaveReason) return false;
+      if (selectedMainTab === 'bookings') {
+        // 預約分頁：顯示所有預約記錄（包括有請假狀態的）
+        // 但排除純請假記錄（那些沒有對應預約的請假申請）
+        const isBookingRecord = !booking.id.startsWith('leave-');
+        if (!isBookingRecord) return false;
+        
+        // 在預約分頁中，根據子分頁過濾
+        if (selectedTab === 'all') return true;
+        return booking.status === selectedTab;
+      }
+      if (selectedMainTab === 'leave') {
+        // 請假分頁：顯示所有有請假狀態的記錄（包括有對應預約的和純請假記錄）
+        const hasLeaveStatus = booking.leaveStatus || booking.leaveReason;
+        if (!hasLeaveStatus) return false;
+        
+        // 在請假分頁中，根據子分頁過濾（使用 leaveStatus）
+        if (selectedTab === 'all') return true;
+        return booking.leaveStatus === selectedTab;
+      }
     }
     
+    // 學生的邏輯保持不變
     if (selectedTab === 'all') return true;
     return booking.status === selectedTab;
   });
@@ -310,7 +422,27 @@ export default function MyBookingsPage() {
     });
   };
 
-  const getStatusColor = (status: string, booking?: { studentCount: number }) => {
+  const getStatusColor = (status: string, booking?: { studentCount: number; leaveReason?: string; leaveStatus?: string }) => {
+    // 優先檢查請假狀態
+    if (booking?.leaveStatus) {
+      switch (booking.leaveStatus) {
+        case 'pending': return 'text-pink-700 bg-pink-50 border-pink-200';     // 待審核請假 - 淺粉紅色
+        case 'approved': return 'text-purple-700 bg-purple-50 border-purple-200'; // 已批准請假 - 淺紫色
+        case 'rejected': return 'text-red-700 bg-red-50 border-red-200';       // 已拒絕請假 - 淺紅色
+        default: return 'text-gray-700 bg-gray-50 border-gray-200';
+      }
+    }
+    
+    // 回退：如果有請假原因但沒有明確的請假狀態，使用原邏輯
+    if (booking?.leaveReason && !booking?.leaveStatus) {
+      switch (status) {
+        case 'pending': return 'text-pink-700 bg-pink-50 border-pink-200';     // 待審核請假 - 淺粉紅色
+        case 'approved': return 'text-purple-700 bg-purple-50 border-purple-200'; // 已批准請假 - 淺紫色
+        case 'rejected': return 'text-red-700 bg-red-50 border-red-200';       // 已拒絕請假 - 淺紅色
+        default: return 'text-gray-700 bg-gray-50 border-gray-200';
+      }
+    }
+    
     switch (status) {
       case 'upcoming': 
         // 🔧 教師看到：根據學生數量顯示不同顏色
@@ -329,7 +461,27 @@ export default function MyBookingsPage() {
     }
   };
 
-  const getStatusText = (status: string, booking?: { studentCount: number }) => {
+  const getStatusText = (status: string, booking?: { studentCount: number; leaveReason?: string; leaveStatus?: string }) => {
+    // 優先檢查請假狀態
+    if (booking?.leaveStatus) {
+      switch (booking.leaveStatus) {
+        case 'pending': return '待審核請假';
+        case 'approved': return '已批准請假';
+        case 'rejected': return '已拒絕請假';
+        default: return '未知狀態';
+      }
+    }
+    
+    // 回退：如果有請假原因但沒有明確的請假狀態，使用原邏輯
+    if (booking?.leaveReason && !booking?.leaveStatus) {
+      switch (status) {
+        case 'pending': return '待審核請假';
+        case 'approved': return '已批准請假';
+        case 'rejected': return '已拒絕請假';
+        default: return '未知狀態';
+      }
+    }
+    
     switch (status) {
       case 'upcoming': 
         // 🔧 教師看到：根據學生數量顯示"待開課"或"已開課"
@@ -358,12 +510,97 @@ export default function MyBookingsPage() {
     }
   };
 
-  const handleCancelRequest = (requestId: string, courseName: string) => {
-    const request = bookings.find(req => req.id === requestId);
-    if (request && request.status === 'pending') {
+  const handleCancelRequest = async (requestId: string, courseName: string) => {
+    const booking = bookings.find(req => req.id === requestId);
+    if (booking && booking.leaveStatus === 'pending') {
       if (confirm(`確定要取消「${courseName}」的請假申請嗎？`)) {
-        alert('✅ 請假申請已取消');
-        // Here you would update the request status
+        try {
+          // 從 localStorage 找到對應的請假申請 ID
+          const leaveRequests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+          const matchingRequest = leaveRequests.find((request: {
+            teacherId: number;
+            courseName: string;
+            courseDate: string;
+            courseTime: string;
+            id: string;
+          }) => 
+            request.teacherId === user?.id &&
+            request.courseName.includes(booking.courseTitle || booking.courseName) &&
+            request.courseDate === booking.courseDate &&
+            request.courseTime === booking.courseTime
+          );
+          
+          if (matchingRequest && user?.id) {
+            const result = await leaveService.cancelLeaveRequest(matchingRequest.id, user.id);
+            if (result.success) {
+              alert('✅ 請假申請已取消');
+              // 重新載入數據
+              loadUserBookings();
+            } else {
+              alert('❌ 取消請假申請失敗');
+            }
+          } else {
+            alert('❌ 找不到對應的請假申請');
+          }
+        } catch (error) {
+          console.error('取消請假申請失敗:', error);
+          alert('❌ 取消請假申請失敗');
+        }
+      }
+    }
+  };
+
+  // 處理請假申請提交
+  const handleSubmitLeave = async () => {
+    if (!leaveForm.reason.trim()) {
+      alert('請填寫請假原因');
+      return;
+    }
+
+    if (selectedBooking && user) {
+      try {
+        // 創建請假申請資料
+        const requestData = {
+          teacherId: user.id,
+          teacherName: user.name || '未知教師',
+          teacherEmail: user.email || '',
+          sessionId: selectedBooking.sessionId || selectedBooking.id.toString(),
+          courseName: selectedBooking.title || selectedBooking.courseName,
+          courseDate: selectedBooking.date || selectedBooking.courseDate,
+          courseTime: selectedBooking.time || selectedBooking.courseTime,
+          reason: leaveForm.reason,
+          studentCount: selectedBooking.studentCount || 0,
+          classroom: selectedBooking.classroom || '線上教室'
+        };
+
+        // 提交請假申請到系統
+        const result = await leaveService.createLeaveRequest(requestData);
+
+        if (result.success && result.data) {
+          alert(`✅ 請假申請已提交成功！
+
+課程：${selectedBooking.title || selectedBooking.courseName}
+時間：${selectedBooking.date || selectedBooking.courseDate} ${selectedBooking.time || selectedBooking.courseTime}
+原因：${leaveForm.reason}
+
+申請編號：${result.data.id}
+
+系統管理員將會審核您的申請，並安排代課老師。
+您可以在管理員的「請假管理」頁面查看申請狀態。`);
+
+          // Reset form and close modal
+          setLeaveForm({ reason: '' });
+          setShowLeaveModal(false);
+          setSelectedBooking(null);
+          
+          // 重新加載數據以反映變更
+          loadUserBookings();
+        } else {
+          alert('❌ 提交請假申請失敗，請稍後再試。');
+        }
+      } catch (error) {
+        console.error('提交請假申請失敗:', error);
+        alert('❌ 提交請假申請失敗，請稍後再試。');
       }
     }
   };
@@ -740,7 +977,7 @@ export default function MyBookingsPage() {
               label: '即將開始', 
               count: user?.role === 'STUDENT' 
                 ? bookings.filter(b => b.status === 'upcoming').length
-                : bookings.filter(b => b.status === 'upcoming' && !b.leaveReason).length,
+                : bookings.filter(b => b.status === 'upcoming' && b.leaveStatus !== 'approved').length,
               color: 'text-blue-600 bg-blue-50 border-blue-200',
               icon: FiClock
             },
@@ -843,10 +1080,10 @@ export default function MyBookingsPage() {
             ) : (
               // Teacher tabs - show different tabs based on selectedMainTab
               selectedMainTab === 'bookings' ? [
-                { key: 'upcoming', label: '即將開始', count: bookings.filter(b => b.status === 'upcoming' && !b.leaveReason).length },
-                { key: 'completed', label: '已完成', count: bookings.filter(b => b.status === 'completed' && !b.leaveReason).length },
-                { key: 'cancelled', label: '已取消', count: bookings.filter(b => b.status === 'cancelled' && !b.leaveReason).length },
-                { key: 'all', label: '全部', count: bookings.filter(b => !b.leaveReason).length }
+                { key: 'upcoming', label: '即將開始', count: bookings.filter(b => b.status === 'upcoming' && !b.id.startsWith('leave-') && b.leaveStatus !== 'approved').length },
+                { key: 'completed', label: '已完成', count: bookings.filter(b => b.status === 'completed' && !b.id.startsWith('leave-')).length },
+                { key: 'cancelled', label: '已取消', count: bookings.filter(b => b.status === 'cancelled' && !b.id.startsWith('leave-')).length },
+                { key: 'all', label: '全部', count: bookings.filter(b => !b.id.startsWith('leave-')).length }
               ].map((tab) => (
                 <motion.button
                   key={tab.key}
@@ -862,10 +1099,10 @@ export default function MyBookingsPage() {
                   {tab.label} ({tab.count})
                 </motion.button>
               )) : [
-                { key: 'pending', label: '待審核請假', count: bookings.filter(b => b.status === 'pending' && b.leaveReason).length },
-                { key: 'approved', label: '已批准請假', count: bookings.filter(b => b.status === 'approved' && b.leaveReason).length },
-                { key: 'rejected', label: '已拒絕請假', count: bookings.filter(b => b.status === 'rejected' && b.leaveReason).length },
-                { key: 'all', label: '全部', count: bookings.filter(b => b.leaveReason).length }
+                { key: 'pending', label: '待審核請假', count: bookings.filter(b => b.leaveStatus === 'pending').length },
+                { key: 'approved', label: '已批准請假', count: bookings.filter(b => b.leaveStatus === 'approved').length },
+                { key: 'rejected', label: '已拒絕請假', count: bookings.filter(b => b.leaveStatus === 'rejected').length },
+                { key: 'all', label: '全部', count: bookings.filter(b => b.leaveStatus || b.leaveReason).length }
               ].map((tab) => (
                 <motion.button
                   key={tab.key}
@@ -987,7 +1224,7 @@ export default function MyBookingsPage() {
                         </motion.button>
                       )}
                       
-                      {booking.status === 'upcoming' && !booking.leaveReason && (() => {
+                      {booking.status === 'upcoming' && (() => {
                         // 獲取課程連結邏輯（與查看詳情一致）
                         let courseLinks = { classroom: null, materials: null, hasValidClassroom: false, hasValidMaterials: false };
                         
@@ -1055,28 +1292,129 @@ export default function MyBookingsPage() {
                         );
                       })()}
                           
-                      {user?.role === 'TEACHER' && !booking.leaveReason && (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className="flex items-center space-x-1 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm"
-                        >
-                          <SafeIcon icon={FiMessageSquare} className="text-xs" />
-                          <span>申請請假</span>
-                        </motion.button>
-                      )}
-
-                      {user?.role === 'TEACHER' && booking.status === 'pending' && booking.leaveReason && (
-                        <motion.button
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={() => handleCancelRequest(booking.id, booking.courseName)}
-                          className="flex items-center space-x-1 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
-                        >
-                          <SafeIcon icon={FiX} className="text-xs" />
-                          <span>取消申請</span>
-                        </motion.button>
-                      )}
+                      {user?.role === 'TEACHER' && (() => {
+                        // 根據請假狀態顯示不同的按鈕
+                        if (booking.leaveStatus === 'pending') {
+                          // 待審核狀態：顯示取消請假按鈕
+                          return (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => handleCancelRequest(booking.id, booking.courseName)}
+                              className="flex items-center space-x-1 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                            >
+                              <SafeIcon icon={FiX} className="text-xs" />
+                              <span>取消請假</span>
+                            </motion.button>
+                          );
+                        } else if (booking.leaveStatus === 'approved') {
+                          // 已批准狀態：顯示查看請假按鈕
+                          return (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => {
+                                const courseForLeave = {
+                                  id: booking.id,
+                                  title: booking.courseName,
+                                  courseTitle: booking.courseTitle,
+                                  date: booking.courseDate,
+                                  time: booking.courseTime,
+                                  studentCount: booking.studentCount || 0,
+                                  classroom: booking.classroom || '線上教室'
+                                };
+                                setSelectedBooking(courseForLeave);
+                                setIsViewMode(true);
+                                
+                                // 從 localStorage 獲取該課程的請假申請詳情
+                                try {
+                                  const leaveRequests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+                                  const courseTime = booking.courseTime;
+                                  const matchingRequest = leaveRequests.find((request: {
+                                    teacherId: number;
+                                    courseName: string;
+                                    courseDate: string;
+                                    courseTime: string;
+                                    leaveReason: string;
+                                  }) => 
+                                    request.teacherId === user?.id &&
+                                    request.courseName.includes(booking.courseTitle || booking.courseName) &&
+                                    request.courseDate === booking.courseDate &&
+                                    request.courseTime === courseTime
+                                  );
+                                  
+                                  if (matchingRequest) {
+                                    setLeaveForm({
+                                      reason: matchingRequest.leaveReason || ''
+                                    });
+                                  }
+                                } catch (error) {
+                                  console.error('獲取請假詳情失敗:', error);
+                                  setLeaveForm({ reason: '' });
+                                }
+                                
+                                setShowLeaveModal(true);
+                              }}
+                              className="flex items-center space-x-1 px-3 py-1.5 bg-purple-100 text-purple-700 rounded-lg hover:bg-purple-200 transition-colors text-sm"
+                            >
+                              <SafeIcon icon={FiEye} className="text-xs" />
+                              <span>查看請假</span>
+                            </motion.button>
+                          );
+                        } else if (booking.leaveStatus === 'rejected') {
+                          // 已拒絕狀態：可以重新申請
+                          return (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => {
+                                const courseForLeave = {
+                                  id: booking.id,
+                                  title: booking.courseName,
+                                  date: booking.courseDate,
+                                  time: booking.courseTime,
+                                  studentCount: booking.studentCount || 0,
+                                  classroom: booking.classroom || '線上教室'
+                                };
+                                setSelectedBooking(courseForLeave);
+                                setIsViewMode(false);
+                                setLeaveForm({ reason: '' }); // 清空表單重新申請
+                                setShowLeaveModal(true);
+                              }}
+                              className="flex items-center space-x-1 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm"
+                            >
+                              <SafeIcon icon={FiMessageSquare} className="text-xs" />
+                              <span>重新申請</span>
+                            </motion.button>
+                          );
+                        } else {
+                          // 沒有請假狀態：顯示申請請假按鈕
+                          return (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={() => {
+                                const courseForLeave = {
+                                  id: booking.id,
+                                  title: booking.courseName,
+                                  date: booking.courseDate,
+                                  time: booking.courseTime,
+                                  studentCount: booking.studentCount || 0,
+                                  classroom: booking.classroom || '線上教室'
+                                };
+                                setSelectedBooking(courseForLeave);
+                                setIsViewMode(false);
+                                setLeaveForm({ reason: '' });
+                                setShowLeaveModal(true);
+                              }}
+                              className="flex items-center space-x-1 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm"
+                            >
+                              <SafeIcon icon={FiMessageSquare} className="text-xs" />
+                              <span>申請請假</span>
+                            </motion.button>
+                          );
+                        }
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -1171,6 +1509,92 @@ export default function MyBookingsPage() {
                 >
                   保留預約
                 </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Leave Request Modal */}
+        {showLeaveModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowLeaveModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold">{isViewMode ? '查看請假' : '申請請假'}</h3>
+                <button
+                  onClick={() => setShowLeaveModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <SafeIcon icon={FiX} className="text-xl" />
+                </button>
+              </div>
+
+              {selectedBooking && (
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium mb-2">課程資訊</h4>
+                  <div className="space-y-1 text-sm text-gray-600">
+                    <div>課程：{selectedBooking.title || selectedBooking.courseName}</div>
+                    <div>時間：{formatDate(selectedBooking.date || selectedBooking.courseDate)} {selectedBooking.time || selectedBooking.courseTime}</div>
+                    <div>學生：{selectedBooking.studentCount || 0} 位</div>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    請假原因 <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    value={leaveForm.reason}
+                    onChange={isViewMode ? undefined : (e) => setLeaveForm({...leaveForm, reason: e.target.value})}
+                    rows={4}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg ${
+                      isViewMode 
+                        ? 'bg-gray-100 cursor-not-allowed' 
+                        : 'focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                    }`}
+                    placeholder={isViewMode ? '' : "請詳細說明請假原因..."}
+                    disabled={isViewMode}
+                    readOnly={isViewMode}
+                    required={!isViewMode}
+                  />
+                </div>
+              </div>
+
+              <div className="flex space-x-3 mt-6">
+                {isViewMode ? (
+                  <button
+                    onClick={() => setShowLeaveModal(false)}
+                    className="w-full bg-gray-600 text-white py-2 rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    關閉
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      onClick={handleSubmitLeave}
+                      className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      提交申請
+                    </button>
+                    <button
+                      onClick={() => setShowLeaveModal(false)}
+                      className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                    >
+                      取消
+                    </button>
+                  </>
+                )}
               </div>
             </motion.div>
           </motion.div>

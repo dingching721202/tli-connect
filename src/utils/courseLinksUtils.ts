@@ -60,8 +60,8 @@ export function getCourseLinksFromTemplate(courseName: string, lessonNumber: num
     console.log(`✅ 找到課程Session: Lesson ${session.sessionNumber} - ${session.title}`);
     
     // 4. 獲取連結，個別連結為空或佔位符時使用統一設定
-    let classroom = session.virtualClassroomLink;
-    let materials = session.materialLink;
+    let classroom: string | null = session.virtualClassroomLink ?? null;
+    let materials: string | null = session.materialLink ?? null;
     
     // 檢查是否為無效連結（空值）
     const isInvalidLink = (link: string | null | undefined): boolean => {
@@ -70,7 +70,7 @@ export function getCourseLinksFromTemplate(courseName: string, lessonNumber: num
     
     // 如果個別教室連結無效，使用統一設定
     if (isInvalidLink(classroom)) {
-      classroom = courseTemplate.globalSettings?.defaultVirtualClassroomLink || null;
+      classroom = courseTemplate.globalSettings?.defaultVirtualClassroomLink ?? null;
       if (classroom && !isInvalidLink(classroom)) {
         console.log(`📍 使用統一教室設定: ${classroom}`);
       } else {
@@ -83,7 +83,7 @@ export function getCourseLinksFromTemplate(courseName: string, lessonNumber: num
     
     // 如果個別教材連結無效，使用統一設定
     if (isInvalidLink(materials)) {
-      materials = courseTemplate.globalSettings?.defaultMaterialLink || null;
+      materials = courseTemplate.globalSettings?.defaultMaterialLink ?? null;
       if (materials && !isInvalidLink(materials)) {
         console.log(`📄 使用統一教材設定: ${materials}`);
       } else {

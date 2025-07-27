@@ -527,6 +527,44 @@ export const bookingService = {
     return { success: true, data: true };
   },
   
+  // 獲取所有預約記錄（管理員用）
+  async getAllBookings(): Promise<ApiResponse<ClassAppointment[]>> {
+    try {
+      // 合併內存中的預約和 localStorage 中的預約
+      let allAppointments = [...classAppointments];
+      
+      // 從 localStorage 讀取預約資料
+      if (typeof localStorage !== 'undefined') {
+        try {
+          const storedAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]') as ClassAppointment[];
+          // 合併資料，避免重複
+          const existingIds = new Set(allAppointments.map(a => a.id));
+          const newAppointments = storedAppointments.filter((a: ClassAppointment) => !existingIds.has(a.id));
+          allAppointments = [...allAppointments, ...newAppointments];
+        } catch (error) {
+          console.error('讀取預約資料失敗:', error);
+        }
+      }
+      
+      // 去重處理
+      const uniqueAppointmentsMap = new Map();
+      allAppointments.forEach(appointment => {
+        const key = `${appointment.id}-${appointment.user_id}`;
+        if (!uniqueAppointmentsMap.has(key) || 
+            appointment.status === 'CANCELED' || 
+            new Date(appointment.created_at) > new Date(uniqueAppointmentsMap.get(key).created_at)) {
+          uniqueAppointmentsMap.set(key, appointment);
+        }
+      });
+      
+      const deduplicatedAppointments = Array.from(uniqueAppointmentsMap.values());
+      return { success: true, data: deduplicatedAppointments };
+    } catch (error) {
+      console.error('獲取所有預約失敗:', error);
+      return { success: false, error: 'Failed to get all bookings' };
+    }
+  },
+
   // 獲取用戶預約
   async getUserAppointments(userId: number): Promise<ClassAppointment[]> {
     // 合併內存中的預約和 localStorage 中的預約
@@ -924,6 +962,8 @@ export const leaveService = {
     courseTime: string;
     reason: string;
     note?: string;
+    studentCount?: number;
+    classroom?: string;
   }) {
     await delay(500);
     
@@ -934,12 +974,24 @@ export const leaveService = {
       // 創建新的請假申請
       const newRequest = {
         id: Date.now().toString(),
-        ...requestData,
+        teacherId: requestData.teacherId,
+        teacherName: requestData.teacherName,
+        teacherEmail: requestData.teacherEmail,
+        sessionId: requestData.sessionId,
+        courseName: requestData.courseName,
+        courseDate: requestData.courseDate,
+        courseTime: requestData.courseTime,
+        leaveReason: requestData.reason, // 對應介面定義
+        requestDate: new Date().toISOString().split('T')[0], // 對應介面定義
+        note: requestData.reason || '', // 將原因同時存為note以保持兼容性
+        studentCount: requestData.studentCount || 0,
+        classroom: requestData.classroom || '線上教室',
         status: 'pending' as const,
         createdAt: new Date().toISOString(),
         reviewedAt: null,
         reviewerName: null,
-        adminNote: null
+        adminNote: null,
+        substituteTeacher: null
       };
       
       // 保存到 localStorage
@@ -969,7 +1021,7 @@ export const leaveService = {
   },
 
   // 審核請假申請（管理員用）
-  async reviewLeaveRequest(requestId: string, status: 'approved' | 'rejected', adminNote?: string, reviewerName?: string) {
+  async reviewLeaveRequest(requestId: string, status: 'approved' | 'rejected', adminNote?: string, reviewerName?: string, substituteTeacher?: { name: string; email: string }) {
     await delay(500);
     
     try {
@@ -986,7 +1038,8 @@ export const leaveService = {
         status,
         reviewedAt: new Date().toISOString(),
         reviewerName: reviewerName || '管理員',
-        adminNote: adminNote || ''
+        adminNote: adminNote || '',
+        substituteTeacher: substituteTeacher || requests[requestIndex].substituteTeacher || null
       };
       
       localStorage.setItem('leaveRequests', JSON.stringify(requests));
@@ -1011,6 +1064,41 @@ export const leaveService = {
     } catch (error) {
       console.error('獲取老師請假申請失敗:', error);
       return { success: false, error: 'Failed to get teacher leave requests' };
+    }
+  },
+
+  // 取消請假申請（教師用）
+  async cancelLeaveRequest(requestId: string, teacherId: number, allowApproved: boolean = false) {
+    await delay(500);
+    
+    try {
+      const requests = JSON.parse(localStorage.getItem('leaveRequests') || '[]');
+      const requestIndex = requests.findIndex((r: LeaveRequest) => {
+        const matchesId = r.id === requestId && r.teacherId === teacherId;
+        if (!allowApproved) {
+          return matchesId && r.status === 'pending';
+        } else {
+          return matchesId && (r.status === 'pending' || r.status === 'approved');
+        }
+      });
+      
+      if (requestIndex === -1) {
+        const statusMsg = allowApproved ? 'pending or approved' : 'pending';
+        return { success: false, error: `Leave request not found or not in ${statusMsg} status` };
+      }
+      
+      // 從列表中移除請假申請
+      const cancelledRequest = requests[requestIndex];
+      requests.splice(requestIndex, 1);
+      
+      localStorage.setItem('leaveRequests', JSON.stringify(requests));
+      
+      console.log('✅ 請假申請已取消:', cancelledRequest);
+      
+      return { success: true, data: cancelledRequest };
+    } catch (error) {
+      console.error('取消請假申請失敗:', error);
+      return { success: false, error: 'Failed to cancel leave request' };
     }
   }
 };

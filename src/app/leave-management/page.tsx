@@ -1,15 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
 import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { leaveService, bookingService } from '@/services/dataService';
+import { getActiveTeachers, Teacher as TeacherData } from '@/data/teacherData';
 
 const {
   FiClock, FiCalendar, FiUser, FiCheck, FiX, FiUserCheck,
-  FiMessageSquare, FiUsers, FiBriefcase
+  FiMessageSquare, FiUsers, FiBriefcase, FiEdit, FiRefreshCw,
+  FiUserPlus, FiInfo, FiAlertTriangle, FiAlertCircle, FiTrash2
 } = FiIcons;
 
 interface LeaveRequest {
@@ -30,13 +33,6 @@ interface LeaveRequest {
   } | null;
 }
 
-interface Teacher {
-  id: string;
-  name: string;
-  email: string;
-  specialties: string[];
-  available: boolean;
-}
 
 interface StudentCancellation {
   id: string;
@@ -57,128 +53,193 @@ interface StudentCancellation {
 export default function LeaveManagementPage() {
   const { user, isOps, isAdmin } = useAuth();
   const [selectedTab, setSelectedTab] = useState<'pending' | 'approved' | 'cancelled' | 'all'>('pending');
-  const [showSubstituteModal, setShowSubstituteModal] = useState(false);
   const [selectedLeaveRequest, setSelectedLeaveRequest] = useState<LeaveRequest | null>(null);
+  const [selectedTeacher, setSelectedTeacher] = useState<TeacherData | null>(null);
+  const [editingTeacherForRequest, setEditingTeacherForRequest] = useState<string | null>(null);
   const [showReasonModal, setShowReasonModal] = useState(false);
+  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const [studentCancellations, setStudentCancellations] = useState<StudentCancellation[]>([]);
+  const [availableTeachers, setAvailableTeachers] = useState<TeacherData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock data - 模擬請假申請數據
-  const leaveRequests: LeaveRequest[] = [
-    {
-      id: 'leave-1',
-      teacherName: '張老師',
-      teacherEmail: 'teacher.zhang@tli.com',
-      courseName: '商務華語會話',
-      courseDate: '2025-01-25',
-      courseTime: '09:00-10:30',
-      leaveReason: '家庭緊急事務',
-      requestDate: '2025-01-20',
-      status: 'pending',
-      studentCount: 12,
-      classroom: 'https://meet.google.com/abc-def-ghi'
-    },
-    {
-      id: '2',
-      teacherName: '王老師',
-      teacherEmail: 'teacher.wang@tli.com',
-      courseName: '華語文法精修',
-      courseDate: '2025-01-28',
-      courseTime: '14:00-15:30',
-      leaveReason: '參加學術會議',
-      requestDate: '2025-01-18',
-      status: 'pending',
-      studentCount: 8,
-      classroom: 'https://meet.google.com/def-ghi-jkl'
-    },
-    {
-      id: '3',
-      teacherName: '李老師',
-      teacherEmail: 'teacher.li@tli.com',
-      courseName: '華語聽力強化',
-      courseDate: '2025-01-22',
-      courseTime: '10:00-11:30',
-      leaveReason: '身體不適',
-      requestDate: '2025-01-19',
-      status: 'approved',
-      studentCount: 15,
-      classroom: 'https://meet.google.com/ghi-jkl-mno',
-      substituteTeacher: {
-        name: '陳老師',
-        email: 'teacher.chen@tli.com'
+  // Check if teacher has time conflict
+  const checkTeacherTimeConflict = async (teacherId: number, courseDate: string, courseTime: string): Promise<boolean> => {
+    try {
+      // Get all bookings for the teacher
+      const bookingsResult = await bookingService.getAllBookings();
+      if (!bookingsResult.success || !bookingsResult.data) {
+        return false; // If can't check, assume no conflict
+      }
+
+      // Parse the course time range
+      const [startTime, endTime] = courseTime.split('-');
+      const courseDateStr = courseDate.split('T')[0]; // Get date part only
+      
+      // Check for conflicts with existing bookings
+      const hasConflict = bookingsResult.data.some(booking => {
+        // Skip if booking is cancelled
+        if (booking.status === 'CANCELED') return false;
+        
+        // Check if same teacher and same date
+        if (booking.teacherId === teacherId) {
+          const bookingDateStr = booking.courseDate.split('T')[0];
+          if (bookingDateStr === courseDateStr) {
+            // Check time overlap
+            const [bookingStart, bookingEnd] = booking.courseTime.split('-');
+            
+            // Time overlap logic
+            const courseStartTime = startTime.replace(':', '');
+            const courseEndTime = endTime.replace(':', '');
+            const existingStartTime = bookingStart.replace(':', '');
+            const existingEndTime = bookingEnd.replace(':', '');
+            
+            return (courseStartTime < existingEndTime && courseEndTime > existingStartTime);
+          }
+        }
+        return false;
+      });
+
+      return hasConflict;
+    } catch (error) {
+      console.error('檢查教師時段衝突失敗:', error);
+      return false; // If error, assume no conflict
+    }
+  };
+
+  // Get suitable teachers based on course type and time availability
+  const getSuitableTeachers = (courseName: string, courseDate?: string, courseTime?: string): TeacherData[] => {
+    // Extract course category from course name
+    let requiredCategories: string[] = [];
+    
+    if (courseName.includes('英文') || courseName.includes('English')) {
+      requiredCategories = ['英文', '商業'];
+    } else if (courseName.includes('中文') || courseName.includes('華語') || courseName.includes('Chinese')) {
+      requiredCategories = ['中文', '商業'];
+    } else if (courseName.includes('日文') || courseName.includes('Japanese')) {
+      requiredCategories = ['日文'];
+    } else {
+      // Default to all categories if can't determine
+      requiredCategories = ['中文', '英文', '商業', '文化'];
+    }
+
+    return availableTeachers.filter(teacher => 
+      teacher.teachingCategory.some(category => 
+        requiredCategories.includes(category)
+      )
+    );
+  };
+
+  // Get available teachers (without time conflicts)
+  const [availableTeachersForSlot, setAvailableTeachersForSlot] = useState<TeacherData[]>([]);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
+
+  // Check teacher availability when editing starts
+  const checkTeacherAvailability = async (courseName: string, courseDate: string, courseTime: string) => {
+    setCheckingAvailability(true);
+    const suitableTeachers = getSuitableTeachers(courseName);
+    const availableTeachers: TeacherData[] = [];
+
+    for (const teacher of suitableTeachers) {
+      const hasConflict = await checkTeacherTimeConflict(teacher.id, courseDate, courseTime);
+      if (!hasConflict) {
+        availableTeachers.push(teacher);
       }
     }
-  ];
 
-  // Mock student cancellation records
-  const studentCancellations: StudentCancellation[] = [
-    {
-      id: 'cancel-1',
-      studentName: '王小明',
-      studentEmail: 'student1@example.com',
-      courseName: '商務華語會話',
-      courseDate: '2025-01-25',
-      courseTime: '09:00-10:30',
-      instructorName: '張老師',
-      cancelReason: '臨時有事',
-      cancelNote: '公司臨時開會，無法參加',
-      cancelDate: '2025-01-23',
-      membershipType: 'individual',
-      status: 'pending'
-    },
-    {
-      id: '2',
-      studentName: '李小華',
-      studentEmail: 'user2@taiwantech.com',
-      courseName: '華語文法精修',
-      courseDate: '2025-01-26',
-      courseTime: '14:00-15:30',
-      instructorName: '王老師',
-      cancelReason: '身體不適',
-      cancelNote: '感冒發燒，不適宜上課',
-      cancelDate: '2025-01-24',
-      membershipType: 'corporate',
-      companyName: '台灣科技股份有限公司',
-      status: 'pending'
-    },
-    {
-      id: '3',
-      studentName: '程式設計師A',
-      studentEmail: 'dev1@innovation.com',
-      courseName: '商務華語會話',
-      courseDate: '2025-01-20',
-      courseTime: '10:00-11:30',
-      instructorName: '張老師',
-      cancelReason: '工作衝突',
-      cancelDate: '2025-01-18',
-      membershipType: 'corporate',
-      companyName: '創新軟體有限公司',
-      status: 'processed'
-    }
-  ];
+    setAvailableTeachersForSlot(availableTeachers);
+    setCheckingAvailability(false);
+  };
 
-  // Mock available teachers
-  const availableTeachers: Teacher[] = [
-    {
-      id: 'teacher-1',
-      name: '陳老師',
-      email: 'teacher.chen@tli.com',
-      specialties: ['商務華語', '華語會話'],
-      available: true
-    },
-    {
-      id: '2',
-      name: '劉老師',
-      email: 'teacher.liu@tli.com',
-      specialties: ['華語文法', '華語寫作'],
-      available: true
-    },
-    {
-      id: '3',
-      name: '黃老師',
-      email: 'teacher.huang@tli.com',
-      specialties: ['華語聽力', '華語發音'],
-      available: true
-    }
-  ];
+  // 加載真實的請假申請數據
+  const loadLeaveData = async () => {
+      setLoading(true);
+      try {
+        // 獲取請假申請
+        const leaveResult = await leaveService.getAllLeaveRequests();
+        if (leaveResult.success && leaveResult.data) {
+          setLeaveRequests(leaveResult.data);
+        }
+
+        // 獲取在職教師列表
+        const activeTeachers = getActiveTeachers();
+        setAvailableTeachers(activeTeachers);
+
+        // 獲取學生取消記錄（檢查符合"學生全部取消"條件的課程）
+        const allBookingsResult = await bookingService.getAllBookings();
+        if (allBookingsResult.success && allBookingsResult.data) {
+          // 分組：按課程名稱、日期、時間分組
+          const courseGroups = new Map<string, Array<{
+            id: string;
+            courseName: string;
+            courseDate: string;
+            courseTime: string;
+            status: string;
+            cancelReason?: string;
+            studentName?: string;
+            studentEmail?: string;
+            instructorName?: string;
+            requestDate?: string;
+            companyName?: string;
+            note?: string;
+          }>>();
+          
+          allBookingsResult.data.forEach(booking => {
+            const courseKey = `${booking.courseName}-${booking.courseDate}-${booking.courseTime}`;
+            if (!courseGroups.has(courseKey)) {
+              courseGroups.set(courseKey, []);
+            }
+            courseGroups.get(courseKey)!.push(booking);
+          });
+
+          // 檢查符合"學生全部取消"條件的課程
+          const cancellationRecords: StudentCancellation[] = [];
+          
+          courseGroups.forEach((bookings, courseKey) => {
+            // 條件：該課程的所有學生都取消了
+            const allCancelled = bookings.length > 0 && 
+                                bookings.every(booking => booking.status === 'cancelled');
+            
+            if (allCancelled) {
+              // 找到最後一個取消的學生作為代表
+              const lastCancelledBooking = bookings
+                .filter(b => b.cancelReason)
+                .sort((a, b) => new Date(b.requestDate || '').getTime() - new Date(a.requestDate || '').getTime())[0];
+              
+              if (lastCancelledBooking) {
+                cancellationRecords.push({
+                  id: `group-${courseKey}`,
+                  studentName: `${bookings.length}位學生全部取消`,
+                  studentEmail: lastCancelledBooking.studentEmail || '',
+                  courseName: lastCancelledBooking.courseName,
+                  courseDate: lastCancelledBooking.courseDate,
+                  courseTime: lastCancelledBooking.courseTime,
+                  instructorName: lastCancelledBooking.instructorName || '教師',
+                  cancelReason: `${bookings.length}位學生全部取消課程`,
+                  cancelNote: `最後取消學生：${lastCancelledBooking.studentName || '學生'}\n取消原因：${lastCancelledBooking.cancelReason || '未提供'}`,
+                  cancelDate: lastCancelledBooking.requestDate || new Date().toISOString().split('T')[0],
+                  membershipType: (lastCancelledBooking.companyName ? 'corporate' : 'individual') as 'individual' | 'corporate',
+                  companyName: lastCancelledBooking.companyName || undefined,
+                  status: 'pending' as const
+                });
+              }
+            }
+          });
+          
+          setStudentCancellations(cancellationRecords);
+        }
+      } catch (error) {
+        console.error('加載請假管理數據失敗:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+  // 加載真實的請假申請數據
+  useEffect(() => {
+    loadLeaveData();
+  }, []);
+
+
 
   // Check if user has admin permission
   if (!user || (!isOps && !isAdmin)) {
@@ -245,15 +306,30 @@ export default function LeaveManagementPage() {
     }
   };
 
-  const handleApproveLeave = (leaveId: string) => {
-    setSelectedLeaveRequest(leaveRequests.find(req => req.id === leaveId) || null);
-    setShowSubstituteModal(true);
-  };
-
-  const handleRejectLeave = () => {
-    if (confirm('確定要拒絕這個請假申請嗎？')) {
-      alert('✅ 請假申請已拒絕');
-      // Here you would update the request status
+  const handleRejectLeave = async () => {
+    if (selectedLeaveRequest && confirm('確定要拒絕這個請假申請嗎？')) {
+      try {
+        const result = await leaveService.reviewLeaveRequest(
+          selectedLeaveRequest.id, 
+          'rejected', 
+          '管理員拒絕請假申請',
+          user?.name || '管理員'
+        );
+        
+        if (result.success) {
+          alert('✅ 請假申請已拒絕');
+          // 重新加載數據
+          const leaveResult = await leaveService.getAllLeaveRequests();
+          if (leaveResult.success && leaveResult.data) {
+            setLeaveRequests(leaveResult.data);
+          }
+        } else {
+          alert('❌ 拒絕請假申請失敗');
+        }
+      } catch (error) {
+        console.error('拒絕請假申請失敗:', error);
+        alert('❌ 拒絕請假申請失敗');
+      }
     }
   };
 
@@ -264,93 +340,109 @@ export default function LeaveManagementPage() {
     }
   };
 
-  const handleAssignSubstitute = (teacherId: string) => {
-    const teacher = availableTeachers.find(t => t.id === teacherId);
-    if (teacher && selectedLeaveRequest) {
-      alert(`✅ 已指派 ${teacher.name} 為代課老師\n\n課程：${selectedLeaveRequest.courseName}\n時間：${selectedLeaveRequest.courseDate} ${selectedLeaveRequest.courseTime}\n\n系統將自動發送通知給所有學生。`);
-      setShowSubstituteModal(false);
-      setSelectedLeaveRequest(null);
+
+  const handleUpdateSubstituteTeacher = async (leaveId: string) => {
+    if (!selectedTeacher) {
+      alert('請先選擇代課老師');
+      return;
+    }
+
+    // Validate that the selected teacher is in the available list
+    if (!availableTeachersForSlot.some(teacher => teacher.id === selectedTeacher.id)) {
+      alert('⚠️ 所選教師在該時段不可用，請重新選擇');
+      return;
+    }
+
+    try {
+      const result = await leaveService.reviewLeaveRequest(
+        leaveId,
+        'approved',
+        `管理員變更代課老師為：${selectedTeacher.name}`,
+        user?.name || '管理員',
+        { name: selectedTeacher.name, email: selectedTeacher.email }
+      );
+
+      if (result.success) {
+        await loadLeaveData();
+        setEditingTeacherForRequest(null);
+        setSelectedTeacher(null);
+        setAvailableTeachersForSlot([]);
+        alert(`✅ 代課老師已變更為：${selectedTeacher.name}`);
+      } else {
+        alert('❌ 變更代課老師失敗');
+      }
+    } catch (error) {
+      console.error('變更代課老師失敗:', error);
+      alert('❌ 變更代課老師失敗');
     }
   };
 
-  const SubstituteModal = () => (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={() => setShowSubstituteModal(false)}
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold">指派代課老師</h3>
-          <button
-            onClick={() => setShowSubstituteModal(false)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <SafeIcon icon={FiX} className="text-xl" />
-          </button>
-        </div>
+  const handleCancelApprovedLeave = async (leaveId: string) => {
+    const request = leaveRequests.find(req => req.id === leaveId);
+    if (request && confirm(`確定要取消「${request.courseName}」的已批准請假嗎？\n\n這會將請假狀態恢復為未申請狀態。`)) {
+      try {
+        // 直接刪除已批准的請假申請
+        const deleteResult = await leaveService.cancelLeaveRequest(leaveId, request.teacherId, true);
+        
+        if (deleteResult.success) {
+          alert('✅ 已批准的請假已取消，課程恢復正常');
+          // 重新加載數據
+          await loadLeaveData();
+        } else {
+          alert('❌ 取消請假失敗');
+        }
+      } catch (error) {
+        console.error('取消已批准請假失敗:', error);
+        alert('❌ 取消請假失敗');
+      }
+    }
+  };
 
-        {selectedLeaveRequest && (
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-            <h4 className="font-medium mb-2">課程資訊</h4>
-            <div className="space-y-1 text-sm text-gray-600">
-              <div>課程：{selectedLeaveRequest.courseName}</div>
-              <div>時間：{formatDate(selectedLeaveRequest.courseDate)} {selectedLeaveRequest.courseTime}</div>
-              <div>學生：{selectedLeaveRequest.studentCount} 位</div>
-              <div>請假老師：{selectedLeaveRequest.teacherName}</div>
-            </div>
-          </div>
-        )}
+  const handleAssignSubstitute = async (requestId: string) => {
+    if (selectedTeacher && editingTeacherForRequest) {
+      const request = leaveRequests.find(req => req.id === requestId);
+      if (!request) return;
 
-        <div className="space-y-3">
-          <h4 className="font-medium">選擇代課老師：</h4>
-          {availableTeachers.map((teacher) => (
-            <motion.div
-              key={teacher.id}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => handleAssignSubstitute(teacher.id)}
-              className="p-3 border border-gray-200 rounded-lg cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all"
-            >
-              <div className="flex justify-between items-start">
-                <div>
-                  <div className="font-medium">{teacher.name}</div>
-                  <div className="text-sm text-gray-600">{teacher.email}</div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    專長：{teacher.specialties.join('、')}
-                  </div>
-                </div>
-                <div className="text-green-600 text-sm">
-                  ✓ 可用
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+      // Validate that the selected teacher is in the available list
+      if (!availableTeachersForSlot.some(teacher => teacher.id === selectedTeacher.id)) {
+        alert('⚠️ 所選教師在該時段不可用，請重新選擇');
+        return;
+      }
+      
+      try {
+        const result = await leaveService.reviewLeaveRequest(
+          requestId, 
+          'approved', 
+          `已指派 ${selectedTeacher.name} 為代課老師`,
+          user?.name || '管理員',
+          { name: selectedTeacher.name, email: selectedTeacher.email }
+        );
+        
+        if (result.success) {
+          const actionText = request.status === 'approved' ? '已變更' : '已指派';
+          alert(`✅ ${actionText} ${selectedTeacher.name} 為代課老師\n\n課程：${request.courseName}\n時間：${request.courseDate} ${request.courseTime}\n\n系統將自動發送通知給所有學生。`);
+          
+          // 重新加載數據
+          const leaveResult = await leaveService.getAllLeaveRequests();
+          if (leaveResult.success && leaveResult.data) {
+            setLeaveRequests(leaveResult.data);
+          }
+          
+          // 關閉編輯模式
+          setEditingTeacherForRequest(null);
+          setSelectedTeacher(null);
+          setAvailableTeachersForSlot([]);
+        } else {
+          alert('❌ 指派代課老師失敗');
+        }
+      } catch (error) {
+        console.error('指派代課老師失敗:', error);
+        alert('❌ 指派代課老師失敗');
+      }
+    }
+  };
 
-        <div className="flex space-x-3 mt-6">
-          <button
-            onClick={() => handleCancelCourse(selectedLeaveRequest?.id || '', selectedLeaveRequest?.courseName || '')}
-            className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors"
-          >
-            取消課程
-          </button>
-          <button
-            onClick={() => setShowSubstituteModal(false)}
-            className="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-colors"
-          >
-            關閉
-          </button>
-        </div>
-      </motion.div>
-    </motion.div>
-  );
+
 
   const ReasonModal = () => (
     <motion.div
@@ -451,7 +543,12 @@ export default function LeaveManagementPage() {
           transition={{ delay: 0.1 }}
           className="space-y-4"
         >
-          {filteredRecords.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">加載請假管理數據中...</p>
+            </div>
+          ) : filteredRecords.length > 0 ? (
             filteredRecords.map((record) => (
               <motion.div
                 key={record.id}
@@ -507,6 +604,12 @@ export default function LeaveManagementPage() {
                               <span>教師：{record.instructorName}</span>
                             </div>
                           )}
+                          {record.type === 'leave' && record.status === 'approved' && record.substituteTeacher && (
+                            <div className="flex items-center space-x-1">
+                              <SafeIcon icon={FiUserCheck} className="text-xs text-green-600" />
+                              <span className="text-green-600 font-medium">代課：{record.substituteTeacher.name}</span>
+                            </div>
+                          )}
                         </div>
                       </div>
                       
@@ -525,15 +628,6 @@ export default function LeaveManagementPage() {
                       </div>
                     )}
 
-                    {/* Substitute Teacher Info for approved leave */}
-                    {record.type === 'leave' && record.substituteTeacher && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
-                        <div className="flex items-center space-x-2 text-green-800">
-                          <SafeIcon icon={FiUserCheck} className="text-sm" />
-                          <span className="font-medium">代課老師：{record.substituteTeacher.name}</span>
-                        </div>
-                      </div>
-                    )}
 
                     <div className="flex flex-wrap gap-2">
                       <motion.button
@@ -577,16 +671,27 @@ export default function LeaveManagementPage() {
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => handleApproveLeave(record.id)}
+                        onClick={() => {
+                          if (editingTeacherForRequest === record.id) {
+                            setEditingTeacherForRequest(null);
+                          } else {
+                            setEditingTeacherForRequest(record.id);
+                            checkTeacherAvailability(record.courseName, record.courseDate, record.courseTime);
+                          }
+                        }}
                         className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
                       >
                         <SafeIcon icon={FiCheck} className="text-sm" />
                         <span>批准請假</span>
                       </motion.button>
+                      
                       <motion.button
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => handleRejectLeave()}
+                        onClick={() => {
+                          setSelectedLeaveRequest(record);
+                          handleRejectLeave();
+                        }}
                         className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                       >
                         <SafeIcon icon={FiX} className="text-sm" />
@@ -594,6 +699,466 @@ export default function LeaveManagementPage() {
                       </motion.button>
                     </div>
                   )}
+
+                  {/* Modal Teacher Selection */}
+                  {record.type === 'leave' && record.status === 'pending' && editingTeacherForRequest === record.id && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                            onClick={() => {
+                              setEditingTeacherForRequest(null);
+                              setSelectedTeacher(null);
+                              setAvailableTeachersForSlot([]);
+                            }}
+                          >
+                            <motion.div
+                              initial={{ scale: 0.9, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0.9, opacity: 0 }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="bg-white rounded-2xl shadow-2xl w-[700px] max-h-[90vh] flex flex-col border border-gray-100"
+                            >
+                              <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 text-white">
+                                <div className="flex items-center space-x-3">
+                                  <div className="bg-white bg-opacity-20 rounded-full p-2">
+                                    <SafeIcon icon={FiUserPlus} className="text-xl" />
+                                  </div>
+                                  <div>
+                                    <h4 className="text-xl font-bold">選擇代課老師</h4>
+                                    <p className="text-green-100 mt-1">
+                                      課程：{record.courseName}
+                                    </p>
+                                    <p className="text-green-100 text-sm">
+                                      時間：{formatDate(record.courseDate)} {record.courseTime}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="p-4">
+                                <div className="text-sm text-gray-600 mb-4 bg-gray-50 p-3 rounded-lg">
+                                  <SafeIcon icon={FiInfo} className="inline mr-2" />
+                                  {checkingAvailability ? (
+                                    <span>正在檢查教師時段可用性...</span>
+                                  ) : (
+                                    <span>已為您篩選出符合該時段可用且專業對口的優秀教師</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex-1 overflow-y-auto px-4 pb-4">
+                                {checkingAvailability ? (
+                                  <div className="p-8 text-center">
+                                    <div className="bg-blue-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                      <SafeIcon icon={FiClock} className="text-2xl text-blue-500 animate-spin" />
+                                    </div>
+                                    <h5 className="font-medium text-gray-700 mb-2">檢查教師可用性中</h5>
+                                    <p className="text-gray-500 text-sm">正在確認教師在該時段沒有課程衝突...</p>
+                                  </div>
+                                ) : availableTeachersForSlot.length > 0 ? (
+                                  availableTeachersForSlot.map((teacher) => (
+                                    <motion.div
+                                      key={teacher.id}
+                                    whileHover={{ scale: 1.01, backgroundColor: '#f9fafb' }}
+                                    onClick={() => setSelectedTeacher(teacher)}
+                                    className={`p-4 cursor-pointer border border-gray-200 rounded-xl mb-3 transition-all duration-200 ${
+                                      selectedTeacher?.id === teacher.id 
+                                        ? 'bg-green-50 border-green-300 shadow-md ring-2 ring-green-200' 
+                                        : 'hover:border-green-200 hover:shadow-sm'
+                                    }`}
+                                  >
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center space-x-2 mb-2">
+                                          <h5 className="font-medium text-gray-900">{teacher.name}</h5>
+                                          <span className={`px-2 py-1 text-xs rounded-full ${
+                                            teacher.contractType === 'full-time' 
+                                              ? 'bg-blue-100 text-blue-800' 
+                                              : 'bg-purple-100 text-purple-800'
+                                          }`}>
+                                            {teacher.contractType === 'full-time' ? '全職' : '兼職'}
+                                          </span>
+                                          <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                                            ⭐ {teacher.rating}
+                                          </span>
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-2">
+                                          <div>
+                                            <span className="font-medium">專長：</span>
+                                            {teacher.expertise.join('、')}
+                                          </div>
+                                          <div>
+                                            <span className="font-medium">授課類型：</span>
+                                            {teacher.teachingCategory.join('、')}
+                                          </div>
+                                          <div>
+                                            <span className="font-medium">經驗：</span>
+                                            {teacher.experience}
+                                          </div>
+                                          <div>
+                                            <span className="font-medium">教學時數：</span>
+                                            {teacher.teachingHours}小時
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="text-xs text-gray-500">
+                                          <span className="font-medium">證書：</span>
+                                          {teacher.qualification.join('、')}
+                                        </div>
+                                        
+                                        <div className="text-xs text-gray-500 mt-1">
+                                          <span className="font-medium">語言：</span>
+                                          {teacher.languages.join('、')}
+                                        </div>
+                                      </div>
+                                      {selectedTeacher?.id === teacher.id && (
+                                        <div className="flex items-center justify-center w-8 h-8 bg-green-500 rounded-full ml-4">
+                                          <SafeIcon icon={FiCheck} className="text-white text-lg" />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </motion.div>
+                                  ))
+                                ) : (
+                                  <div className="p-8 text-center">
+                                    <div className="bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                      <SafeIcon icon={FiAlertTriangle} className="text-2xl text-gray-400" />
+                                    </div>
+                                    <h5 className="font-medium text-gray-700 mb-2">該時段無可用教師</h5>
+                                    <p className="text-gray-500 text-sm">符合課程類型的教師在該時段都有課程安排</p>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* 確認區域 */}
+                              <div className="sticky bottom-0 p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+                                {!selectedTeacher ? (
+                                  <div className="text-center py-4">
+                                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                      <SafeIcon icon={FiAlertCircle} className="inline text-amber-500 mr-2" />
+                                      <span className="text-amber-700 font-medium">請先選擇一位代課老師</span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center space-x-3">
+                                        <div className="bg-green-500 rounded-full p-2">
+                                          <SafeIcon icon={FiUserCheck} className="text-white text-sm" />
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold text-green-800">已選擇代課老師</p>
+                                          <p className="text-green-700">{selectedTeacher.name}</p>
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="inline-block text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full whitespace-nowrap">
+                                          {selectedTeacher.teachingCategory.join('、')}
+                                        </div>
+                                        <div className="text-xs text-green-600 mt-1">
+                                          ⭐ {selectedTeacher.rating} | {selectedTeacher.experience}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                <div className="flex justify-between">
+                                  <div className="flex space-x-3">
+                                    <motion.button
+                                      whileHover={{ scale: 1.02 }}
+                                      whileTap={{ scale: 0.98 }}
+                                      onClick={() => {
+                                        setEditingTeacherForRequest(null);
+                                        setSelectedTeacher(null);
+                                        setAvailableTeachersForSlot([]);
+                                      }}
+                                      className="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium"
+                                    >
+                                      <SafeIcon icon={FiX} className="inline mr-2" />
+                                      取消
+                                    </motion.button>
+                                    
+                                    <motion.button
+                                      whileHover={{ scale: 1.02 }}
+                                      whileTap={{ scale: 0.98 }}
+                                      onClick={() => handleCancelCourse(record.id, record.courseName)}
+                                      className="px-5 py-2.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors font-medium"
+                                    >
+                                      <SafeIcon icon={FiTrash2} className="inline mr-2" />
+                                      取消課程
+                                    </motion.button>
+                                  </div>
+                                  
+                                  <motion.button
+                                    whileHover={{ scale: selectedTeacher ? 1.05 : 1 }}
+                                    whileTap={{ scale: selectedTeacher ? 0.95 : 1 }}
+                                    onClick={() => handleAssignSubstitute(record.id)}
+                                    disabled={!selectedTeacher}
+                                    className={`px-10 py-4 rounded-xl font-bold text-xl transition-all duration-200 min-w-[200px] ${
+                                      selectedTeacher 
+                                        ? 'bg-gradient-to-r from-green-500 to-green-600 text-white shadow-xl hover:shadow-2xl transform border-2 border-green-400' 
+                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    }`}
+                                  >
+                                    <SafeIcon icon={FiCheck} className="inline mr-2 text-lg" />
+                                    確認指派代課老師
+                                  </motion.button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          </motion.div>
+                        )}
+
+
+                  {/* Actions for approved leave requests */}
+                  {record.type === 'leave' && record.status === 'approved' && (
+                    <div className="flex flex-wrap gap-2 lg:flex-col lg:items-end">
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => {
+                          if (editingTeacherForRequest === record.id) {
+                            setEditingTeacherForRequest(null);
+                          } else {
+                            setEditingTeacherForRequest(record.id);
+                            checkTeacherAvailability(record.courseName, record.courseDate, record.courseTime);
+                          }
+                        }}
+                        className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                      >
+                        <SafeIcon icon={FiEdit} className="text-sm" />
+                        <span>變更老師</span>
+                      </motion.button>
+                        
+                        {/* Modal Teacher Selection for approved requests */}
+                        {editingTeacherForRequest === record.id && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                            onClick={() => {
+                              setEditingTeacherForRequest(null);
+                              setSelectedTeacher(null);
+                              setAvailableTeachersForSlot([]);
+                            }}
+                          >
+                            <motion.div
+                              initial={{ scale: 0.9, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0.9, opacity: 0 }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="bg-white rounded-2xl shadow-2xl w-[700px] max-h-[90vh] flex flex-col border border-gray-100"
+                            >
+                              <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white">
+                                <div className="flex items-center space-x-3">
+                                  <div className="bg-white bg-opacity-20 rounded-full p-2">
+                                    <SafeIcon icon={FiEdit} className="text-xl" />
+                                  </div>
+                                  <div>
+                                    <h4 className="text-xl font-bold">變更代課老師</h4>
+                                    <p className="text-blue-100 mt-1">
+                                      課程：{record.courseName}
+                                    </p>
+                                    <p className="text-blue-100 text-sm">
+                                      時間：{formatDate(record.courseDate)} {record.courseTime}
+                                    </p>
+                                    {record.substituteTeacher && (
+                                      <p className="text-blue-100 text-sm mt-1">
+                                        目前代課：{record.substituteTeacher.name}
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="p-4">
+                                <div className="text-sm text-gray-600 mb-4 bg-gray-50 p-3 rounded-lg">
+                                  <SafeIcon icon={FiInfo} className="inline mr-2" />
+                                  {checkingAvailability ? (
+                                    <span>正在檢查教師時段可用性...</span>
+                                  ) : (
+                                    <span>已為您篩選出符合該時段可用且專業對口的優秀教師</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex-1 overflow-y-auto px-4 pb-4">
+                                {checkingAvailability ? (
+                                  <div className="p-8 text-center">
+                                    <div className="bg-blue-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                      <SafeIcon icon={FiClock} className="text-2xl text-blue-500 animate-spin" />
+                                    </div>
+                                    <h5 className="font-medium text-gray-700 mb-2">檢查教師可用性中</h5>
+                                    <p className="text-gray-500 text-sm">正在確認教師在該時段沒有課程衝突...</p>
+                                  </div>
+                                ) : availableTeachersForSlot.length > 0 ? (
+                                  availableTeachersForSlot.map((teacher) => (
+                                    <motion.div
+                                      key={teacher.id}
+                                    whileHover={{ scale: 1.01, backgroundColor: '#f9fafb' }}
+                                    onClick={() => setSelectedTeacher(teacher)}
+                                    className={`p-4 cursor-pointer border border-gray-200 rounded-xl mb-3 transition-all duration-200 ${
+                                      selectedTeacher?.id === teacher.id 
+                                        ? 'bg-blue-50 border-blue-300 shadow-md ring-2 ring-blue-200' 
+                                        : 'hover:border-blue-200 hover:shadow-sm'
+                                    }`}
+                                  >
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center space-x-2 mb-2">
+                                          <h5 className="font-medium text-gray-900">{teacher.name}</h5>
+                                          <span className={`px-2 py-1 text-xs rounded-full ${
+                                            teacher.contractType === 'full-time' 
+                                              ? 'bg-blue-100 text-blue-800' 
+                                              : 'bg-purple-100 text-purple-800'
+                                          }`}>
+                                            {teacher.contractType === 'full-time' ? '全職' : '兼職'}
+                                          </span>
+                                          <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                                            ⭐ {teacher.rating}
+                                          </span>
+                                          {record.substituteTeacher?.id === teacher.id && (
+                                            <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
+                                              目前代課老師
+                                            </span>
+                                          )}
+                                        </div>
+                                        
+                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-2">
+                                          <div>
+                                            <span className="font-medium">專長：</span>
+                                            {teacher.expertise.join('、')}
+                                          </div>
+                                          <div>
+                                            <span className="font-medium">授課類型：</span>
+                                            {teacher.teachingCategory.join('、')}
+                                          </div>
+                                          <div>
+                                            <span className="font-medium">經驗：</span>
+                                            {teacher.experience}
+                                          </div>
+                                          <div>
+                                            <span className="font-medium">教學時數：</span>
+                                            {teacher.teachingHours}小時
+                                          </div>
+                                        </div>
+                                        
+                                        <div className="text-xs text-gray-500">
+                                          <span className="font-medium">證書：</span>
+                                          {teacher.qualification.join('、')}
+                                        </div>
+                                        
+                                        <div className="text-xs text-gray-500 mt-1">
+                                          <span className="font-medium">語言：</span>
+                                          {teacher.languages.join('、')}
+                                        </div>
+                                      </div>
+                                      {selectedTeacher?.id === teacher.id && (
+                                        <div className="flex items-center justify-center w-8 h-8 bg-blue-500 rounded-full ml-4">
+                                          <SafeIcon icon={FiCheck} className="text-white text-lg" />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </motion.div>
+                                  ))
+                                ) : (
+                                  <div className="p-8 text-center">
+                                    <div className="bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                                      <SafeIcon icon={FiAlertTriangle} className="text-2xl text-gray-400" />
+                                    </div>
+                                    <h5 className="font-medium text-gray-700 mb-2">該時段無可用教師</h5>
+                                    <p className="text-gray-500 text-sm">符合課程類型的教師在該時段都有課程安排</p>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              {/* 確認區域 */}
+                              <div className="sticky bottom-0 p-6 border-t border-gray-200 bg-gradient-to-r from-gray-50 to-gray-100">
+                                {!selectedTeacher ? (
+                                  <div className="text-center py-4">
+                                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                                      <SafeIcon icon={FiAlertCircle} className="inline text-amber-500 mr-2" />
+                                      <span className="text-amber-700 font-medium">請先選擇新的代課老師</span>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center space-x-3">
+                                        <div className="bg-blue-500 rounded-full p-2">
+                                          <SafeIcon icon={FiUserCheck} className="text-white text-sm" />
+                                        </div>
+                                        <div>
+                                          <p className="font-semibold text-blue-800">將變更代課老師</p>
+                                          <p className="text-blue-700">{selectedTeacher.name}</p>
+                                        </div>
+                                      </div>
+                                      <div className="text-right">
+                                        <div className="inline-block text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full whitespace-nowrap">
+                                          {selectedTeacher.teachingCategory.join('、')}
+                                        </div>
+                                        <div className="text-xs text-blue-600 mt-1">
+                                          ⭐ {selectedTeacher.rating} | {selectedTeacher.experience}
+                                        </div>
+                                        {record.substituteTeacher && (
+                                          <div className="text-xs text-gray-500 mt-1">
+                                            原：{record.substituteTeacher.name}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                <div className="flex justify-between">
+                                  <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => {
+                                      setEditingTeacherForRequest(null);
+                                      setSelectedTeacher(null);
+                                    }}
+                                    className="px-5 py-2.5 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-colors font-medium"
+                                  >
+                                    <SafeIcon icon={FiX} className="inline mr-2" />
+                                    取消
+                                  </motion.button>
+                                  
+                                  <motion.button
+                                    whileHover={{ scale: selectedTeacher ? 1.05 : 1 }}
+                                    whileTap={{ scale: selectedTeacher ? 0.95 : 1 }}
+                                    onClick={() => handleUpdateSubstituteTeacher(record.id)}
+                                    disabled={!selectedTeacher}
+                                    className={`px-10 py-4 rounded-xl font-bold text-xl transition-all duration-200 min-w-[200px] ${
+                                      selectedTeacher 
+                                        ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-xl hover:shadow-2xl transform border-2 border-blue-400' 
+                                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                    }`}
+                                  >
+                                    <SafeIcon icon={FiEdit} className="inline mr-2 text-lg" />
+                                    確認變更代課老師
+                                  </motion.button>
+                                </div>
+                              </div>
+                            </motion.div>
+                          </motion.div>
+                        )}
+                      
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => handleCancelApprovedLeave(record.id)}
+                        className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                      >
+                        <SafeIcon icon={FiRefreshCw} className="text-sm" />
+                        <span>取消請假</span>
+                      </motion.button>
+                    </div>
+                  )}
+
+
                 </div>
               </motion.div>
             ))
@@ -611,7 +1176,6 @@ export default function LeaveManagementPage() {
         </motion.div>
 
         {/* Modals */}
-        {showSubstituteModal && <SubstituteModal />}
         {showReasonModal && <ReasonModal />}
       </div>
     </div>
