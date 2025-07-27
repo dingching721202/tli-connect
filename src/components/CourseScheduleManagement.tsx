@@ -450,7 +450,7 @@ const CourseScheduleManagement = () => {
           <SafeIcon icon={FiSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="搜尋課程標題或教師..."
+            placeholder="搜尋單元名稱或教師..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -471,7 +471,7 @@ const CourseScheduleManagement = () => {
       </div>
 
       {/* Schedules List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {getFilteredSchedules().map((schedule) => (
           <motion.div
             key={schedule.id}
@@ -686,7 +686,7 @@ const CourseScheduleManagement = () => {
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                       <p className="text-xs text-gray-500 mt-1">
-                        系列名稱會加在課程標題後面，最終顯示為「{formData.templateTitle}{formData.seriesName ? `-${formData.seriesName}` : ''}」
+                        系列名稱會加在單元名稱後面，最終顯示為「{formData.templateTitle}{formData.seriesName ? `-${formData.seriesName}` : ''}」
                       </p>
                     </div>
                   )}

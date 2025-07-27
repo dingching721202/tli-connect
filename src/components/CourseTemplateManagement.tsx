@@ -153,51 +153,7 @@ const CourseTemplateManagement = () => {
     }));
   };
 
-  // 應用統一課程標題到所有課程
-  const applyGlobalTitleToAllSessions = () => {
-    const updatedSessions = formData.sessions.map(session => ({
-      ...session,
-      title: '' // 清空個別設定，讓統一設定生效
-    }));
 
-    setFormData(prev => ({
-      ...prev,
-      sessions: updatedSessions
-    }));
-  };
-
-  // 應用統一虛擬教室連結到所有課程
-  const applyGlobalClassroomToAllSessions = () => {
-    const updatedSessions = formData.sessions.map(session => ({
-      ...session,
-      virtualClassroomLink: '' // 清空個別設定，讓統一設定生效
-    }));
-
-    setFormData(prev => ({
-      ...prev,
-      sessions: updatedSessions
-    }));
-  };
-
-  // 應用統一教材連結到所有課程
-  const applyGlobalMaterialToAllSessions = () => {
-    const updatedSessions = formData.sessions.map(session => ({
-      ...session,
-      materialLink: '' // 清空個別設定，讓統一設定生效
-    }));
-
-    setFormData(prev => ({
-      ...prev,
-      sessions: updatedSessions
-    }));
-  };
-
-  // 判斷是否使用統一設定（欄位有內容就是獨立設定，空的就用統一設定）
-  const isUsingGlobalSetting = (session: CourseSession, field: 'title' | 'virtualClassroomLink' | 'materialLink') => {
-    const value = session[field];
-    // 所有欄位都是：空的就是使用統一設定
-    return !value || value.trim() === '';
-  };
 
 
   // 處理課程內容變化
@@ -362,7 +318,7 @@ const CourseTemplateManagement = () => {
           <SafeIcon icon={FiSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="搜尋課程標題、描述或分類..."
+            placeholder="搜尋單元名稱、描述或分類..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -659,63 +615,45 @@ const CourseTemplateManagement = () => {
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <div className="flex justify-between items-center mb-2">
+                      <div className="mb-2">
                         <label className="block text-sm font-medium text-gray-700">
-                          課程標題
+                          單元名稱
                         </label>
-                        <button
-                          onClick={applyGlobalTitleToAllSessions}
-                          className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors"
-                        >
-                          套用到所有
-                        </button>
                       </div>
                       <input
                         type="text"
                         value={formData.globalSettings?.defaultTitle || ''}
                         onChange={(e) => handleGlobalSettingChange('defaultTitle', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="課程標題"
+                        placeholder="單元名稱"
                       />
                     </div>
                     <div>
-                      <div className="flex justify-between items-center mb-2">
+                      <div className="mb-2">
                         <label className="block text-sm font-medium text-gray-700">
-                          虛擬教室
+                          教室連結
                         </label>
-                        <button
-                          onClick={applyGlobalClassroomToAllSessions}
-                          className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors"
-                        >
-                          套用到所有
-                        </button>
                       </div>
                       <input
                         type="url"
                         value={formData.globalSettings?.defaultVirtualClassroomLink || ''}
                         onChange={(e) => handleGlobalSettingChange('defaultVirtualClassroomLink', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="https://meet.google.com/..."
+                        placeholder="教室連結"
                       />
                     </div>
                     <div>
-                      <div className="flex justify-between items-center mb-2">
+                      <div className="mb-2">
                         <label className="block text-sm font-medium text-gray-700">
                           教材連結
                         </label>
-                        <button
-                          onClick={applyGlobalMaterialToAllSessions}
-                          className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors"
-                        >
-                          套用到所有
-                        </button>
                       </div>
                       <input
                         type="text"
                         value={formData.globalSettings?.defaultMaterialLink || ''}
                         onChange={(e) => handleGlobalSettingChange('defaultMaterialLink', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                        placeholder="教材連結或檔案路徑"
+                        placeholder="教材連結"
                       />
                     </div>
                   </div>
@@ -731,46 +669,38 @@ const CourseTemplateManagement = () => {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              課程主題
+                              單元名稱
                             </label>
                             <input
                               type="text"
                               value={session.title || ''}
                               onChange={(e) => handleSessionChange(index, 'title', e.target.value)}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="課程標題"
+                              placeholder="單元名稱"
                             />
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              虛擬教室連結
+                              教室連結
                             </label>
                             <input
                               type="url"
                               value={session.virtualClassroomLink || ''}
                               onChange={(e) => handleSessionChange(index, 'virtualClassroomLink', e.target.value)}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder={
-                                isUsingGlobalSetting(session, 'virtualClassroomLink') && formData.globalSettings?.defaultVirtualClassroomLink
-                                  ? formData.globalSettings.defaultVirtualClassroomLink
-                                  : "https://meet.google.com/..."
-                              }
+                              placeholder="教室連結"
                             />
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
-                              教材連結/PDF
+                              教材連結
                             </label>
                             <input
                               type="text"
                               value={session.materialLink || ''}
                               onChange={(e) => handleSessionChange(index, 'materialLink', e.target.value)}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder={
-                                isUsingGlobalSetting(session, 'materialLink') && formData.globalSettings?.defaultMaterialLink
-                                  ? formData.globalSettings.defaultMaterialLink
-                                  : "教材連結或檔案路徑"
-                              }
+                              placeholder="教材連結"
                             />
                           </div>
                         </div>

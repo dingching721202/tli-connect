@@ -10,6 +10,7 @@ import ReferralSystem from './ReferralSystem';
 import MembershipCard from './MembershipCard';
 import { dashboardService, leaveService, bookingService } from '@/services/dataService';
 import { Membership, ClassAppointment } from '@/types';
+import { getCourseLinksForLesson, parseCourseNameAndLesson } from '@/utils/courseLinksUtils';
 
 interface BookedCourse {
   appointment: ClassAppointment;
@@ -123,6 +124,39 @@ const Dashboard = () => {
   } | null>(null);
   // 移除不再使用的 teacherCourses state，教師現在使用 dashboardData
   const [loading, setLoading] = useState(true);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Course | null>(null);
+  const [studentList, setStudentList] = useState<Array<{name: string; email: string; phone?: string}>>([]);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('zh-TW', {
+      month: 'short',
+      day: 'numeric',
+      weekday: 'short'
+    });
+  };
+
+  // Get student list for a booking - 根據實際預約資料獲取學生清單
+  const getStudentListForBooking = (course: Course) => {
+    if (!course || course.studentCount === 0) {
+      return []; // 待開課課程沒有學生
+    }
+    
+    // 🔧 對於已開課的課程，從課程資料中提取學生資訊
+    if (course.studentName && 
+        course.studentEmail && 
+        course.studentName !== '待開課' && 
+        course.studentName !== '未安排學生') {
+      return [{
+        name: course.studentName,
+        email: course.studentEmail,
+        phone: course.studentPhone || ''
+      }];
+    }
+    
+    return []; // 如果沒有有效學生資訊則返回空陣列
+  };
 
   // 載入 Dashboard 資料 (US09)
   useEffect(() => {
@@ -203,7 +237,7 @@ const Dashboard = () => {
   
   // 取消預約相關狀態
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<Course | null>(null);
+  const [selectedCancelBooking, setSelectedCancelBooking] = useState<Course | null>(null);
   const [cancelForm, setCancelForm] = useState({
     reason: ''
   });
@@ -476,10 +510,10 @@ const Dashboard = () => {
     if (!dashboardData || loading) return [];
     
     // 使用與 my-bookings 頁面相同的數據轉換邏輯
-    const convertTeacherData = (data: any) => {
+    const convertTeacherData = (data: { upcomingClasses?: Array<{ session: { date: string; startTime: string; endTime: string }; studentCount: number; course: { name: string }; classId: string }> }) => {
       if (!data.upcomingClasses) return [];
       
-      return data.upcomingClasses.map((item: any) => {
+      return data.upcomingClasses.map((item) => {
         const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
         const now = new Date();
         const daysFromNow = Math.ceil((startTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -828,7 +862,7 @@ const Dashboard = () => {
         appointmentIdType: typeof course.appointmentId,
         hasAppointmentId: !!course.appointmentId
       });
-      setSelectedBooking(course);
+      setSelectedCancelBooking(course);
       setShowCancelModal(true);
     } else {
       console.error('❌ 找不到對應的課程:', courseId);
@@ -841,25 +875,25 @@ const Dashboard = () => {
       return;
     }
 
-    if (selectedBooking && user) {
+    if (selectedCancelBooking && user) {
       try {
         setCancelling(true);
         
-        console.log('🔍 開始取消預約，選中的課程:', selectedBooking);
+        console.log('🔍 開始取消預約，選中的課程:', selectedCancelBooking);
         
         // 檢查appointmentId是否存在
-        if (!selectedBooking.appointmentId) {
-          console.error('❌ 缺少 appointmentId:', selectedBooking);
+        if (!selectedCancelBooking.appointmentId) {
+          console.error('❌ 缺少 appointmentId:', selectedCancelBooking);
           alert('❌ 預約資料不完整，無法取消預約。請重新整理頁面後再試。');
           setCancelling(false);
           return;
         }
         
-        console.log('📋 準備取消預約 - appointmentId:', selectedBooking.appointmentId, 'type:', typeof selectedBooking.appointmentId);
+        console.log('📋 準備取消預約 - appointmentId:', selectedCancelBooking.appointmentId, 'type:', typeof selectedCancelBooking.appointmentId);
         console.log('📋 用戶ID:', user.id, 'type:', typeof user.id);
         
         // 確保數據類型正確
-        const appointmentIdNumber = Number(selectedBooking.appointmentId);
+        const appointmentIdNumber = Number(selectedCancelBooking.appointmentId);
         const userIdNumber = Number(user.id);
         
         console.log('📋 轉換後的數據:', {
@@ -928,16 +962,7 @@ const Dashboard = () => {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('zh-TW', {
-      month: 'short',
-      day: 'numeric',
-      weekday: 'short'
-    });
-  };
-
-  const getStatusColor = (status: string, course?: any) => {
+  const getStatusColor = (status: string, course?: { studentCount: number }) => {
     switch (status) {
       case 'upcoming': 
         // 🔧 教師看到：根據學生數量顯示不同顏色
@@ -953,7 +978,7 @@ const Dashboard = () => {
     }
   };
 
-  const getStatusText = (status: string, course?: any) => {
+  const getStatusText = (status: string, course?: { studentCount: number }) => {
     switch (status) {
       case 'upcoming': 
         // 🔧 教師看到：根據學生數量顯示"待開課"或"已開課"
@@ -1242,6 +1267,13 @@ const Dashboard = () => {
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
+                          onClick={() => {
+                            setSelectedBooking(course);
+                            if (user?.role === 'TEACHER') {
+                              setStudentList(getStudentListForBooking(course));
+                            }
+                            setShowDetailModal(true);
+                          }}
                           className="flex items-center space-x-1 px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors text-sm"
                         >
                           <SafeIcon icon={FiEye} className="text-xs" />
@@ -1250,27 +1282,55 @@ const Dashboard = () => {
 
                         {course.status === 'upcoming' && (
                           <>
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => window.open(course.classroom, '_blank')}
-                              className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
-                            >
-                              <SafeIcon icon={FiExternalLink} className="text-xs" />
-                              <span>進入教室</span>
-                            </motion.button>
-                            
-                            {course.materials && (
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => window.open(course.materials, '_blank')}
-                                className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-                              >
-                                <SafeIcon icon={FiBook} className="text-xs" />
-                                <span>查看教材</span>
-                              </motion.button>
-                            )}
+                            {(() => {
+                              // 獲取課程連結邏輯（與查看詳情一致）
+                              let courseLinks = { classroom: null, materials: null, hasValidClassroom: false, hasValidMaterials: false };
+                              
+                              const courseName = course.title || course.courseName || '';
+                              const parsed = parseCourseNameAndLesson(courseName);
+                              
+                              if (parsed) {
+                                courseLinks = getCourseLinksForLesson(parsed.courseName, parsed.lessonNumber);
+                              }
+                              
+                              return (
+                                <>
+                                  {courseLinks.hasValidClassroom ? (
+                                    <motion.button
+                                      whileHover={{ scale: 1.05 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      onClick={() => window.open(courseLinks.classroom, '_blank')}
+                                      className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
+                                    >
+                                      <SafeIcon icon={FiExternalLink} className="text-xs" />
+                                      <span>進入教室</span>
+                                    </motion.button>
+                                  ) : (
+                                    <div className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-sm cursor-not-allowed">
+                                      <SafeIcon icon={FiExternalLink} className="text-xs" />
+                                      <span>教室未設置</span>
+                                    </div>
+                                  )}
+                                  
+                                  {courseLinks.hasValidMaterials ? (
+                                    <motion.button
+                                      whileHover={{ scale: 1.05 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      onClick={() => window.open(courseLinks.materials, '_blank')}
+                                      className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                                    >
+                                      <SafeIcon icon={FiBook} className="text-xs" />
+                                      <span>查看教材</span>
+                                    </motion.button>
+                                  ) : (
+                                    <div className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-sm cursor-not-allowed">
+                                      <SafeIcon icon={FiBook} className="text-xs" />
+                                      <span>教材未設置</span>
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()}
 
                             {user?.role === 'TEACHER' && (
                               <motion.button
@@ -1435,15 +1495,45 @@ const Dashboard = () => {
                 </div>
 
                 {/* 操作按鈕 */}
-                <div className="flex justify-end space-x-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowCourseDetailsModal(false)}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                  >
-                    關閉
-                  </motion.button>
+                <div className="space-y-4">
+                  {/* 課程連結 */}
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <h4 className="font-medium mb-3 text-green-900">課程連結</h4>
+                    <div className="space-y-3">
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => window.open(selectedCourse?.classroom, '_blank')}
+                        className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        <SafeIcon icon={FiExternalLink} />
+                        <span>進入線上教室</span>
+                      </motion.button>
+                      {selectedCourse?.materials && (
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => window.open(selectedCourse?.materials, '_blank')}
+                          className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          <SafeIcon icon={FiEye} />
+                          <span>查看課程教材</span>
+                        </motion.button>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* 關閉按鈕 */}
+                  <div className="flex justify-end">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => setShowCourseDetailsModal(false)}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      關閉
+                    </motion.button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1605,6 +1695,144 @@ const Dashboard = () => {
                 取消
               </button>
             </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Detail Modal - 與我的預約頁面一模一樣 */}
+      {showDetailModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowDetailModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-xl font-bold">預約詳情</h3>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <SafeIcon icon={FiX} className="text-xl" />
+              </button>
+            </div>
+
+            {selectedBooking && (
+              <div className="space-y-6">
+                {/* 課程資訊 */}
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium mb-3 text-gray-900">課程資訊</h4>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="text-gray-600">課程名稱：</span>
+                      <div className="font-medium mt-1 break-words">{selectedBooking.title}</div>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">上課時間：</span>
+                      <span>{formatDate(selectedBooking.date)} {selectedBooking.time}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 學生清單 (for teachers viewing bookings) */}
+                {user?.role === 'TEACHER' && studentList.length > 0 && (
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <div className="flex justify-between items-center mb-3">
+                      <h4 className="font-medium text-green-900">學生名單</h4>
+                      <span className="text-sm text-green-700">學生人數：{studentList.length}人</span>
+                    </div>
+                    <div className="space-y-3">
+                      {studentList.map((student, index) => (
+                        <div key={index} className="bg-white p-3 rounded border">
+                          <div className="flex justify-between items-start">
+                            <div className="space-y-1">
+                              <div className="font-medium text-gray-900">{student.name}</div>
+                              <div className="text-sm text-gray-600">{student.email}</div>
+                              {student.phone && (
+                                <div className="text-sm text-gray-600">{student.phone}</div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 課程連結 */}
+                {(() => {
+                  // 🔧 動態獲取課程連結：根據課程名稱和Lesson編號從課程模組中查找
+                  let courseLinks = { classroom: null, materials: null, hasValidClassroom: false, hasValidMaterials: false };
+                  
+                  // 嘗試從課程標題中解析課程名稱和Lesson編號
+                  const courseName = selectedBooking.title || selectedBooking.courseName || '';
+                  const parsed = parseCourseNameAndLesson(courseName);
+                  
+                  if (parsed) {
+                    courseLinks = getCourseLinksForLesson(parsed.courseName, parsed.lessonNumber);
+                    console.log(`🔗 Dashboard - 為課程"${parsed.courseName}" Lesson ${parsed.lessonNumber}獲取到的連結:`, courseLinks);
+                  } else {
+                    console.warn(`⚠️ Dashboard - 無法從課程名稱"${courseName}"獲取Lesson編號`);
+                  }
+                  
+                  return (
+                    <div className="p-4 bg-green-50 rounded-lg">
+                      <h4 className="font-medium mb-3 text-green-900">課程連結</h4>
+                      <div className="space-y-3">
+                        {courseLinks.hasValidClassroom ? (
+                          <button
+                            onClick={() => {
+                              console.log(`🚀 Dashboard - 進入教室: ${courseLinks.classroom}`);
+                              window.open(courseLinks.classroom, '_blank');
+                            }}
+                            className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                          >
+                            <SafeIcon icon={FiExternalLink} />
+                            <span>進入線上教室</span>
+                          </button>
+                        ) : (
+                          <div className="w-full flex items-center justify-center space-x-2 bg-gray-400 text-white py-2 px-4 rounded-lg cursor-not-allowed">
+                            <SafeIcon icon={FiExternalLink} />
+                            <span>教室連結未設置</span>
+                          </div>
+                        )}
+                        
+                        {courseLinks.hasValidMaterials ? (
+                          <button
+                            onClick={() => {
+                              console.log(`📄 Dashboard - 查看教材: ${courseLinks.materials}`);
+                              window.open(courseLinks.materials, '_blank');
+                            }}
+                            className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            <SafeIcon icon={FiEye} />
+                            <span>查看課程教材</span>
+                          </button>
+                        ) : (
+                          <div className="w-full flex items-center justify-center space-x-2 bg-gray-400 text-white py-2 px-4 rounded-lg cursor-not-allowed">
+                            <SafeIcon icon={FiEye} />
+                            <span>教材連結未設置</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="w-full bg-gray-600 text-white py-3 rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  關閉
+                </button>
+              </div>
+            )}
           </motion.div>
         </motion.div>
       )}

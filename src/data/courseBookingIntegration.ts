@@ -178,7 +178,7 @@ function generateCourseSessionsFromManagedCourse(course: {
   } else {
     // 重複課程，根據 recurringDays 按順序生成時段（Lesson 1, 2, 3...）
     const classDays = recurringDays?.map(day => parseInt(day)) || [1, 3, 5]; // 預設週一、三、五
-    let currentDate = new Date(start);
+    const currentDate = new Date(start);
     let sessionCount = 0;
     
     while (currentDate <= end && sessionCount < totalSessions) {
@@ -250,7 +250,7 @@ function generateDetailedCourseSessions(course: {
   // 按星期排序（確保穩定的順序）
   allClassDays.sort((a, b) => a.day - b.day);
   
-  let currentDate = new Date(start);
+  const currentDate = new Date(start);
   let sessionCount = 0;
   
   console.log(`生成順序課程時段，總共 ${totalSessions} 堂課，包含 ${globalSchedules.length} 個時間段:`, {

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>設置 Pronunciation 測試資料</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        .button:hover {
+            background: #0056b3;
+        }
+        .success {
+            background: #28a745;
+        }
+        .success:hover {
+            background: #1e7e34;
+        }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 設置 Pronunciation 課程測試資料</h1>
+        
+        <div class="warning">
+            <strong>⚠️ 重要提示：</strong>
+            <ul>
+                <li>此工具將創建 Pronunciation 課程模板和排程</li>
+                <li>每個 Lesson 都會有獨特的 Zoom 連結</li>
+                <li>設置完成後請重新整理相關頁面</li>
+                <li>這是測試資料，可以安全地重複執行</li>
+            </ul>
+        </div>
+        
+        <div>
+            <button class="button" onclick="setupPronunciation()">🚀 設置 Pronunciation 課程</button>
+            <button class="button" onclick="validateSetup()">✅ 驗證設置</button>
+            <button class="button" onclick="clearLogs()">🧹 清除日誌</button>
+            <button class="button success" onclick="goToApp()">📱 前往應用</button>
+        </div>
+        
+        <div id="logs" class="log">等待執行...</div>
+        
+        <h2>📋 課程配置詳情</h2>
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 4px;">
+            <h3>Pronunciation 課程包含以下 Lesson：</h3>
+            <ul>
+                <li><strong>Lesson 1</strong> - Pronunciation of Consonant & Vowel
+                    <br>🔗 <code>https://us06web.zoom.us/j/7212021983?pwd=Jhb69e1fj4rk6ShfjL9gBCmdFmFO7t.1</code></li>
+                <li><strong>Lesson 2</strong> - Stress and Rhythm
+                    <br>🔗 <code>https://us06web.zoom.us/j/7212021984?pwd=Jhb69e1fj4rk6ShfjL9gBCmdFmFO7t.2</code></li>
+                <li><strong>Lesson 3</strong> - Intonation Patterns
+                    <br>🔗 <code>https://us06web.zoom.us/j/7212021985?pwd=Jhb69e1fj4rk6ShfjL9gBCmdFmFO7t.3</code></li>
+                <li><strong>Lesson 4</strong> - Connected Speech
+                    <br>🔗 <code>https://us06web.zoom.us/j/7212021986?pwd=Jhb69e1fj4rk6ShfjL9gBCmdFmFO7t.4</code></li>
+            </ul>
+            <p><strong>教師：</strong>王老師</p>
+            <p><strong>時間：</strong>週二、週四 19:00-20:30</p>
+        </div>
+    </div>
+
+    <script>
+        const logElement = document.getElementById('logs');
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLogs() {
+            logElement.textContent = '';
+        }
+        
+        // 設置 Pronunciation 課程模板
+        function setupPronunciationTemplate() {
+            log('📝 設置課程模板...');
+            
+            const templates = JSON.parse(localStorage.getItem('courseTemplates') || '[]');
+            
+            // 移除現有的 Pronunciation 模板
+            const filteredTemplates = templates.filter(t => !t.title.toLowerCase().includes('pronunciation'));
+            
+            // 創建新的 Pronunciation 模板
+            const pronunciationTemplate = {
+                id: 'template_pronunciation_' + Date.now(),
+                title: 'Pronunciation',
+                description: '英語發音訓練課程，專注於子音母音發音、重音節奏、語調等技巧',
+                category: '英文',
+                level: '初級',
+                totalSessions: 4,
+                capacity: 15,
+                // 統一設定 - 當個別Session連結為空時使用
+                globalSettings: {
+                    defaultTitle: 'Lesson {n}',
+                    defaultVirtualClassroomLink: 'https://us06web.zoom.us/j/7212021900?pwd=DefaultPronunciationRoom',
+                    defaultMaterialLink: '/materials/pronunciation/default-materials.pdf'
+                },
+                sessions: [
+                    {
+                        sessionNumber: 1,
+                        title: 'Lesson 1 - Pronunciation of Consonant & Vowel',
+                        virtualClassroomLink: 'https://us06web.zoom.us/j/7212021983?pwd=Jhb69e1fj4rk6ShfjL9gBCmdFmFO7t.1',
+                        materialLink: '/materials/pronunciation/lesson1-consonant-vowel.pdf',
+                        useGlobalTitle: false,
+                        useGlobalClassroom: false,
+                        useGlobalMaterial: false
+                    },
+                    {
+                        sessionNumber: 2,
+                        title: 'Lesson 2 - Stress and Rhythm',
+                        virtualClassroomLink: 'https://us06web.zoom.us/j/7212021984?pwd=Jhb69e1fj4rk6ShfjL9gBCmdFmFO7t.2',
+                        materialLink: '/materials/pronunciation/lesson2-stress-rhythm.pdf',
+                        useGlobalTitle: false,
+                        useGlobalClassroom: false,
+                        useGlobalMaterial: false
+                    },
+                    {
+                        sessionNumber: 3,
+                        title: 'Lesson 3 - Intonation Patterns',
+                        virtualClassroomLink: '', // 🔧 留空以測試統一設定
+                        materialLink: '', // 🔧 留空以測試統一設定
+                        useGlobalTitle: false,
+                        useGlobalClassroom: true, // 使用統一教室設定
+                        useGlobalMaterial: true // 使用統一教材設定
+                    },
+                    {
+                        sessionNumber: 4,
+                        title: 'Lesson 4 - Connected Speech',
+                        virtualClassroomLink: 'https://us06web.zoom.us/j/7212021986?pwd=Jhb69e1fj4rk6ShfjL9gBCmdFmFO7t.4',
+                        materialLink: '/materials/pronunciation/lesson4-connected-speech.pdf',
+                        useGlobalTitle: false,
+                        useGlobalClassroom: false,
+                        useGlobalMaterial: false
+                    }
+                ],
+                status: 'published',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            filteredTemplates.push(pronunciationTemplate);
+            localStorage.setItem('courseTemplates', JSON.stringify(filteredTemplates));
+            
+            log('✅ Pronunciation 課程模板已設置');
+            return pronunciationTemplate;
+        }
+
+        // 設置課程排程
+        function setupPronunciationSchedule(templateId) {
+            log('📅 設置課程排程...');
+            
+            const schedules = JSON.parse(localStorage.getItem('courseSchedules') || '[]');
+            
+            // 移除現有的 Pronunciation 排程
+            const filteredSchedules = schedules.filter(s => s.templateId !== templateId);
+            
+            // 創建新的排程
+            const pronunciationSchedule = {
+                id: 'schedule_pronunciation_' + Date.now(),
+                templateId: templateId,
+                templateTitle: 'Pronunciation',
+                seriesName: '',
+                teacherId: '1',
+                teacherName: '王老師',
+                timeSlots: [
+                    {
+                        id: 'slot_1',
+                        weekdays: [2, 4], // 週二、週四
+                        startTime: '19:00',
+                        endTime: '20:30',
+                        teacherId: '1'
+                    }
+                ],
+                startDate: '2025-08-01',
+                endDate: '2025-09-30',
+                excludeDates: [],
+                generatedSessions: [],
+                status: 'published',
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            filteredSchedules.push(pronunciationSchedule);
+            localStorage.setItem('courseSchedules', JSON.stringify(filteredSchedules));
+            
+            log('✅ Pronunciation 課程排程已設置');
+            return pronunciationSchedule;
+        }
+
+        // 設置測試預約
+        function setupTestBooking(templateId) {
+            log('📋 設置測試預約...');
+            
+            const appointments = JSON.parse(localStorage.getItem('classAppointments') || '[]');
+            
+            // 檢查是否已有測試預約
+            const hasTestBooking = appointments.some(apt => 
+                apt.course_name && apt.course_name.includes('Pronunciation')
+            );
+            
+            if (!hasTestBooking) {
+                // 創建測試預約 - Alice Wang 預約 Pronunciation Lesson 1
+                const testAppointment = {
+                    id: Date.now(),
+                    user_id: 2, // Alice Wang
+                    class_timeslot_id: Math.abs((templateId + '_session_1').split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0)),
+                    course_name: 'Pronunciation - Lesson 1 - Pronunciation of Consonant & Vowel',
+                    status: 'CONFIRMED',
+                    created_at: new Date().toISOString(),
+                    booking_date: '2025-08-05',
+                    booking_time: '19:00-20:30'
+                };
+                
+                appointments.push(testAppointment);
+                localStorage.setItem('classAppointments', JSON.stringify(appointments));
+                
+                log('✅ 測試預約已創建 - Alice Wang 預約 Pronunciation Lesson 1');
+            } else {
+                log('✅ 測試預約已存在');
+            }
+        }
+
+        // 主要設置函數
+        function setupPronunciation() {
+            try {
+                log('🚀 開始設置 Pronunciation 課程...');
+                clearLogs();
+                log('🚀 開始設置 Pronunciation 課程...');
+                
+                const template = setupPronunciationTemplate();
+                const schedule = setupPronunciationSchedule(template.id);
+                setupTestBooking(template.id);
+                
+                // 觸發更新事件
+                window.dispatchEvent(new CustomEvent('courseTemplatesUpdated'));
+                window.dispatchEvent(new CustomEvent('courseSchedulesUpdated'));
+                
+                log('🎉 Pronunciation 課程設置完成！');
+                log('📱 請重新整理應用頁面以查看更新');
+                
+            } catch (error) {
+                log('❌ 設置失敗: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        // 驗證設置
+        function validateSetup() {
+            try {
+                log('🔍 開始驗證設置...');
+                
+                // 驗證課程模板
+                const templates = JSON.parse(localStorage.getItem('courseTemplates') || '[]');
+                const pronunciationTemplate = templates.find(t => t.title === 'Pronunciation');
+                
+                if (!pronunciationTemplate) {
+                    log('❌ 未找到 Pronunciation 課程模板');
+                    return false;
+                }
+                
+                log('✅ 課程模板存在: ' + pronunciationTemplate.title);
+                log('📚 總課程數: ' + pronunciationTemplate.totalSessions);
+                
+                pronunciationTemplate.sessions.forEach(session => {
+                    log(`  - Lesson ${session.sessionNumber}: ${session.title}`);
+                    log(`    🔗 虛擬教室: ${session.virtualClassroomLink}`);
+                    log(`    📄 教材: ${session.materialLink}`);
+                });
+                
+                // 驗證課程排程
+                const schedules = JSON.parse(localStorage.getItem('courseSchedules') || '[]');
+                const pronunciationSchedule = schedules.find(s => s.templateId === pronunciationTemplate.id);
+                
+                if (!pronunciationSchedule) {
+                    log('❌ 未找到 Pronunciation 課程排程');
+                    return false;
+                }
+                
+                log('✅ 課程排程存在: ' + pronunciationSchedule.id);
+                log('👨‍🏫 教師: ' + pronunciationSchedule.teacherName);
+                
+                // 驗證預約資料
+                const appointments = JSON.parse(localStorage.getItem('classAppointments') || '[]');
+                const pronunciationBookings = appointments.filter(apt => 
+                    apt.course_name && apt.course_name.includes('Pronunciation')
+                );
+                
+                log('✅ 測試預約數量: ' + pronunciationBookings.length);
+                pronunciationBookings.forEach(booking => {
+                    log(`  - 用戶${booking.user_id}: ${booking.course_name}`);
+                });
+                
+                log('🎉 驗證完成！設置正確');
+                return true;
+                
+            } catch (error) {
+                log('❌ 驗證失敗: ' + error.message);
+                console.error(error);
+                return false;
+            }
+        }
+
+        function goToApp() {
+            window.open('http://localhost:3000', '_blank');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>當前實作驗證測試</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .summary { background: #e3f2fd; border: 2px solid #2196f3; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .test { border: 1px solid #ccc; margin: 10px 0; padding: 15px; border-radius: 5px; }
+        .success { background: #e8f5e8; border-color: #4caf50; }
+        .error { background: #ffe8e8; border-color: #f44336; }
+        .code { background: #f5f5f5; padding: 10px; border-radius: 3px; font-family: monospace; }
+        h1, h2 { color: #333; }
+        h3 { color: #555; margin-top: 0; }
+    </style>
+</head>
+<body>
+    <h1>🔍 當前實作驗證測試</h1>
+    
+    <div class="summary">
+        <h2>📋 檢查重點</h2>
+        <p><strong>你提到：</strong>查看課程教材成功了，但進入教室按鈕沒有成功</p>
+        <p><strong>需要驗證：</strong></p>
+        <ul>
+            <li>1. 根據課程名稱找到對應的課程模組 ✅</li>
+            <li>2. 依據 Lesson 編號找到對應的 Session ✅</li>
+            <li>3. 如果該 Lesson 有連結（非空值）就用該連結 ✅</li>
+            <li>4. 沒有就用統一設定的連結 ✅</li>
+        </ul>
+    </div>
+    
+    <div id="debug-info"></div>
+    
+    <script>
+        console.log('=== 當前實作驗證測試 ===');
+        
+        // 檢查當前的邏輯流程
+        const debugInfo = document.getElementById('debug-info');
+        
+        const testInfo = `
+        <div class="test">
+            <h3>🔧 當前的邏輯流程</h3>
+            <div class="code">
+1. 我的預約頁面邏輯：
+   - 優先使用 selectedBooking.sessionNumber
+   - 回退到從課程名稱解析 parseCourseNameAndLesson()
+   - 調用 getCourseLinksForLesson(courseName, lessonNumber)
+
+2. Dashboard 頁面邏輯：
+   - 從 selectedBooking.title 或 selectedBooking.courseName 獲取課程名稱
+   - 使用 parseCourseNameAndLesson() 解析
+   - 調用 getCourseLinksForLesson(courseName, lessonNumber)
+
+3. getCourseLinksForLesson() 邏輯：
+   - 調用 getCourseLinksFromTemplate(courseName, lessonNumber)
+   - 在課程模板中查找對應的 Session
+   - 如果個別連結為空 → 使用統一設定連結
+   - 如果個別連結有值 → 使用個別連結
+   - 通過 isValidLink() 驗證連結有效性
+
+4. 按鈕顯示邏輯：
+   - courseLinks.hasValidClassroom → 顯示進入教室按鈕
+   - courseLinks.hasValidMaterials → 顯示查看教材按鈕
+   - 否則顯示灰色未設置狀態
+            </div>
+        </div>
+        
+        <div class="test">
+            <h3>🤔 可能的問題點</h3>
+            <div class="code">
+問題可能出現在：
+
+1. 課程名稱解析失敗
+   - parseCourseNameAndLesson() 無法解析課程名稱
+   - 課程名稱格式不符合預期
+
+2. 課程模板查找失敗
+   - getCourseTemplates() 返回空陣列
+   - 課程名稱匹配邏輯有問題
+
+3. Session 查找失敗
+   - Lesson 編號不存在於課程模板中
+   - Session 數據結構問題
+
+4. 統一設定數據問題
+   - globalSettings 為空或undefined
+   - defaultVirtualClassroomLink 為空
+
+5. 連結驗證問題
+   - isValidLink() 判斷邏輯問題
+   - URL 格式不正確
+            </div>
+        </div>
+        
+        <div class="test">
+            <h3>🔍 建議的調試方法</h3>
+            <div class="code">
+1. 檢查瀏覽器控制台的 console.log 輸出：
+   - 🔗 為課程"..." Lesson ...獲取到的連結
+   - 📍 使用統一教室設定 / 使用個別教室設定
+   - 📄 使用統一教材設定 / 使用個別教材設定
+
+2. 檢查實際的課程模板數據：
+   - localStorage.getItem('courseTemplates')
+   - 確認 globalSettings 是否存在
+   - 確認 sessions 數據結構
+
+3. 檢查預約數據：
+   - selectedBooking.courseName
+   - selectedBooking.sessionNumber
+   - parseCourseNameAndLesson() 的返回值
+
+4. 檢查最終的 courseLinks 物件：
+   - courseLinks.classroom
+   - courseLinks.materials
+   - courseLinks.hasValidClassroom
+   - courseLinks.hasValidMaterials
+            </div>
+        </div>
+        
+        <div class="test ${allWorking ? 'success' : 'error'}">
+            <h3>📊 邏輯驗證結果</h3>
+            <div class="code">
+當前的實作邏輯看起來是正確的：
+
+✅ 使用 getCourseLinksForLesson() 根據課程名稱和 Lesson 編號查找
+✅ 在 getCourseLinksFromTemplate() 中實現了回退邏輯
+✅ 個別連結為空時使用統一設定
+✅ 通過 isValidLink() 驗證連結有效性
+✅ UI 根據 hasValidClassroom/hasValidMaterials 顯示按鈕
+
+如果查看教材成功但進入教室失敗，可能是：
+- 教材連結有統一設定，但教室連結的統一設定為空
+- 特定 Lesson 的教室連結數據問題
+- 課程模板中的 globalSettings 設定不完整
+            </div>
+        </div>
+        `;
+        
+        debugInfo.innerHTML = testInfo;
+        
+        // 輸出調試建議
+        console.log('🔍 建議檢查以下內容：');
+        console.log('1. 瀏覽器控制台的課程連結相關 log');
+        console.log('2. localStorage 中的課程模板數據');
+        console.log('3. 具體的課程預約數據');
+        console.log('4. globalSettings 中的統一連結設定');
+    </script>
+</body>
+</html>

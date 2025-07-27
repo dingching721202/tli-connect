@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>課程連結邏輯調試</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-case { 
+            border: 1px solid #ccc; 
+            margin: 10px 0; 
+            padding: 15px; 
+            border-radius: 5px;
+        }
+        .success { background-color: #e8f5e8; border-color: #4caf50; }
+        .error { background-color: #ffe8e8; border-color: #f44336; }
+        .warning { background-color: #fff3cd; border-color: #ffc107; }
+        pre { background: #f5f5f5; padding: 10px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🔗 課程連結邏輯調試</h1>
+    
+    <div id="results"></div>
+    
+    <script>
+        // 模擬課程模板數據
+        const mockTemplate = {
+            id: 'template_pronunciation',
+            title: 'Pronunciation',
+            globalSettings: {
+                defaultVirtualClassroomLink: 'https://meet.google.com/global-classroom',
+                defaultMaterialLink: 'https://drive.google.com/global-materials'
+            },
+            sessions: [
+                {
+                    sessionNumber: 1,
+                    title: 'Lesson 1',
+                    virtualClassroomLink: 'https://meet.google.com/lesson-1-room',
+                    materialLink: 'https://drive.google.com/lesson-1-materials'
+                },
+                {
+                    sessionNumber: 2,
+                    title: 'Lesson 2',
+                    virtualClassroomLink: '', // 空的，應該使用統一設定
+                    materialLink: '' // 空的，應該使用統一設定
+                },
+                {
+                    sessionNumber: 3,
+                    title: 'Lesson 3',
+                    virtualClassroomLink: 'https://meet.google.com/course-session', // 佔位符，應該使用統一設定
+                    materialLink: '' // 空的，應該使用統一設定
+                }
+            ]
+        };
+
+        // 模擬 isValidLink 函數
+        function isValidLink(link) {
+            if (!link || link.trim() === '') return false;
+            
+            const placeholderLinks = [
+                'https://meet.google.com/course-session',
+                'https://example.com/classroom',
+                'https://placeholder.com',
+                'https://your-classroom-link.com',
+                'https://your-material-link.com'
+            ];
+            
+            if (placeholderLinks.includes(link.trim())) {
+                return false;
+            }
+            
+            try {
+                if (link.startsWith('http://') || link.startsWith('https://')) {
+                    new URL(link);
+                    return true;
+                }
+                
+                if (link.startsWith('/') || link.startsWith('./') || link.startsWith('../')) {
+                    return true;
+                }
+                
+                if (link.includes('.')) {
+                    return true;
+                }
+                
+                return false;
+            } catch {
+                return false;
+            }
+        }
+
+        // 模擬 getCourseLinksFromTemplate 函數
+        function getCourseLinksFromTemplate(courseName, lessonNumber) {
+            console.log(`🔍 查找課程連結: ${courseName} - Lesson ${lessonNumber}`);
+            
+            const courseTemplate = mockTemplate; // 模擬找到模板
+            
+            if (!courseTemplate) {
+                return { classroom: null, materials: null };
+            }
+            
+            const session = courseTemplate.sessions.find(s => s.sessionNumber === lessonNumber);
+            
+            if (!session) {
+                return { classroom: null, materials: null };
+            }
+            
+            // 獲取連結，處理統一設定的回退邏輯
+            let classroom = session.virtualClassroomLink;
+            let materials = session.materialLink;
+            
+            // 檢查是否為佔位符連結的函數
+            const isPlaceholderLink = (link) => {
+                if (!link || link.trim() === '') return true;
+                
+                const placeholderLinks = [
+                    'https://meet.google.com/course-session',
+                    'https://example.com/classroom',
+                    'https://placeholder.com',
+                    'https://your-classroom-link.com',
+                    'https://your-material-link.com'
+                ];
+                
+                return placeholderLinks.includes(link.trim());
+            };
+            
+            // 處理統一設定回退 - 包括空值和佔位符
+            if (isPlaceholderLink(classroom)) {
+                if (courseTemplate.globalSettings?.defaultVirtualClassroomLink && 
+                    !isPlaceholderLink(courseTemplate.globalSettings.defaultVirtualClassroomLink)) {
+                    classroom = courseTemplate.globalSettings.defaultVirtualClassroomLink;
+                    console.log(`📍 使用統一虛擬教室設定: ${classroom}`);
+                } else {
+                    console.warn(`⚠️ Session ${lessonNumber} 沒有虛擬教室連結，且統一設定也無效`);
+                    classroom = null;
+                }
+            }
+            
+            if (isPlaceholderLink(materials)) {
+                if (courseTemplate.globalSettings?.defaultMaterialLink && 
+                    !isPlaceholderLink(courseTemplate.globalSettings.defaultMaterialLink)) {
+                    materials = courseTemplate.globalSettings.defaultMaterialLink;
+                    console.log(`📄 使用統一教材設定: ${materials}`);
+                } else {
+                    console.warn(`⚠️ Session ${lessonNumber} 沒有教材連結，且統一設定也無效`);
+                    materials = null;
+                }
+            }
+            
+            return {
+                classroom: classroom || null,
+                materials: materials || null
+            };
+        }
+
+        // 模擬 getValidCourseLinks 函數
+        function getValidCourseLinks(fullCourseName) {
+            // 簡化版本的解析
+            const match = fullCourseName.match(/Lesson\s+(\d+)/i);
+            const lessonNumber = match ? parseInt(match[1], 10) : 1;
+            const courseName = 'Pronunciation';
+            
+            const links = getCourseLinksFromTemplate(courseName, lessonNumber);
+            
+            return {
+                classroom: isValidLink(links.classroom) ? links.classroom : null,
+                materials: isValidLink(links.materials) ? links.materials : null,
+                hasValidClassroom: isValidLink(links.classroom),
+                hasValidMaterials: isValidLink(links.materials)
+            };
+        }
+
+        // 測試案例
+        const testCases = [
+            {
+                courseName: 'Pronunciation - Lesson 1',
+                expected: {
+                    hasValidClassroom: true,
+                    hasValidMaterials: true,
+                    classroom: 'https://meet.google.com/lesson-1-room',
+                    materials: 'https://drive.google.com/lesson-1-materials'
+                },
+                description: 'Lesson 1 - 有個別連結'
+            },
+            {
+                courseName: 'Pronunciation - Lesson 2',
+                expected: {
+                    hasValidClassroom: true,
+                    hasValidMaterials: true,
+                    classroom: 'https://meet.google.com/global-classroom',
+                    materials: 'https://drive.google.com/global-materials'
+                },
+                description: 'Lesson 2 - 個別連結為空，應使用統一設定'
+            },
+            {
+                courseName: 'Pronunciation - Lesson 3',
+                expected: {
+                    hasValidClassroom: true,
+                    hasValidMaterials: true,
+                    classroom: 'https://meet.google.com/global-classroom',
+                    materials: 'https://drive.google.com/global-materials'
+                },
+                description: 'Lesson 3 - 個別連結為佔位符，應使用統一設定'
+            }
+        ];
+
+        const results = document.getElementById('results');
+        let allPassed = true;
+
+        testCases.forEach((testCase, index) => {
+            console.log(`\\n=== 測試案例 ${index + 1}: ${testCase.description} ===`);
+            
+            const result = getValidCourseLinks(testCase.courseName);
+            
+            const classroomMatch = result.classroom === testCase.expected.classroom;
+            const materialsMatch = result.materials === testCase.expected.materials;
+            const hasClassroomMatch = result.hasValidClassroom === testCase.expected.hasValidClassroom;
+            const hasMaterialsMatch = result.hasValidMaterials === testCase.expected.hasValidMaterials;
+            
+            const passed = classroomMatch && materialsMatch && hasClassroomMatch && hasMaterialsMatch;
+            allPassed = allPassed && passed;
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `test-case ${passed ? 'success' : 'error'}`;
+            
+            resultDiv.innerHTML = `
+                <h3>${testCase.description}</h3>
+                <p><strong>課程:</strong> ${testCase.courseName}</p>
+                
+                <h4>教室連結:</h4>
+                <pre>預期: ${testCase.expected.classroom || 'null'}
+實際: ${result.classroom || 'null'}
+有效: ${result.hasValidClassroom} (預期: ${testCase.expected.hasValidClassroom})</pre>
+                
+                <h4>教材連結:</h4>
+                <pre>預期: ${testCase.expected.materials || 'null'}
+實際: ${result.materials || 'null'}
+有效: ${result.hasValidMaterials} (預期: ${testCase.expected.hasValidMaterials})</pre>
+                
+                <p style="color: ${passed ? 'green' : 'red'}; font-weight: bold;">
+                    ${passed ? '✅ 通過' : '❌ 失敗'}
+                </p>
+            `;
+            
+            results.appendChild(resultDiv);
+        });
+
+        // 總結
+        const summary = document.createElement('div');
+        summary.className = `test-case ${allPassed ? 'success' : 'error'}`;
+        summary.innerHTML = `
+            <h2>測試總結</h2>
+            <p>總共 ${testCases.length} 個測試案例</p>
+            <p style="color: ${allPassed ? 'green' : 'red'}; font-weight: bold;">
+                ${allPassed ? '🎉 所有測試通過！' : '❌ 有測試失敗，需要檢查邏輯。'}
+            </p>
+        `;
+        
+        results.insertBefore(summary, results.firstChild);
+    </script>
+</body>
+</html>

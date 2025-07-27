@@ -259,7 +259,7 @@ export function syncCourseScheduleTitles(): void {
   }
 }
 
-// 根據模板ID和系列名稱生成完整的課程標題
+// 根據模板ID和系列名稱生成完整的單元名稱
 export function generateCourseTitle(templateTitle: string, seriesName?: string): string {
   if (seriesName && seriesName.trim()) {
     return `${templateTitle}-${seriesName.trim()}`;

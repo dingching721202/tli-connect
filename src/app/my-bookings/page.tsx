@@ -8,10 +8,11 @@ import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { bookingService, dashboardService } from '@/services/dataService';
 import { } from '@/types';
+import { getCourseLinksForLesson, parseCourseNameAndLesson } from '@/utils/courseLinksUtils';
 
 const {
-  FiCalendar, FiClock, FiUser, FiUsers, FiMapPin, FiExternalLink,
-  FiX, FiEye, FiCheckCircle, FiAlertCircle, FiBook, FiMail, FiBriefcase,
+  FiCalendar, FiClock, FiUser, FiUsers, FiExternalLink,
+  FiX, FiEye, FiCheckCircle, FiAlertCircle, FiBook, FiBriefcase,
   FiUserCheck, FiMessageSquare
 } = FiIcons;
 
@@ -309,7 +310,7 @@ export default function MyBookingsPage() {
     });
   };
 
-  const getStatusColor = (status: string, booking?: any) => {
+  const getStatusColor = (status: string, booking?: { studentCount: number }) => {
     switch (status) {
       case 'upcoming': 
         // 🔧 教師看到：根據學生數量顯示不同顏色
@@ -328,7 +329,7 @@ export default function MyBookingsPage() {
     }
   };
 
-  const getStatusText = (status: string, booking?: any) => {
+  const getStatusText = (status: string, booking?: { studentCount: number }) => {
     switch (status) {
       case 'upcoming': 
         // 🔧 教師看到：根據學生數量顯示"待開課"或"已開課"
@@ -633,29 +634,69 @@ export default function MyBookingsPage() {
             )}
 
             {/* 課程連結 (for non-leave requests) */}
-            {!selectedBooking.leaveReason && (
-              <div className="p-4 bg-green-50 rounded-lg">
-                <h4 className="font-medium mb-3 text-green-900">課程連結</h4>
-                <div className="space-y-3">
-                  <button
-                    onClick={() => window.open(selectedBooking.classroom, '_blank')}
-                    className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
-                  >
-                    <SafeIcon icon={FiExternalLink} />
-                    <span>進入線上教室</span>
-                  </button>
-                  {selectedBooking.materials && (
-                    <button
-                      onClick={() => window.open(selectedBooking.materials, '_blank')}
-                      className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      <SafeIcon icon={FiEye} />
-                      <span>查看課程教材</span>
-                    </button>
-                  )}
+            {!selectedBooking.leaveReason && (() => {
+              // 🔧 動態獲取課程連結：根據課程名稱和Lesson編號從課程模組中查找
+              let courseLinks = { classroom: null, materials: null, hasValidClassroom: false, hasValidMaterials: false };
+              
+              if (selectedBooking.sessionNumber) {
+                // 如果有sessionNumber，直接使用課程名稱和編號
+                const baseName = selectedBooking.courseName.split(' - ')[0]; // 取得基本課程名稱
+                courseLinks = getCourseLinksForLesson(baseName, selectedBooking.sessionNumber);
+                console.log(`🔗 為課程"${baseName}" Lesson ${selectedBooking.sessionNumber}獲取到的連結:`, courseLinks);
+              } else {
+                // 如果沒有sessionNumber，嘗試從課程名稱中解析
+                const parsed = parseCourseNameAndLesson(selectedBooking.courseName);
+                if (parsed) {
+                  courseLinks = getCourseLinksForLesson(parsed.courseName, parsed.lessonNumber);
+                  console.log(`🔗 從課程名稱"${selectedBooking.courseName}"解析出的連結:`, courseLinks);
+                } else {
+                  console.warn(`⚠️ 無法從課程名稱"${selectedBooking.courseName}"獲取Lesson編號`);
+                }
+              }
+              
+              return (
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <h4 className="font-medium mb-3 text-green-900">課程連結</h4>
+                  <div className="space-y-3">
+                    {courseLinks.hasValidClassroom ? (
+                      <button
+                        onClick={() => {
+                          console.log(`🚀 進入教室: ${courseLinks.classroom}`);
+                          window.open(courseLinks.classroom, '_blank');
+                        }}
+                        className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        <SafeIcon icon={FiExternalLink} />
+                        <span>進入線上教室</span>
+                      </button>
+                    ) : (
+                      <div className="w-full flex items-center justify-center space-x-2 bg-gray-400 text-white py-2 px-4 rounded-lg cursor-not-allowed">
+                        <SafeIcon icon={FiExternalLink} />
+                        <span>教室連結未設置</span>
+                      </div>
+                    )}
+                    
+                    {courseLinks.hasValidMaterials ? (
+                      <button
+                        onClick={() => {
+                          console.log(`📄 查看教材: ${courseLinks.materials}`);
+                          window.open(courseLinks.materials, '_blank');
+                        }}
+                        className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        <SafeIcon icon={FiEye} />
+                        <span>查看課程教材</span>
+                      </button>
+                    ) : (
+                      <div className="w-full flex items-center justify-center space-x-2 bg-gray-400 text-white py-2 px-4 rounded-lg cursor-not-allowed">
+                        <SafeIcon icon={FiEye} />
+                        <span>教材連結未設置</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             <button
               onClick={() => setShowDetailModal(false)}
@@ -946,57 +987,83 @@ export default function MyBookingsPage() {
                         </motion.button>
                       )}
                       
-                      {booking.status === 'upcoming' && !booking.leaveReason && (
-                        <>
-                          <motion.button
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={() => window.open(booking.classroom, '_blank')}
-                            className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
-                          >
-                            <SafeIcon icon={FiExternalLink} className="text-xs" />
-                            <span>進入教室</span>
-                          </motion.button>
-                          
-                          {booking.materials && (
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              onClick={() => window.open(booking.materials, '_blank')}
-                              className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
-                            >
-                              <SafeIcon icon={FiBook} className="text-xs" />
-                              <span>查看教材</span>
-                            </motion.button>
-                          )}
-                          
-                          {user?.role === 'STUDENT' && (() => {
-                            const bookingWithExtras = booking as Booking & { canCancel: boolean };
-                            return bookingWithExtras.canCancel && (
+                      {booking.status === 'upcoming' && !booking.leaveReason && (() => {
+                        // 獲取課程連結邏輯（與查看詳情一致）
+                        let courseLinks = { classroom: null, materials: null, hasValidClassroom: false, hasValidMaterials: false };
+                        
+                        if (booking.sessionNumber) {
+                          const baseName = booking.courseName.split(' - ')[0];
+                          courseLinks = getCourseLinksForLesson(baseName, booking.sessionNumber);
+                        } else {
+                          const parsed = parseCourseNameAndLesson(booking.courseName);
+                          if (parsed) {
+                            courseLinks = getCourseLinksForLesson(parsed.courseName, parsed.lessonNumber);
+                          }
+                        }
+                        
+                        return (
+                          <>
+                            {courseLinks.hasValidClassroom ? (
                               <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
-                                onClick={() => handleCancelBooking(booking.id)}
-                                className="flex items-center space-x-1 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                                onClick={() => window.open(courseLinks.classroom, '_blank')}
+                                className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
                               >
-                                <SafeIcon icon={FiX} className="text-xs" />
-                                <span>取消預約</span>
+                                <SafeIcon icon={FiExternalLink} className="text-xs" />
+                                <span>進入教室</span>
                               </motion.button>
-                            );
-                          })()}
+                            ) : (
+                              <div className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-sm cursor-not-allowed">
+                                <SafeIcon icon={FiExternalLink} className="text-xs" />
+                                <span>教室未設置</span>
+                              </div>
+                            )}
+                            
+                            {courseLinks.hasValidMaterials ? (
+                              <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => window.open(courseLinks.materials, '_blank')}
+                                className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
+                              >
+                                <SafeIcon icon={FiBook} className="text-xs" />
+                                <span>查看教材</span>
+                              </motion.button>
+                            ) : (
+                              <div className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-500 rounded-lg text-sm cursor-not-allowed">
+                                <SafeIcon icon={FiBook} className="text-xs" />
+                                <span>教材未設置</span>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                           
-                          {user?.role === 'TEACHER' && !booking.leaveReason && (
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                              className="flex items-center space-x-1 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm"
-                            >
-                              <SafeIcon icon={FiMessageSquare} className="text-xs" />
-                              <span>申請請假</span>
-                            </motion.button>
-                          )}
+                      {user?.role === 'STUDENT' && (() => {
+                        const bookingWithExtras = booking as Booking & { canCancel: boolean };
+                        return bookingWithExtras.canCancel && (
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleCancelBooking(booking.id)}
+                            className="flex items-center space-x-1 px-3 py-1.5 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors text-sm"
+                          >
+                            <SafeIcon icon={FiX} className="text-xs" />
+                            <span>取消預約</span>
+                          </motion.button>
+                        );
+                      })()}
                           
-                        </>
+                      {user?.role === 'TEACHER' && !booking.leaveReason && (
+                        <motion.button
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          className="flex items-center space-x-1 px-3 py-1.5 bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200 transition-colors text-sm"
+                        >
+                          <SafeIcon icon={FiMessageSquare} className="text-xs" />
+                          <span>申請請假</span>
+                        </motion.button>
                       )}
 
                       {user?.role === 'TEACHER' && booking.status === 'pending' && booking.leaveReason && (

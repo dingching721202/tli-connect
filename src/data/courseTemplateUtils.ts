@@ -12,7 +12,7 @@ export interface CourseTemplate {
   capacity: number; // 滿班人數
   // 統一設定 - 作為所有課程的預設值
   globalSettings?: {
-    defaultTitle?: string; // 統一課程標題模板，例如 "Lesson {n}"
+    defaultTitle?: string; // 統一單元名稱模板，例如 "Lesson {n}"
     defaultVirtualClassroomLink?: string; // 統一虛擬教室連結
     defaultMaterialLink?: string; // 統一教材連結
   };
