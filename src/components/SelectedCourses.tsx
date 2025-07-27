@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiTrash2, FiCalendar, FiClock, FiUser, FiCheck, FiCreditCard, FiLogIn } from 'react-icons/fi';
+import { FiTrash2, FiCalendar, FiCheck, FiCreditCard, FiLogIn } from 'react-icons/fi';
 interface BookingCourse {
   id: number;
   title: string;

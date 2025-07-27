@@ -146,7 +146,7 @@ export function updateCourseClassroomLinks() {
     const config = courseConfigs[template.title as keyof typeof courseConfigs];
     if (config) {
       // 為每個session設置連結
-      const updatedSessions = template.sessions.map((session, index) => ({
+      const updatedSessions = template.sessions.map((session) => ({
         ...session,
         virtualClassroomLink: `${config.baseZoomUrl}.${session.sessionNumber}`,
         materialLink: session.materialLink || `${config.materialBasePath}/lesson${session.sessionNumber}.pdf`

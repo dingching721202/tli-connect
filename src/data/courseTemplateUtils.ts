@@ -1,6 +1,7 @@
 // 課程模組 - 專注於課程架構建立
 // 導入預設課程資料
 import { courses } from './courses';
+import { teacherDataService } from './teacherData';
 
 export interface CourseTemplate {
   id: string;
@@ -268,7 +269,6 @@ export function syncTemplateToBookingSystem(template: CourseTemplate): void {
 // 根據分類獲取合適的教師名稱（使用教師管理系統）
 function getTeacherNameFromCategory(category: string): string {
   try {
-    const { teacherDataService } = require('./teacherData');
     const teachers = teacherDataService.getAllTeachers();
     
     // 根據分類映射到教師專長，找到對應的教師
@@ -297,7 +297,6 @@ function getTeacherNameFromCategory(category: string): string {
 // 根據分類獲取合適的教師ID（使用教師管理系統）
 function getTeacherIdFromCategory(category: string): number {
   try {
-    const { teacherDataService } = require('./teacherData');
     const teachers = teacherDataService.getAllTeachers();
     
     // 根據分類映射到教師專長，找到對應的教師

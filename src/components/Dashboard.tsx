@@ -1,4 +1,5 @@
 'use client';
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -9,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ReferralSystem from './ReferralSystem';
 import MembershipCard from './MembershipCard';
 import { dashboardService, leaveService, bookingService } from '@/services/dataService';
+import { teacherDataService } from '@/data/teacherData';
 import { Membership, ClassAppointment } from '@/types';
 import { getCourseLinksForLesson, parseCourseNameAndLesson } from '@/utils/courseLinksUtils';
 
@@ -44,31 +46,6 @@ interface BookedCourse {
     id: string;
     title: string;
   };
-}
-
-interface TeacherCourse {
-  session: {
-    id: string;
-    date: string;
-    startTime: string;
-    endTime: string;
-    courseTitle: string;
-    sessionTitle: string;
-    sessionNumber?: number;
-    teacherName: string;
-    courseId: string;
-    capacity: number;
-    currentEnrollments: number;
-    classroom?: string;
-    materials?: string;
-    status?: string;
-  };
-  studentList: Array<{
-    id: number;
-    name: string;
-    email: string;
-  }>;
-  appointmentCount: number;
 }
 
 const {
@@ -139,19 +116,22 @@ const Dashboard = () => {
 
   // Get student list for a booking - 根據實際預約資料獲取學生清單
   const getStudentListForBooking = (course: Course) => {
-    if (!course || course.studentCount === 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    if (!course || (course as any).studentCount === 0) {
       return []; // 待開課課程沒有學生
     }
     
     // 🔧 對於已開課的課程，從課程資料中提取學生資訊
-    if (course.studentName && 
-        course.studentEmail && 
-        course.studentName !== '待開課' && 
-        course.studentName !== '未安排學生') {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const courseAny = course as any;
+    if (courseAny.studentName && 
+        courseAny.studentEmail && 
+        courseAny.studentName !== '待開課' && 
+        courseAny.studentName !== '未安排學生') {
       return [{
-        name: course.studentName,
-        email: course.studentEmail,
-        phone: course.studentPhone || ''
+        name: courseAny.studentName,
+        email: courseAny.studentEmail,
+        phone: courseAny.studentPhone || ''
       }];
     }
     
@@ -171,11 +151,13 @@ const Dashboard = () => {
         
         if (user.role === 'STUDENT') {
           const data = await dashboardService.getDashboardData(user.id);
-          setDashboardData(data);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setDashboardData(data as any);
         } else if (user.role === 'TEACHER') {
           // 🔧 教師也使用 getDashboardData，與我的預約頁面保持一致
           const data = await dashboardService.getDashboardData(user.id, 'TEACHER');
-          setDashboardData(data);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setDashboardData(data as any);
         }
       } catch (error) {
         console.error('載入 Dashboard 資料失敗:', error);
@@ -193,12 +175,12 @@ const Dashboard = () => {
       // 當用戶從課程預約頁面返回時重新載入資料
       if (user?.role === 'STUDENT') {
         dashboardService.getDashboardData(user.id).then(data => {
-          setDashboardData(data);
+          setDashboardData(data as any);
         });
       } else if (user?.role === 'TEACHER') {
         // 🔧 教師也使用相同的數據載入方式
         dashboardService.getDashboardData(user.id, 'TEACHER').then(data => {
-          setDashboardData(data);
+          setDashboardData(data as any);
         });
       }
     };
@@ -292,7 +274,7 @@ const Dashboard = () => {
               
               // 只有當後端資料確實是 ACTIVE 狀態時才更新
               if (data.membership && data.membership.status === 'ACTIVE') {
-                setDashboardData(data);
+                setDashboardData(data as any);
                 console.log('✅ Dashboard 資料已從後端重新載入 (ACTIVE):', data);
               } else {
                 console.log('⚠️ 後端資料狀態不是 ACTIVE，保持本地狀態');
@@ -330,7 +312,7 @@ const Dashboard = () => {
         ];
       }
       const allCourses = getBookedCourses();
-      const upcomingCourses = allCourses.filter(c => c.status === 'upcoming' && c.leaveStatus !== 'approved');
+      const upcomingCourses = allCourses.filter(c => c.status === 'upcoming' && (c as any).leaveStatus !== 'approved');
       const completedCourses = allCourses.filter(c => c.status === 'completed');
       
       // 計算本月課程
@@ -354,13 +336,10 @@ const Dashboard = () => {
 
     if (user?.role === 'TEACHER') {
       // 🔧 使用教師管理系統的真實數據
-      const { teacherDataService } = require('../data/teacherData');
       const teacherInSystem = teacherDataService.getTeacherByEmail(user.email);
       
       // 從教師課程數據計算統計（如果已載入）
       const allCourses = getTeacherCourses() || [];
-      const upcomingCourses = allCourses.filter(c => c.status === 'upcoming' && c.leaveStatus !== 'approved');
-      const completedCourses = allCourses.filter(c => c.status === 'completed');
       
       // 計算本月課程
       const currentMonth = new Date().getMonth();
@@ -541,12 +520,12 @@ const Dashboard = () => {
         const daysFromNow = Math.ceil((startTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         
         let status: 'upcoming' | 'completed' | 'cancelled';
-        if (item.appointment?.status === 'CANCELED') {
+        if ((item as any).appointment?.status === 'CANCELED') {
           status = 'cancelled';
         } else {
           const endTime = new Date(`${item.session.date} ${item.session.endTime}`);
           // 🔧 修改：只有已開課的課程結束後才變成已完成
-          if (endTime < now && item.session.bookingStatus === 'opened') {
+          if (endTime < now && (item.session as any).bookingStatus === 'opened') {
             status = 'completed';
           } else {
             status = 'upcoming';
@@ -554,33 +533,33 @@ const Dashboard = () => {
         }
         
         const courseTime = `${item.session.startTime}-${item.session.endTime}`;
-        const leaveStatus = getLeaveStatus(item.session.courseTitle, item.session.date, courseTime);
+        const leaveStatus = getLeaveStatus((item.session as any).courseTitle, item.session.date, courseTime);
         
         return {
-          id: `teacher-${item.appointment?.id || item.session.id}`,
-          title: `${item.session.courseTitle} - Lesson ${item.session.sessionNumber || 1} - ${item.session.sessionTitle}`,
-          courseTitle: item.session.courseTitle,
-          sessionTitle: item.session.sessionTitle,
-          sessionNumber: item.session.sessionNumber,
-          students: item.session.bookingStatus === 'opened' ? '1 位學生' : '0 位學生', // 🔧 顯示學生數字
+          id: `teacher-${(item as any).appointment?.id || (item.session as any).id}`,
+          title: `${(item.session as any).courseTitle} - Lesson ${(item.session as any).sessionNumber || 1} - ${(item.session as any).sessionTitle}`,
+          courseTitle: (item.session as any).courseTitle,
+          sessionTitle: (item.session as any).sessionTitle,
+          sessionNumber: (item.session as any).sessionNumber,
+          students: (item.session as any).bookingStatus === 'opened' ? '1 位學生' : '0 位學生', // 🔧 顯示學生數字
           date: item.session.date,
           time: courseTime,
           status,
-          classroom: item.session.classroom || '線上教室',
-          materials: item.session.materials || '待公佈',
+          classroom: (item.session as any).classroom || '線上教室',
+          materials: (item.session as any).materials || '待公佈',
           daysFromNow,
           // 教師專用欄位
-          studentName: item.student?.name || (item.session.bookingStatus === 'pending' ? '待開課' : '未安排學生'),
-          studentEmail: item.student?.email || '',
-          studentCount: item.session.bookingStatus === 'opened' ? 1 : 0, // 🔧 根據狀態設定學生數量
-          appointmentId: item.appointment?.id || 0,
+          studentName: (item as any).student?.name || ((item.session as any).bookingStatus === 'pending' ? '待開課' : '未安排學生'),
+          studentEmail: (item as any).student?.email || '',
+          studentCount: (item.session as any).bookingStatus === 'opened' ? 1 : 0, // 🔧 根據狀態設定學生數量
+          appointmentId: (item as any).appointment?.id || 0,
           // 請假狀態
           leaveStatus: leaveStatus
         };
       });
     };
 
-    const courses = convertTeacherData(dashboardData);
+    const courses = convertTeacherData(dashboardData as any);
 
     // Sort by date (upcoming first, then by closest date)
     return courses.sort((a, b) => {
@@ -593,7 +572,6 @@ const Dashboard = () => {
   // 企業窗口專用：企業員工課程數據
   const getCorporateCourses = (): Course[] => {
     // 🔧 使用教師管理系統獲取教師資料
-    const { teacherDataService } = require('../data/teacherData');
     const teachers = teacherDataService.getAllTeachers();
     
     return [
@@ -663,7 +641,6 @@ const Dashboard = () => {
   // 管理員專用：全體會員預約數據
   const getAllMemberBookings = (): Course[] => {
     // 🔧 使用教師管理系統獲取教師資料
-    const { teacherDataService } = require('../data/teacherData');
     const teachers = teacherDataService.getAllTeachers();
     
     const bookings: Course[] = [
@@ -837,8 +814,8 @@ const Dashboard = () => {
           courseDate: selectedCourse.date,
           courseTime: selectedCourse.time,
           reason: leaveForm.reason,
-          studentCount: selectedCourse.studentCount || 0,
-          classroom: selectedCourse.classroom || '線上教室'
+          studentCount: (selectedCourse as any).studentCount || 0,
+          classroom: (selectedCourse as any).classroom || '線上教室'
         };
 
         // 提交請假申請到系統
@@ -864,7 +841,7 @@ const Dashboard = () => {
           // 重新載入 Dashboard 資料以反映新的請假狀態
           if (user) {
             const data = await dashboardService.getDashboardData(user.id);
-            setDashboardData(data);
+            setDashboardData(data as any);
           }
         } else {
           alert('❌ 提交請假申請失敗，請稍後再試。');
@@ -943,14 +920,14 @@ const Dashboard = () => {
         if (result.success) {
           alert(`✅ 預約已成功取消！
 
-課程：${selectedBooking.title}
-時間：${selectedBooking.date} ${selectedBooking.time}
+課程：${selectedBooking?.title}
+時間：${selectedBooking?.date} ${selectedBooking?.time}
 取消原因：${cancelForm.reason}`);
           
           // 重新載入 Dashboard 資料
           if (user) {
             const data = await dashboardService.getDashboardData(user.id);
-            setDashboardData(data);
+            setDashboardData(data as any);
           }
           
         } else {
@@ -964,17 +941,17 @@ const Dashboard = () => {
             errorMessage = `找不到預約記錄或預約已被取消。
 
 調試資訊：
-- 課程：${selectedBooking.title}
-- AppointmentId: ${selectedBooking.appointmentId}
-- TimeslotId: ${selectedBooking.timeslotId}
+- 課程：${selectedBooking?.title}
+- AppointmentId: ${selectedBooking?.appointmentId}
+- TimeslotId: ${selectedBooking?.timeslotId}
 
 請重新整理頁面後再試，或聯繫技術支援。`;
           } else {
             errorMessage = `取消預約失敗：${result.error || '未知錯誤'}
 
 調試資訊：
-- 課程：${selectedBooking.title}
-- AppointmentId: ${selectedBooking.appointmentId}
+- 課程：${selectedBooking?.title}
+- AppointmentId: ${selectedBooking?.appointmentId}
 
 請重新整理頁面後再試。`;
           }
@@ -1087,7 +1064,7 @@ const Dashboard = () => {
   const upcomingCount = user?.role === 'STUDENT'
     ? allBookedCourses.filter(c => c.status === 'upcoming').length
     : user?.role === 'TEACHER'
-    ? allTeacherCourses.filter(c => c.status === 'upcoming' && c.leaveStatus !== 'approved').length
+    ? allTeacherCourses.filter(c => c.status === 'upcoming' && (c as any).leaveStatus !== 'approved').length
     : user?.role === 'CORPORATE_CONTACT'
     ? allCorporateCourses.filter(c => c.status === 'upcoming').length
     : (user?.role === 'OPS' || user?.role === 'ADMIN')
@@ -1285,11 +1262,11 @@ const Dashboard = () => {
                         <div>
                           <div className="mb-1">
                             <h3 className="text-lg font-semibold text-gray-900">
-                              {course.courseTitle || course.title.split(' - ')[0]}
+                              {(course as any).courseTitle || course.title?.split(' - ')[0]}
                             </h3>
-                            {course.sessionTitle && (
+                            {(course as any).sessionTitle && (
                               <div className="text-sm text-gray-600 mt-1">
-                                Lesson {course.sessionNumber || 1} - {course.sessionTitle}
+                                Lesson {(course as any).sessionNumber || 1} - {(course as any).sessionTitle}
                               </div>
                             )}
                           </div>
@@ -1309,8 +1286,8 @@ const Dashboard = () => {
                             </div>
                           </div>
                         </div>
-                        <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(course.status, course)}`}>
-                          {getStatusText(course.status, course)}
+                        <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(course.status, course as any)}`}>
+                          {getStatusText(course.status, course as any)}
                         </span>
                       </div>
 
@@ -1342,7 +1319,7 @@ const Dashboard = () => {
                               const parsed = parseCourseNameAndLesson(courseName);
                               
                               if (parsed) {
-                                courseLinks = getCourseLinksForLesson(parsed.courseName, parsed.lessonNumber);
+                                courseLinks = getCourseLinksForLesson(parsed.courseName, parsed.lessonNumber) as any;
                               }
                               
                               return (
@@ -1351,7 +1328,7 @@ const Dashboard = () => {
                                     <motion.button
                                       whileHover={{ scale: 1.05 }}
                                       whileTap={{ scale: 0.95 }}
-                                      onClick={() => window.open(courseLinks.classroom, '_blank')}
+                                      onClick={() => courseLinks.classroom && window.open(courseLinks.classroom, '_blank')}
                                       className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
                                     >
                                       <SafeIcon icon={FiExternalLink} className="text-xs" />
@@ -1368,7 +1345,7 @@ const Dashboard = () => {
                                     <motion.button
                                       whileHover={{ scale: 1.05 }}
                                       whileTap={{ scale: 0.95 }}
-                                      onClick={() => window.open(courseLinks.materials, '_blank')}
+                                      onClick={() => courseLinks.materials && window.open(courseLinks.materials, '_blank')}
                                       className="flex items-center space-x-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                                     >
                                       <SafeIcon icon={FiBook} className="text-xs" />
@@ -1386,7 +1363,7 @@ const Dashboard = () => {
 
                             {user?.role === 'TEACHER' && (() => {
                               // 根據請假狀態顯示不同的按鈕
-                              if (course.leaveStatus === 'pending') {
+                              if ((course as any).leaveStatus === 'pending') {
                                 // 待審核狀態：顯示取消請假按鈕
                                 return (
                                   <motion.button
@@ -1406,7 +1383,7 @@ const Dashboard = () => {
                                             id: string;
                                           }) => 
                                             request.teacherId === user?.id &&
-                                            request.courseName.includes(course.courseTitle) &&
+                                            request.courseName.includes((course as any).courseTitle) &&
                                             request.courseDate === course.date &&
                                             request.courseTime === courseTime
                                           );
@@ -1435,7 +1412,7 @@ const Dashboard = () => {
                                     <span>取消請假</span>
                                   </motion.button>
                                 );
-                              } else if (course.leaveStatus === 'approved') {
+                              } else if ((course as any).leaveStatus === 'approved') {
                                 // 已批准狀態：顯示查看請假按鈕
                                 return (
                                   <motion.button
@@ -1457,7 +1434,7 @@ const Dashboard = () => {
                                           leaveReason: string;
                                         }) => 
                                           request.teacherId === user?.id &&
-                                          request.courseName.includes(course.courseTitle) &&
+                                          request.courseName.includes((course as any).courseTitle) &&
                                           request.courseDate === course.date &&
                                           request.courseTime === courseTime
                                         );
@@ -1480,7 +1457,7 @@ const Dashboard = () => {
                                     <span>查看請假</span>
                                   </motion.button>
                                 );
-                              } else if (course.leaveStatus === 'rejected') {
+                              } else if ((course as any).leaveStatus === 'rejected') {
                                 // 已拒絕狀態：可以重新申請
                                 return (
                                   <motion.button
@@ -1948,7 +1925,7 @@ const Dashboard = () => {
                   const parsed = parseCourseNameAndLesson(courseName);
                   
                   if (parsed) {
-                    courseLinks = getCourseLinksForLesson(parsed.courseName, parsed.lessonNumber);
+                    courseLinks = getCourseLinksForLesson(parsed.courseName, parsed.lessonNumber) as any;
                     console.log(`🔗 Dashboard - 為課程"${parsed.courseName}" Lesson ${parsed.lessonNumber}獲取到的連結:`, courseLinks);
                   } else {
                     console.warn(`⚠️ Dashboard - 無法從課程名稱"${courseName}"獲取Lesson編號`);
@@ -1962,7 +1939,7 @@ const Dashboard = () => {
                           <button
                             onClick={() => {
                               console.log(`🚀 Dashboard - 進入教室: ${courseLinks.classroom}`);
-                              window.open(courseLinks.classroom, '_blank');
+                              if (courseLinks.classroom) window.open(courseLinks.classroom, '_blank');
                             }}
                             className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
                           >
@@ -1980,7 +1957,7 @@ const Dashboard = () => {
                           <button
                             onClick={() => {
                               console.log(`📄 Dashboard - 查看教材: ${courseLinks.materials}`);
-                              window.open(courseLinks.materials, '_blank');
+                              if (courseLinks.materials) window.open(courseLinks.materials, '_blank');
                             }}
                             className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
                           >

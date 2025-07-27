@@ -339,4 +339,4 @@ export const searchTeachers = (query: string) => teacherDataService.searchTeache
 export const getTeacherStatistics = () => teacherDataService.getTeacherStatistics();
 
 // Export types
-export type { Teacher };
+// Teacher is already exported as an interface above

@@ -124,7 +124,7 @@ const BookingSystem: React.FC = () => {
 
   useEffect(() => {
     loadTimeslots();
-  }, [courseFilterParam, isSingleCourseMode]);
+  }, [courseFilterParam, isSingleCourseMode, loadTimeslots]);
 
   // 監聽視窗焦點變化，當用戶從課程管理返回時重新載入資料
   useEffect(() => {
@@ -163,7 +163,7 @@ const BookingSystem: React.FC = () => {
       window.removeEventListener('courseTemplatesUpdated', handleCourseTemplatesUpdate as EventListener);
       window.removeEventListener('bookingsUpdated', handleBookingsUpdate);
     };
-  }, []); // Remove loadTimeslots dependency to prevent infinite loop
+  }, [loadTimeslots]);
 
 
   // 將課程模組的 BookingCourseSession 轉換為 BookingCourse 格式 (US05, US06)

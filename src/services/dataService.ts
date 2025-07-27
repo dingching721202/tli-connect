@@ -3,6 +3,7 @@ import {
   ApiResponse, LoginResponse, BatchBookingResponse
 } from '@/types';
 import { generateBookingSessions } from '@/data/courseBookingIntegration';
+import { teacherDataService } from '@/data/teacherData';
 
 interface LeaveRequest {
   id: string;
@@ -299,7 +300,7 @@ export const bookingService = {
       
       // 根據 timeslotId 查找對應的課程時段
       const session = allSessions.find(s => {
-        const sessionHashId = s.id.hashCode ? s.id.hashCode() : this.hashString(s.id);
+        const sessionHashId = this.hashString(s.id);
         return sessionHashId === timeslotId;
       });
       
@@ -476,7 +477,7 @@ export const bookingService = {
     // 從課程預約日曆系統獲取時段資訊來做24小時檢查
     const allSessions = generateBookingSessions();
     const session = allSessions.find(s => {
-      const sessionHashId = s.id.hashCode ? s.id.hashCode() : this.hashString(s.id);
+      const sessionHashId = this.hashString(s.id);
       return sessionHashId === appointment!.class_timeslot_id;
     });
     
@@ -684,7 +685,6 @@ export const dashboardService = {
       console.log('📋 所有預約記錄數量:', allAppointments.length);
       
       // 獲取教師資料以匹配教師ID
-      const { teacherDataService } = require('../data/teacherData');
       let teacher = teacherDataService.getTeacherById(teacherId);
       
       // 如果通過ID找不到，嘗試通過用戶資料匹配
@@ -693,7 +693,7 @@ export const dashboardService = {
         if (user) {
           // 通過email匹配教師管理系統中的教師
           const allTeachers = teacherDataService.getAllTeachers();
-          teacher = allTeachers.find(t => t.email === user.email);
+          teacher = allTeachers.find(t => t.email === user.email) || null;
           console.log(`通過email ${user.email} 找到教師:`, teacher?.name);
         }
       }
@@ -719,10 +719,11 @@ export const dashboardService = {
       const teacherBookings = [];
       
       for (const session of teacherSessions) {
-        const sessionHashId = session.id.hashCode ? session.id.hashCode() : this.hashString(session.id);
+        const sessionHashId = this.hashString(session.id);
         
         // 找出預約了此時段的學生
-        const sessionAppointments = allAppointments.filter(appointment => 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const sessionAppointments = allAppointments.filter((appointment: any) => 
           appointment.class_timeslot_id === sessionHashId && 
           appointment.status === 'CONFIRMED'
         );
@@ -791,7 +792,7 @@ export const dashboardService = {
       for (const appointment of appointments) {
         // 使用 timeslot_id 查找對應的課程時段
         const session = allSessions.find(s => {
-          const sessionHashId = s.id.hashCode ? s.id.hashCode() : this.hashString(s.id);
+          const sessionHashId = this.hashString(s.id);
           return sessionHashId === appointment.class_timeslot_id;
         });
         
@@ -876,7 +877,6 @@ export const dashboardService = {
       
       // 🔧 修復：解決用戶系統和教師管理系統的ID不一致問題
       // 用戶系統：王老師 id=4，教師管理系統：王老師 id=1
-      const { teacherDataService } = require('../data/teacherData');
       const currentUser = users.find(u => u.id === teacherId);
       
       let actualTeacherId = teacherId;
@@ -899,7 +899,7 @@ export const dashboardService = {
       
       for (const session of teacherSessions) {
         // 獲取該時段的所有預約
-        const sessionHashId = session.id.hashCode ? session.id.hashCode() : this.hashString(session.id);
+        const sessionHashId = this.hashString(session.id);
         console.log(`📊 檢查課程時段 ID 匹配:`, {
           sessionId: session.id,
           sessionHashId,

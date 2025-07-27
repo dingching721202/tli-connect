@@ -6,7 +6,7 @@ import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
 import { teacherDataService } from '@/data/teacherData';
 
-const { FiX, FiUserPlus } = FiIcons;
+const { FiX } = FiIcons;
 
 interface NewTeacher {
   name: string;

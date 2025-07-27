@@ -1,8 +1,8 @@
 // 課程預約整合模組 - 連接課程模組與預約系統
 import { getManagedCourses, ManagedCourse } from './courseUtils';
-import { getTeachers } from './courseUtils';
 import { getCourseTemplates, CourseTemplate } from './courseTemplateUtils';
 import { getPublishedCourseSchedules, getCourseScheduleFullTitle } from './courseScheduleUtils';
+import { teacherDataService } from './teacherData';
 
 export interface BookingCourseSession {
   id: string;
@@ -49,7 +49,6 @@ type GeneratedSession = {
 export function generateBookingSessions(): BookingCourseSession[] {
   const courses = getSyncedManagedCourses();
   // 統一使用教師管理系統
-  const { teacherDataService } = require('./teacherData');
   const teachers = teacherDataService.getAllTeachers();
   const sessions: BookingCourseSession[] = [];
 
@@ -286,11 +285,13 @@ function generateDetailedCourseSessions(course: {
           classroom: sessionContent.classroom,
           materials: sessionContent.materials,
           teacherId: matchingClassDay.schedule.teacherId,
-          sessionNumber: sessionContent.sessionNumber || (sessionCount + 1) // 傳遞正確的 sessionNumber
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          sessionNumber: (sessionContent as any).sessionNumber || (sessionCount + 1) // 傳遞正確的 sessionNumber
         });
         
         sessionCount++;
-        console.log(`生成第 ${sessionCount} 堂課: ${dateStr} ${matchingClassDay.schedule.startTime}-${matchingClassDay.schedule.endTime} ${sessionContent.title} (Lesson ${sessionContent.sessionNumber || sessionCount})`);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        console.log(`生成第 ${sessionCount} 堂課: ${dateStr} ${matchingClassDay.schedule.startTime}-${matchingClassDay.schedule.endTime} ${sessionContent.title} (Lesson ${(sessionContent as any).sessionNumber || sessionCount})`);
       }
     }
     
@@ -485,7 +486,8 @@ function getSyncedManagedCourses(): ManagedCourse[] {
           refundPolicy: '課程開始前7天可申請退費',
           createdAt: template.createdAt || new Date().toISOString(),
           updatedAt: template.updatedAt || new Date().toISOString()
-        } as ManagedCourse;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any as ManagedCourse;
         
         // 添加預設的排程信息
         (defaultManagedCourse as unknown as { 
@@ -499,7 +501,7 @@ function getSyncedManagedCourses(): ManagedCourse[] {
           weekdays: getRecurringDaysFromCategory(template.category),
           startTime: getDefaultStartTime(template.category),
           endTime: getDefaultEndTime(template.category),
-          teacherId: getTeacherIdFromTemplateCategory(template.category)
+          teacherId: String(getTeacherIdFromTemplateCategory(template.category))
         }];
         
         (defaultManagedCourse as unknown as { 
@@ -634,40 +636,11 @@ function getSyncedManagedCourses(): ManagedCourse[] {
   }
 }
 
-// 輔助函數 - 針對課程模組的資料映射（使用教師管理系統）
-function getTeacherNameFromTemplateCategory(category: string): string {
-  try {
-    const { teacherDataService } = require('./teacherData');
-    const teachers = teacherDataService.getAllTeachers();
-    
-    // 根據分類映射到教師專長，找到對應的教師
-    const categoryMap: { [key: string]: string[] } = {
-      '中文': ['中文會話', '繁體字教學', '台灣文化'],
-      '英文': ['商務英語', '簡報技巧', '談判英語'], 
-      '文化': ['台灣文化', '中華文化'],
-      '商業': ['商務英語', '職場溝通'],
-      '師資': ['教學方法', '師資培訓'],
-      '其它': []
-    };
-    
-    const targetSkills = categoryMap[category] || [];
-    const teacher = teachers.find(t => 
-      t.status === 'active' && 
-      targetSkills.some(skill => t.expertise.includes(skill))
-    );
-    
-    return teacher?.name || '未指定教師';
-  } catch (error) {
-    console.error('獲取教師名稱失敗:', error);
-    return '未指定教師';
-  }
-}
 
 // 根據分類獲取教師ID（使用教師管理系統）
 function getTeacherIdFromTemplateCategory(category: string): number {
   try {
-    const { teacherDataService } = require('./teacherData');
-    const teachers = teacherDataService.getAllTeachers();
+      const teachers = teacherDataService.getAllTeachers();
     
     // 根據分類映射到教師專長，找到對應的教師
     const categoryMap: { [key: string]: string[] } = {

@@ -146,7 +146,6 @@ const Calendar: React.FC<CalendarProps> = ({
 
     // 直接使用分離的欄位顯示課程信息
     const courseName = course.courseTitle || course.title;
-    const sessionInfo = course.sessionTitle || '';
 
     // 根據課程狀態設置統一顏色 (US05, US06)
     const getCourseColor = () => {

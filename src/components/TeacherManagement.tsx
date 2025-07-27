@@ -4,13 +4,11 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
-import { useAuth } from '@/contexts/AuthContext';
 import { teacherDataService, Teacher } from '@/data/teacherData';
 
 const {
-  FiUsers, FiUserPlus, FiEdit2, FiTrash2, FiSearch, FiDownload, FiX, FiEye,
-  FiMail, FiPhone, FiMapPin, FiCalendar, FiBook, FiAward, FiStar,
-  FiCheckCircle, FiXCircle, FiClock, FiUser
+  FiUsers, FiUserPlus, FiTrash2, FiSearch, FiDownload, FiX, FiEye,
+  FiStar, FiClock, FiUser
 } = FiIcons;
 
 // Teacher interface is now imported from teacherData service
@@ -60,7 +58,6 @@ const TEACHING_CATEGORY_OPTIONS = [
 ];
 
 const TeacherManagement: React.FC = () => {
-  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive' | 'suspended'>('all');
   const [showAddModal, setShowAddModal] = useState(false);
@@ -136,14 +133,6 @@ const TeacherManagement: React.FC = () => {
     }
   };
 
-  const getContractTypeText = (type: string) => {
-    switch (type) {
-      case 'full-time': return '全職';
-      case 'part-time': return '兼職';
-      case 'freelance': return '自由工作者';
-      default: return '未知';
-    }
-  };
 
   const handleAddTeacher = () => {
     // Validate form

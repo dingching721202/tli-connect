@@ -1,6 +1,7 @@
 // 設置測試資料來驗證連結功能
 import { getCourseTemplates, createCourseTemplate, updateCourseTemplate } from './courseTemplateUtils';
 import { getCourseSchedules, createCourseSchedule } from './courseScheduleUtils';
+import { teacherDataService } from './teacherData';
 
 export function setupPronunciationTestData() {
   console.log('🚀 開始設置 Pronunciation 測試資料...');
@@ -62,7 +63,7 @@ export function setupPronunciationTestData() {
       capacity: 15,
       sessions: pronunciationSessions,
       status: 'published'
-    });
+    }) || undefined;
   } else {
     console.log('🆕 創建新的 Pronunciation 模板');
     pronunciationTemplate = createCourseTemplate({
@@ -93,9 +94,9 @@ export function setupPronunciationTestData() {
     // 獲取王老師的ID（從教師管理系統）
     let teacherId = '1'; // 默認使用ID 1
     try {
-      const { teacherDataService } = require('./teacherData');
       const teachers = teacherDataService.getAllTeachers();
-      const wangTeacher = teachers.find((t: { name: string; id: string }) => t.name === '王老師' || t.name.includes('王'));
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const wangTeacher = teachers.find((t: any) => t.name === '王老師' || t.name.includes('王'));
       if (wangTeacher) {
         teacherId = wangTeacher.id.toString();
       }
@@ -120,6 +121,7 @@ export function setupPronunciationTestData() {
         }
       ],
       startDate: '2025-08-01',
+      endDate: '2025-12-31',
       excludeDates: [],
       generatedSessions: [],
       status: 'published'
@@ -132,7 +134,7 @@ export function setupPronunciationTestData() {
   
   // 3. 創建一些測試預約資料
   if (typeof localStorage !== 'undefined') {
-    setupTestBookingData(pronunciationTemplate.id, pronunciationSchedule.id);
+    setupTestBookingData(pronunciationTemplate.id);
   }
   
   console.log('🎉 Pronunciation 測試資料設置完成！');
@@ -142,7 +144,7 @@ export function setupPronunciationTestData() {
   };
 }
 
-function setupTestBookingData(templateId: string, scheduleId: string) {
+function setupTestBookingData(templateId: string) {
   console.log('📋 設置測試預約資料...');
   
   // 獲取現有預約資料
@@ -158,9 +160,7 @@ function setupTestBookingData(templateId: string, scheduleId: string) {
     const testAppointment = {
       id: Date.now(),
       user_id: 2, // Alice Wang的ID
-      class_timeslot_id: `${templateId}_session_1`.hashCode ? 
-        `${templateId}_session_1`.hashCode() : 
-        Math.abs(`${templateId}_session_1`.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0)),
+      class_timeslot_id: Math.abs(`${templateId}_session_1`.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0)),
       course_name: 'Pronunciation - Lesson 1 - Pronunciation of Consonant & Vowel',
       status: 'CONFIRMED',
       created_at: new Date().toISOString(),
