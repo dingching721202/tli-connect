@@ -156,12 +156,28 @@ function generateCourseSessionsFromManagedCourse(course: {
   console.log(`為課程 ${course.id} 使用預設排程邏輯`);
   const { startDate, endDate, totalSessions, startTime, endTime, recurring, recurringDays } = course;
   
-  if (!startDate || !endDate || !totalSessions) {
+  if (!startDate || !endDate || !totalSessions || totalSessions <= 0) {
+    console.warn('generateCourseSessionsFromManagedCourse: 缺少基本課程資訊', { 
+      startDate, endDate, totalSessions 
+    });
     return [];
   }
   
-  const start = new Date(startDate);
-  const end = new Date(endDate);
+  // 驗證日期格式
+  const startDateObj = new Date(startDate);
+  const endDateObj = new Date(endDate);
+  if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+    console.error('generateCourseSessionsFromManagedCourse: 無效的日期格式', { startDate, endDate });
+    return [];
+  }
+  
+  if (startDateObj >= endDateObj) {
+    console.error('generateCourseSessionsFromManagedCourse: 開始日期必須早於結束日期', { startDate, endDate });
+    return [];
+  }
+  
+  const start = new Date(startDateObj);
+  const end = new Date(endDateObj);
   const generatedSessions: GeneratedSession[] = [];
   
   if (!recurring) {
@@ -176,11 +192,19 @@ function generateCourseSessionsFromManagedCourse(course: {
     });
   } else {
     // 重複課程，根據 recurringDays 按順序生成時段（Lesson 1, 2, 3...）
-    const classDays = recurringDays?.map(day => parseInt(day)) || [1, 3, 5]; // 預設週一、三、五
+    const classDays = recurringDays?.map(day => {
+      const dayNum = parseInt(day);
+      return isNaN(dayNum) ? null : dayNum;
+    }).filter(day => day !== null && day >= 0 && day <= 6) || [1, 3, 5]; // 預設週一、三、五
+    
     const currentDate = new Date(start);
     let sessionCount = 0;
+    let loopCounter = 0;
+    const maxLoopIterations = 365; // 最多搜尋一年
     
-    while (currentDate <= end && sessionCount < totalSessions) {
+    while (currentDate <= end && sessionCount < totalSessions && loopCounter < maxLoopIterations) {
+      loopCounter++;
+      
       const dayOfWeek = currentDate.getDay();
       const dateStr = currentDate.getFullYear() + '-' + 
         String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -201,6 +225,10 @@ function generateCourseSessionsFromManagedCourse(course: {
       }
       
       currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    if (loopCounter >= maxLoopIterations) {
+      console.error('generateCourseSessionsFromManagedCourse: 避免無限循環，強制中止課程生成');
     }
   }
   
@@ -227,24 +255,67 @@ function generateDetailedCourseSessions(course: {
 }) {
   const { startDate, endDate, totalSessions, globalSchedules, sessions, excludeDates } = course;
   
-  if (!startDate || !endDate || !globalSchedules?.length || !sessions?.length) {
+  // 防禦性檢查：確保所有必要的資料都存在且有效
+  if (!startDate || !endDate || !totalSessions || totalSessions <= 0) {
+    console.warn('generateDetailedCourseSessions: 缺少基本課程資訊', { startDate, endDate, totalSessions });
     return [];
   }
   
-  const start = new Date(startDate);
+  if (!globalSchedules || !Array.isArray(globalSchedules) || globalSchedules.length === 0) {
+    console.warn('generateDetailedCourseSessions: 缺少課程排程資訊', { globalSchedules });
+    return [];
+  }
+  
+  if (!sessions || !Array.isArray(sessions) || sessions.length === 0) {
+    console.warn('generateDetailedCourseSessions: 缺少課程內容資訊', { sessions });
+    return [];
+  }
+  
+  // 驗證日期格式
+  const startDateObj = new Date(startDate);
+  const endDateObj = new Date(endDate);
+  if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+    console.error('generateDetailedCourseSessions: 無效的日期格式', { startDate, endDate });
+    return [];
+  }
+  
+  if (startDateObj >= endDateObj) {
+    console.error('generateDetailedCourseSessions: 開始日期必須早於結束日期', { startDate, endDate });
+    return [];
+  }
+  
+  const start = new Date(startDateObj);
   const excludeSet = new Set(excludeDates || []);
   const generatedSessions: GeneratedSession[] = [];
   
-  // 收集所有時間段的上課日
+  // 收集所有時間段的上課日，並進行安全性檢查
   const allClassDays: { day: number; schedule: typeof globalSchedules[0] }[] = [];
-  globalSchedules.forEach(schedule => {
-    schedule.weekdays.forEach((dayStr: string) => {
-      allClassDays.push({
-        day: parseInt(dayStr),
-        schedule: schedule
+  
+  try {
+    globalSchedules.forEach(schedule => {
+      // 檢查 schedule 資料完整性
+      if (!schedule || !schedule.weekdays || !Array.isArray(schedule.weekdays)) {
+        console.warn('generateDetailedCourseSessions: 無效的排程資料', schedule);
+        return;
+      }
+      
+      schedule.weekdays.forEach((dayStr: string) => {
+        const dayNum = parseInt(dayStr);
+        if (isNaN(dayNum) || dayNum < 0 || dayNum > 6) {
+          console.warn('generateDetailedCourseSessions: 無效的星期數字', dayStr);
+          return;
+        }
+        
+        allClassDays.push({
+          day: dayNum,
+          schedule: schedule
+        });
       });
     });
-  });
+  } catch (error) {
+    console.error('generateDetailedCourseSessions: 處理排程資料時發生錯誤', error);
+    return [];
+  }
   
   // 按星期排序（確保穩定的順序）
   allClassDays.sort((a, b) => a.day - b.day);
@@ -263,7 +334,13 @@ function generateDetailedCourseSessions(course: {
   });
   
   // 按順序生成課程時段（Lesson 1, Lesson 2, Lesson 3...）
-  while (sessionCount < totalSessions) {
+  // 添加安全檢查以避免無限循環
+  let loopCounter = 0;
+  const maxLoopIterations = 365; // 最多搜尋一年
+  
+  while (sessionCount < totalSessions && loopCounter < maxLoopIterations) {
+    loopCounter++;
+    
     const dayOfWeek = currentDate.getDay();
     const dateStr = currentDate.getFullYear() + '-' + 
       String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -277,13 +354,19 @@ function generateDetailedCourseSessions(course: {
         // 使用對應的課程內容（按順序，不是循環）
         const sessionContent = sessions[sessionCount] || sessions[sessions.length - 1]; // 如果課程內容不夠，使用最後一個
         
+        // 安全檢查 sessionContent
+        if (!sessionContent) {
+          console.warn('generateDetailedCourseSessions: 缺少課程內容', { sessionCount, sessionsLength: sessions.length });
+          break;
+        }
+        
         generatedSessions.push({
           date: dateStr,
-          startTime: matchingClassDay.schedule.startTime,
-          endTime: matchingClassDay.schedule.endTime,
+          startTime: matchingClassDay.schedule.startTime || '10:00',
+          endTime: matchingClassDay.schedule.endTime || '11:30',
           title: sessionContent.title || `Lesson ${sessionCount + 1}`, // 確保有標題
-          classroom: sessionContent.classroom,
-          materials: sessionContent.materials,
+          classroom: sessionContent.classroom || '線上教室',
+          materials: sessionContent.materials || '',
           teacherId: matchingClassDay.schedule.teacherId,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           sessionNumber: (sessionContent as any).sessionNumber || (sessionCount + 1) // 傳遞正確的 sessionNumber
@@ -296,6 +379,20 @@ function generateDetailedCourseSessions(course: {
     }
     
     currentDate.setDate(currentDate.getDate() + 1);
+    
+    // 確保日期不會超過結束日期
+    if (currentDate > endDateObj) {
+      console.warn('generateDetailedCourseSessions: 已達到課程結束日期，但尚未生成足夠的課程時段', { 
+        sessionCount, 
+        totalSessions, 
+        endDate 
+      });
+      break;
+    }
+  }
+  
+  if (loopCounter >= maxLoopIterations) {
+    console.error('generateDetailedCourseSessions: 避免無限循環，強制中止課程生成');
   }
   
   console.log(`總共生成 ${generatedSessions.length} 個順序課程時段`);
