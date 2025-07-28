@@ -2,7 +2,7 @@ export interface MemberCard {
   id: number;
   created_at: string;
   name: string;
-  available_course_ids: number[];
+  available_course_ids: (number | string)[];
 }
 
 export const memberCards: MemberCard[] = [

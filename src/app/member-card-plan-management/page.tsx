@@ -6,7 +6,8 @@ import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiSave, FiX, FiStar, FiUser
 import Navigation from '@/components/Navigation';
 import SafeIcon from '@/components/common/SafeIcon';
 import { memberCards, MemberCard } from '@/data/member_cards';
-import { courses } from '@/data/courses';
+import { getCourseTemplates } from '@/data/courseTemplateUtils';
+import { getPublishedCourseSchedules } from '@/data/courseScheduleUtils';
 
 interface MemberCardPlan {
   id: number;
@@ -50,9 +51,20 @@ interface FormData {
   };
 }
 
+// 課程資料的介面定義
+interface CourseData {
+  id: string | number;
+  title: string;
+  language: string;
+  level: string;
+  category: string;
+  description?: string;
+}
+
 const MemberCardPlanManagement: React.FC = () => {
   const [plans, setPlans] = useState<MemberCardPlan[]>([]);
   const [memberCardsData, setMemberCardsData] = useState(memberCards);
+  const [courses, setCourses] = useState<CourseData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showMemberCardModal, setShowMemberCardModal] = useState(false);
@@ -81,11 +93,12 @@ const MemberCardPlanManagement: React.FC = () => {
 
   const [memberCardFormData, setMemberCardFormData] = useState({
     name: '',
-    available_course_ids: [] as number[]
+    available_course_ids: [] as (number | string)[]
   });
 
   useEffect(() => {
     loadPlans();
+    loadCourses();
   }, []);
 
   useEffect(() => {
@@ -107,6 +120,71 @@ const MemberCardPlanManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadCourses = async () => {
+    try {
+      // 從課程模組獲取真實的課程資料
+      const templates = getCourseTemplates();
+      const schedules = getPublishedCourseSchedules();
+      
+      console.log('📚 載入課程模組資料:', { 
+        templates: templates.length, 
+        schedules: schedules.length 
+      });
+      
+      const coursesData: CourseData[] = [];
+      
+      // 1. 優先處理有排程的課程模板（這些是實際可預約的課程）
+      schedules.forEach(schedule => {
+        const template = templates.find(t => t.id === schedule.templateId);
+        if (template && template.status === 'published') {
+          coursesData.push({
+            id: `${template.id}_${schedule.id}`, // 組合ID確保唯一性
+            title: schedule.seriesName ? `${template.title} - ${schedule.seriesName}` : template.title,
+            language: getLanguageFromCategory(template.category),
+            level: template.level,
+            category: template.category,
+            description: template.description
+          });
+        }
+      });
+      
+      // 2. 處理沒有排程但已發布的模板（作為備選課程）
+      const publishedTemplates = templates.filter(t => t.status === 'published');
+      publishedTemplates.forEach(template => {
+        const hasSchedule = schedules.some(s => s.templateId === template.id);
+        if (!hasSchedule) {
+          coursesData.push({
+            id: template.id,
+            title: template.title,
+            language: getLanguageFromCategory(template.category),
+            level: template.level,
+            category: template.category,
+            description: template.description
+          });
+        }
+      });
+      
+      console.log('✅ 成功載入課程資料:', coursesData.length, '個課程');
+      setCourses(coursesData);
+    } catch (error) {
+      console.error('載入課程資料失敗:', error);
+      setCourses([]);
+    }
+  };
+
+  // 根據分類映射語言
+  const getLanguageFromCategory = (category: string): string => {
+    const languageMap: { [key: string]: string } = {
+      '中文': 'chinese',
+      '英文': 'english',
+      '文化': 'chinese',
+      '商業': 'english',
+      '師資': 'chinese',
+      '其它': 'chinese'
+    };
+    return languageMap[category] || 'chinese';
   };
 
   const handleOpenModal = (plan?: MemberCardPlan) => {
@@ -344,7 +422,7 @@ const MemberCardPlanManagement: React.FC = () => {
     }
   };
 
-  const handleCourseSelection = (courseId: number, checked: boolean) => {
+  const handleCourseSelection = (courseId: string | number, checked: boolean) => {
     const newCourseIds = checked
       ? [...memberCardFormData.available_course_ids, courseId]
       : memberCardFormData.available_course_ids.filter(id => id !== courseId);
@@ -937,20 +1015,27 @@ const MemberCardPlanManagement: React.FC = () => {
                     
                     {/* Individual Course Options */}
                     <div className="space-y-2">
-                      {courses.map((course) => (
-                        <label key={course.id} className="flex items-center space-x-3 p-2 hover:bg-white rounded-lg transition-colors">
-                          <input
-                            type="checkbox"
-                            checked={memberCardFormData.available_course_ids.includes(course.id)}
-                            onChange={(e) => handleCourseSelection(course.id, e.target.checked)}
-                            className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
-                          />
-                          <div className="flex-1">
-                            <p className="text-sm font-medium text-gray-900">{course.title}</p>
-                            <p className="text-xs text-gray-500">{course.language} • {course.level}</p>
-                          </div>
-                        </label>
-                      ))}
+                      {courses.length === 0 ? (
+                        <div className="text-center py-8">
+                          <p className="text-gray-500 text-sm">沒有可用的課程</p>
+                          <p className="text-xs text-gray-400 mt-1">請先在課程模組中創建並發布課程</p>
+                        </div>
+                      ) : (
+                        courses.map((course) => (
+                          <label key={course.id} className="flex items-center space-x-3 p-2 hover:bg-white rounded-lg transition-colors">
+                            <input
+                              type="checkbox"
+                              checked={memberCardFormData.available_course_ids.includes(course.id)}
+                              onChange={(e) => handleCourseSelection(course.id, e.target.checked)}
+                              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                            />
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">{course.title}</p>
+                              <p className="text-xs text-gray-500">{course.language} • {course.level} • {course.category}</p>
+                            </div>
+                          </label>
+                        ))
+                      )}
                     </div>
                   </div>
                   <p className="text-xs text-gray-500 mt-2">
