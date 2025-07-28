@@ -16,10 +16,10 @@ const Navigation: React.FC = () => {
 
   const navigationItems = [
     { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'OPS', 'CORPORATE_CONTACT', 'ADMIN'] },
+    { name: '課程預約', href: '/booking', icon: FiBook, roles: ['guest', 'STUDENT'] },
     { name: '會員管理', href: '/member-management', icon: FiUsers, roles: ['OPS', 'ADMIN'] },
     { name: '教師管理', href: '/teacher-management', icon: FiUserCheck, roles: ['OPS', 'ADMIN'] },
     { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['OPS', 'ADMIN'] },
-    { name: '課程預約', href: '/', icon: FiBook, roles: ['guest', 'STUDENT'] },
     { name: '會員方案', href: '/membership', icon: FiShare2, roles: ['guest', 'STUDENT'] },
     { name: '我的預約', href: '/my-bookings', icon: FiCalendar, roles: ['STUDENT', 'TEACHER'] },
     { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['OPS', 'ADMIN'] },
@@ -52,7 +52,7 @@ const Navigation: React.FC = () => {
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14 xl:h-16">
+        <div className="flex items-center h-14 xl:h-16">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -66,29 +66,27 @@ const Navigation: React.FC = () => {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:block">
+          <div className="hidden lg:flex flex-1 justify-start px-6">
             <div className="flex items-center space-x-1 xl:space-x-2">
-              {navigationItems.map((item) => (
-                canAccess(item.roles) && (
-                  <motion.button
-                    key={item.name}
-                    onClick={() => handleNavigation(item.href)}
-                    className={`
-                      flex items-center space-x-1 px-2 py-1.5 rounded-md text-xs xl:text-sm font-medium transition-colors whitespace-nowrap
-                      ${isActive(item.href)
-                        ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                      }
-                    `}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    title={item.name}
-                  >
-                    <SafeIcon icon={item.icon} size={14} />
-                    <span className="hidden xl:inline">{item.name}</span>
-                    <span className="xl:hidden text-[10px]">{item.name.slice(0, 2)}</span>
-                  </motion.button>
-                )
+              {navigationItems.filter(item => canAccess(item.roles)).map((item) => (
+                <motion.button
+                  key={item.name}
+                  onClick={() => handleNavigation(item.href)}
+                  className={`
+                    flex items-center space-x-1 px-2 py-1.5 rounded-md text-xs xl:text-sm font-medium transition-colors whitespace-nowrap
+                    ${isActive(item.href)
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                    }
+                  `}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  title={item.name}
+                >
+                  <SafeIcon icon={item.icon} size={14} />
+                  <span className="hidden xl:inline">{item.name}</span>
+                  <span className="xl:hidden text-[10px]">{item.name.slice(0, 2)}</span>
+                </motion.button>
               ))}
             </div>
           </div>
@@ -180,25 +178,23 @@ const Navigation: React.FC = () => {
             className="md:hidden bg-white border-t border-gray-200"
           >
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {navigationItems.map((item) => (
-                canAccess(item.roles) && (
-                  <motion.button
-                    key={item.name}
-                    onClick={() => handleNavigation(item.href)}
-                    className={`
-                      w-full flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors
-                      ${isActive(item.href)
-                        ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                      }
-                    `}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <SafeIcon icon={item.icon} size={18} />
-                    <span>{item.name}</span>
-                  </motion.button>
-                )
+              {navigationItems.filter(item => canAccess(item.roles)).map((item) => (
+                <motion.button
+                  key={item.name}
+                  onClick={() => handleNavigation(item.href)}
+                  className={`
+                    w-full flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors
+                    ${isActive(item.href)
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                    }
+                  `}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <SafeIcon icon={item.icon} size={18} />
+                  <span>{item.name}</span>
+                </motion.button>
               ))}
 
               {/* Mobile User Section */}

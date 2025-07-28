@@ -22,7 +22,11 @@
       "Bash(find:*)",
       "Bash(/dev/null)",
       "Bash(npx tsc:*)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(chmod:*)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:connect.tli1956.com)",
+      "Bash(true)"
     ],
     "deny": []
   }

@@ -421,7 +421,7 @@ const Dashboard = () => {
     
     console.log('📊 過濾後的 CONFIRMED 預約數量:', confirmedAppointments.length);
     
-    const courses = confirmedAppointments.map(item => {
+    const courses = confirmedAppointments.map((item, index) => {
       // 使用課程預約日曆系統的真實資料
       const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
       const now = new Date();
@@ -514,7 +514,7 @@ const Dashboard = () => {
     const convertTeacherData = (data: { upcomingClasses?: Array<{ session: { date: string; startTime: string; endTime: string }; studentCount: number; course: { name: string }; classId: string }> }) => {
       if (!data.upcomingClasses) return [];
       
-      return data.upcomingClasses.map((item) => {
+      return data.upcomingClasses.map((item, index) => {
         const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
         const now = new Date();
         const daysFromNow = Math.ceil((startTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -536,7 +536,7 @@ const Dashboard = () => {
         const leaveStatus = getLeaveStatus((item.session as any).courseTitle, item.session.date, courseTime);
         
         return {
-          id: `teacher-${(item as any).appointment?.id || (item.session as any).id}`,
+          id: `teacher-${(item as any).appointment?.id || (item.session as any).id}-${index}`,
           title: `${(item.session as any).courseTitle} - Lesson ${(item.session as any).sessionNumber || 1} - ${(item.session as any).sessionTitle}`,
           courseTitle: (item.session as any).courseTitle,
           sessionTitle: (item.session as any).sessionTitle,

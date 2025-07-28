@@ -77,7 +77,7 @@ export default function MyBookingsPage() {
   const convertBookingData = useCallback((dashboardData: { upcomingClasses: Array<{ appointment?: { id: number; status: string; class_timeslot_id: number; created_at: string }; session: { id: string; date: string; startTime: string; endTime: string; courseTitle: string; sessionTitle: string; teacherName: string; classroom?: string; materials?: string } }> }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
     console.log('🔍 轉換預約資料，總數:', dashboardData.upcomingClasses.length);
     
-    const convertedData = dashboardData.upcomingClasses.map((item) => {
+    const convertedData = dashboardData.upcomingClasses.map((item, index) => {
       // 使用課程預約日曆系統的真實資料
       const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
       const now = new Date();
@@ -98,7 +98,7 @@ export default function MyBookingsPage() {
       }
       
       const converted = {
-        id: `student-${item.appointment?.id || item.session.id}`,
+        id: `student-${item.appointment?.id || item.session.id}-${index}`,
         courseName: `${item.session.courseTitle} - Lesson ${1 || 1} - ${item.session.sessionTitle}`,
         courseTitle: item.session.courseTitle,
         sessionTitle: item.session.sessionTitle,
@@ -149,7 +149,7 @@ export default function MyBookingsPage() {
   const convertTeacherBookingData = useCallback((dashboardData: { upcomingClasses: Array<{ appointment: { id: number; status: string; class_timeslot_id: number; created_at: string }; session: { id: string; date: string; startTime: string; endTime: string; courseTitle: string; sessionTitle: string; teacherName: string; classroom?: string; materials?: string }; student: { id: number; name: string; email: string; phone: string } | null }> }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
     console.log('🔍 轉換教師預約資料，總數:', dashboardData.upcomingClasses.length);
     
-    const convertedData = dashboardData.upcomingClasses.map((item) => {
+    const convertedData = dashboardData.upcomingClasses.map((item, index) => {
       const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
       const now = new Date();
       const daysFromNow = Math.ceil((startTime.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
@@ -168,7 +168,7 @@ export default function MyBookingsPage() {
       }
       
       const converted = {
-        id: `teacher-${item.appointment?.id || item.session.id}`,
+        id: `teacher-${item.appointment?.id || item.session.id}-${index}`,
         courseName: `${item.session.courseTitle} - Lesson ${1 || 1} - ${item.session.sessionTitle}`,
         courseTitle: item.session.courseTitle,
         sessionTitle: item.session.sessionTitle,
