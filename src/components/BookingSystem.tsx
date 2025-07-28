@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Calendar from './Calendar';
+import CourseListView from './CourseListView';
 import CourseSelection from './CourseSelection';
 import SelectedCourses from './SelectedCourses';
 
@@ -41,7 +42,7 @@ const hashString = (str: string): number => {
 import { bookingService } from '@/services/dataService';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
-import { FiLoader, FiFilter, FiCheck } from 'react-icons/fi';
+import { FiLoader, FiFilter, FiCheck, FiCalendar, FiList } from 'react-icons/fi';
 import { 
   generateBookingSessions, 
   getCourseFilters, 
@@ -63,6 +64,9 @@ const BookingSystem: React.FC = () => {
   const [managedCourseSessions, setManagedCourseSessions] = useState<BookingCourseSession[]>([]);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  // 視圖模式狀態
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
   
   // 單一課程模式 - 從URL參數獲取
   const courseFilterParam = searchParams?.get('courseFilter');
@@ -529,7 +533,33 @@ const BookingSystem: React.FC = () => {
                   <SafeIcon icon={FiFilter} className="mr-2 text-blue-600" />
                   {isSingleCourseMode ? '課程資訊' : '課程篩選'}
                 </h3>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-4">
+                  {/* 視圖切換按鈕 */}
+                  <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                    <button
+                      onClick={() => setViewMode('calendar')}
+                      className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                        viewMode === 'calendar' 
+                          ? 'bg-white text-blue-600 shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-800'
+                      }`}
+                    >
+                      <SafeIcon icon={FiCalendar} size={16} />
+                      <span>日曆</span>
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`flex items-center space-x-1 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                        viewMode === 'list' 
+                          ? 'bg-white text-blue-600 shadow-sm' 
+                          : 'text-gray-600 hover:text-gray-800'
+                      }`}
+                    >
+                      <SafeIcon icon={FiList} size={16} />
+                      <span>列表</span>
+                    </button>
+                  </div>
+                  <div className="flex items-center space-x-2">
                   {!isSingleCourseMode && (
                     <>
                       <span className="text-gray-300">|</span>
@@ -548,6 +578,7 @@ const BookingSystem: React.FC = () => {
                       </button>
                     </>
                   )}
+                  </div>
                 </div>
               </div>
               
@@ -614,17 +645,26 @@ const BookingSystem: React.FC = () => {
             </motion.div>
           )}
 
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8">
-            {/* Calendar - Takes 2 columns on xl screens */}
-            <div className="xl:col-span-2">
-              <Calendar
-                currentDate={currentDate}
-                onDateChange={setCurrentDate}
-                onDateSelect={handleDateSelect}
-                courses={filteredCourses}
-                selectedCourses={selectedCourses}
-                onCourseToggle={handleCourseToggle}
-              />
+          <div className={viewMode === 'calendar' ? 'grid grid-cols-1 xl:grid-cols-3 gap-6 lg:gap-8' : 'grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8'}>
+            {/* Calendar or List View */}
+            <div className={viewMode === 'calendar' ? 'xl:col-span-2' : 'lg:col-span-2'}>
+              {viewMode === 'calendar' ? (
+                <Calendar
+                  currentDate={currentDate}
+                  onDateChange={setCurrentDate}
+                  onDateSelect={handleDateSelect}
+                  courses={filteredCourses}
+                  selectedCourses={selectedCourses}
+                  onCourseToggle={handleCourseToggle}
+                />
+              ) : (
+                <CourseListView
+                  courses={filteredCourses}
+                  selectedCourses={selectedCourses}
+                  onCourseToggle={handleCourseToggle}
+                  onDateSelect={handleDateSelect}
+                />
+              )}
             </div>
 
         {/* Right Panel - Takes 1 column on xl screens */}
