@@ -59,6 +59,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
   const startOfMonth = new Date(currentYear, currentMonth, 1);
   const startOfCalendar = new Date(startOfMonth);
+  // 日曆起始位置：週日為一週的第一天（傳統排序：日一二三四五六）
   startOfCalendar.setDate(startOfCalendar.getDate() - startOfCalendar.getDay());
 
   const calendarDates = [];
@@ -87,7 +88,10 @@ const Calendar: React.FC<CalendarProps> = ({
   };
 
   const getCoursesByDate = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    // 使用本地日期格式，避免時區偏移問題
+    const dateStr = date.getFullYear() + '-' + 
+      String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(date.getDate()).padStart(2, '0');
     return courses.filter(course => course.date === dateStr);
   };
 
@@ -241,7 +245,10 @@ const Calendar: React.FC<CalendarProps> = ({
   };
 
   const renderDateCell = (date: Date) => {
-    const dateStr = date.toISOString().split('T')[0];
+    // 使用本地日期格式，避免時區偏移問題
+    const dateStr = date.getFullYear() + '-' + 
+      String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+      String(date.getDate()).padStart(2, '0');
     const dayCourses = getCoursesByDate(date);
     const isToday = isDateToday(date);
     const isCurrentMonth = isDateInCurrentMonth(date);

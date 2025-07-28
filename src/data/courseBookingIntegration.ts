@@ -798,17 +798,17 @@ function mapLevelToEnglish(level: string): string {
   return levelMap[level] || 'beginner';
 }
 
-// 根據分類獲取合適的重複日期
+// 根據分類獲取合適的重複日期（返回數字格式：0=週日，1=週一，2=週二...）
 function getRecurringDaysFromCategory(category: string): string[] {
   const daysMap: { [key: string]: string[] } = {
-    '中文': ['Monday', 'Wednesday', 'Friday'],
-    '英文': ['Tuesday', 'Thursday'],
-    '文化': ['Saturday'],
-    '商業': ['Monday', 'Wednesday'],
-    '師資': ['Tuesday', 'Thursday'],
-    '其它': ['Saturday']
+    '中文': ['1', '3', '5'], // 週一、三、五
+    '英文': ['2', '4'],      // 週二、四
+    '文化': ['6'],           // 週六
+    '商業': ['1', '3'],      // 週一、三
+    '師資': ['2', '4'],      // 週二、四
+    '其它': ['6']            // 週六
   };
-  return daysMap[category] || ['Saturday'];
+  return daysMap[category] || ['6'];
 }
 
 // 根據分類獲取預設開始時間
