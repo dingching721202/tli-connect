@@ -1,7 +1,8 @@
 'use client';
 
 import Navigation from "@/components/Navigation";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import Image from "next/image";
 
 export default function Home() {
   const [heroForm, setHeroForm] = useState({
@@ -14,16 +15,16 @@ export default function Home() {
     email: '',
     phone: ''
   });
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<Record<string, Record<string, string>>>({});
   const [success, setSuccess] = useState('');
 
   const validEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
   const validPhone = (v: string) => !v || /^[0-9+\-()\s]+$/.test(v);
 
-  const handleSubmit = (formType: string, formData: any) => (e: React.FormEvent) => {
+  const handleSubmit = (formType: string, formData: { name: string; email: string; phone: string }) => (e: React.FormEvent) => {
     e.preventDefault();
     
-    const newErrors: any = {};
+    const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) newErrors.name = 'Please enter your name.';
     if (!validEmail(formData.email.trim())) newErrors.email = 'Please enter a valid email address.';
     if (!validPhone(formData.phone.trim())) newErrors.phone = 'Please enter numbers only or include + / - / ( ).';
@@ -192,7 +193,7 @@ export default function Home() {
             <div style={{display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 440px', gap: '32px', alignItems: 'start'}}>
               <div>
                 <h1 className="h1">Master the Global Stage — Join TLI Connect</h1>
-                <p className="body-l" style={{color: '#7FA8D8'}}>Language × Culture × Business — empowering tomorrow's global talent.</p>
+                <p className="body-l" style={{color: '#7FA8D8'}}>Language × Culture × Business — empowering tomorrow&apos;s global talent.</p>
                 <span style={{
                   display: 'inline-block',
                   padding: '6px 12px',
@@ -300,7 +301,7 @@ export default function Home() {
                       Talk to Us
                     </button>
                     <div style={{fontSize: '12px', lineHeight: '18px', color: 'var(--ink-dim)'}}>
-                      We'll get back to you within 1–2 business days. Your information is kept strictly confidential.
+                      We&apos;ll get back to you within 1–2 business days. Your information is kept strictly confidential.
                     </div>
                     {success === 'hero' && (
                       <div style={{
@@ -313,7 +314,7 @@ export default function Home() {
                         marginTop: '16px',
                         fontSize: '14px'
                       }}>
-                        Thanks! We'll contact you within 1–2 business days.
+                        Thanks! We&apos;ll contact you within 1–2 business days.
                       </div>
                     )}
                   </div>
@@ -348,12 +349,11 @@ export default function Home() {
               "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=2000&auto=format&fit=crop&q=80"
             ].map((src, i) => (
               <div key={i} style={{position: 'relative', overflow: 'hidden'}}>
-                <img 
+                <Image 
                   src={src}
                   alt=""
+                  fill
                   style={{
-                    width: '100%',
-                    height: '100%',
                     objectFit: 'cover',
                     filter: 'grayscale(6%) contrast(1.03) saturate(0.96)'
                   }}
@@ -372,7 +372,7 @@ export default function Home() {
         {/* Numbers */}
         <section className="section" style={{background: '#EFF5FC'}}>
           <div className="page-container">
-            <h2 className="h2">TLI Connect — The Digital Extension of TLI's Legacy</h2>
+            <h2 className="h2">TLI Connect — The Digital Extension of TLI&apos;s Legacy</h2>
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3,1fr)',
@@ -390,7 +390,7 @@ export default function Home() {
                 }}>
                   Established<br/>1956
                 </div>
-                <p className="body-m">Taiwan's pioneer language institute.</p>
+                <p className="body-m">Taiwan&apos;s pioneer language institute.</p>
               </div>
               <div>
                 <div style={{
@@ -505,7 +505,7 @@ export default function Home() {
               color: '#2E6EB6',
               marginTop: '40px'
             }}>
-              What you'll master
+              What you&apos;ll master
             </h3>
             
             <div style={{
@@ -597,7 +597,7 @@ export default function Home() {
               color: '#2E6EB6',
               marginTop: '48px'
             }}>
-              How you'll learn
+              How you&apos;ll learn
             </h3>
             
             <div style={{
@@ -622,12 +622,11 @@ export default function Home() {
                   aspectRatio: '1/1',
                   background: '#0B0C0D'
                 }}>
-                  <img 
+                  <Image 
                     src={currentImage}
                     alt=""
+                    fill
                     style={{
-                      width: '100%',
-                      height: '100%',
                       objectFit: 'cover',
                       display: 'block',
                       filter: 'grayscale(6%) contrast(1.02) saturate(0.98)',
@@ -768,7 +767,7 @@ export default function Home() {
             }}>
               <div>
                 <h2 className="h2" style={{marginBottom: '16px'}}>Ready to Join TLI Connect?</h2>
-                <p className="body-m" style={{margin: '0'}}>Leave your info and we'll send you full plan details within one business day.</p>
+                <p className="body-m" style={{margin: '0'}}>Leave your info and we&apos;ll send you full plan details within one business day.</p>
               </div>
               
               <div style={{
@@ -862,7 +861,7 @@ export default function Home() {
                       Talk to Us
                     </button>
                     <div style={{fontSize: '12px', lineHeight: '18px', color: 'var(--ink-dim)'}}>
-                      We'll get back to you within 1–2 business days. Your information is kept strictly confidential.
+                      We&apos;ll get back to you within 1–2 business days. Your information is kept strictly confidential.
                     </div>
                     {success === 'footer' && (
                       <div style={{
@@ -875,7 +874,7 @@ export default function Home() {
                         marginTop: '16px',
                         fontSize: '14px'
                       }}>
-                        Thanks! We'll contact you within 1–2 business days.
+                        Thanks! We&apos;ll contact you within 1–2 business days.
                       </div>
                     )}
                   </div>

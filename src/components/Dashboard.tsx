@@ -116,14 +116,12 @@ const Dashboard = () => {
 
   // Get student list for a booking - 根據實際預約資料獲取學生清單
   const getStudentListForBooking = (course: Course) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (!course || (course as any).studentCount === 0) {
+    if (!course || (course as { studentCount?: number }).studentCount === 0) {
       return []; // 待開課課程沒有學生
     }
     
     // 🔧 對於已開課的課程，從課程資料中提取學生資訊
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const courseAny = course as any;
+    const courseAny = course as { studentName?: string; studentEmail?: string; studentPhone?: string };
     if (courseAny.studentName && 
         courseAny.studentEmail && 
         courseAny.studentName !== '待開課' && 
@@ -151,13 +149,11 @@ const Dashboard = () => {
         
         if (user.role === 'STUDENT') {
           const data = await dashboardService.getDashboardData(user.id);
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setDashboardData(data as any);
+          setDashboardData(data as { membership: Membership | null; upcomingClasses: BookedCourse[] });
         } else if (user.role === 'TEACHER') {
           // 🔧 教師也使用 getDashboardData，與我的預約頁面保持一致
           const data = await dashboardService.getDashboardData(user.id, 'TEACHER');
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setDashboardData(data as any);
+          setDashboardData(data as { membership: Membership | null; upcomingClasses: BookedCourse[] });
         }
       } catch (error) {
         console.error('載入 Dashboard 資料失敗:', error);
@@ -421,7 +417,7 @@ const Dashboard = () => {
     
     console.log('📊 過濾後的 CONFIRMED 預約數量:', confirmedAppointments.length);
     
-    const courses = confirmedAppointments.map((item, index) => {
+    const courses = confirmedAppointments.map((item) => {
       // 使用課程預約日曆系統的真實資料
       const startTime = new Date(`${item.session.date} ${item.session.startTime}`);
       const now = new Date();
