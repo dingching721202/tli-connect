@@ -7,6 +7,7 @@ import Calendar from './Calendar';
 import CourseListView from './CourseListView';
 import CourseSelection from './CourseSelection';
 import SelectedCourses from './SelectedCourses';
+import { hashString, getActualEnrollmentCount } from '../utils/enrollmentUtils';
 
 interface BookingCourse {
   id: number;
@@ -28,17 +29,7 @@ interface BookingCourse {
   sessionId?: string; // 完整的session ID用於選擇邏輯
 }
 
-// Hash function for generating timeslot IDs
-const hashString = (str: string): number => {
-  let hash = 0;
-  if (str.length === 0) return hash;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash);
-};
+// Hash function and enrollment counting utilities imported from utils
 import { bookingService } from '@/services/dataService';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
@@ -178,6 +169,9 @@ const BookingSystem: React.FC = () => {
       const twentyFourHours = 24 * 60 * 60 * 1000;
       const timeslotId = hashString(session.id);
       
+      // 計算實際預約數量
+      const actualEnrollments = getActualEnrollmentCount(timeslotId);
+      
       // 檢查用戶是否已預約此時段 (US06)
       const isBookedByUser = user ? checkUserBooking(user.id, timeslotId) : false;
       
@@ -196,8 +190,8 @@ const BookingSystem: React.FC = () => {
         // US05.3: 距離開課 < 24h 的時段鎖定
         bookingStatus = 'locked';
         disabledReason = '距開課少於24小時';
-      } else if (session.currentEnrollments >= session.capacity) {
-        // US05.2: 額滿時段
+      } else if (actualEnrollments >= session.capacity) {
+        // US05.2: 使用實際預約數量判斷額滿時段
         bookingStatus = 'full';
         disabledReason = '課程已額滿';
       }
@@ -214,7 +208,7 @@ const BookingSystem: React.FC = () => {
         price: session.price,
         description: `${session.courseTitle} - 第${session.sessionNumber}課`,
         capacity: session.capacity,
-        reserved_count: session.currentEnrollments,
+        reserved_count: actualEnrollments, // 使用實際預約數量
         status: session.status === 'available' ? 'CREATED' : 'CANCELED',
         timeslot_id: timeslotId,
         bookingStatus,
@@ -370,7 +364,19 @@ const BookingSystem: React.FC = () => {
             created_at: new Date().toISOString()
           }));
           
-          localStorage.setItem('classAppointments', JSON.stringify([...existingAppointments, ...newAppointments]));
+          // 過濾掉重複的預約
+          const filteredNewAppointments = newAppointments.filter(newApt => 
+            !existingAppointments.some((existing: { user_id: number; class_timeslot_id: number; status: string }) => 
+              existing.user_id === newApt.user_id && 
+              existing.class_timeslot_id === newApt.class_timeslot_id &&
+              existing.status === 'CONFIRMED'
+            )
+          );
+          
+          if (filteredNewAppointments.length > 0) {
+            localStorage.setItem('classAppointments', JSON.stringify([...existingAppointments, ...filteredNewAppointments]));
+            console.log(`📱 本地同步了 ${filteredNewAppointments.length} 個新預約`);
+          }
           
           // 觸發自定義事件通知其他組件更新資料
           window.dispatchEvent(new CustomEvent('bookingsUpdated'));

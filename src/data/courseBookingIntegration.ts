@@ -3,6 +3,9 @@ import { getManagedCourses, ManagedCourse } from './courseUtils';
 import { getCourseTemplates, CourseTemplate } from './courseTemplateUtils';
 import { getPublishedCourseSchedules, getCourseScheduleFullTitle } from './courseScheduleUtils';
 import { teacherDataService } from './teacherData';
+import { getEnrollmentCountBySessionId } from '../utils/enrollmentUtils';
+
+// Hash function and enrollment counting utilities imported from utils
 
 export interface BookingCourseSession {
   id: string;
@@ -87,8 +90,11 @@ export function generateBookingSessions(): BookingCourseSession[] {
       const finalSessionNumber = session.sessionNumber || (index + 1);
       console.log(`生成預約時段: ${course.title}, session: ${session.title}, sessionNumber: ${session.sessionNumber}, finalSessionNumber: ${finalSessionNumber}`);
       
+      const sessionId = `${course.id}_session_${index + 1}`;
+      const actualEnrollments = getEnrollmentCountBySessionId(sessionId);
+      
       sessions.push({
-        id: `${course.id}_session_${index + 1}`,
+        id: sessionId,
         courseId: course.id,
         courseTitle: course.title,
         sessionNumber: finalSessionNumber,
@@ -103,9 +109,9 @@ export function generateBookingSessions(): BookingCourseSession[] {
         category: course.category,
         difficulty: course.difficulty,
         capacity: course.capacity,
-        currentEnrollments: course.currentEnrollments,
+        currentEnrollments: actualEnrollments, // 使用實際預約數量
         price: course.price,
-        status: course.currentEnrollments >= course.capacity ? 'full' : 'available'
+        status: actualEnrollments >= course.capacity ? 'full' : 'available' // 基於實際預約數量判斷狀態
       });
     });
   });

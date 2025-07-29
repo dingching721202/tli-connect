@@ -2,6 +2,7 @@
 import { getCourseTemplates, createCourseTemplate, updateCourseTemplate } from './courseTemplateUtils';
 import { getCourseSchedules, createCourseSchedule } from './courseScheduleUtils';
 import { teacherDataService } from './teacherData';
+import { hashString } from '../utils/enrollmentUtils';
 
 export function setupPronunciationTestData() {
   console.log('🚀 開始設置 Pronunciation 測試資料...');
@@ -156,22 +157,33 @@ function setupTestBookingData(templateId: string) {
   );
   
   if (!hasTestBooking) {
-    // 創建一個測試預約 - Alice Wang 預約 Pronunciation Lesson 1
-    const testAppointment = {
-      id: Date.now(),
+    // 創建測試預約，使用正確的 session ID 格式
+    // 根據 courseScheduleUtils.ts 中的格式：session_${templateId}_${sessionNumber}
+    const sessionIds = [
+      `session_${templateId}_1`, // Lesson 1
+      `session_${templateId}_2`, // Lesson 2  
+      `session_${templateId}_3`, // Lesson 3
+      `session_${templateId}_4`  // Lesson 4
+    ];
+    
+    const testAppointments = sessionIds.map((sessionId, index) => ({
+      id: Date.now() + index,
       user_id: 2, // Alice Wang的ID
-      class_timeslot_id: Math.abs(`${templateId}_session_1`.split('').reduce((a, b) => (a << 5) - a + b.charCodeAt(0), 0)),
-      course_name: 'Pronunciation - Lesson 1 - Pronunciation of Consonant & Vowel',
+      class_timeslot_id: hashString(sessionId),
+      course_name: `Pronunciation - Lesson ${index + 1}`,
       status: 'CONFIRMED',
       created_at: new Date().toISOString(),
-      booking_date: '2025-08-05', // 週二
-      booking_time: '19:00-20:30'
-    };
+      booking_date: index < 2 ? '2025-08-04' : '2025-08-11', // 前兩堂在8/4-8/5，後兩堂在8/11-8/12
+      booking_time: index % 2 === 0 ? '12:30-13:20' : '19:30-20:20' // 週一12:30，週二19:30
+    }));
     
-    existingAppointments.push(testAppointment);
+    existingAppointments.push(...testAppointments);
     localStorage.setItem('classAppointments', JSON.stringify(existingAppointments));
     
-    console.log('✅ 測試預約已創建 - Alice Wang 預約 Pronunciation Lesson 1');
+    console.log(`✅ 測試預約已創建 - Alice Wang 預約了 ${testAppointments.length} 堂 Pronunciation 課程`);
+    testAppointments.forEach((apt, index) => {
+      console.log(`  - Session ${index + 1}: timeslot_id = ${apt.class_timeslot_id}, sessionId = ${sessionIds[index]}`);
+    });
   } else {
     console.log('✅ 測試預約已存在');
   }

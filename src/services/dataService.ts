@@ -340,6 +340,26 @@ export const bookingService = {
       console.log(`✅ 創建新預約:`, newAppointment);
       classAppointments.push(newAppointment);
       
+      // 同步更新到 localStorage（帶數據驗證）
+      if (typeof localStorage !== 'undefined') {
+        const existingAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]');
+        
+        // 檢查是否已存在相同的預約（避免重複）
+        const isDuplicate = existingAppointments.some((apt: { user_id: number; class_timeslot_id: number; status: string }) => 
+          apt.user_id === newAppointment.user_id && 
+          apt.class_timeslot_id === newAppointment.class_timeslot_id &&
+          apt.status === 'CONFIRMED'
+        );
+        
+        if (!isDuplicate) {
+          existingAppointments.push(newAppointment);
+          localStorage.setItem('classAppointments', JSON.stringify(existingAppointments));
+          console.log(`📱 已同步預約到 localStorage:`, newAppointment);
+        } else {
+          console.log(`⚠️ 重複預約，跳過同步:`, newAppointment);
+        }
+      }
+      
       successBookings.push({
         timeslot_id: timeslotId,
         booking_id: newAppointment.id

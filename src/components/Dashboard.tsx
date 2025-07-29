@@ -1544,7 +1544,7 @@ const Dashboard = () => {
                   )}
                 </p>
                 {courseTab === 'upcoming' && user?.role === 'STUDENT' && (
-                  <Link href="/#booking">
+                  <Link href="/booking">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}

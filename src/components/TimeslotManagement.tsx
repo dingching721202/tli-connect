@@ -6,24 +6,10 @@ import { FiCalendar, FiClock, FiUser, FiAlertTriangle, FiX, FiEye, FiSearch, FiF
 import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { getActiveTeachers, Teacher as TeacherData } from '@/data/teacherData';
-import { getCourseSchedules } from '@/data/courseScheduleUtils';
-import { getAllBookableSessions } from '@/data/courseBookingUtils';
-import { ClassAppointment } from '@/types';
+import { getAllTimeslotsWithBookings, TimeslotWithBookings } from '@/services/timeslotService';
 
-interface TimeslotWithDetails {
-  id: string;
-  title: string;
-  teacherName: string;
-  teacherId: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  status: 'available' | 'full' | 'past';
-  capacity: number;
-  bookedCount: number;
-  canCancel: boolean;
-  timeStatus: 'pending' | 'started' | 'completed';
-}
+// 使用統一的 TimeslotWithBookings 接口
+type TimeslotWithDetails = TimeslotWithBookings;
 
 const TimeslotManagement: React.FC = () => {
   const { user } = useAuth();
@@ -156,130 +142,30 @@ const TimeslotManagement: React.FC = () => {
     }
   };
 
-  // 載入課程時段資料 - 使用真實的老師預約資料
+  // 載入課程時段資料 - 直接使用預約API數據
   useEffect(() => {
     if (!user || !['OPS', 'ADMIN'].includes(user.role)) {
       setLoading(false);
       return;
     }
+    
     const loadTimeslots = async () => {
       try {
         setLoading(true);
+        console.log('🔍 開始載入時段預約數據...');
         
-        // 獲取所有課程排程（來自課程模組與排程管理）
-        const courseSchedules = getCourseSchedules();
-        console.log('🔍 獲取課程排程:', courseSchedules.length, '個');
+        // 使用統一的時段服務獲取所有時段預約數據
+        const timelsotsWithBookings = getAllTimeslotsWithBookings();
+        console.log('✅ 時段預約數據載入完成，總共:', timelsotsWithBookings.length, '個時段');
         
-        // 獲取所有預約記錄
-        const allAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]');
-        console.log('📋 獲取預約記錄:', allAppointments.length, '個');
-        
-        // 轉換為時段管理格式
-        const enrichedTimeslots: TimeslotWithDetails[] = [];
-        
-        // 檢查是否有課程排程數據
-        if (!courseSchedules || courseSchedules.length === 0) {
-          console.log('⚠️ 沒有找到課程排程數據');
-          setTimeslots([]);
-          const activeTeachers = getActiveTeachers();
-          setAvailableTeachers(activeTeachers);
-          return; // 提早返回，避免進入處理循環
-        }
-        
-        // 添加hashString helper function
-        const hashString = (str: string): number => {
-          let hash = 0;
-          for (let i = 0; i < str.length; i++) {
-            const char = str.charCodeAt(i);
-            hash = ((hash << 5) - hash) + char;
-            hash = hash & hash; // Convert to 32bit integer
-          }
-          return Math.abs(hash);
-        };
-        
-        // 檢查已發布的排程
-        const publishedSchedules = courseSchedules.filter(schedule => schedule.status === 'published');
-        console.log('📅 已發布的課程排程:', publishedSchedules.length, '個');
-        
-        if (publishedSchedules.length === 0) {
-          console.log('⚠️ 沒有找到已發布的課程排程');
-          setTimeslots([]);
-          const activeTeachers = getActiveTeachers();
-          setAvailableTeachers(activeTeachers);
-          return; // 提早返回
-        }
-        
-        for (const schedule of publishedSchedules) {
-          // 檢查是否有生成的課程時段
-          if (!schedule.generatedSessions || schedule.generatedSessions.length === 0) {
-            console.log(`⚠️ 課程排程 ${schedule.id} 沒有生成的課程時段`);
-            continue;
-          }
-          
-          for (const session of schedule.generatedSessions) {
-            const now = new Date();
-            const sessionDateTime = new Date(`${session.date} ${session.startTime}`);
-            const sessionEndTime = new Date(`${session.date} ${session.endTime}`);
-            const canCancel = sessionDateTime > now;
-            
-            // 計算該時段的預約數量
-            const sessionHashId = hashString(session.id);
-            const sessionAppointments = allAppointments.filter((appointment: ClassAppointment) => 
-              appointment.class_timeslot_id === sessionHashId && 
-              appointment.status === 'CONFIRMED'
-            );
-            const bookedCount = sessionAppointments.length;
-            
-            // 狀態計算邏輯：沒人預約=待開課，有人預約=已開課，超過時間=已上課
-            let timeStatus: 'pending' | 'started' | 'completed';
-            if (sessionEndTime < now) {
-              timeStatus = 'completed'; // 已超過上課時間 = 已上課
-            } else if (bookedCount >= 1) {
-              timeStatus = 'started'; // 有人預約 = 已開課
-            } else {
-              timeStatus = 'pending'; // 沒人預約 = 待開課
-            }
-            
-            enrichedTimeslots.push({
-              id: session.id,
-              title: `${schedule.templateTitle}${schedule.seriesName ? ` ${schedule.seriesName}` : ''} Lesson ${session.sessionNumber} - ${session.title}`,
-              teacherName: session.teacherName,
-              teacherId: session.teacherId,
-              date: session.date,
-              startTime: session.startTime,
-              endTime: session.endTime,
-              status: 'available' as const,
-              capacity: 20, // 默認容量，可以後續從排程配置中獲取
-              bookedCount,
-              canCancel,
-              timeStatus
-            });
-          }
-        }
-
-        // 按照距離現在時間排序（越靠近的越上面）
-        // 根據時間排序（離現在最近的排在前面）
-        const sortedTimeslots = enrichedTimeslots.sort((a, b) => {
-          const now = new Date();
-          const aDateTime = new Date(`${a.date}T${a.startTime}`);
-          const bDateTime = new Date(`${b.date}T${b.startTime}`);
-          
-          const aDistance = Math.abs(aDateTime.getTime() - now.getTime());
-          const bDistance = Math.abs(bDateTime.getTime() - now.getTime());
-          
-          return aDistance - bDistance;
-        });
-        
-        setTimeslots(sortedTimeslots);
+        setTimeslots(timelsotsWithBookings);
         
         // 獲取在職教師列表
         const activeTeachers = getActiveTeachers();
         setAvailableTeachers(activeTeachers);
         
-        console.log('✅ 課程時段載入完成，總共:', enrichedTimeslots.length, '個時段');
       } catch (error) {
         console.error('❌ 載入課程時段失敗:', error);
-        // 確保在錯誤情況下也設置空數組，避免UI卡住
         setTimeslots([]);
         setAvailableTeachers([]);
       } finally {
@@ -288,6 +174,18 @@ const TimeslotManagement: React.FC = () => {
     };
 
     loadTimeslots();
+    
+    // 監聽預約更新事件，實時刷新數據
+    const handleBookingsUpdate = () => {
+      console.log('📱 收到預約更新事件，重新載入時段數據');
+      loadTimeslots();
+    };
+    
+    window.addEventListener('bookingsUpdated', handleBookingsUpdate);
+    
+    return () => {
+      window.removeEventListener('bookingsUpdated', handleBookingsUpdate);
+    };
   }, [user]);
 
   // 檢查用戶權限
@@ -364,50 +262,8 @@ const TimeslotManagement: React.FC = () => {
 相關學生將收到取消通知。`);
         
         // 重新載入時段資料
-        const allBookableSessions = getAllBookableSessions();
-        const enrichedTimeslots: TimeslotWithDetails[] = allBookableSessions.map(session => {
-          const now = new Date();
-          const sessionDateTime = new Date(`${session.date} ${session.startTime}`);
-          const sessionEndTime = new Date(`${session.date} ${session.endTime}`);
-          const canCancel = session.status === 'available' && sessionDateTime > now;
-          
-          let timeStatus: 'pending' | 'started' | 'completed';
-          if (sessionEndTime < now) {
-            timeStatus = 'completed';
-          } else if (session.bookedCount >= 1) {
-            timeStatus = 'started';
-          } else {
-            timeStatus = 'pending';
-          }
-          
-          return {
-            id: session.id,
-            title: session.title,
-            teacherName: session.teacherName,
-            teacherId: session.teacherId,
-            date: session.date,
-            startTime: session.startTime,
-            endTime: session.endTime,
-            status: session.status,
-            capacity: session.capacity,
-            bookedCount: session.bookedCount,
-            canCancel,
-            timeStatus
-          };
-        });
-
-        enrichedTimeslots.sort((a, b) => {
-          const now = new Date();
-          const aTime = new Date(`${a.date} ${a.startTime}`);
-          const bTime = new Date(`${b.date} ${b.startTime}`);
-          
-          const aDiff = Math.abs(aTime.getTime() - now.getTime());
-          const bDiff = Math.abs(bTime.getTime() - now.getTime());
-          
-          return aDiff - bDiff;
-        });
-        
-        setTimeslots(enrichedTimeslots);
+        const updatedTimeslots = getAllTimeslotsWithBookings();
+        setTimeslots(updatedTimeslots);
         
       } else {
         alert('❌ 取消課程時段失敗');
@@ -928,51 +784,28 @@ const TimeslotManagement: React.FC = () => {
                     <span className="text-sm text-green-700">學生人數：{selectedTimeslotForDetail.bookedCount}人</span>
                   </div>
                   <div className="space-y-3">
-                    {(() => {
-                      // Get actual student list for this timeslot
-                      const hashString = (str: string): number => {
-                        let hash = 0;
-                        for (let i = 0; i < str.length; i++) {
-                          const char = str.charCodeAt(i);
-                          hash = ((hash << 5) - hash) + char;
-                          hash = hash & hash; // Convert to 32bit integer
-                        }
-                        return Math.abs(hash);
-                      };
-                      
-                      const timeslotHashId = hashString(selectedTimeslotForDetail.id);
-                      const allAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]');
-                      const sessionAppointments = allAppointments.filter((appointment: ClassAppointment) => 
-                        appointment.class_timeslot_id === timeslotHashId && 
-                        appointment.status === 'CONFIRMED'
-                      );
-                      
-                      if (sessionAppointments.length === 0) {
-                        return (
-                          <div className="bg-white p-3 rounded border text-center text-gray-500">
-                            暂无学生预约
-                          </div>
-                        );
-                      }
-                      
-                      return sessionAppointments.map((appointment: ClassAppointment, index: number) => (
-                        <div key={index} className="bg-white p-3 rounded border">
+                    {selectedTimeslotForDetail.enrolledStudents.length === 0 ? (
+                      <div className="bg-white p-3 rounded border text-center text-gray-500">
+                        暫無學生預約
+                      </div>
+                    ) : (
+                      selectedTimeslotForDetail.enrolledStudents.map((student) => (
+                        <div key={student.bookingId} className="bg-white p-3 rounded border">
                           <div className="flex justify-between items-start">
                             <div className="space-y-1">
-                              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                              <div className="font-medium text-gray-900">{(appointment as any).student_name || `學生 ${index + 1}`}</div>
-                              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                              <div className="text-sm text-gray-600">{(appointment as any).student_email || 'student@example.com'}</div>
-                              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                              {(appointment as any).student_phone && (
-                                /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-                                <div className="text-sm text-gray-600">{(appointment as any).student_phone}</div>
-                              )}
+                              <div className="font-medium text-gray-900">{student.userName}</div>
+                              <div className="text-sm text-gray-600">{student.userEmail}</div>
+                              <div className="text-sm text-gray-500">
+                                預約時間: {new Date(student.bookedAt).toLocaleString('zh-TW')}
+                              </div>
+                            </div>
+                            <div className="text-xs text-gray-400">
+                              ID: {student.bookingId}
                             </div>
                           </div>
                         </div>
-                      ));
-                    })()}
+                      ))
+                    )}
                   </div>
                 </div>
               )}
