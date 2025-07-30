@@ -39,14 +39,15 @@ export async function POST(
 
     if (!result.success) {
       // 根據錯誤類型返回適當的狀態碼
-      if (result.error === 'ACTIVE_CARD_EXISTS') {
+      const resultWithError = result as { success: false; error?: string };
+      if (resultWithError.error === 'ACTIVE_CARD_EXISTS') {
         return NextResponse.json(
           { success: false, error: 'ACTIVE_CARD_EXISTS', message: '您已有啟用中的會員卡' },
           { status: 422 }
         );
       }
       
-      if (result.error === 'Membership not found or not purchased') {
+      if (resultWithError.error === 'Membership not found or not purchased') {
         return NextResponse.json(
           { success: false, error: 'MEMBERSHIP_NOT_FOUND', message: '找不到可啟用的會員卡' },
           { status: 404 }
@@ -54,7 +55,7 @@ export async function POST(
       }
 
       return NextResponse.json(
-        { success: false, error: result.error },
+        { success: false, error: resultWithError.error },
         { status: 400 }
       );
     }
@@ -64,9 +65,9 @@ export async function POST(
       data: {
         id: result.data!.id,
         status: result.data!.status,
-        activated_at: result.data!.start_time,
-        expire_at: result.data!.expire_time,
-        duration_days: result.data!.duration_in_days
+        activated_at: result.data!.start_date,
+        expire_at: result.data!.end_date,
+        activated_at_iso: result.data!.activated_at
       },
       message: '會員卡啟用成功'
     });

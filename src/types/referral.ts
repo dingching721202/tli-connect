@@ -1,5 +1,46 @@
-// 推薦管理系統的數據接口定義
+// ========================================
+// 推薦系統型別定義 (向後相容層)
+// ========================================
 
+// 注意：這個檔案主要用於向後相容性
+// 新的推薦系統型別已定義在 business.ts 中的 Agent 相關型別
+
+// ========================================
+// 向後相容的型別別名
+// ========================================
+
+import type { 
+  Agent, 
+  Referral, 
+  CommissionPayment
+} from './business';
+
+// @deprecated 請使用 business.ts 中的 Agent 型別
+export interface ConsultantProfile {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  joinDate: string;
+  totalEarnings: number;
+  currentMonthEarnings: number;
+  totalCustomers: number;
+  activeReferralCodes: number;
+  activeReferralLinks: number;
+  commissionRate: number;
+  paymentInfo: {
+    bankAccount?: string;
+    paymentMethod: 'bank_transfer' | 'paypal' | 'check';
+    taxId?: string;
+  };
+  performance: {
+    thisMonth: MonthlyPerformance;
+    lastMonth: MonthlyPerformance;
+    yearToDate: MonthlyPerformance;
+  };
+}
+
+// @deprecated 請使用 business.ts 中的 Referral 型別
 export interface ReferralCode {
   id: string;
   code: string;
@@ -28,6 +69,7 @@ export interface ReferralLink {
   utm_campaign?: string;
 }
 
+// @deprecated 請使用 business.ts 中的 Order 相關型別
 export interface CustomerPurchase {
   id: string;
   orderNumber: string;
@@ -42,10 +84,11 @@ export interface CustomerPurchase {
   purchaseDate: string;
   paymentStatus: 'paid' | 'pending' | 'failed' | 'refunded';
   referralMethod: 'code' | 'link';
-  referralValue: string; // 推薦代碼或連結
+  referralValue: string;
   notes?: string;
 }
 
+// @deprecated 請使用 business.ts 中的 CommissionPayment 型別
 export interface CommissionRecord {
   id: string;
   purchaseId: string;
@@ -106,30 +149,6 @@ export interface ReferralAnalytics {
   }>;
 }
 
-export interface ConsultantProfile {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  joinDate: string;
-  totalEarnings: number;
-  currentMonthEarnings: number;
-  totalCustomers: number;
-  activeReferralCodes: number;
-  activeReferralLinks: number;
-  commissionRate: number;
-  paymentInfo: {
-    bankAccount?: string;
-    paymentMethod: 'bank_transfer' | 'paypal' | 'check';
-    taxId?: string;
-  };
-  performance: {
-    thisMonth: MonthlyPerformance;
-    lastMonth: MonthlyPerformance;
-    yearToDate: MonthlyPerformance;
-  };
-}
-
 export interface ReferralDashboardData {
   consultant: ConsultantProfile;
   recentPurchases: CustomerPurchase[];
@@ -138,4 +157,20 @@ export interface ReferralDashboardData {
   activeLinks: ReferralLink[];
   analytics: ReferralAnalytics;
   monthlyPerformance: MonthlyPerformance[];
+}
+
+// ========================================
+// 型別轉換輔助函數型別
+// ========================================
+
+export interface AgentToConsultantConverter {
+  (agent: Agent): ConsultantProfile;
+}
+
+export interface ReferralToCodeConverter {
+  (referral: Referral): ReferralCode;
+}
+
+export interface CommissionToRecordConverter {
+  (commission: CommissionPayment): CommissionRecord;
 }

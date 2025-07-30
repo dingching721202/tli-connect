@@ -15,19 +15,34 @@ const Navigation: React.FC = () => {
   const pathname = usePathname();
 
   const navigationItems = [
-    { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'OPS', 'CORPORATE_CONTACT', 'ADMIN'] },
+    // 門戶入口
+    { name: '我的門戶', href: '/portals', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'STAFF', 'CORPORATE_CONTACT', 'ADMIN', 'AGENT'] },
+    
+    // 學生專用
     { name: '課程預約', href: '/booking', icon: FiBook, roles: ['guest', 'STUDENT'] },
-    { name: '會員管理', href: '/member-management', icon: FiUsers, roles: ['OPS', 'ADMIN'] },
-    { name: '教師管理', href: '/teacher-management', icon: FiUserCheck, roles: ['OPS', 'ADMIN'] },
-    { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['OPS', 'ADMIN'] },
     { name: '會員方案', href: '/membership', icon: FiShare2, roles: ['guest', 'STUDENT'] },
     { name: '我的預約', href: '/my-bookings', icon: FiCalendar, roles: ['STUDENT', 'TEACHER'] },
-    { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['OPS', 'ADMIN'] },
-    { name: '會員卡方案管理', href: '/member-card-plan-management', icon: FiSettings, roles: ['OPS', 'ADMIN'] },
-    { name: '企業詢價管理', href: '/corporate-inquiries', icon: FiBriefcase, roles: ['OPS', 'ADMIN'] },
-    { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['OPS', 'ADMIN'] },
+    
+    // 管理功能 (管理員和員工)
+    { name: '會員管理', href: '/member-management', icon: FiUsers, roles: ['STAFF', 'ADMIN'] },
+    { name: '教師管理', href: '/teacher-management', icon: FiUserCheck, roles: ['STAFF', 'ADMIN'] },
+    { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['STAFF', 'ADMIN'] },
+    { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['STAFF', 'ADMIN'] },
+    { name: '企業詢價管理', href: '/corporate-inquiries', icon: FiBriefcase, roles: ['STAFF', 'ADMIN'] },
+    
+    // 管理員專用
+    { name: '會員卡方案管理', href: '/member-card-plan-management', icon: FiSettings, roles: ['ADMIN'] },
+    { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['ADMIN'] },
+    { name: '系統設定', href: '/system-settings', icon: FiSettings, roles: ['ADMIN'] },
+    
+    // 企業專用
     { name: '企業管理', href: '/corporate-management', icon: FiBriefcase, roles: ['CORPORATE_CONTACT'] },
-    { name: '系統設定', href: '/system-settings', icon: FiSettings, roles: ['OPS', 'ADMIN'] },
+    
+    // 代理商專用
+    { name: '推薦系統', href: '/referral', icon: FiShare2, roles: ['AGENT'] },
+    
+    // 儀表板 (向下相容)
+    { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'STAFF', 'CORPORATE_CONTACT', 'ADMIN'] },
   ];
 
   const handleNavigation = (href: string) => {
@@ -46,7 +61,10 @@ const Navigation: React.FC = () => {
   const canAccess = (roles: string[]) => {
     if (roles.includes('all')) return true;
     if (!user) return roles.includes('guest');
-    return roles.includes(user.role);
+    
+    // 向下相容性：舊的OPS角色映射到新的STAFF
+    const userRole = user.role === 'OPS' ? 'STAFF' : user.role;
+    return roles.includes(userRole);
   };
 
   return (

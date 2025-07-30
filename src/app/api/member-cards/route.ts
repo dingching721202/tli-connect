@@ -44,8 +44,8 @@ export async function POST(request: NextRequest) {
 
     // 檢查是否已經為此訂單創建過會員卡
     const existingCards = memberCardService.getAllCards().filter(card => 
-      card.plan_id === plan_id && 
-      card.user_email === user_email &&
+      card.member_card_plan_id === plan_id && 
+      card.user_id === user_id &&
       card.order_id === order_id
     );
 
@@ -100,16 +100,11 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userEmail = searchParams.get('user_email');
     const userId = searchParams.get('user_id');
     
     let cards = memberCardService.getAllCards();
     
     // 過濾會員卡
-    if (userEmail) {
-      cards = cards.filter(card => card.user_email === userEmail);
-    }
-    
     if (userId) {
       cards = cards.filter(card => card.user_id === parseInt(userId));
     }

@@ -3,7 +3,7 @@ import { staffService } from '@/services/dataService';
 
 // POST /api/timeslots/[id]/cancel - 課務取消課程時段 (US08)
 export async function POST(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
@@ -20,7 +20,8 @@ export async function POST(
     const result = await staffService.cancelTimeslot(timeslotId);
     
     if (!result.success) {
-      if (result.error === 'Timeslot not found') {
+      const resultWithError = result as { success: false; message?: string };
+      if (resultWithError.message === 'Timeslot not found') {
         return NextResponse.json(
           { success: false, error: 'Timeslot not found' },
           { status: 404 }
@@ -28,7 +29,7 @@ export async function POST(
       }
       
       return NextResponse.json(
-        { success: false, error: result.error },
+        { success: false, error: resultWithError.message || 'Unknown error' },
         { status: 400 }
       );
     }

@@ -58,7 +58,7 @@ export async function PATCH(
 
 // GET - 獲取單一訂單詳情
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
