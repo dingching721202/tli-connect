@@ -6,12 +6,8 @@
 import type { 
   User, 
   CourseModule, 
-  CourseSchedule, 
-  CourseSession, 
   UserMembership,
-  Booking,
-  CorporateClient,
-  ReferralCode
+  Booking
 } from '@/types/business';
 
 export interface MigrationResult {
@@ -195,7 +191,7 @@ export const validateMembershipData = (memberships: Partial<UserMembership>[]): 
  * @param oldUsers 舊格式用戶數據
  * @returns 新格式用戶數據
  */
-export const transformUserData = (oldUsers: any[]): User[] => {
+export const transformUserData = (oldUsers: Record<string, unknown>[]): User[] => {
   return oldUsers.map((oldUser, index) => {
     const now = new Date().toISOString();
     
@@ -226,7 +222,7 @@ export const transformUserData = (oldUsers: any[]): User[] => {
  * @param oldCourses 舊格式課程數據
  * @returns 新格式課程模組數據
  */
-export const transformCourseData = (oldCourses: any[]): CourseModule[] => {
+export const transformCourseData = (oldCourses: Record<string, unknown>[]): CourseModule[] => {
   return oldCourses.map((oldCourse, index) => {
     const now = new Date().toISOString();
     
@@ -256,7 +252,7 @@ export const transformCourseData = (oldCourses: any[]): CourseModule[] => {
  * @param oldMemberships 舊格式會員卡數據
  * @returns 新格式會員卡數據
  */
-export const transformMembershipData = (oldMemberships: any[]): UserMembership[] => {
+export const transformMembershipData = (oldMemberships: Record<string, unknown>[]): UserMembership[] => {
   return oldMemberships.map((oldMembership, index) => {
     const now = new Date().toISOString();
     const purchaseDate = oldMembership.purchase_date || oldMembership.created_at || now;
@@ -352,12 +348,12 @@ export const cleanInvalidBookings = (
  * @returns 遷移結果摘要
  */
 export const performFullMigration = async (oldData: {
-  users?: any[];
-  courses?: any[];
-  memberships?: any[];
-  bookings?: any[];
-  corporate?: any[];
-  referrals?: any[];
+  users?: Record<string, unknown>[];
+  courses?: Record<string, unknown>[];
+  memberships?: Record<string, unknown>[];
+  bookings?: Record<string, unknown>[];
+  corporate?: Record<string, unknown>[];
+  referrals?: Record<string, unknown>[];
 }): Promise<MigrationSummary> => {
   const startTime = new Date();
   
@@ -451,7 +447,7 @@ export const performFullMigration = async (oldData: {
 /**
  * 標準化角色名稱
  */
-const normalizeRole = (role: any): User['role'] => {
+const normalizeRole = (role: unknown): User['role'] => {
   if (!role) return 'STUDENT';
   
   const roleMap: Record<string, User['role']> = {
@@ -469,7 +465,7 @@ const normalizeRole = (role: any): User['role'] => {
 /**
  * 標準化狀態
  */
-const normalizeStatus = (status: any): User['status'] => {
+const normalizeStatus = (status: unknown): User['status'] => {
   if (status === false || status === 'inactive' || status === 'disabled') return 'INACTIVE';
   if (status === 'suspended' || status === 'banned') return 'SUSPENDED';
   return 'ACTIVE';
@@ -478,7 +474,7 @@ const normalizeStatus = (status: any): User['status'] => {
 /**
  * 標準化語言
  */
-const normalizeLanguage = (language: any): string => {
+const normalizeLanguage = (language: unknown): string => {
   if (!language) return 'Chinese';
   
   const languageMap: Record<string, string> = {
@@ -496,7 +492,7 @@ const normalizeLanguage = (language: any): string => {
 /**
  * 標準化難度等級
  */
-const normalizeLevel = (level: any): CourseModule['level'] => {
+const normalizeLevel = (level: unknown): CourseModule['level'] => {
   if (!level) return 'BEGINNER';
   
   const levelMap: Record<string, CourseModule['level']> = {
@@ -513,7 +509,7 @@ const normalizeLevel = (level: any): CourseModule['level'] => {
 /**
  * 標準化會員卡狀態
  */
-const normalizeMembershipStatus = (status: any): UserMembership['status'] => {
+const normalizeMembershipStatus = (status: unknown): UserMembership['status'] => {
   if (!status) return 'PURCHASED';
   
   const statusMap: Record<string, UserMembership['status']> = {
@@ -539,7 +535,7 @@ const calculateActivationDeadline = (purchaseDate: string): string => {
 // 預設匯出
 // ========================================
 
-export default {
+const dataMigrationUtils = {
   validateUserData,
   validateCourseData,
   validateMembershipData,
@@ -550,3 +546,5 @@ export default {
   cleanInvalidBookings,
   performFullMigration
 };
+
+export default dataMigrationUtils;

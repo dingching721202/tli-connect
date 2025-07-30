@@ -537,7 +537,7 @@ export const formatError = (error: unknown): ApiError => {
 // 預設匯出
 // ========================================
 
-export default {
+const apiServiceModule = {
   createSuccessResponse,
   createErrorResponse,
   createPaginatedResponse,
@@ -556,3 +556,5 @@ export default {
   ApiErrorCode,
   ERROR_MESSAGES
 };
+
+export default apiServiceModule;

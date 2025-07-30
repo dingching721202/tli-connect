@@ -1,6 +1,6 @@
-import type { Booking, CourseSession, UserMembership } from '@/types/business';
+import type { Booking } from '@/types/business';
 import { bookings, getBookingById, getBookingsByUserId, getBookingsBySessionId } from '@/data/bookings';
-import { courseSessions, getCourseSessionById } from '@/data/courseSessions';
+import { getCourseSessionById } from '@/data/courseSessions';
 import { canBookCourse, useMembershipSession } from './membershipService';
 
 // ========================================
@@ -468,7 +468,7 @@ export const getUpcomingBookings = (userId: number, hours: number = 24): Booking
 // 預設匯出
 // ========================================
 
-export default {
+const bookingServiceModule = {
   validateSingleBooking,
   createSingleBooking,
   createBatchBooking,
@@ -480,3 +480,5 @@ export default {
   getBookingStatistics,
   getUpcomingBookings
 };
+
+export default bookingServiceModule;

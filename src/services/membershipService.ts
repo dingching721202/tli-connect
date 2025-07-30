@@ -1,7 +1,6 @@
-import type { UserMembership, MemberCardPlan, User } from '@/types/business';
+import type { UserMembership } from '@/types/business';
 import { memberships, getMembershipById, getMembershipsByUserId, getActiveMembershipByUserId } from '@/data/member_cards';
-import { memberCardPlans, getMemberCardPlanById } from '@/data/memberCardPlans';
-import { users, getUserById } from '@/data/users';
+import { getMemberCardPlanById } from '@/data/memberCardPlans';
 
 // ========================================
 // 會員制度服務 - Phase 2.1
@@ -166,10 +165,9 @@ export const hasValidMembership = (userId: number): boolean => {
 /**
  * 檢查用戶是否可以預約課程
  * @param userId 用戶ID
- * @param courseSessionId 課程節ID
  * @returns 是否可以預約
  */
-export const canBookCourse = (userId: number, courseSessionId: number): MembershipValidationResult => {
+export const canBookCourse = (userId: number): MembershipValidationResult => {
   const membership = getActiveMembershipByUserId(userId);
   
   if (!membership) {
@@ -197,11 +195,10 @@ export const canBookCourse = (userId: number, courseSessionId: number): Membersh
 /**
  * 使用會員卡課程
  * @param userId 用戶ID
- * @param courseSessionId 課程節ID
  * @returns 是否成功使用
  */
-export const useMembershipSession = (userId: number, courseSessionId: number): MembershipValidationResult => {
-  const validation = canBookCourse(userId, courseSessionId);
+export const useMembershipSession = (userId: number): MembershipValidationResult => {
+  const validation = canBookCourse(userId);
   
   if (!validation.isValid) {
     return validation;
@@ -418,7 +415,7 @@ export const processExpiredActivationMemberships = (): number => {
 // 預設匯出
 // ========================================
 
-export default {
+const membershipServiceModule = {
   validateMembershipActivation,
   activateMembership,
   checkAndExpireMemberships,
@@ -433,3 +430,5 @@ export default {
   getExpiredActivationMemberships,
   processExpiredActivationMemberships
 };
+
+export default membershipServiceModule;

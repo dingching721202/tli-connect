@@ -454,7 +454,7 @@ export const getRetryAdvice = (error: unknown): string | null => {
 // 預設匯出
 // ========================================
 
-export default {
+const errorHandlerModule = {
   logError,
   getErrorMessage,
   handleApiError,
@@ -469,3 +469,5 @@ export default {
   getRetryAdvice,
   USER_FRIENDLY_MESSAGES
 };
+
+export default errorHandlerModule;

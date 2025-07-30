@@ -1,5 +1,5 @@
 import type { User } from '@/types/business';
-import { users, getUserById } from '@/data/users';
+import { getUserById } from '@/data/users';
 
 // ========================================
 // RBAC 系統服務 - Phase 2.3
@@ -265,13 +265,13 @@ export const canAccessResource = (
     case ResourceType.MEMBERSHIP:
       return canAccessMembership(userId, resourceId, action);
     case ResourceType.INQUIRY:
-      return canAccessInquiry(userId, resourceId, action);
+      return canAccessInquiry(userId);
     case ResourceType.TEACHER_SCHEDULE:
-      return canAccessTeacherSchedule(userId, resourceId, action);
+      return canAccessTeacherSchedule(userId);
     case ResourceType.COMPANY:
-      return canAccessCompany(userId, resourceId, action);
+      return canAccessCompany(userId);
     case ResourceType.REFERRAL:
-      return canAccessReferral(userId, resourceId, action);
+      return canAccessReferral(userId);
     default:
       return false;
   }
@@ -350,14 +350,14 @@ const canAccessMembership = (userId: number, membershipId: number, action: strin
 /**
  * 檢查用戶是否可以存取詢問記錄
  */
-const canAccessInquiry = (userId: number, inquiryId: number, action: string): boolean => {
+const canAccessInquiry = (userId: number): boolean => {
   return hasPermission(userId, Permission.MANAGE_CORPORATE_INQUIRIES);
 };
 
 /**
  * 檢查用戶是否可以存取教師排程
  */
-const canAccessTeacherSchedule = (userId: number, scheduleId: number, action: string): boolean => {
+const canAccessTeacherSchedule = (userId: number): boolean => {
   // 教師可以管理自己的排程
   // 員工和管理員可以管理所有教師排程
   return hasAnyPermission(userId, [Permission.MANAGE_OWN_SCHEDULE, Permission.MANAGE_TEACHERS]);
@@ -366,14 +366,14 @@ const canAccessTeacherSchedule = (userId: number, scheduleId: number, action: st
 /**
  * 檢查用戶是否可以存取公司資料
  */
-const canAccessCompany = (userId: number, companyId: number, action: string): boolean => {
+const canAccessCompany = (userId: number): boolean => {
   return hasPermission(userId, Permission.MANAGE_COMPANY_EMPLOYEES);
 };
 
 /**
  * 檢查用戶是否可以存取推薦資料
  */
-const canAccessReferral = (userId: number, referralId: number, action: string): boolean => {
+const canAccessReferral = (userId: number): boolean => {
   return hasPermission(userId, Permission.MANAGE_REFERRAL_CODES);
 };
 
@@ -529,7 +529,7 @@ export const getPermissionDisplayName = (permission: Permission): string => {
 // 預設匯出
 // ========================================
 
-export default {
+const rbacServiceModule = {
   hasPermission,
   hasAnyPermission,
   hasAllPermissions,
@@ -547,3 +547,5 @@ export default {
   Permission,
   ResourceType
 };
+
+export default rbacServiceModule;

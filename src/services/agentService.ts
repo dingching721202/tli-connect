@@ -2,17 +2,15 @@ import type { User, ReferralCode, Commission } from '@/types/business';
 import { 
   referralCodes, 
   commissions,
-  referralStats,
   getReferralCodesByUser,
   getReferralCodeByCode,
   getCommissionsByAgent,
   addReferralCode,
   updateReferralCodeStatus,
-  addCommission,
-  getReferralStatsByAgent
+  addCommission
 } from '@/data/referralData';
 import { users, getUserById, getUsersByRole } from '@/data/users';
-import { orders, getOrderById } from '@/data/orders';
+import { getOrderById } from '@/data/orders';
 
 // ========================================
 // 代理商系統服務 - Phase 2.5
@@ -653,7 +651,7 @@ const generateReferralCode = (agentCode: string): string => {
 // 預設匯出
 // ========================================
 
-export default {
+const agentServiceModule = {
   registerAgent,
   updateAgentLevel,
   deactivateAgent,
@@ -665,3 +663,5 @@ export default {
   getAgentStatistics,
   getAgentPerformance
 };
+
+export default agentServiceModule;

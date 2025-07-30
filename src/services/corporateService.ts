@@ -3,29 +3,22 @@ import type {
   CorporateEmployee, 
   CorporateSubscription, 
   CorporateInquiry,
-  User,
-  UserMembership
+  User
 } from '@/types/business';
 import { 
   corporateClients, 
   corporateEmployees, 
   corporateSubscriptions,
   getCorporateClientById,
-  getCorporateClientsByStatus,
   getEmployeesByClientId,
-  getSubscriptionByClientId,
-  getCorporateEmployeeByUserId
+  getSubscriptionByClientId
 } from '@/data/corporateData';
 import { 
   corporateInquiries,
-  getCorporateInquiries,
   getCorporateInquiryById,
-  updateCorporateInquiry,
-  deleteCorporateInquiry,
-  addCorporateInquiry
+  updateCorporateInquiry
 } from '@/data/corporateInquiry';
-import { users, getUserById, createUser } from '@/data/users';
-import { memberships, addMembership } from '@/data/member_cards';
+import { getUserById, createUser } from '@/data/users';
 
 // ========================================
 // 企業客戶管理服務 - Phase 2.4
@@ -653,7 +646,7 @@ export const getCorporateClientReport = (clientId: number) => {
 // 預設匯出
 // ========================================
 
-export default {
+const corporateServiceModule = {
   createCorporateClient,
   updateCorporateClient,
   activateCorporateClient,
@@ -668,3 +661,5 @@ export default {
   getCorporateStatistics,
   getCorporateClientReport
 };
+
+export default corporateServiceModule;

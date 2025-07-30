@@ -4,13 +4,12 @@
 // ========================================
 
 import { users, getUserById, createUser } from '@/data/users';
-import { memberships, getMembershipById } from '@/data/member_cards';
-import { bookings, getBookingById } from '@/data/bookings';
-import { courseSessions, getCourseSessionById } from '@/data/courseSessions';
+import { memberships } from '@/data/member_cards';
+import { courseSessions } from '@/data/courseSessions';
 import { courseSchedules, getCourseScheduleById } from '@/data/courseSchedules';
 import { courseModules, getCourseModuleById } from '@/data/courseModules';
 import { validateMembershipActivation, activateMembership } from '@/services/membershipService';
-import { createSingleBooking, canCancelBooking } from '@/services/bookingService';
+import { createSingleBooking } from '@/services/bookingService';
 import { hasPermission, canAccessResource, ResourceType } from '@/services/rbacService';
 import { createCorporateClient } from '@/services/corporateService';
 import { registerAgent } from '@/services/agentService';
@@ -283,7 +282,7 @@ async function validateAdminFunctions(): Promise<ValidationResult> {
     }
     
     // 測試權限檢查
-    const hasUserManagementPermission = hasPermission(adminUser.id, 'MANAGE_USERS' as any);
+    const hasUserManagementPermission = hasPermission(adminUser.id, 'MANAGE_USERS' as never);
     if (!hasUserManagementPermission) {
       throw new Error('管理員沒有用戶管理權限');
     }
@@ -619,7 +618,9 @@ export async function quickHealthCheck(): Promise<{
   };
 }
 
-export default {
+const systemValidatorModule = {
   performSystemValidation,
   quickHealthCheck
 };
+
+export default systemValidatorModule;

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
-import type { User, ContactInquiry, Booking } from '@/types';
+import type { User } from '@/types';
 
 interface StaffDashboardData {
   user: User;

@@ -23,6 +23,10 @@ const NotificationContext = createContext<NotificationContextType | null>(null);
 export function NotificationProvider({ children }: { children: React.ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
+  const dismissNotification = useCallback((id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
+
   const showNotification = useCallback((notification: UserFriendlyError) => {
     const id = `notification_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const newNotification: Notification = {
@@ -39,11 +43,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         dismissNotification(id);
       }, notification.autoHide);
     }
-  }, []);
-
-  const dismissNotification = useCallback((id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  }, []);
+  }, [dismissNotification]);
 
   const clearAllNotifications = useCallback(() => {
     setNotifications([]);

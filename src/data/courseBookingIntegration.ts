@@ -2,7 +2,7 @@ import { courseSchedules } from './courseSchedules';
 import { courseSessions } from './courseSessions';
 import { bookings } from './bookings';
 import { memberships } from './memberships';
-import type { CourseSchedule, CourseSession, Booking, UserMembership } from '@/types/business';
+import type { CourseSchedule, Booking } from '@/types/business';
 
 // ========================================
 // 課程預約整合工具 - MECE架構
@@ -435,7 +435,7 @@ export const getRecommendedCourses = (userId: number, limit: number = 5): Course
 };
 
 // 向下相容的預設匯出
-export default {
+const courseBookingIntegrationModule = {
   canUserBookSession,
   bookCourseSession,
   cancelCourseBooking,
@@ -443,5 +443,10 @@ export default {
   getUserBookingHistory,
   getCourseBookingStats,
   checkSessionConflicts,
-  getRecommendedCourses
+  getRecommendedCourses,
+  generateBookingSessions,
+  getCourseFilters,
+  filterBookingSessions
 };
+
+export default courseBookingIntegrationModule;

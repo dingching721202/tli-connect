@@ -42,7 +42,7 @@ export const generateSessionsFromSchedule = (scheduleId: number): CourseSession[
   
   // 根據 recurring_pattern 生成節次
   if (schedule.recurring_pattern) {
-    const { type, days_of_week, exceptions } = schedule.recurring_pattern;
+    const { days_of_week, exceptions } = schedule.recurring_pattern;
     const currentDate = new Date(startDate);
     let sessionNumber = 1;
 

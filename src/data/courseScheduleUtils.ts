@@ -1,7 +1,7 @@
 import { courseSchedules } from './courseSchedules';
 import { courseSessions } from './courseSessions';
 import { courseModules } from './courseModules';
-import type { CourseSchedule, CourseSession, CourseModule } from '@/types/business';
+import type { CourseSchedule } from '@/types/business';
 
 // ========================================
 // 課程排程工具函數 - MECE架構
@@ -407,7 +407,7 @@ export const getCourseScheduleFullTitle = (scheduleId: number): string => {
 };
 
 // 向下相容的預設匯出
-export default {
+const courseScheduleUtilsModule = {
   checkScheduleConflict,
   getTeacherAvailableSlots,
   calculateScheduleRevenue,
@@ -421,5 +421,11 @@ export default {
   updateCourseSchedule,
   createCourseSchedule,
   deleteCourseSchedule,
-  getCourseScheduleFullTitle
+  getCourseScheduleFullTitle,
+  getCourseSchedules,
+  getPublishedCourseSchedules,
+  calculateEndDate,
+  generateScheduledSessions
 };
+
+export default courseScheduleUtilsModule;

@@ -52,8 +52,6 @@ export default function TeacherPortal() {
       setIsLoading(true);
       
       // 載入教師相關資料
-      const today = new Date().toISOString().split('T')[0];
-      
       // 模擬資料載入
       setDashboardData({
         user: user!,
