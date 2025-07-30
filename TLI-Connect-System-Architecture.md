@@ -195,8 +195,8 @@ interface NewsAnnouncement {
 - `GET /api/v1/home/news`：獲取最新消息
 - `GET /api/v1/home/featured-courses`：獲取推薦課程
 - `POST /api/v1/admin/home/content`：管理首頁內容（管理員）
-- `PUT /api/v1/admin/home/content/:id`：更新首頁內容（管理員）
-- `DELETE /api/v1/admin/home/content/:id`：刪除首頁內容（管理員）
+- `PUT /api/v1/admin/home/content/{id}`：更新首頁內容（管理員）
+- `DELETE /api/v1/admin/home/content/{id}`：刪除首頁內容（管理員）
 
 ### 📌 功能名稱：用戶註冊與登入
 **所屬 APP**：Student Portal  
@@ -248,7 +248,7 @@ interface UserSession {
 
 ### 📌 功能名稱：會員卡管理
 **所屬 APP**：Student Portal, Admin Portal  
-**功能描述**：專注於會員卡生命週期管理，包括卡片啟用、狀態追蹤、到期提醒、類型配置等核心營運功能，不涉及商品銷售和定價策略
+**功能描述**：管理會員卡的生命週期，包括會員卡啟用、狀態查看、類型管理等核心功能
 
 #### User Story
 | id | 標題 | 內容 | Acceptance Criteria |
@@ -261,7 +261,7 @@ interface UserSession {
 
 ### 📌 功能名稱：會員方案管理
 **所屬 APP**：Student Portal, Admin Portal  
-**功能描述**：專注於會員方案商業模式管理，包括方案展示、定價策略、促銷活動、購買流程、銷售統計等商務功能，不涉及會員卡營運管理
+**功能描述**：管理會員方案的商品展示、購買流程、方案配置等商業邏輯功能
 
 #### User Story
 | id | 標題 | 內容 | Acceptance Criteria |
@@ -790,7 +790,7 @@ interface SessionCancellation {
 interface StudentNotification {
   id: string;                 // UUID
   user_id: string;           // 學員ID
-  session_id: string;        // 時段ID
+  timeslot_id: string;       // 時段ID
   booking_id: string;        // 預約ID
   notification_type: 'CANCELLATION' | 'RESCHEDULE' | 'REMINDER'; // 通知類型
   title: string;             // 通知標題
@@ -804,7 +804,7 @@ interface StudentNotification {
 interface StaffPermission {
   id: string;                 // UUID
   staff_id: string;          // 校務人員ID
-  permission_scope: 'SESSION_MANAGEMENT' | 'BOOKING_MANAGEMENT' | 'STUDENT_VIEW' | 'USER_EDIT' | 'BASIC_REPORTS'; // 權限範圍
+  permission_scope: 'TIMESLOT_MANAGEMENT' | 'BOOKING_MANAGEMENT' | 'STUDENT_VIEW' | 'USER_EDIT' | 'BASIC_REPORTS'; // 權限範圍
   resource_restrictions?: {   // 資源限制
     allowed_course_ids?: string[];  // 可管理的課程ID
     allowed_locations?: string[];   // 可管理的地點
@@ -912,7 +912,7 @@ interface DashboardInfo {
   };
   upcoming_classes: Array<{   // 即將到來的課程
     booking_id: string;
-    session_id: string;
+    timeslot_id: string;
     title: string;            // 課程標題
     date: string;             // 上課日期 YYYY-MM-DD
     start_time: string;       // 開始時間 HH:mm
@@ -2647,12 +2647,12 @@ interface PaginationParams {
 - **MEMBER_004**: `CARD_NOT_PURCHASED` - 會員卡非PURCHASED狀態
 
 ### 📚 課程相關錯誤碼
-- **COURSE_001**: `SESSION_NOT_FOUND` - 課程時段不存在
-- **COURSE_002**: `SESSION_FULL` - 課程時段已滿 (FULL)
+- **COURSE_001**: `TIMESLOT_NOT_FOUND` - 課程時段不存在
+- **COURSE_002**: `TIMESLOT_FULL` - 課程時段已滿 (FULL)
 - **COURSE_003**: `WITHIN_24H` - 距離開課小於24小時 (WITHIN_24H)
 - **COURSE_004**: `MEMBERSHIP_EXPIRED` - 會員資格過期 (MEMBERSHIP_EXPIRED)
 - **COURSE_005**: `CANNOT_CANCEL_WITHIN_24H` - 開課前24小時內不可取消 (403)
-- **COURSE_006**: `SESSION_CANCELLED` - 課程時段已被取消
+- **COURSE_006**: `TIMESLOT_CANCELLED` - 課程時段已被取消
 
 ### 🛒 訂單相關錯誤碼
 - **ORDER_001**: `ORDER_NOT_FOUND` - 訂單不存在
