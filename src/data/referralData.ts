@@ -1,304 +1,352 @@
-export interface ReferralCode {
-  id: string;
-  code: string;
-  referrerId: string;  // User ID who created the referral
-  referrerName: string;
-  referrerEmail: string;
-  discountPercentage: number;  // e.g., 10 for 10% discount
-  maxUses: number;  // -1 for unlimited
-  currentUses: number;
-  expiryDate: string | null;  // null for no expiry
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import type { Referral, Agent, CommissionPayment } from '@/types/business';
 
-export interface ReferralUsage {
-  id: string;
-  referralCodeId: string;
-  referralCode: string;
-  referrerId: string;
-  referredUserId: string;
-  referredUserName: string;
-  referredUserEmail: string;
-  orderId: string;
-  originalAmount: number;
-  discountAmount: number;
-  finalAmount: number;
-  commission: number;  // Amount earned by referrer
-  status: 'pending' | 'completed' | 'cancelled';
-  usedAt: string;
-  completedAt: string | null;
-}
+// ========================================
+// 推薦系統資料 - MECE架構
+// 管理代理商、推薦和佣金資料
+// ========================================
 
-export interface ReferralReward {
-  id: string;
-  referrerId: string;
-  referralUsageId: string;
-  rewardType: 'commission' | 'bonus' | 'discount';
-  amount: number;
-  currency: 'TWD';
-  status: 'pending' | 'approved' | 'paid' | 'cancelled';
-  description: string;
-  earnedAt: string;
-  paidAt: string | null;
-}
-
-// Mock referral codes data
-const referralCodes: ReferralCode[] = [
+export const agents: Agent[] = [
   {
-    id: 'ref_001',
-    code: 'JOHN2024',
-    referrerId: '1',
-    referrerName: 'John Smith',
-    referrerEmail: 'john@example.com',
-    discountPercentage: 10,
-    maxUses: 50,
-    currentUses: 5,
-    expiryDate: '2024-12-31T23:59:59Z',
-    isActive: true,
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-07-20T00:00:00Z'
+    id: 1,
+    user_id: 8, // 假設的代理商用戶ID
+    agent_code: 'AG001',
+    level: 'GOLD',
+    parent_agent_id: undefined,
+    commission_rate: 15,
+    total_referrals: 48,
+    total_sales_amount: 480000,
+    total_commission_earned: 72000,
+    status: 'ACTIVE',
+    contract_signed_at: '2023-01-01T00:00:00+00:00',
+    created_at: '2023-01-01T00:00:00+00:00',
+    updated_at: '2024-01-15T00:00:00+00:00'
   },
   {
-    id: 'ref_002',
-    code: 'MARY15OFF',
-    referrerId: '2',
-    referrerName: 'Mary Johnson',
-    referrerEmail: 'mary@example.com',
-    discountPercentage: 15,
-    maxUses: 20,
-    currentUses: 12,
-    expiryDate: '2024-10-31T23:59:59Z',
-    isActive: true,
-    createdAt: '2024-02-15T00:00:00Z',
-    updatedAt: '2024-07-20T00:00:00Z'
+    id: 2,
+    user_id: 9, // 假設的代理商用戶ID
+    agent_code: 'AG002',
+    level: 'SILVER',
+    parent_agent_id: 1, // 上級代理商
+    commission_rate: 12,
+    total_referrals: 28,
+    total_sales_amount: 280000,
+    total_commission_earned: 33600,
+    status: 'ACTIVE',
+    contract_signed_at: '2023-03-15T00:00:00+00:00',
+    created_at: '2023-03-15T00:00:00+00:00',
+    updated_at: '2024-01-15T00:00:00+00:00'
+  },
+  {
+    id: 3,
+    user_id: 10, // 假設的代理商用戶ID
+    agent_code: 'AG003',
+    level: 'BRONZE',
+    parent_agent_id: 1,
+    commission_rate: 10,
+    total_referrals: 15,
+    total_sales_amount: 150000,
+    total_commission_earned: 15000,
+    status: 'ACTIVE',
+    contract_signed_at: '2023-06-01T00:00:00+00:00',
+    created_at: '2023-06-01T00:00:00+00:00',
+    updated_at: '2024-01-15T00:00:00+00:00'
   }
 ];
 
-// Mock referral usage data
-const referralUsages: ReferralUsage[] = [
+export const referrals: Referral[] = [
   {
-    id: 'usage_001',
-    referralCodeId: 'ref_001',
-    referralCode: 'JOHN2024',
-    referrerId: '1',
-    referredUserId: '5',
-    referredUserName: 'Alice Chen',
-    referredUserEmail: 'alice@example.com',
-    orderId: 'ord_001',
-    originalAmount: 10000,
-    discountAmount: 1000,
-    finalAmount: 9000,
-    commission: 500,
-    status: 'completed',
-    usedAt: '2024-07-15T10:30:00Z',
-    completedAt: '2024-07-15T10:35:00Z'
+    id: 1,
+    agent_id: 1,
+    referred_user_id: 101,
+    referral_code: 'AG001-WINTER2024',
+    order_id: 1001,
+    commission_amount: 2400,
+    commission_rate: 15,
+    status: 'APPROVED',
+    referred_at: '2024-01-10T10:00:00+00:00',
+    converted_at: '2024-01-12T15:30:00+00:00',
+    created_at: '2024-01-10T10:00:00+00:00',
+    updated_at: '2024-01-12T15:30:00+00:00'
   },
   {
-    id: 'usage_002',
-    referralCodeId: 'ref_002',
-    referralCode: 'MARY15OFF',
-    referrerId: '2',
-    referredUserId: '6',
-    referredUserName: 'Bob Wang',
-    referredUserEmail: 'bob@example.com',
-    orderId: 'ord_002',
-    originalAmount: 3000,
-    discountAmount: 450,
-    finalAmount: 2550,
-    commission: 150,
-    status: 'completed',
-    usedAt: '2024-07-18T14:20:00Z',
-    completedAt: '2024-07-18T14:25:00Z'
+    id: 2,
+    agent_id: 1,
+    referred_user_id: 102,
+    referral_code: 'AG001-SPRING2024',
+    order_id: 1002,
+    commission_amount: 1800,
+    commission_rate: 15,
+    status: 'PENDING',
+    referred_at: '2024-01-14T14:20:00+00:00',
+    converted_at: '2024-01-16T09:45:00+00:00',
+    created_at: '2024-01-14T14:20:00+00:00',
+    updated_at: '2024-01-16T09:45:00+00:00'
+  },
+  {
+    id: 3,
+    agent_id: 2,
+    referred_user_id: 103,
+    referral_code: 'AG002-NEW2024',
+    order_id: 1003,
+    commission_amount: 1440,
+    commission_rate: 12,
+    status: 'APPROVED',
+    referred_at: '2024-01-08T11:30:00+00:00',
+    converted_at: '2024-01-10T16:15:00+00:00',
+    created_at: '2024-01-08T11:30:00+00:00',
+    updated_at: '2024-01-10T16:15:00+00:00'
+  },
+  {
+    id: 4,
+    agent_id: 3,
+    referred_user_id: 104,
+    referral_code: 'AG003-PROMO2024',
+    commission_amount: 600,
+    commission_rate: 10,
+    status: 'PENDING',
+    referred_at: '2024-01-18T08:45:00+00:00',
+    created_at: '2024-01-18T08:45:00+00:00',
+    updated_at: '2024-01-18T08:45:00+00:00'
   }
 ];
 
-// Mock referral rewards data
-const referralRewards: ReferralReward[] = [
+export const commissionPayments: CommissionPayment[] = [
   {
-    id: 'reward_001',
-    referrerId: '1',
-    referralUsageId: 'usage_001',
-    rewardType: 'commission',
-    amount: 500,
-    currency: 'TWD',
-    status: 'paid',
-    description: '推薦獎金 - Alice Chen 購買年度方案',
-    earnedAt: '2024-07-15T10:35:00Z',
-    paidAt: '2024-07-20T00:00:00Z'
+    id: 1,
+    agent_id: 1,
+    period_start: '2024-01-01',
+    period_end: '2024-01-31',
+    total_amount: 15600,
+    referral_ids: [1, 5, 8, 12, 15], // 假設的推薦ID
+    payment_method: 'BANK_TRANSFER',
+    payment_reference: 'PAY-2024-001-AG001',
+    status: 'PAID',
+    paid_at: '2024-02-05T10:00:00+00:00',
+    created_at: '2024-02-01T00:00:00+00:00',
+    updated_at: '2024-02-05T10:00:00+00:00'
   },
   {
-    id: 'reward_002',
-    referrerId: '2',
-    referralUsageId: 'usage_002',
-    rewardType: 'commission',
-    amount: 150,
-    currency: 'TWD',
-    status: 'approved',
-    description: '推薦獎金 - Bob Wang 購買季度方案',
-    earnedAt: '2024-07-18T14:25:00Z',
-    paidAt: null
+    id: 2,
+    agent_id: 2,
+    period_start: '2024-01-01',
+    period_end: '2024-01-31',
+    total_amount: 8400,
+    referral_ids: [3, 7, 11],
+    payment_method: 'BANK_TRANSFER',
+    payment_reference: 'PAY-2024-002-AG002',
+    status: 'APPROVED',
+    created_at: '2024-02-01T00:00:00+00:00',
+    updated_at: '2024-02-03T14:30:00+00:00'
+  },
+  {
+    id: 3,
+    agent_id: 3,
+    period_start: '2024-01-01',
+    period_end: '2024-01-31',
+    total_amount: 3200,
+    referral_ids: [4, 9],
+    payment_method: 'DIGITAL_WALLET',
+    status: 'PENDING',
+    created_at: '2024-02-01T00:00:00+00:00',
+    updated_at: '2024-02-01T00:00:00+00:00'
   }
 ];
 
-// Referral code functions
-export function getAllReferralCodes(): ReferralCode[] {
-  return referralCodes;
-}
+// ========================================
+// 輔助函數
+// ========================================
 
-export function getReferralCodeById(id: string): ReferralCode | null {
-  return referralCodes.find(code => code.id === id) || null;
-}
+// 根據代理商編號獲取代理商
+export const getAgentByCode = (agentCode: string): Agent | undefined => {
+  return agents.find(agent => agent.agent_code === agentCode);
+};
 
-export function getReferralCodeByCode(code: string): ReferralCode | null {
-  return referralCodes.find(ref => ref.code.toLowerCase() === code.toLowerCase()) || null;
-}
+// 根據用戶ID獲取代理商
+export const getAgentByUserId = (userId: number): Agent | undefined => {
+  return agents.find(agent => agent.user_id === userId);
+};
 
-export function getReferralCodesByReferrer(referrerId: string): ReferralCode[] {
-  return referralCodes.filter(code => code.referrerId === referrerId);
-}
+// 根據代理商ID獲取推薦記錄
+export const getReferralsByAgentId = (agentId: number): Referral[] => {
+  return referrals.filter(referral => referral.agent_id === agentId);
+};
 
-export function getActiveReferralCodes(): ReferralCode[] {
-  const now = new Date();
-  return referralCodes.filter(code => {
-    if (!code.isActive) return false;
-    if (code.expiryDate && new Date(code.expiryDate) < now) return false;
-    if (code.maxUses > 0 && code.currentUses >= code.maxUses) return false;
-    return true;
+// 根據狀態獲取推薦記錄
+export const getReferralsByStatus = (status: Referral['status']): Referral[] => {
+  return referrals.filter(referral => referral.status === status);
+};
+
+// 根據代理商ID獲取佣金記錄
+export const getCommissionPaymentsByAgentId = (agentId: number): CommissionPayment[] => {
+  return commissionPayments.filter(payment => payment.agent_id === agentId);
+};
+
+// 計算代理商本月績效
+export const calculateAgentMonthlyPerformance = (agentId: number, year: number, month: number) => {
+  const startDate = new Date(year, month - 1, 1);
+  const endDate = new Date(year, month, 0);
+  
+  const monthlyReferrals = referrals.filter(referral => {
+    const referralDate = new Date(referral.referred_at);
+    return referral.agent_id === agentId &&
+           referralDate >= startDate &&
+           referralDate <= endDate;
   });
-}
 
-export function createReferralCode(codeData: Omit<ReferralCode, 'id' | 'currentUses' | 'createdAt' | 'updatedAt'>): ReferralCode {
-  const newCode: ReferralCode = {
-    ...codeData,
-    id: `ref_${Date.now()}`,
-    currentUses: 0,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  
-  referralCodes.push(newCode);
-  return newCode;
-}
+  const approvedReferrals = monthlyReferrals.filter(r => r.status === 'APPROVED');
+  const totalCommission = approvedReferrals.reduce((sum, r) => sum + r.commission_amount, 0);
+  const conversionRate = monthlyReferrals.length > 0 ? 
+    (approvedReferrals.length / monthlyReferrals.length) * 100 : 0;
 
-export function validateReferralCode(code: string): { isValid: boolean; referralCode?: ReferralCode; message: string } {
-  const referralCode = getReferralCodeByCode(code);
-  
-  if (!referralCode) {
-    return { isValid: false, message: '推薦碼不存在' };
-  }
-  
-  if (!referralCode.isActive) {
-    return { isValid: false, message: '推薦碼已停用' };
-  }
-  
-  if (referralCode.expiryDate && new Date(referralCode.expiryDate) < new Date()) {
-    return { isValid: false, message: '推薦碼已過期' };
-  }
-  
-  if (referralCode.maxUses > 0 && referralCode.currentUses >= referralCode.maxUses) {
-    return { isValid: false, message: '推薦碼使用次數已達上限' };
-  }
-  
-  return { 
-    isValid: true, 
-    referralCode, 
-    message: `可享 ${referralCode.discountPercentage}% 折扣` 
-  };
-}
-
-// Referral usage functions
-export function getReferralUsagesByReferrer(referrerId: string): ReferralUsage[] {
-  return referralUsages.filter(usage => usage.referrerId === referrerId);
-}
-
-export function getReferralUsagesByReferred(referredUserId: string): ReferralUsage[] {
-  return referralUsages.filter(usage => usage.referredUserId === referredUserId);
-}
-
-export function createReferralUsage(usageData: Omit<ReferralUsage, 'id' | 'usedAt' | 'completedAt'>): ReferralUsage {
-  const newUsage: ReferralUsage = {
-    ...usageData,
-    id: `usage_${Date.now()}`,
-    usedAt: new Date().toISOString(),
-    completedAt: usageData.status === 'completed' ? new Date().toISOString() : null
-  };
-  
-  referralUsages.push(newUsage);
-  
-  // Update referral code usage count
-  const referralCode = getReferralCodeById(usageData.referralCodeId);
-  if (referralCode) {
-    referralCode.currentUses++;
-    referralCode.updatedAt = new Date().toISOString();
-  }
-  
-  return newUsage;
-}
-
-// Referral rewards functions
-export function getReferralRewardsByReferrer(referrerId: string): ReferralReward[] {
-  return referralRewards.filter(reward => reward.referrerId === referrerId);
-}
-
-export function getTotalEarnings(referrerId: string): { total: number; pending: number; paid: number } {
-  const rewards = getReferralRewardsByReferrer(referrerId);
-  
   return {
-    total: rewards.reduce((sum, reward) => sum + reward.amount, 0),
-    pending: rewards.filter(r => r.status === 'pending' || r.status === 'approved').reduce((sum, reward) => sum + reward.amount, 0),
-    paid: rewards.filter(r => r.status === 'paid').reduce((sum, reward) => sum + reward.amount, 0)
+    agent_id: agentId,
+    period: `${year}-${month.toString().padStart(2, '0')}`,
+    total_referrals: monthlyReferrals.length,
+    approved_referrals: approvedReferrals.length,
+    pending_referrals: monthlyReferrals.filter(r => r.status === 'PENDING').length,
+    total_commission: totalCommission,
+    conversion_rate: conversionRate
   };
-}
+};
 
-export function createReferralReward(rewardData: Omit<ReferralReward, 'id' | 'earnedAt' | 'paidAt'>): ReferralReward {
-  const newReward: ReferralReward = {
-    ...rewardData,
-    id: `reward_${Date.now()}`,
-    earnedAt: new Date().toISOString(),
-    paidAt: null
-  };
-  
-  referralRewards.push(newReward);
-  return newReward;
-}
+// 獲取代理商排行榜
+export const getAgentLeaderboard = (period: 'month' | 'quarter' | 'year' = 'month') => {
+  const now = new Date();
+  let startDate: Date;
+  const endDate = new Date(now);
 
-// Statistics functions
-export function getReferralStatistics(referrerId?: string) {
-  let usages = referralUsages;
-  let codes = referralCodes;
-  let rewards = referralRewards;
-  
-  if (referrerId) {
-    usages = usages.filter(u => u.referrerId === referrerId);
-    codes = codes.filter(c => c.referrerId === referrerId);
-    rewards = rewards.filter(r => r.referrerId === referrerId);
+  switch (period) {
+    case 'month':
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+      break;
+    case 'quarter':
+      const quarter = Math.floor(now.getMonth() / 3);
+      startDate = new Date(now.getFullYear(), quarter * 3, 1);
+      break;
+    case 'year':
+      startDate = new Date(now.getFullYear(), 0, 1);
+      break;
   }
+
+  const agentStats = agents.map(agent => {
+    const periodReferrals = referrals.filter(referral => {
+      const referralDate = new Date(referral.referred_at);
+      return referral.agent_id === agent.id &&
+             referralDate >= startDate &&
+             referralDate <= endDate &&
+             referral.status === 'APPROVED';
+    });
+
+    const totalCommission = periodReferrals.reduce((sum, r) => sum + r.commission_amount, 0);
+
+    return {
+      agent,
+      period_referrals: periodReferrals.length,
+      period_commission: totalCommission,
+      conversion_rate: agent.total_referrals > 0 ? 
+        (periodReferrals.length / agent.total_referrals) * 100 : 0
+    };
+  });
+
+  return agentStats
+    .sort((a, b) => b.period_commission - a.period_commission)
+    .map((stat, index) => ({
+      rank: index + 1,
+      ...stat
+    }));
+};
+
+// 生成推薦碼
+export const generateReferralCode = (agentCode: string, campaign?: string): string => {
+  const suffix = campaign || new Date().getFullYear().toString();
+  const random = Math.random().toString(36).substring(2, 8).toUpperCase();
+  return `${agentCode}-${suffix}-${random}`;
+};
+
+// 驗證推薦碼
+export const validateReferralCode = (code: string): { valid: boolean; agent?: Agent; message: string } => {
+  const parts = code.split('-');
+  if (parts.length < 2) {
+    return { valid: false, message: '推薦碼格式無效' };
+  }
+
+  const agentCode = parts[0];
+  const agent = getAgentByCode(agentCode);
   
-  const totalReferrals = usages.length;
-  const completedReferrals = usages.filter(u => u.status === 'completed').length;
-  const totalSales = usages.reduce((sum, usage) => sum + usage.finalAmount, 0);
-  const totalCommission = rewards.reduce((sum, reward) => sum + reward.amount, 0);
-  
-  return {
-    totalReferrals,
-    completedReferrals,
-    conversionRate: totalReferrals > 0 ? (completedReferrals / totalReferrals) * 100 : 0,
-    totalSales,
-    totalCommission,
-    activeCodes: codes.filter(c => c.isActive).length
+  if (!agent) {
+    return { valid: false, message: '找不到對應的代理商' };
+  }
+
+  if (agent.status !== 'ACTIVE') {
+    return { valid: false, message: '代理商帳戶未啟用' };
+  }
+
+  return { valid: true, agent, message: '推薦碼有效' };
+};
+
+// 記錄新推薦
+export const recordReferral = (
+  agentId: number,
+  referredUserId: number,
+  referralCode: string,
+  orderId?: number
+): Referral => {
+  const agent = agents.find(a => a.id === agentId);
+  if (!agent) throw new Error('找不到代理商');
+
+  const newReferral: Referral = {
+    id: Math.max(...referrals.map(r => r.id), 0) + 1,
+    agent_id: agentId,
+    referred_user_id: referredUserId,
+    referral_code: referralCode,
+    order_id: orderId,
+    commission_amount: 0, // 待計算
+    commission_rate: agent.commission_rate,
+    status: 'PENDING',
+    referred_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
   };
-}
 
-// Generate a new referral code
-export function generateReferralCode(prefix: string = 'TLI'): string {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `${prefix}${timestamp}${random}`.toUpperCase();
-}
+  referrals.push(newReferral);
+  
+  // 更新代理商統計
+  agent.total_referrals += 1;
+  agent.updated_at = new Date().toISOString();
 
-// Additional function required by components
-export function getReferralCodesByUser(userId: string): ReferralCode[] {
-  return getReferralCodesByReferrer(userId);
-}
+  return newReferral;
+};
+
+// 根據用戶ID獲取推薦碼
+export const getReferralCodesByUser = (userId: number): string[] => {
+  const agent = getAgentByUserId(userId);
+  if (!agent) return [];
+
+  const userReferrals = referrals.filter(r => r.agent_id === agent.id);
+  return userReferrals.map(r => r.referral_code);
+};
+
+// 處理推薦轉換（購買完成）
+export const processReferralConversion = (referralId: number, orderValue: number): boolean => {
+  const referral = referrals.find(r => r.id === referralId);
+  if (!referral || referral.status !== 'PENDING') return false;
+
+  const agent = agents.find(a => a.id === referral.agent_id);
+  if (!agent) return false;
+
+  // 計算佣金
+  referral.commission_amount = orderValue * (referral.commission_rate / 100);
+  referral.status = 'APPROVED';
+  referral.converted_at = new Date().toISOString();
+  referral.updated_at = new Date().toISOString();
+
+  // 更新代理商統計
+  agent.total_sales_amount += orderValue;
+  agent.total_commission_earned += referral.commission_amount;
+  agent.updated_at = new Date().toISOString();
+
+  return true;
+};
+
+// 向下相容的預設匯出
+export { agents as default };

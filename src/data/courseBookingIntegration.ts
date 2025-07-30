@@ -1,902 +1,447 @@
-// 課程預約整合模組 - 連接課程模組與預約系統
-import { getManagedCourses, ManagedCourse } from './courseUtils';
-import { getCourseTemplates, CourseTemplate } from './courseTemplateUtils';
-import { getPublishedCourseSchedules, getCourseScheduleFullTitle } from './courseScheduleUtils';
-import { teacherDataService } from './teacherData';
-import { getEnrollmentCountBySessionId } from '../utils/enrollmentUtils';
+import { courseSchedules } from './courseSchedules';
+import { courseSessions } from './courseSessions';
+import { bookings } from './bookings';
+import { memberships } from './memberships';
+import type { CourseSchedule, CourseSession, Booking, UserMembership } from '@/types/business';
 
-// Hash function and enrollment counting utilities imported from utils
+// ========================================
+// 課程預約整合工具 - MECE架構
+// 整合課程系統與預約系統的相關函數
+// ========================================
 
-export interface BookingCourseSession {
-  id: string;
-  courseId: string;
-  courseTitle: string;
-  sessionNumber: number;
-  sessionTitle: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  teacherId: string | number;
-  teacherName: string;
-  classroom: string;
-  materials: string;
-  category: string;
-  difficulty: string;
-  capacity: number;
-  currentEnrollments: number;
-  price: number;
-  status: 'available' | 'full' | 'cancelled';
-}
+// 檢查用戶是否可以預約特定課程節次
+export const canUserBookSession = (
+  userId: number,
+  sessionId: number
+): { canBook: boolean; reason?: string } => {
+  const session = courseSessions.find(s => s.id === sessionId);
+  if (!session) {
+    return { canBook: false, reason: '找不到課程節次' };
+  }
 
-export interface CourseFilter {
-  id: string;
-  title: string;
-  category: string;
-  difficulty: string;
-  selected: boolean;
-}
+  const schedule = courseSchedules.find(s => s.id === session.course_schedule_id);
+  if (!schedule) {
+    return { canBook: false, reason: '找不到課程排程' };
+  }
 
-// 定義生成的課程時段類型
-type GeneratedSession = {
-  date: string;
-  startTime: string;
-  endTime: string;
-  title: string;
-  classroom: string;
-  materials: string;
-  teacherId?: string | number;
-  sessionNumber?: number;
+  // 檢查課程狀態
+  if (schedule.status !== 'PUBLISHED') {
+    return { canBook: false, reason: '課程尚未開放預約' };
+  }
+
+  // 檢查節次狀態
+  if (session.status !== 'SCHEDULED') {
+    return { canBook: false, reason: '課程節次不可預約' };
+  }
+
+  // 檢查容量
+  if (session.reserved_count >= session.capacity) {
+    return { canBook: false, reason: '課程已滿' };
+  }
+
+  // 檢查用戶是否有有效會員卡
+  const activeMembership = memberships.find(m => 
+    m.user_id === userId && 
+    m.status === 'ACTIVE' &&
+    m.remaining_sessions > 0
+  );
+
+  if (!activeMembership) {
+    return { canBook: false, reason: '沒有有效的會員卡或剩餘課程' };
+  }
+
+  // 檢查是否已經預約
+  const existingBooking = bookings.find(b => 
+    b.user_id === userId && 
+    b.course_session_id === sessionId &&
+    b.status !== 'CANCELED'
+  );
+
+  if (existingBooking) {
+    return { canBook: false, reason: '已經預約過此課程' };
+  }
+
+  // 檢查預約時間限制（24小時前取消規則的反向檢查）
+  const sessionStart = new Date(session.start_time);
+  const now = new Date();
+  const hoursUntilSession = (sessionStart.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+  if (hoursUntilSession < 2) { // 課程開始前2小時不能預約
+    return { canBook: false, reason: '課程開始前2小時不能預約' };
+  }
+
+  return { canBook: true };
 };
 
-// 從課程模組生成預約可用的課程時段
-export function generateBookingSessions(): BookingCourseSession[] {
-  const courses = getSyncedManagedCourses();
-  // 統一使用教師管理系統
-  const teachers = teacherDataService.getAllTeachers();
-  const sessions: BookingCourseSession[] = [];
+// 預約課程節次
+export const bookCourseSession = (
+  userId: number,
+  sessionId: number,
+  membershipId: number
+): { success: boolean; booking?: Booking; error?: string } => {
+  const canBookResult = canUserBookSession(userId, sessionId);
+  if (!canBookResult.canBook) {
+    return { success: false, error: canBookResult.reason };
+  }
 
-  courses.forEach(course => {
-    // 只處理已發布的課程
-    if (course.status !== 'active') return;
+  const session = courseSessions.find(s => s.id === sessionId);
+  const membership = memberships.find(m => m.id === membershipId);
 
-    // 根據 ManagedCourse 的實際結構生成時段
-    const courseSessions: GeneratedSession[] = generateCourseSessionsFromManagedCourse(course);
+  if (!session || !membership) {
+    return { success: false, error: '找不到課程或會員卡' };
+  }
+
+  // 創建預約記錄
+  const newBooking: Booking = {
+    id: Math.max(...bookings.map(b => b.id), 0) + 1,
+    user_id: userId,
+    course_session_id: sessionId,
+    membership_id: membershipId,
+    status: 'CONFIRMED',
+    booking_time: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+
+  // 更新節次預約數量
+  session.reserved_count += 1;
+  
+  // 扣除會員卡課程數
+  membership.remaining_sessions -= 1;
+  membership.updated_at = new Date().toISOString();
+
+  // 保存預約記錄
+  bookings.push(newBooking);
+
+  return { success: true, booking: newBooking };
+};
+
+// 取消課程預約
+export const cancelCourseBooking = (
+  bookingId: number,
+  userId: number
+): { success: boolean; error?: string } => {
+  const booking = bookings.find(b => b.id === bookingId && b.user_id === userId);
+  if (!booking) {
+    return { success: false, error: '找不到預約記錄' };
+  }
+
+  if (booking.status === 'CANCELED') {
+    return { success: false, error: '預約已經被取消' };
+  }
+
+  const session = courseSessions.find(s => s.id === booking.course_session_id);
+  if (!session) {
+    return { success: false, error: '找不到課程節次' };
+  }
+
+  // 檢查取消時間限制（24小時前才能取消）
+  const sessionStart = new Date(session.start_time);
+  const now = new Date();
+  const hoursUntilSession = (sessionStart.getTime() - now.getTime()) / (1000 * 60 * 60);
+
+  if (hoursUntilSession < 24) {
+    return { success: false, error: '課程開始前24小時內不能取消' };
+  }
+
+  // 更新預約狀態
+  booking.status = 'CANCELED';
+  booking.cancellation_time = new Date().toISOString();
+  booking.updated_at = new Date().toISOString();
+
+  // 恢復節次容量
+  session.reserved_count = Math.max(0, session.reserved_count - 1);
+
+  // 恢復會員卡課程數
+  const membership = memberships.find(m => m.id === booking.membership_id);
+  if (membership) {
+    membership.remaining_sessions += 1;
+    membership.updated_at = new Date().toISOString();
+  }
+
+  return { success: true };
+};
+
+// 批次預約課程
+export const batchBookSessions = (
+  userId: number,
+  sessionIds: number[],
+  membershipId: number
+): {
+  successful_bookings: Array<{ session_id: number; booking_id: number }>;
+  failed_bookings: Array<{ session_id: number; reason: string }>;
+} => {
+  const successful_bookings: Array<{ session_id: number; booking_id: number }> = [];
+  const failed_bookings: Array<{ session_id: number; reason: string }> = [];
+
+  for (const sessionId of sessionIds) {
+    const result = bookCourseSession(userId, sessionId, membershipId);
     
-    courseSessions.forEach((session, index) => {
-      // 優先使用排程中的教師ID（如果存在），回退到課程的教師
-      const teacherId = session.teacherId || course.teacher;
-      
-      // 統一使用教師管理系統查找教師
-      let teacher = null;
-      let teacherName = '未指定';
-      
-      if (teacherId) {
-        // 教師管理系統使用數字 ID
-        const numericTeacherId = typeof teacherId === 'number' ? teacherId : Number(teacherId);
-        teacher = teachers.find(t => t.id === numericTeacherId);
-        
-        if (teacher) {
-          teacherName = teacher.name;
-        } else {
-          console.warn(`找不到教師 ${teacherId}，課程: ${course.title}`, {
-            sessionTeacherId: session.teacherId,
-            courseTeacher: course.teacher,
-            finalTeacherId: teacherId,
-            availableTeachers: teachers.map(t => ({ id: t.id, name: t.name }))
-          });
-        }
-      }
-      
-      const finalSessionNumber = session.sessionNumber || (index + 1);
-      console.log(`生成預約時段: ${course.title}, session: ${session.title}, sessionNumber: ${session.sessionNumber}, finalSessionNumber: ${finalSessionNumber}`);
-      
-      const sessionId = `${course.id}_session_${index + 1}`;
-      const actualEnrollments = getEnrollmentCountBySessionId(sessionId);
-      
-      sessions.push({
-        id: sessionId,
-        courseId: course.id,
-        courseTitle: course.title,
-        sessionNumber: finalSessionNumber,
-        sessionTitle: session.title || `Lesson ${finalSessionNumber}`,
-        date: session.date,
-        startTime: session.startTime,
-        endTime: session.endTime,
-        teacherId: teacherId,
-        teacherName: teacherName,
-        classroom: session.classroom || course.location || 'Online',
-        materials: session.materials || course.materials?.join(', ') || '',
-        category: course.category,
-        difficulty: course.difficulty,
-        capacity: course.capacity,
-        currentEnrollments: actualEnrollments, // 使用實際預約數量
-        price: course.price,
-        status: actualEnrollments >= course.capacity ? 'full' : 'available' // 基於實際預約數量判斷狀態
+    if (result.success && result.booking) {
+      successful_bookings.push({
+        session_id: sessionId,
+        booking_id: result.booking.id
       });
-    });
-  });
-
-  return sessions.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-}
-
-// 根據 ManagedCourse 生成課程時段（使用課程排程的完整邏輯）
-function generateCourseSessionsFromManagedCourse(course: {
-  id: string;
-  startDate: string;
-  endDate: string;
-  totalSessions: number;
-  startTime: string;
-  endTime: string;
-  recurring: boolean;
-  recurringDays?: string[];
-  location?: string;
-  materials?: string[];
-  globalSchedules?: Array<{
-    weekdays: string[];
-    startTime: string;
-    endTime: string;
-    teacherId: string;
-  }>;
-  sessions?: Array<{
-    title: string;
-    classroom: string;
-    materials: string;
-  }>;
-  excludeDates?: string[];
-}) {
-  // 優先檢查課程是否有詳細的排程配置（來自課程排程模組）
-  if (course.globalSchedules && course.sessions && course.startDate && course.endDate) {
-    console.log(`為課程 ${course.id} 使用詳細排程配置，生成 ${course.totalSessions} 個時段`);
-    // 使用課程排程模組的完整排程邏輯
-    return generateDetailedCourseSessions({
-      startDate: course.startDate,
-      endDate: course.endDate,
-      totalSessions: course.totalSessions,
-      globalSchedules: course.globalSchedules,
-      sessions: course.sessions,
-      excludeDates: course.excludeDates || []
-    });
-  }
-  
-  // 回退到簡化邏輯（為了向後兼容沒有排程的課程）
-  console.log(`為課程 ${course.id} 使用預設排程邏輯`);
-  const { startDate, endDate, totalSessions, startTime, endTime, recurring, recurringDays } = course;
-  
-  if (!startDate || !endDate || !totalSessions || totalSessions <= 0) {
-    console.warn('generateCourseSessionsFromManagedCourse: 缺少基本課程資訊', { 
-      startDate, endDate, totalSessions 
-    });
-    return [];
-  }
-  
-  // 驗證日期格式
-  const startDateObj = new Date(startDate);
-  const endDateObj = new Date(endDate);
-  if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
-    console.error('generateCourseSessionsFromManagedCourse: 無效的日期格式', { startDate, endDate });
-    return [];
-  }
-  
-  if (startDateObj >= endDateObj) {
-    console.error('generateCourseSessionsFromManagedCourse: 開始日期必須早於結束日期', { startDate, endDate });
-    return [];
-  }
-  
-  const start = new Date(startDateObj);
-  const end = new Date(endDateObj);
-  const generatedSessions: GeneratedSession[] = [];
-  
-  if (!recurring) {
-    // 非重複課程，只在開始日期創建一個時段
-    generatedSessions.push({
-      date: startDate,
-      startTime: startTime || '09:00',
-      endTime: endTime || '17:00',
-      title: 'Lesson 1',
-      classroom: course.location || 'Online',
-      materials: course.materials?.join(', ') || ''
-    });
-  } else {
-    // 重複課程，根據 recurringDays 按順序生成時段（Lesson 1, 2, 3...）
-    const classDays = recurringDays?.map(day => {
-      const dayNum = parseInt(day);
-      return isNaN(dayNum) ? null : dayNum;
-    }).filter(day => day !== null && day >= 0 && day <= 6) || [1, 3, 5]; // 預設週一、三、五
-    
-    const currentDate = new Date(start);
-    let sessionCount = 0;
-    let loopCounter = 0;
-    const maxLoopIterations = 365; // 最多搜尋一年
-    
-    while (currentDate <= end && sessionCount < totalSessions && loopCounter < maxLoopIterations) {
-      loopCounter++;
-      
-      const dayOfWeek = currentDate.getDay();
-      const dateStr = currentDate.getFullYear() + '-' + 
-        String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(currentDate.getDate()).padStart(2, '0');
-      
-      if (classDays.includes(dayOfWeek)) {
-        generatedSessions.push({
-          date: dateStr,
-          startTime: startTime || '09:00',
-          endTime: endTime || '17:00',
-          title: `Lesson ${sessionCount + 1}`, // 按順序編號課程
-          classroom: course.location || 'Online',
-          materials: course.materials?.join(', ') || '',
-          sessionNumber: sessionCount + 1 // 傳遞正確的 sessionNumber
-        });
-        
-        sessionCount++; // 按順序遞增
-      }
-      
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-    
-    if (loopCounter >= maxLoopIterations) {
-      console.error('generateCourseSessionsFromManagedCourse: 避免無限循環，強制中止課程生成');
-    }
-  }
-  
-  return generatedSessions;
-}
-
-// 使用課程排程模組的正確邏輯，確保課程按順序排列（不是重複排課）
-function generateDetailedCourseSessions(course: {
-  startDate: string;
-  endDate: string;
-  totalSessions: number;
-  globalSchedules: Array<{
-    weekdays: string[];
-    startTime: string;
-    endTime: string;
-    teacherId: string;
-  }>;
-  sessions: Array<{
-    title: string;
-    classroom: string;
-    materials: string;
-  }>;
-  excludeDates?: string[];
-}) {
-  const { startDate, endDate, totalSessions, globalSchedules, sessions, excludeDates } = course;
-  
-  // 防禦性檢查：確保所有必要的資料都存在且有效
-  if (!startDate || !endDate || !totalSessions || totalSessions <= 0) {
-    console.warn('generateDetailedCourseSessions: 缺少基本課程資訊', { startDate, endDate, totalSessions });
-    return [];
-  }
-  
-  if (!globalSchedules || !Array.isArray(globalSchedules) || globalSchedules.length === 0) {
-    console.warn('generateDetailedCourseSessions: 缺少課程排程資訊', { globalSchedules });
-    return [];
-  }
-  
-  if (!sessions || !Array.isArray(sessions) || sessions.length === 0) {
-    console.warn('generateDetailedCourseSessions: 缺少課程內容資訊', { sessions });
-    return [];
-  }
-  
-  // 驗證日期格式
-  const startDateObj = new Date(startDate);
-  const endDateObj = new Date(endDate);
-  if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
-    console.error('generateDetailedCourseSessions: 無效的日期格式', { startDate, endDate });
-    return [];
-  }
-  
-  if (startDateObj >= endDateObj) {
-    console.error('generateDetailedCourseSessions: 開始日期必須早於結束日期', { startDate, endDate });
-    return [];
-  }
-  
-  const start = new Date(startDateObj);
-  const excludeSet = new Set(excludeDates || []);
-  const generatedSessions: GeneratedSession[] = [];
-  
-  // 收集所有時間段的上課日，並進行安全性檢查
-  const allClassDays: { day: number; schedule: typeof globalSchedules[0] }[] = [];
-  
-  try {
-    globalSchedules.forEach(schedule => {
-      // 檢查 schedule 資料完整性
-      if (!schedule || !schedule.weekdays || !Array.isArray(schedule.weekdays)) {
-        console.warn('generateDetailedCourseSessions: 無效的排程資料', schedule);
-        return;
-      }
-      
-      schedule.weekdays.forEach((dayStr: string) => {
-        const dayNum = parseInt(dayStr);
-        if (isNaN(dayNum) || dayNum < 0 || dayNum > 6) {
-          console.warn('generateDetailedCourseSessions: 無效的星期數字', dayStr);
-          return;
-        }
-        
-        allClassDays.push({
-          day: dayNum,
-          schedule: schedule
-        });
-      });
-    });
-  } catch (error) {
-    console.error('generateDetailedCourseSessions: 處理排程資料時發生錯誤', error);
-    return [];
-  }
-  
-  // 按星期排序（確保穩定的順序）
-  allClassDays.sort((a, b) => a.day - b.day);
-  
-  const currentDate = new Date(start);
-  let sessionCount = 0;
-  
-  console.log(`生成順序課程時段，總共 ${totalSessions} 堂課，包含 ${globalSchedules.length} 個時間段:`, {
-    schedules: globalSchedules.map(s => ({
-      weekdays: s.weekdays,
-      startTime: s.startTime,
-      endTime: s.endTime,
-      teacherId: s.teacherId
-    })),
-    allClassDays: allClassDays.map(d => ({ day: d.day, time: `${d.schedule.startTime}-${d.schedule.endTime}` }))
-  });
-  
-  // 按順序生成課程時段（Lesson 1, Lesson 2, Lesson 3...）
-  // 添加安全檢查以避免無限循環
-  let loopCounter = 0;
-  const maxLoopIterations = 365; // 最多搜尋一年
-  
-  while (sessionCount < totalSessions && loopCounter < maxLoopIterations) {
-    loopCounter++;
-    
-    const dayOfWeek = currentDate.getDay();
-    const dateStr = currentDate.getFullYear() + '-' + 
-      String(currentDate.getMonth() + 1).padStart(2, '0') + '-' + 
-      String(currentDate.getDate()).padStart(2, '0');
-    
-    // 檢查這一天是否有上課時段且不在排除日期中
-    if (!excludeSet.has(dateStr)) {
-      const matchingClassDay = allClassDays.find(cd => cd.day === dayOfWeek);
-      
-      if (matchingClassDay) {
-        // 使用對應的課程內容（按順序，不是循環）
-        const sessionContent = sessions[sessionCount] || sessions[sessions.length - 1]; // 如果課程內容不夠，使用最後一個
-        
-        // 安全檢查 sessionContent
-        if (!sessionContent) {
-          console.warn('generateDetailedCourseSessions: 缺少課程內容', { sessionCount, sessionsLength: sessions.length });
-          break;
-        }
-        
-        generatedSessions.push({
-          date: dateStr,
-          startTime: matchingClassDay.schedule.startTime || '10:00',
-          endTime: matchingClassDay.schedule.endTime || '11:30',
-          title: sessionContent.title || `Lesson ${sessionCount + 1}`, // 確保有標題
-          classroom: sessionContent.classroom || '線上教室',
-          materials: sessionContent.materials || '',
-          teacherId: matchingClassDay.schedule.teacherId,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          sessionNumber: (sessionContent as any).sessionNumber || (sessionCount + 1) // 傳遞正確的 sessionNumber
-        });
-        
-        sessionCount++;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        console.log(`生成第 ${sessionCount} 堂課: ${dateStr} ${matchingClassDay.schedule.startTime}-${matchingClassDay.schedule.endTime} ${sessionContent.title} (Lesson ${(sessionContent as any).sessionNumber || sessionCount})`);
-      }
-    }
-    
-    currentDate.setDate(currentDate.getDate() + 1);
-    
-    // 確保日期不會超過結束日期
-    if (currentDate > endDateObj) {
-      console.warn('generateDetailedCourseSessions: 已達到課程結束日期，但尚未生成足夠的課程時段', { 
-        sessionCount, 
-        totalSessions, 
-        endDate 
-      });
-      break;
-    }
-  }
-  
-  if (loopCounter >= maxLoopIterations) {
-    console.error('generateDetailedCourseSessions: 避免無限循環，強制中止課程生成');
-  }
-  
-  console.log(`總共生成 ${generatedSessions.length} 個順序課程時段`);
-  return generatedSessions.sort((a, b) => {
-    // 按日期排序，如果同一天則按時間排序
-    const dateCompare = new Date(a.date).getTime() - new Date(b.date).getTime();
-    if (dateCompare !== 0) return dateCompare;
-    return a.startTime.localeCompare(b.startTime);
-  });
-}
-
-// 獲取課程篩選選項（包含同步的課程模組資料）
-export function getCourseFilters(): CourseFilter[] {
-  // 優先從 localStorage 獲取已同步的課程資料
-  const syncedCourses = getSyncedManagedCourses();
-  const filters: CourseFilter[] = [];
-  
-  syncedCourses.forEach(course => {
-    if (course.status === 'active') {
-      filters.push({
-        id: course.id!,
-        title: course.title || '',
-        category: course.category || '其它',
-        difficulty: course.difficulty || 'beginner',
-        selected: true // 預設全選
+    } else {
+      failed_bookings.push({
+        session_id: sessionId,
+        reason: result.error || '未知錯誤'
       });
     }
-  });
-  
-  return filters;
-}
+  }
 
-// 獲取包含同步資料的管理課程（從課程模組和課程排程合併）
-function getSyncedManagedCourses(): ManagedCourse[] {
-  if (typeof localStorage === 'undefined') {
-    return getManagedCourses(); // 伺服器端回退到預設資料
-  }
-  
-  // 1. 從課程排程模組獲取已發布的排程（這些包含實際的課程安排）
-  try {
-    const schedules = getPublishedCourseSchedules();
-    const templates = getCourseTemplates();
-    const publishedTemplates = templates.filter((template: CourseTemplate) => template.status === 'published');
-    
-    console.log('獲取到', schedules.length, '個已發布的課程排程');
-    console.log('獲取到', publishedTemplates.length, '個已發布的課程模板');
-    
-    // 過濾掉對應模板已被刪除的排程
-    const validSchedules = schedules.filter(schedule => {
-      const template = templates.find(t => t.id === schedule.templateId);
-      return template && template.status === 'published';
-    });
-    
-    if (validSchedules.length !== schedules.length) {
-      console.log(`過濾掉 ${schedules.length - validSchedules.length} 個無效排程（對應模板已刪除或未發布）`);
-    }
-    
-    const managedCourses: ManagedCourse[] = [];
-    
-    // 2. 優先處理有排程的課程（這些有實際的日曆安排）
-    validSchedules.forEach((schedule) => {
-      const template = templates.find(t => t.id === schedule.templateId);
-      if (template && template.status === 'published') {
-        // 每個排程創建一個 ManagedCourse，這樣多個排程就會顯示多個課程實例
-        const managedCourse = {
-          id: `${template.id}_${schedule.id}`, // 組合ID確保唯一性
-          title: getCourseScheduleFullTitle(schedule), // 使用完整標題（包含系列名稱）
-          description: template.description || '',
-          teacher: schedule.teacherId,
-          capacity: 15,
-          price: getPriceFromTemplateCategory(template.category),
-          currency: 'TWD',
-          startDate: schedule.startDate,
-          endDate: schedule.endDate,
-          startTime: schedule.timeSlots[0]?.startTime || '10:00',
-          endTime: schedule.timeSlots[0]?.endTime || '11:30',
-          location: '線上課程',
-          category: template.category || '其它',
-          tags: [template.category, template.level],
-          status: 'active' as const,
-          enrollmentDeadline: new Date(new Date(schedule.startDate).getTime() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-          materials: template.sessions?.map((s) => s.materialLink).filter((link): link is string => Boolean(link)) || [],
-          prerequisites: '無特殊要求',
-          language: getLanguageFromTemplateCategory(template.category),
-          difficulty: mapLevelToEnglish(template.level) as 'beginner' | 'intermediate' | 'advanced',
-          totalSessions: template.totalSessions || 1,
-          sessionDuration: 90,
-          recurring: true,
-          recurringType: 'weekly' as const,
-          recurringDays: schedule.timeSlots[0]?.weekdays.map(day => day.toString()) || ['1', '3', '5'],
-          maxEnrollments: 15,
-          currentEnrollments: 0,
-          waitlistEnabled: true,
-          refundPolicy: '開課前24小時內不可退費',
-          createdAt: schedule.createdAt,
-          updatedAt: schedule.updatedAt
-        } as ManagedCourse & {
-          // 添加詳細的排程信息，這樣可以生成正確的日曆時段
-          globalSchedules: Array<{
-            weekdays: string[];
-            startTime: string;
-            endTime: string;
-            teacherId: string;
-          }>;
-          sessions: Array<{
-            title: string;
-            classroom: string;
-            materials: string;
-          }>;
-          excludeDates: string[];
-        };
-        
-        // 添加額外的排程信息
-        (managedCourse as unknown as { 
-          globalSchedules: Array<{
-            weekdays: string[];
-            startTime: string;
-            endTime: string;
-            teacherId: string;
-          }>;
-          sessions: Array<{
-            title: string;
-            classroom: string;
-            materials: string;
-          }>;
-          excludeDates: string[];
-        }).globalSchedules = schedule.timeSlots.map(slot => ({
-          weekdays: slot.weekdays.map(day => day.toString()),
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          teacherId: slot.teacherId
-        }));
-        
-        (managedCourse as unknown as { 
-          sessions: Array<{
-            title: string;
-            classroom: string;
-            materials: string;
-            sessionNumber: number;
-          }>;
-        }).sessions = template.sessions.map((session, index) => ({
-          title: session.title,
-          classroom: session.virtualClassroomLink || '線上教室',
-          materials: session.materialLink || `Lesson ${index + 1} Materials`,
-          sessionNumber: session.sessionNumber || (index + 1)
-        }));
-        
-        (managedCourse as unknown as { excludeDates: string[] }).excludeDates = schedule.excludeDates || [];
-        
-        managedCourses.push(managedCourse);
-      }
-    });
-    
-    // 3. 如果有已發布的模板但沒有對應的排程，也要顯示（用預設排程）
-    publishedTemplates.forEach((template: CourseTemplate) => {
-      const hasSchedule = validSchedules.some(s => s.templateId === template.id);
-      if (!hasSchedule) {
-        // 沒有排程的模板使用預設設定
-        const defaultManagedCourse = {
-          id: template.id?.replace('template_', '') || '',
-          title: template.title || '',
-          description: template.description || '',
-          teacher: getTeacherIdFromTemplateCategory(template.category),
-          capacity: 15,
-          price: getPriceFromTemplateCategory(template.category),
-          currency: 'TWD',
-          startDate: '2025-08-01T00:00:00+00:00',
-          endDate: '2025-12-31T23:59:59+00:00',
-          startTime: getDefaultStartTime(template.category),
-          endTime: getDefaultEndTime(template.category),
-          location: '線上課程',
-          category: template.category || '其它',
-          tags: [template.category, template.level],
-          status: 'active' as const,
-          enrollmentDeadline: '2025-07-30T23:59:59+00:00',
-          materials: template.sessions?.map((s) => s.materialLink).filter((link): link is string => Boolean(link)) || [],
-          prerequisites: '無特殊要求',
-          language: getLanguageFromTemplateCategory(template.category),
-          difficulty: mapLevelToEnglish(template.level) as 'beginner' | 'intermediate' | 'advanced',
-          totalSessions: template.totalSessions || 1,
-          sessionDuration: 90,
-          recurring: true,
-          recurringType: 'weekly' as const,
-          recurringDays: getRecurringDaysFromCategory(template.category),
-          maxEnrollments: 15,
-          currentEnrollments: 0,
-          waitlistEnabled: true,
-          refundPolicy: '課程開始前7天可申請退費',
-          createdAt: template.createdAt || new Date().toISOString(),
-          updatedAt: template.updatedAt || new Date().toISOString()
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } as any as ManagedCourse;
-        
-        // 添加預設的排程信息
-        (defaultManagedCourse as unknown as { 
-          globalSchedules: Array<{
-            weekdays: string[];
-            startTime: string;
-            endTime: string;
-            teacherId: string;
-          }>;
-        }).globalSchedules = [{
-          weekdays: getRecurringDaysFromCategory(template.category),
-          startTime: getDefaultStartTime(template.category),
-          endTime: getDefaultEndTime(template.category),
-          teacherId: String(getTeacherIdFromTemplateCategory(template.category))
-        }];
-        
-        (defaultManagedCourse as unknown as { 
-          sessions: Array<{
-            title: string;
-            classroom: string;
-            materials: string;
-            sessionNumber: number;
-          }>;
-        }).sessions = template.sessions.map((session, index) => ({
-          title: session.title,
-          classroom: session.virtualClassroomLink || '線上教室',
-          materials: session.materialLink || `Lesson ${index + 1} Materials`,
-          sessionNumber: session.sessionNumber || (index + 1)
-        }));
-        
-        (defaultManagedCourse as unknown as { excludeDates: string[] }).excludeDates = [];
-        
-        managedCourses.push(defaultManagedCourse);
-      }
-    });
-    
-    console.log('總共生成', managedCourses.length, '個可預約課程');
-    return managedCourses;
-    
-  } catch (error) {
-    console.error('從課程模組獲取資料時發生錯誤:', error);
-  }
-  
-  // 2. 如果課程模組沒有資料，嘗試從同步的課程資料獲取（但要過濾掉已刪除的模板）
-  const syncedCoursesStr = localStorage.getItem('courses');
-  if (syncedCoursesStr) {
-    try {
-      const syncedCourses = JSON.parse(syncedCoursesStr);
-      console.log('從同步資料獲取到', syncedCourses.length, '個課程');
-      
-      // 獲取當前有效的課程模板ID列表
-      const currentTemplates = getCourseTemplates();
-      const validTemplateIds = new Set(currentTemplates.map(t => t.id));
-      
-      // 過濾掉對應模板已被刪除的課程
-      const validSyncedCourses = syncedCourses.filter((course: { template_id?: string; id: number | string }) => {
-        if (course.template_id) {
-          return validTemplateIds.has(course.template_id);
-        }
-        // 檢查是否有對應的模板ID（通過ID推導）
-        const templateId = `template_${course.id}`;
-        return validTemplateIds.has(templateId);
-      });
-      
-      console.log(`過濾後剩餘 ${validSyncedCourses.length} 個有效課程`);
-      
-      // 將同步資料轉換為 ManagedCourse 格式
-      return validSyncedCourses.map((course: {
-        id: number | string;
-        template_id?: string;
-        title: string;
-        description: string;
-        teacher_id?: string;
-        teacher?: string;
-        max_students?: number;
-        price?: number;
-        currency?: string;
-        start_date?: string;
-        end_date?: string;
-        location?: string;
-        categories?: string[];
-        tags?: string[];
-        is_active?: boolean;
-        status?: string;
-        enrollment_deadline?: string;
-        materials?: string[];
-        prerequisites?: string;
-        language?: string;
-        level?: string;
-        total_sessions?: number;
-        session_duration?: number;
-        recurring?: boolean;
-        recurring_type?: string;
-        recurring_days?: string[];
-        current_students?: number;
-        waitlist_enabled?: boolean;
-        refund_policy?: string;
-        created_at?: string;
-        updated_at?: string;
-      }) => ({
-        id: course.id?.toString() || course.template_id?.replace('template_', '') || '',
-        title: course.title || '',
-        description: course.description || '',
-        teacher: course.teacher_id || course.teacher || '',
-        capacity: course.max_students || 15,
-        price: course.price || 0,
-        currency: course.currency || 'TWD',
-        startDate: course.start_date || '',
-        endDate: course.end_date || '',
-        startTime: getDefaultStartTime(course.categories?.[0] || ''),
-        endTime: getDefaultEndTime(course.categories?.[0] || ''),
-        location: course.location || '線上課程',
-        category: course.categories?.[0] || '其它',
-        tags: course.tags || [],
-        status: course.is_active && course.status === 'active' ? 'active' : 'draft',
-        enrollmentDeadline: course.enrollment_deadline || '',
-        materials: course.materials || [],
-        prerequisites: course.prerequisites || '',
-        language: course.language || 'chinese',
-        difficulty: course.level || 'beginner',
-        totalSessions: course.total_sessions || 1,
-        sessionDuration: course.session_duration || 90,
-        recurring: course.recurring || false,
-        recurringType: course.recurring_type as 'weekly' | 'biweekly' | 'monthly' || 'weekly',
-        recurringDays: course.recurring_days || [],
-        maxEnrollments: course.max_students || 15,
-        currentEnrollments: course.current_students || 0,
-        waitlistEnabled: course.waitlist_enabled || false,
-        refundPolicy: course.refund_policy || '',
-        createdAt: course.created_at || new Date().toISOString(),
-        updatedAt: course.updated_at || new Date().toISOString()
-      }));
-    } catch (error) {
-      console.error('解析同步課程資料時發生錯誤:', error);
-    }
-  }
-  
-  // 3. 如果都沒有資料，檢查是否有課程模板存在，只有完全沒有模板時才回退到預設資料
-  const currentTemplates = getCourseTemplates();
-  if (currentTemplates.length === 0) {
-    console.log('沒有課程模板，回退到預設課程資料');
-    return getManagedCourses();
-  } else {
-    console.log('有課程模板但沒有課程資料，返回空列表（避免已刪除課程復原）');
-    return [];
-  }
-}
+  return { successful_bookings, failed_bookings };
+};
 
+// 獲取用戶的課程預約歷史
+export const getUserBookingHistory = (userId: number, limit?: number) => {
+  const userBookings = bookings
+    .filter(b => b.user_id === userId)
+    .sort((a, b) => new Date(b.booking_time).getTime() - new Date(a.booking_time).getTime());
 
-// 根據分類獲取教師ID（使用教師管理系統）
-function getTeacherIdFromTemplateCategory(category: string): number {
-  try {
-      const teachers = teacherDataService.getAllTeachers();
-    
-    // 根據分類映射到教師專長，找到對應的教師
-    const categoryMap: { [key: string]: string[] } = {
-      '中文': ['中文會話', '繁體字教學', '台灣文化'],
-      '英文': ['商務英語', '簡報技巧', '談判英語'], 
-      '文化': ['台灣文化', '中華文化'],
-      '商業': ['商務英語', '職場溝通'],
-      '師資': ['教學方法', '師資培訓'],
-      '其它': []
+  const bookingsWithDetails = userBookings.map(booking => {
+    const session = courseSessions.find(s => s.id === booking.course_session_id);
+    const schedule = session ? courseSchedules.find(s => s.id === session.course_schedule_id) : null;
+    const membership = memberships.find(m => m.id === booking.membership_id);
+
+    return {
+      booking,
+      session,
+      schedule,
+      membership
     };
-    
-    const targetSkills = categoryMap[category] || [];
-    const teacher = teachers.find(t => 
-      t.status === 'active' && 
-      targetSkills.some(skill => t.expertise.includes(skill))
-    );
-    
-    return teacher?.id || 1; // 默認返回第一個教師的ID
-  } catch (error) {
-    console.error('獲取教師ID失敗:', error);
-    return 1; // 默認返回ID 1
-  }
-}
+  });
 
-function getPriceFromTemplateCategory(category: string): number {
-  const priceMap: { [key: string]: number } = {
-    '中文': 2800,
-    '英文': 3200,
-    '文化': 2500,
-    '商業': 4000,
-    '師資': 5000,
-    '其它': 2500
-  };
-  return priceMap[category] || 2500;
-}
+  return limit ? bookingsWithDetails.slice(0, limit) : bookingsWithDetails;
+};
 
-function getLanguageFromTemplateCategory(category: string): string {
-  const languageMap: { [key: string]: string } = {
-    '中文': 'chinese',
-    '英文': 'english',
-    '文化': 'chinese',
-    '商業': 'english',
-    '師資': 'chinese',
-    '其它': 'chinese'
-  };
-  return languageMap[category] || 'chinese';
-}
+// 獲取課程的預約統計
+export const getCourseBookingStats = (scheduleId: number) => {
+  const schedule = courseSchedules.find(s => s.id === scheduleId);
+  if (!schedule) return null;
 
-// 將中文級別映射為英文級別  
-function mapLevelToEnglish(level: string): string {
-  const levelMap: { [key: string]: string } = {
-    '初級': 'beginner',
-    '中級': 'intermediate', 
-    '中高級': 'intermediate',
-    '高級': 'advanced',
-    '不限': 'beginner'
-  };
-  return levelMap[level] || 'beginner';
-}
-
-// 根據分類獲取合適的重複日期（返回數字格式：0=週日，1=週一，2=週二...）
-function getRecurringDaysFromCategory(category: string): string[] {
-  const daysMap: { [key: string]: string[] } = {
-    '中文': ['1', '3', '5'], // 週一、三、五
-    '英文': ['2', '4'],      // 週二、四
-    '文化': ['6'],           // 週六
-    '商業': ['1', '3'],      // 週一、三
-    '師資': ['2', '4'],      // 週二、四
-    '其它': ['6']            // 週六
-  };
-  return daysMap[category] || ['6'];
-}
-
-// 根據分類獲取預設開始時間
-function getDefaultStartTime(category: string): string {
-  const timeMap: { [key: string]: string } = {
-    '商業': '19:00',
-    '師資': '19:00', 
-    '英文': '19:00',
-    '文化': '14:00',
-    '中文': '10:00',
-    '其它': '10:00'
-  };
-  return timeMap[category] || '10:00';
-}
-
-// 根據分類獲取預設結束時間
-function getDefaultEndTime(category: string): string {
-  const timeMap: { [key: string]: string } = {
-    '商業': '21:00',
-    '師資': '21:00',
-    '英文': '21:00', 
-    '文化': '15:30',
-    '中文': '11:30',
-    '其它': '11:30'
-  };
-  return timeMap[category] || '11:30';
-}
-
-// 根據篩選條件過濾課程時段
-export function filterBookingSessions(
-  sessions: BookingCourseSession[], 
-  selectedCourseIds: string[]
-): BookingCourseSession[] {
-  if (selectedCourseIds.length === 0) return sessions;
-  
-  return sessions.filter(session => 
-    selectedCourseIds.includes(session.courseId)
+  const sessions = courseSessions.filter(s => s.course_schedule_id === scheduleId);
+  const allBookings = bookings.filter(b => 
+    sessions.some(s => s.id === b.course_session_id)
   );
-}
 
-// 獲取特定日期的課程時段
-export function getSessionsByDate(
-  sessions: BookingCourseSession[], 
-  date: string
-): BookingCourseSession[] {
-  return sessions.filter(session => session.date === date);
-}
+  const confirmedBookings = allBookings.filter(b => b.status === 'CONFIRMED');
+  const canceledBookings = allBookings.filter(b => b.status === 'CANCELED');
+  const attendedBookings = allBookings.filter(b => b.status === 'ATTENDED');
 
-// 格式化課程顯示文字
-export function formatSessionDisplay(session: BookingCourseSession): string {
-  const difficultyMap = {
-    'beginner': '初級',
-    'intermediate': '中級', 
-    'advanced': '高級'
+  const totalCapacity = sessions.reduce((sum, s) => sum + s.capacity, 0);
+  const totalReserved = sessions.reduce((sum, s) => sum + s.reserved_count, 0);
+
+  return {
+    schedule_id: scheduleId,
+    total_sessions: sessions.length,
+    total_capacity: totalCapacity,
+    total_reserved: totalReserved,
+    available_slots: totalCapacity - totalReserved,
+    occupancy_rate: totalCapacity > 0 ? (totalReserved / totalCapacity) * 100 : 0,
+    booking_stats: {
+      total_bookings: allBookings.length,
+      confirmed: confirmedBookings.length,
+      canceled: canceledBookings.length,
+      attended: attendedBookings.length,
+      no_show: allBookings.filter(b => b.status === 'NO_SHOW').length
+    },
+    cancellation_rate: allBookings.length > 0 ? (canceledBookings.length / allBookings.length) * 100 : 0,
+    attendance_rate: (confirmedBookings.length + attendedBookings.length) > 0 ? 
+      (attendedBookings.length / (confirmedBookings.length + attendedBookings.length)) * 100 : 0
   };
-  
-  const difficulty = difficultyMap[session.difficulty as keyof typeof difficultyMap] || session.difficulty;
-  
-  return `${session.courseTitle} ${difficulty} Lesson ${session.sessionNumber} ${session.startTime}-${session.endTime}`;
-}
+};
 
-// 獲取課程類別顏色
-export function getCategoryColor(category: string): string {
-  const colorMap: { [key: string]: string } = {
-    '中文': 'bg-blue-100 text-blue-800',
-    '英文': 'bg-green-100 text-green-800',
-    '文化': 'bg-purple-100 text-purple-800',
-    '商業': 'bg-orange-100 text-orange-800',
-    '師資': 'bg-red-100 text-red-800',
-    '其它': 'bg-gray-100 text-gray-800'
-  };
-  
-  return colorMap[category] || colorMap['其它'];
-}
+// 檢查課程節次衝突
+export const checkSessionConflicts = (userId: number, sessionId: number): boolean => {
+  const targetSession = courseSessions.find(s => s.id === sessionId);
+  if (!targetSession) return false;
 
-// 獲取難度等級顏色
-export function getDifficultyColor(difficulty: string): string {
-  const colorMap: { [key: string]: string } = {
-    'beginner': 'bg-green-100 text-green-800',
-    'intermediate': 'bg-yellow-100 text-yellow-800',
-    'advanced': 'bg-red-100 text-red-800'
+  const userBookings = bookings.filter(b => 
+    b.user_id === userId && 
+    b.status === 'CONFIRMED'
+  );
+
+  for (const booking of userBookings) {
+    const bookedSession = courseSessions.find(s => s.id === booking.course_session_id);
+    if (!bookedSession) continue;
+
+    const targetStart = new Date(targetSession.start_time);
+    const targetEnd = new Date(targetSession.end_time);
+    const bookedStart = new Date(bookedSession.start_time);
+    const bookedEnd = new Date(bookedSession.end_time);
+
+    // 檢查時間重疊
+    if (targetStart < bookedEnd && targetEnd > bookedStart) {
+      return true; // 有衝突
+    }
+  }
+
+  return false; // 無衝突
+};
+
+// 生成預約節次資訊
+export const generateBookingSessions = (scheduleId: number) => {
+  const schedule = courseSchedules.find(s => s.id === scheduleId);
+  if (!schedule) return [];
+
+  return courseSessions
+    .filter(s => s.course_schedule_id === scheduleId)
+    .map(session => ({
+      ...session,
+      schedule,
+      availability: {
+        available_slots: session.capacity - session.reserved_count,
+        is_full: session.reserved_count >= session.capacity,
+        can_book: session.status === 'SCHEDULED' && session.reserved_count < session.capacity
+      }
+    }));
+};
+
+// 獲取課程篩選選項
+export const getCourseFilters = () => {
+  const languages = [...new Set(courseSchedules.map(s => {
+    const courseModule = courseModules.find(m => m.id === s.course_module_id);
+    return courseModule?.language;
+  }).filter(Boolean))];
+
+  const levels = [...new Set(courseSchedules.map(s => {
+    const courseModule = courseModules.find(m => m.id === s.course_module_id);
+    return courseModule?.level;
+  }).filter(Boolean))];
+
+  const teachers = [...new Set(courseSchedules.map(s => ({
+    id: s.teacher_id,
+    name: s.teacher_name
+  })))];
+
+  const locationTypes = [...new Set(courseSchedules.map(s => s.location.type))];
+
+  const priceRange = courseSchedules.reduce(
+    (range, s) => ({
+      min: Math.min(range.min, s.price),
+      max: Math.max(range.max, s.price)
+    }),
+    { min: Infinity, max: 0 }
+  );
+
+  return {
+    languages,
+    levels,
+    teachers,
+    location_types: locationTypes,
+    price_range: priceRange.min === Infinity ? { min: 0, max: 0 } : priceRange
   };
-  
-  return colorMap[difficulty] || colorMap['beginner'];
-}
+};
+
+// 篩選預約節次
+export const filterBookingSessions = (filters: {
+  language?: string;
+  level?: string;
+  teacher_id?: number;
+  location_type?: string;
+  price_range?: [number, number];
+  start_date?: string;
+  end_date?: string;
+}) => {
+  let filteredSchedules = courseSchedules.filter(s => s.status === 'PUBLISHED');
+
+  // 套用篩選條件
+  if (filters.teacher_id) {
+    filteredSchedules = filteredSchedules.filter(s => s.teacher_id === filters.teacher_id);
+  }
+
+  if (filters.location_type) {
+    filteredSchedules = filteredSchedules.filter(s => s.location.type === filters.location_type);
+  }
+
+  if (filters.price_range) {
+    const [min, max] = filters.price_range;
+    filteredSchedules = filteredSchedules.filter(s => s.price >= min && s.price <= max);
+  }
+
+  if (filters.language || filters.level) {
+    filteredSchedules = filteredSchedules.filter(s => {
+      const courseModule = courseModules.find(m => m.id === s.course_module_id);
+      if (!courseModule) return false;
+      
+      if (filters.language && courseModule.language !== filters.language) return false;
+      if (filters.level && courseModule.level !== filters.level) return false;
+      
+      return true;
+    });
+  }
+
+  // 獲取對應的節次
+  const allSessions = filteredSchedules.flatMap(schedule => 
+    courseSessions
+      .filter(s => s.course_schedule_id === schedule.id)
+      .filter(s => {
+        if (s.status !== 'SCHEDULED') return false;
+        
+        if (filters.start_date) {
+          const sessionDate = new Date(s.start_time);
+          const startDate = new Date(filters.start_date);
+          if (sessionDate < startDate) return false;
+        }
+        
+        if (filters.end_date) {
+          const sessionDate = new Date(s.start_time);
+          const endDate = new Date(filters.end_date);
+          if (sessionDate > endDate) return false;
+        }
+        
+        return true;
+      })
+      .map(session => ({
+        ...session,
+        schedule,
+        courseModule: courseModules.find(m => m.id === schedule.course_module_id),
+        availability: {
+          available_slots: session.capacity - session.reserved_count,
+          is_full: session.reserved_count >= session.capacity,
+          can_book: session.reserved_count < session.capacity
+        }
+      }))
+  );
+
+  return allSessions.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
+};
+
+// 獲取用戶推薦的課程（基於歷史預約）
+export const getRecommendedCourses = (userId: number, limit: number = 5): CourseSchedule[] => {
+  const userBookings = bookings.filter(b => b.user_id === userId);
+  const bookedScheduleIds = new Set<number>();
+
+  // 收集用戶已預約過的課程排程
+  userBookings.forEach(booking => {
+    const session = courseSessions.find(s => s.id === booking.course_session_id);
+    if (session) {
+      bookedScheduleIds.add(session.course_schedule_id);
+    }
+  });
+
+  // 簡單的推薦邏輯：推薦相似的課程
+  const availableSchedules = courseSchedules.filter(schedule => 
+    schedule.status === 'PUBLISHED' &&
+    !bookedScheduleIds.has(schedule.id) &&
+    schedule.current_students < schedule.max_students
+  );
+
+  // 按照受歡迎程度排序（以當前學生數為指標）
+  return availableSchedules
+    .sort((a, b) => b.current_students - a.current_students)
+    .slice(0, limit);
+};
+
+// 向下相容的預設匯出
+export default {
+  canUserBookSession,
+  bookCourseSession,
+  cancelCourseBooking,
+  batchBookSessions,
+  getUserBookingHistory,
+  getCourseBookingStats,
+  checkSessionConflicts,
+  getRecommendedCourses
+};

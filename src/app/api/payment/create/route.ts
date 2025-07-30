@@ -76,8 +76,8 @@ export async function POST(request: NextRequest) {
               created_at: new Date().toISOString(),
               member_card_id: plan.member_card_id,
               duration_in_days: plan.duration_days,
-              start_time: null,  // 等待用戶啟用
-              expire_time: null,
+              start_time: undefined,  // 等待用戶啟用
+              expire_time: undefined,
               activated: false,
               activate_expire_time: new Date(Date.now() + activateDeadlineDays * 24 * 60 * 60 * 1000).toISOString(),
               user_id: updatedOrder.user_id || 999, // 暫時用戶ID，實際應用中需要真實用戶ID

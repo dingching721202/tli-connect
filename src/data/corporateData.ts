@@ -1,324 +1,223 @@
-export interface CorporateClient {
-  id: string;
-  companyName: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  industry: string;
-  employeeCount: string;
-  contractStartDate: string;
-  contractEndDate: string;
-  packageType: string;
-  monthlyFee: number;
-  status: 'active' | 'inactive' | 'suspended';
-  createdAt: string;
-  updatedAt: string;
-}
+import type { CorporateClient, CorporateEmployee, CorporateSubscription } from '@/types/business';
 
-export interface Company {
-  id: string | number;
-  name: string;
-  contactName: string;
-  contactEmail: string;
-  contactPhone: string;
-  address?: string;
-  industry: string;
-  employeeCount: string;
-  status: 'active' | 'inactive' | 'expired';
-  createdAt: string;
-  membershipPlans?: MembershipPlan[];
-  startDate?: string;
-  endDate?: string;
-}
+// ========================================
+// 企業資料 - MECE架構
+// 管理企業客戶、員工和訂閱資料
+// ========================================
 
-export interface MembershipPlan {
-  id: string | number;
-  name: string;
-  price?: number;
-  duration: number;
-  type?: 'individual' | 'corporate' | 'addon' | 'enterprise' | 'primary';
-  features?: string[];
-  published?: boolean;
-  category?: string;
-  popular?: boolean;
-  status?: 'draft' | 'published' | 'active' | 'inactive' | 'expiring_soon';
-  durationType?: 'annual' | 'monthly' | 'quarterly';
-  purchaseDate?: string;
-  startDate?: string;
-  endDate?: string;
-  slots?: number;
-  basePrice?: number;
-  discountRate?: number;
-  finalPrice?: number;
-}
-
-export interface CorporatePackage {
-  id: string;
-  name: string;
-  description: string;
-  maxUsers: number;
-  monthlyPricePerUser: number;
-  features: string[];
-  isActive: boolean;
-}
-
-// Mock corporate clients data
-const corporateClients: CorporateClient[] = [
+export const corporateClients: CorporateClient[] = [
   {
-    id: 'corp_001',
-    companyName: '台積電股份有限公司',
-    contactName: '張經理',
-    contactEmail: 'manager.zhang@tsmc.com',
-    contactPhone: '+886-3-568-2301',
+    id: 1,
+    company_name: 'ABC科技股份有限公司',
+    registration_number: '12345678',
     industry: '科技業',
-    employeeCount: '1000人以上',
-    contractStartDate: '2024-01-01',
-    contractEndDate: '2024-12-31',
-    packageType: 'Enterprise',
-    monthlyFee: 150000,
-    status: 'active',
-    createdAt: '2024-01-01T00:00:00Z',
-    updatedAt: '2024-07-20T00:00:00Z'
+    company_size: '100-500人',
+    address: '台北市信義區信義路五段7號',
+    primary_contact: {
+      name: '張經理',
+      position: '人力資源經理',
+      email: 'hr.manager@abc-tech.com',
+      phone: '02-1234-5678',
+      department: '人力資源部'
+    },
+    billing_contact: {
+      name: '財務部',
+      position: '財務經理',
+      email: 'finance@abc-tech.com',
+      phone: '02-1234-5679',
+      department: '財務部'
+    },
+    contract_terms: {
+      start_date: '2024-01-01',
+      end_date: '2024-12-31',
+      auto_renewal: true,
+      payment_terms: 'NET_30',
+      discount_rate: 15,
+      minimum_commitment: 50
+    },
+    status: 'ACTIVE',
+    created_at: '2024-01-01T00:00:00+00:00',
+    updated_at: '2024-01-15T00:00:00+00:00'
   },
   {
-    id: 'corp_002',
-    companyName: '富邦金融控股股份有限公司',
-    contactName: '李主管',
-    contactEmail: 'supervisor.li@fubon.com',
-    contactPhone: '+886-2-8771-6699',
-    industry: '金融服務',
-    employeeCount: '500-1000人',
-    contractStartDate: '2024-03-01',
-    contractEndDate: '2025-02-28',
-    packageType: 'Professional',
-    monthlyFee: 80000,
-    status: 'active',
-    createdAt: '2024-03-01T00:00:00Z',
-    updatedAt: '2024-07-20T00:00:00Z'
+    id: 2,
+    company_name: '123金融服務公司',
+    registration_number: '87654321',
+    industry: '金融業',
+    company_size: '500-1000人',
+    address: '台北市中正區重慶南路一段122號',
+    primary_contact: {
+      name: '王協理',
+      position: '培訓協理',
+      email: 'training@123finance.com',
+      phone: '02-5678-1234'
+    },
+    contract_terms: {
+      start_date: '2024-03-01',
+      end_date: '2025-02-28',
+      auto_renewal: false,
+      payment_terms: 'NET_60',
+      discount_rate: 20,
+      minimum_commitment: 100
+    },
+    status: 'ACTIVE',
+    created_at: '2024-03-01T00:00:00+00:00',
+    updated_at: '2024-03-15T00:00:00+00:00'
   }
 ];
 
-// Mock corporate packages data
-const corporatePackages: CorporatePackage[] = [
+export const corporateSubscriptions: CorporateSubscription[] = [
   {
-    id: 'pkg_basic',
-    name: '基礎企業方案',
-    description: '適合小型企業的基礎培訓方案',
-    maxUsers: 50,
-    monthlyPricePerUser: 500,
-    features: [
-      '基礎課程內容',
-      '學習進度追蹤',
-      '基本報表功能',
-      'Email 客服支援'
-    ],
-    isActive: true
+    id: 1,
+    corporate_client_id: 1,
+    plan_name: '企業標準方案',
+    employee_limit: 100,
+    course_access: [1, 2, 3, 4, 5],
+    monthly_fee: 25000,
+    setup_fee: 10000,
+    status: 'ACTIVE',
+    billing_cycle: 'MONTHLY',
+    next_billing_date: '2024-02-01',
+    created_at: '2024-01-01T00:00:00+00:00',
+    updated_at: '2024-01-15T00:00:00+00:00'
   },
   {
-    id: 'pkg_professional',
-    name: '專業企業方案',
-    description: '適合中型企業的專業培訓方案',
-    maxUsers: 200,
-    monthlyPricePerUser: 400,
-    features: [
-      '完整課程內容',
-      '詳細學習分析',
-      '客製化報表',
-      '專屬客服經理',
-      '線上直播課程'
-    ],
-    isActive: true
-  },
-  {
-    id: 'pkg_enterprise',
-    name: '企業旗艦方案',
-    description: '適合大型企業的全方位培訓方案',
-    maxUsers: -1, // unlimited
-    monthlyPricePerUser: 300,
-    features: [
-      '全部課程內容',
-      'AI 學習推薦',
-      '高級分析儀表板',
-      '24小時專屬支援',
-      '客製化課程開發',
-      'API 整合服務',
-      '多語言支援'
-    ],
-    isActive: true
+    id: 2,
+    corporate_client_id: 2,
+    plan_name: '企業進階方案',
+    employee_limit: 200,
+    course_access: [1, 2, 3, 4, 5, 6],
+    monthly_fee: 45000,
+    setup_fee: 15000,
+    status: 'ACTIVE',
+    billing_cycle: 'QUARTERLY',
+    next_billing_date: '2024-06-01',
+    created_at: '2024-03-01T00:00:00+00:00',
+    updated_at: '2024-03-15T00:00:00+00:00'
   }
 ];
 
-// Get all corporate clients
-export function getAllCorporateClients(): CorporateClient[] {
-  return corporateClients;
-}
-
-// Get corporate client by ID
-export function getCorporateClientById(id: string): CorporateClient | null {
-  return corporateClients.find(client => client.id === id) || null;
-}
-
-// Get active corporate clients
-export function getActiveCorporateClients(): CorporateClient[] {
-  return corporateClients.filter(client => client.status === 'active');
-}
-
-// Get corporate clients by industry
-export function getCorporateClientsByIndustry(industry: string): CorporateClient[] {
-  return corporateClients.filter(client => client.industry === industry);
-}
-
-// Get all corporate packages
-export function getAllCorporatePackages(): CorporatePackage[] {
-  return corporatePackages.filter(pkg => pkg.isActive);
-}
-
-// Get corporate package by ID
-export function getCorporatePackageById(id: string): CorporatePackage | null {
-  return corporatePackages.find(pkg => pkg.id === id) || null;
-}
-
-// Create a new corporate client
-export function createCorporateClient(clientData: Omit<CorporateClient, 'id' | 'createdAt' | 'updatedAt'>): CorporateClient {
-  const newClient: CorporateClient = {
-    ...clientData,
-    id: `corp_${Date.now()}`,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
-  
-  corporateClients.push(newClient);
-  return newClient;
-}
-
-// Update corporate client
-export function updateCorporateClient(id: string, updates: Partial<CorporateClient>): CorporateClient | null {
-  const clientIndex = corporateClients.findIndex(client => client.id === id);
-  
-  if (clientIndex === -1) {
-    return null;
+export const corporateEmployees: CorporateEmployee[] = [
+  {
+    id: 1,
+    user_id: 5,
+    corporate_client_id: 1,
+    employee_id: 'EMP001',
+    department: '業務部',
+    position: '業務專員',
+    manager_email: 'manager@abc-tech.com',
+    enrollment_date: '2024-01-15',
+    status: 'ACTIVE',
+    created_at: '2024-01-15T00:00:00+00:00',
+    updated_at: '2024-01-15T00:00:00+00:00'
+  },
+  {
+    id: 2,
+    user_id: 6,
+    corporate_client_id: 1,
+    employee_id: 'EMP002',
+    department: '研發部',
+    position: '軟體工程師',
+    manager_email: 'rd.manager@abc-tech.com',
+    enrollment_date: '2024-01-20',
+    status: 'ACTIVE',
+    created_at: '2024-01-20T00:00:00+00:00',
+    updated_at: '2024-01-20T00:00:00+00:00'
   }
-  
-  corporateClients[clientIndex] = {
-    ...corporateClients[clientIndex],
-    ...updates,
-    updatedAt: new Date().toISOString()
-  };
-  
-  return corporateClients[clientIndex];
-}
+];
 
-// Delete corporate client
-export function deleteCorporateClient(id: string): boolean {
-  const clientIndex = corporateClients.findIndex(client => client.id === id);
-  
-  if (clientIndex === -1) {
-    return false;
-  }
-  
-  corporateClients.splice(clientIndex, 1);
-  return true;
-}
+// ========================================
+// 輔助函數
+// ========================================
 
-// Calculate total monthly revenue
-export function calculateTotalMonthlyRevenue(): number {
-  return corporateClients
-    .filter(client => client.status === 'active')
-    .reduce((total, client) => total + client.monthlyFee, 0);
-}
+// 根據ID獲取企業客戶
+export const getCorporateClientById = (id: number): CorporateClient | undefined => {
+  return corporateClients.find(client => client.id === id);
+};
 
-// Get corporate statistics
-export function getCorporateStatistics() {
-  const totalClients = corporateClients.length;
-  const activeClients = corporateClients.filter(client => client.status === 'active').length;
-  const totalRevenue = calculateTotalMonthlyRevenue();
-  
-  // Industry breakdown
-  const industryBreakdown = corporateClients.reduce((acc, client) => {
-    acc[client.industry] = (acc[client.industry] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
-  
-  return {
-    totalClients,
-    activeClients,
-    inactiveClients: totalClients - activeClients,
-    totalRevenue,
-    industryBreakdown
-  };
-}
+// 根據狀態獲取企業客戶
+export const getCorporateClientsByStatus = (status: string): CorporateClient[] => {
+  return corporateClients.filter(client => client.status === status);
+};
 
-// Additional functions required by MemberManagement component
-export function getCompanies(): Company[] {
-  return corporateClients.map(client => ({
-    id: client.id,
-    name: client.companyName,
-    contactName: client.contactName,
-    contactEmail: client.contactEmail,
-    contactPhone: client.contactPhone,
-    address: '', // Default value since not in CorporateClient
-    industry: client.industry,
-    employeeCount: client.employeeCount,
-    status: client.status === 'active' ? 'active' : client.status === 'suspended' ? 'inactive' : 'inactive',
-    createdAt: client.createdAt,
-    membershipPlans: [] // 添加空數組作為預設值
-  }));
-}
+// 根據企業ID獲取訂閱
+export const getSubscriptionByClientId = (clientId: number): CorporateSubscription | undefined => {
+  return corporateSubscriptions.find(sub => sub.corporate_client_id === clientId);
+};
 
-export function getCompanyStatistics() {
-  return getCorporateStatistics();
-}
+// 根據企業ID獲取員工
+export const getEmployeesByClientId = (clientId: number): CorporateEmployee[] => {
+  return corporateEmployees.filter(emp => emp.corporate_client_id === clientId);
+};
 
-export function getCorporateUsersByCompany(companyId: string) {
-  // Mock data - in real app would fetch from database
-  console.log(`Getting users for company ID: ${companyId}`);
-  return [];
-}
+// 根據用戶ID獲取企業員工資料
+export const getCorporateEmployeeByUserId = (userId: number): CorporateEmployee | undefined => {
+  return corporateEmployees.find(emp => emp.user_id === userId);
+};
 
-export function getCorporateUsersByPlan() {
-  // Mock data - in real app would fetch from database
-  return [];
-}
-
-export function addCompany(companyData: Omit<Company, 'id' | 'createdAt'>): Company {
-  const newCompany: Company = {
-    ...companyData,
-    id: `company_${Date.now()}`,
-    createdAt: new Date().toISOString()
-  };
-  
-  // Would save to database in real app
-  return newCompany;
-}
-
-export function updateCompany(id: string, updates: Partial<Company>): Company | null {
-  // Mock implementation - would update in database
-  const company = getCompanies().find(c => c.id === id);
-  if (!company) return null;
-  
-  return {
-    ...company,
-    ...updates
-  };
-}
-
-export function deleteCompany(companyId: string): boolean {
-  // Mock implementation - would delete from database
-  console.log(`Deleting company with ID: ${companyId}`);
-  return true;
-}
-
-// Additional function for corporate management
-export function calculateMembershipPeriod(startDate: string, durationMonths: number): { endDate: string; daysRemaining: number } {
+// 計算會員期間函數
+export const calculateMembershipPeriod = (startDate: string, endDate: string) => {
   const start = new Date(startDate);
-  const end = new Date(start);
-  end.setMonth(end.getMonth() + durationMonths);
-  
-  const now = new Date();
-  const daysRemaining = Math.max(0, Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+  const end = new Date(endDate);
+  const diffTime = Math.abs(end.getTime() - start.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  const diffMonths = Math.ceil(diffDays / 30);
   
   return {
-    endDate: end.toISOString().split('T')[0],
-    daysRemaining
+    days: diffDays,
+    months: diffMonths,
+    weeks: Math.ceil(diffDays / 7)
   };
-}
+};
+
+// 額外的輔助函數
+export const getCompanies = (): CorporateClient[] => {
+  return corporateClients;
+};
+
+export const addCompany = (company: Omit<CorporateClient, 'id' | 'created_at' | 'updated_at'>): CorporateClient => {
+  const newCompany: CorporateClient = {
+    ...company,
+    id: Math.max(...corporateClients.map(c => c.id), 0) + 1,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
+  corporateClients.push(newCompany);
+  return newCompany;
+};
+
+export const updateCompany = (companyId: number, updates: Partial<CorporateClient>): boolean => {
+  const companyIndex = corporateClients.findIndex(c => c.id === companyId);
+  if (companyIndex === -1) return false;
+  
+  corporateClients[companyIndex] = {
+    ...corporateClients[companyIndex],
+    ...updates,
+    updated_at: new Date().toISOString()
+  };
+  return true;
+};
+
+export const deleteCompany = (companyId: number): boolean => {
+  const companyIndex = corporateClients.findIndex(c => c.id === companyId);
+  if (companyIndex === -1) return false;
+  
+  corporateClients.splice(companyIndex, 1);
+  return true;
+};
+
+export const getCompanyStatistics = () => {
+  return {
+    total: corporateClients.length,
+    active: corporateClients.filter(c => c.status === 'ACTIVE').length,
+    inactive: corporateClients.filter(c => c.status === 'INACTIVE').length,
+    pending: corporateClients.filter(c => c.status === 'PENDING').length
+  };
+};
+
+export const getCorporateUsersByCompany = (companyId: number): CorporateEmployee[] => {
+  return getEmployeesByClientId(companyId);
+};
+
+// 向下相容的預設匯出
+export { corporateClients as default };
