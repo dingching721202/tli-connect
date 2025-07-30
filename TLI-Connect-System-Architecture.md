@@ -94,13 +94,14 @@
 ## 一、功能模組總覽（依 APP 區分）
 
 ### 📱 APP 名稱：Student Portal
+- 首頁功能
 - 用戶註冊與登入
 - 學員Dashboard
 - 會員方案管理
 - 課程瀏覽與預約
 - 我的學習記錄
 - 個人資料管理
-- 推薦系統
+- 推薦代理系統
 - 聯繫我們表單
 
 ### 👨‍🏫 APP 名稱：Teacher Portal
@@ -109,35 +110,93 @@
 - 請假申請系統
 - 課程準備工具
 - 學生互動記錄
+- 推薦代理系統
 
 ### 🔧 APP 名稱：Admin Portal
 - 用戶管理系統
 - 課程內容管理
 - 課程排程管理
-- 課務管理系統（管理員版）
+- 預約管理
+- 課務管理系統（超級管理員權限）
 - 教師資源管理
 - 訂單與付款管理
 - 系統設定管理
 - 數據分析報表
 - 案件管理系統
+- 推薦代理管理
 
 ### 📋 APP 名稱：Staff Portal
 - 課務管理系統
 - 學員管理
 - 用戶資料編輯
-- 課程時段管理
 - 預約管理
 - 基本報表查看
+- 推薦代理系統
 
 ### 🏢 APP 名稱：Corporate Portal
-- 企業客戶管理
-- 批量購買方案
+- 企業客戶管理（包含方案展示、購買、席次管理）
 - 員工學習追蹤
 - 企業專案管理
+
+### 🤝 APP 名稱：Agent Portal
+- 代理Dashboard
+- 推薦代理系統
+- 代理業績追蹤
+- 客戶管理系統
+- 推廣素材庫
+- 培訓資源中心
 
 ---
 
 ## 二、各功能模組細節
+
+### 📌 功能名稱：系統首頁
+**所屬 APP**：Student Portal  
+**功能描述**：提供系統首頁展示，包含課程介紹、最新消息、快速導航等功能
+
+#### User Story
+| id | 標題 | 內容 | Acceptance Criteria |
+|---|---|---|---|
+| US-HOME-001 | 瀏覽首頁內容 | 作為訪客，我希望能在首頁看到課程介紹和最新消息，以便了解系統提供的服務 | 顯示課程分類和特色介紹；展示最新消息和公告；提供快速註冊和登入入口 |
+| US-HOME-002 | 快速導航 | 作為用戶，我希望能從首頁快速導航到各個功能模組，以便提高使用效率 | 提供清晰的功能導航選單；根據用戶角色顯示對應功能入口；支援響應式設計 |
+| US-HOME-003 | 課程推薦展示 | 作為訪客，我希望能在首頁看到推薦課程，以便快速了解熱門課程 | 展示熱門課程列表；顯示課程基本資訊和價格；提供課程詳情連結 |
+
+#### 資料 Schema (TypeScript Interface)
+```typescript
+interface HomePageContent {
+  id: string;                    // UUID
+  section_type: 'BANNER' | 'NEWS' | 'COURSE_HIGHLIGHT' | 'FEATURE'; // 區塊類型
+  title: string;                 // 標題
+  content: string;              // 內容
+  image_url?: string;           // 圖片URL
+  link_url?: string;            // 連結URL
+  display_order: number;        // 顯示順序
+  is_active: boolean;           // 是否啟用
+  created_at: string;           // ISO 8601 格式
+  updated_at: string;           // ISO 8601 格式
+}
+
+interface NewsAnnouncement {
+  id: string;                   // UUID
+  title: string;                // 公告標題
+  content: string;              // 公告內容
+  category: 'SYSTEM' | 'COURSE' | 'EVENT' | 'MAINTENANCE'; // 公告類別
+  priority: 'HIGH' | 'MEDIUM' | 'LOW'; // 優先級
+  is_published: boolean;        // 是否發布
+  publish_date: string;         // 發布日期 ISO 8601
+  expire_date?: string;         // 過期日期 ISO 8601
+  created_at: string;           // ISO 8601 格式
+  updated_at: string;           // ISO 8601 格式
+}
+```
+
+#### API 設計
+- `GET /api/v1/home/content`：獲取首頁內容
+- `GET /api/v1/home/news`：獲取最新消息
+- `GET /api/v1/home/featured-courses`：獲取推薦課程
+- `POST /api/v1/admin/home/content`：管理首頁內容（管理員）
+- `PUT /api/v1/admin/home/content/:id`：更新首頁內容（管理員）
+- `DELETE /api/v1/admin/home/content/:id`：刪除首頁內容（管理員）
 
 ### 📌 功能名稱：用戶註冊與登入
 **所屬 APP**：Student Portal  
@@ -158,7 +217,7 @@ interface User {
   name: string;                  // 用戶姓名
   phone: string;                 // 電話號碼
   password_hash: string;         // 加密密碼
-  role: 'STUDENT' | 'TEACHER' | 'ADMIN' | 'STAFF' | 'CORPORATE'; // 用戶角色
+  role: 'STUDENT' | 'TEACHER' | 'ADMIN' | 'STAFF' | 'CORPORATE' | 'AGENT'; // 用戶角色
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';         // 帳號狀態
   email_verified: boolean;       // Email驗證狀態
   created_at: string;           // ISO 8601 格式
@@ -187,36 +246,34 @@ interface UserSession {
 
 ---
 
-### 📌 功能名稱：會員方案管理
-**所屬 APP**：Student Portal  
-**功能描述**：提供會員方案瀏覽、購買、啟用等完整會員制度功能
+### 📌 功能名稱：會員卡管理
+**所屬 APP**：Student Portal, Admin Portal  
+**功能描述**：專注於會員卡生命週期管理，包括卡片啟用、狀態追蹤、到期提醒、類型配置等核心營運功能，不涉及商品銷售和定價策略
 
 #### User Story
 | id | 標題 | 內容 | Acceptance Criteria |
 |---|---|---|---|
-| US-MEMBER-001 | 學員瀏覽並挑選會員方案 | 作為學員，我希望查看所有上架中的MemberCardPlan(季/年)，以便我能決定要買哪一種卡 | 呼叫/member-card-plans僅回傳status=PUBLISHED之方案；每筆資料欄位包含：plan_id, title, type(SEASON\|YEAR), duration_days, price；UI需顯示不同版本會員方案的標籤，以利辨識 |
-| US-MEMBER-002 | 購買會員卡 | 作為學員，我希望線上付款購買指定會員方案，以便付款完成即可擁有會員資格 | 送出/orders時需帶plan_id，系統建立Order(status=CREATED)；第三方金流成功→Order.status→COMPLETED；付款失敗或逾時→Order.status→CANCELED，不得產生會員卡 |
-| US-MEMBER-003 | 啟用會員卡 | 作為學員，我希望對已購買的會員卡設定生效日期或立即啟用，以便期限正式開始倒數，並可進行課程預約 | 學員只能對狀態PURCHASED的卡呼叫/member-cards/{id}/activate；若該學員已有ACTIVE會員卡→回傳422 ACTIVE_CARD_EXISTS；啟用成功：status→ACTIVATE, activate_at=today, expire_at=activate_at+duration_days；Dashboard應即時顯示卡片到期日 |
+| US-MEMBER-CARD-001 | 會員卡啟用 | 作為學員，我希望對已購買的會員卡設定生效日期或立即啟用，以便期限正式開始倒數，並可進行課程預約 | 學員只能對狀態PURCHASED的卡呼叫/member-cards/{id}/activate；若該學員已有ACTIVE會員卡→回傳422 ACTIVE_CARD_EXISTS；啟用成功：status→ACTIVATE, activate_at=today, expire_at=activate_at+duration_days；Dashboard應即時顯示卡片到期日；購買後30天內可啟用；同時只能有一張啟用的會員卡 |
+| US-MEMBER-CARD-002 | 會員卡狀態管理 | 作為學員，我希望能夠查看我的會員卡狀態，以便了解會員權益情況 | 顯示會員卡狀態（已購買/已啟用/已過期）；顯示有效期限；顯示剩餘天數；提供續費提醒 |
+| US-MEMBER-CARD-003 | 會員卡期限管理 | 作為學員，我希望能夠管理會員卡的自動續約設定，以便控制續費行為 | 可設定/取消自動續約；續約前7天發送提醒；支援暫停/恢復會員卡；提供續約歷史記錄 |
+| US-MEMBER-CARD-004 | CRUD會員卡類型管理 | 作為管理員，我希望能夠完整管理會員卡類型，以便為不同等級的會員提供差異化的課程權益 | 建立/查看/編輯/刪除會員卡類型；設定會員卡名稱和描述；選擇可存取的課程範圍；設定會員卡權益和限制；管理草稿/發布狀態；查看會員卡使用統計 |
+| US-MEMBER-CARD-005 | 會員卡數據統計 | 作為管理員，我希望能夠查看會員卡使用統計，以便分析會員活躍度 | 會員卡啟用率分析；會員留存率追蹤；課程使用頻率統計；會員卡到期預警；會員行為分析報表 |
 
-#### 資料 Schema (TypeScript Interface)
+### 📌 功能名稱：會員方案管理
+**所屬 APP**：Student Portal, Admin Portal  
+**功能描述**：專注於會員方案商業模式管理，包括方案展示、定價策略、促銷活動、購買流程、銷售統計等商務功能，不涉及會員卡營運管理
+
+#### User Story
+| id | 標題 | 內容 | Acceptance Criteria |
+|---|---|---|---|
+| US-MEMBER-PLAN-001 | 瀏覽會員方案 | 作為學員，我希望查看所有上架中的MemberCardPlan(季/年)，以便我能決定要買哪一種卡 | 呼叫/member-card-plans僅回傳status=PUBLISHED之方案；每筆資料欄位包含：plan_id, title, type(SEASON\|YEAR), duration_days, price；UI需顯示不同版本會員方案的標籤，以利辨識 |
+| US-MEMBER-PLAN-002 | 購買會員方案 | 作為學員，我希望線上付款購買指定會員方案，以便付款完成即可擁有會員資格 | 送出/orders時需帶plan_id，系統建立Order(status=CREATED)；第三方金流成功→Order.status→COMPLETED；付款失敗或逾時→Order.status→CANCELED，不得產生會員卡 |
+| US-MEMBER-PLAN-003 | CRUD會員方案管理 | 作為管理員，我希望能夠完整管理會員方案，以便提供多樣化的會員服務 | 建立/查看/編輯/刪除會員方案；選擇包含的會員卡類型；設定方案價格、期限和特色功能；區分個人/企業方案類型；管理草稿/發布狀態 |
+| US-MEMBER-PLAN-004 | 會員方案定價管理 | 作為管理員，我希望能夠管理方案定價策略，以便實施促銷和價格調整 | 設定原價和促銷價；配置限時優惠；支援推薦代碼折扣；價格變更歷史記錄；批量價格調整功能 |
+| US-MEMBER-PLAN-005 | 會員方案銷售統計 | 作為管理員，我希望能夠查看會員方案銷售統計，以便分析商品表現 | 方案銷售統計；收益分析報表；個人/企業方案分析；熱門方案排行；轉換率分析 |
+
+#### 會員卡管理 - 資料 Schema (TypeScript Interface)
 ```typescript
-interface MemberCardPlan {
-  plan_id: string;              // UUID (renamed from id)
-  title: string;                // 方案名稱
-  description: string;          // 方案描述
-  type: 'SEASON' | 'YEAR';      // 期間類型 (renamed from duration_type)
-  duration_days: number;        // 有效天數
-  price: number;               // 售價 (TWD) (unified from original_price/sale_price)
-  original_price?: number;      // 原價 (TWD) (optional for display)
-  features: string[];          // 功能特色列表
-  course_access: string[];     // 可存取課程ID列表
-  is_popular: boolean;         // 是否熱門方案
-  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'; // 發布狀態 (renamed from is_published)
-  version_tag?: string;        // 版本標籤，用於UI辨識
-  created_at: string;          // ISO 8601 格式
-  updated_at: string;          // ISO 8601 格式
-}
-
 interface MemberCard {
   id: string;                  // UUID
   user_id: string;            // 用戶ID
@@ -228,18 +285,142 @@ interface MemberCard {
   activate_deadline: string;   // 啟用截止日 ISO 8601
   duration_days: number;      // 有效天數（從plan複製過來）
   auto_renew: boolean;        // 是否自動續約
+  renewal_history: RenewalRecord[]; // 續約歷史
+  suspension_history: SuspensionRecord[]; // 暫停歷史
   created_at: string;         // ISO 8601 格式
   updated_at: string;         // ISO 8601 格式
 }
+
+interface MemberCardType {
+  id: string;                  // UUID
+  name: string;               // 會員卡類型名稱
+  description: string;        // 描述
+  course_access: string[];    // 可存取課程ID列表
+  benefits: string[];         // 會員權益列表
+  restrictions: string[];     // 限制條件
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'; // 發布狀態
+  usage_stats: CardUsageStats; // 使用統計
+  created_at: string;         // ISO 8601 格式
+  updated_at: string;         // ISO 8601 格式
+}
+
+interface RenewalRecord {
+  id: string;                 // UUID
+  member_card_id: string;     // 會員卡ID
+  old_expire_at: string;      // 原到期日
+  new_expire_at: string;      // 新到期日
+  renewal_type: 'AUTO' | 'MANUAL'; // 續約類型
+  payment_amount: number;     // 付款金額
+  created_at: string;         // ISO 8601 格式
+}
+
+interface SuspensionRecord {
+  id: string;                 // UUID
+  member_card_id: string;     // 會員卡ID
+  action: 'SUSPEND' | 'RESUME'; // 操作類型
+  reason: string;             // 原因
+  admin_id?: string;          // 操作管理員ID
+  created_at: string;         // ISO 8601 格式
+}
+
+interface CardUsageStats {
+  total_issued: number;       // 總發卡數
+  active_count: number;       // 啟用數量
+  expired_count: number;      // 過期數量
+  activation_rate: number;    // 啟用率
+  retention_rate: number;     // 留存率
+  avg_usage_frequency: number; // 平均使用頻率
+}
 ```
 
-#### API 設計
-- `GET /api/v1/member-card-plans`：取得所有已發布方案（僅回傳status=PUBLISHED）
-- `GET /api/v1/member-card-plans/:id`：取得特定方案詳情
-- `POST /api/v1/orders`：建立訂單（需帶plan_id）
+#### 會員卡管理 - API 設計
+**會員卡操作**
 - `GET /api/v1/member-cards/my`：取得我的會員卡
 - `POST /api/v1/member-cards/:id/activate`：啟用會員卡
 - `PUT /api/v1/member-cards/:id/auto-renew`：設定自動續約
+- `POST /api/v1/member-cards/:id/suspend`：暫停會員卡
+- `POST /api/v1/member-cards/:id/resume`：恢復會員卡
+- `GET /api/v1/member-cards/:id/renewal-history`：取得續約歷史
+
+**管理員會員卡管理**
+- `GET /api/v1/admin/member-card-types`：取得會員卡類型列表
+- `POST /api/v1/admin/member-card-types`：建立會員卡類型
+- `PUT /api/v1/admin/member-card-types/:id`：更新會員卡類型
+- `DELETE /api/v1/admin/member-card-types/:id`：刪除會員卡類型
+- `GET /api/v1/admin/member-cards/statistics`：取得會員卡統計
+- `GET /api/v1/admin/member-cards/expiring`：取得即將到期的會員卡
+
+#### 會員方案管理 - 資料 Schema (TypeScript Interface)
+```typescript
+interface MemberCardPlan {
+  plan_id: string;              // UUID
+  title: string;                // 方案名稱
+  description: string;          // 方案描述
+  type: 'SEASON' | 'YEAR';      // 期間類型
+  duration_days: number;        // 有效天數
+  price: number;               // 當前售價 (TWD)
+  original_price: number;       // 原價 (TWD)
+  discount_percentage?: number;  // 折扣百分比
+  features: string[];          // 功能特色列表
+  member_card_type_id: string; // 關聯的會員卡類型ID
+  is_popular: boolean;         // 是否熱門方案
+  is_individual: boolean;      // 是否個人方案
+  is_corporate: boolean;       // 是否企業方案
+  status: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED'; // 發布狀態
+  version_tag?: string;        // 版本標籤，用於UI辨識
+  pricing_history: PricingRecord[]; // 價格變更歷史
+  sales_stats: PlanSalesStats; // 銷售統計
+  referral_enabled: boolean;   // 是否啟用推薦功能
+  referral_discount?: number;  // 推薦折扣金額
+  created_at: string;          // ISO 8601 格式
+  updated_at: string;          // ISO 8601 格式
+}
+
+interface PricingRecord {
+  id: string;                  // UUID
+  plan_id: string;            // 方案ID
+  old_price: number;          // 舊價格
+  new_price: number;          // 新價格
+  change_reason: string;      // 變更原因
+  effective_date: string;     // 生效日期 ISO 8601
+  admin_id: string;           // 操作管理員ID
+  created_at: string;         // ISO 8601 格式
+}
+
+interface PlanSalesStats {
+  total_sales: number;        // 總銷售數量
+  total_revenue: number;      // 總收益
+  conversion_rate: number;    // 轉換率
+  avg_sale_price: number;     // 平均售價
+  monthly_sales: MonthlySales[]; // 月度銷售
+  popular_rank: number;       // 熱門排行
+}
+
+interface MonthlySales {
+  year_month: string;         // YYYY-MM 格式
+  sales_count: number;        // 銷售數量
+  revenue: number;           // 收益
+}
+```
+
+#### 會員方案管理 - API 設計
+**方案瀏覽與購買**
+- `GET /api/v1/member-card-plans`：取得所有已發布方案（僅回傳status=PUBLISHED）
+- `GET /api/v1/member-card-plans/:id`：取得特定方案詳情
+- `POST /api/v1/orders`：建立訂單（需帶plan_id）
+- `GET /api/v1/member-card-plans/popular`：取得熱門方案
+- `GET /api/v1/member-card-plans/individual`：取得個人方案
+- `GET /api/v1/member-card-plans/corporate`：取得企業方案
+
+**管理員方案管理**
+- `GET /api/v1/admin/member-card-plans`：取得所有方案（包含草稿）
+- `POST /api/v1/admin/member-card-plans`：建立新方案
+- `PUT /api/v1/admin/member-card-plans/:id`：更新方案
+- `DELETE /api/v1/admin/member-card-plans/:id`：刪除方案
+- `PUT /api/v1/admin/member-card-plans/:id/status`：更新方案狀態
+- `PUT /api/v1/admin/member-card-plans/:id/pricing`：更新方案定價
+- `GET /api/v1/admin/member-card-plans/sales-statistics`：取得銷售統計
+- `POST /api/v1/admin/member-card-plans/batch-pricing`：批量調整價格
 
 ---
 
@@ -250,14 +431,14 @@ interface MemberCard {
 #### User Story
 | id | 標題 | 內容 | Acceptance Criteria |
 |---|---|---|---|
-| US-COURSE-001 | 查看課程日曆 | 作為學員，我希望於日曆檢視所有可預約課程時段，以便能快速挑選仍有名額的課程 | 僅列出Timeslot.status=CREATED且reserved_count<capacity之時段；額滿(reserved_count≥capacity)之時段以灰色呈現並Disable點擊；距離開課<24h的時段，無論是否額滿，都顯示為鎖定狀態並不可點擊 |
-| US-COURSE-002 | 一次預約多堂課程 | 作為已啟用會員卡的學員，我希望批量選取多個時段並一次送出預約，以便即便部分時段額滿，我仍能先搶到剩餘可用時段，並立刻知道哪些沒搶到 | /bookings/batch接收timeslot_ids[]；逐筆驗證：各時段start_time≥NOW+24h，各時段Timeslot.status=CREATED且reserved_count<capacity，學員擁有訂閱會員身份；可預約成功的時段→建立Booking(status=BOOKED)，並reserved_count+=1；驗證失敗的時段不建立Booking，記錄失敗原因：FULL/WITHIN_24H/MEMBERSHIP_EXPIRED；API回傳success/failed格式；前端彈窗顯示預約結果；日曆同步更新狀態 |
+| US-COURSE-001 | 查看課程日曆 | 作為學員，我希望於日曆檢視所有可預約課程時段，以便能快速挑選仍有名額的課程 | 僅列出CourseSession.status=SCHEDULED且enrolled_count<capacity之時段；額滿(enrolled_count≥capacity)之時段以灰色呈現並Disable點擊；距離開課<24h的時段，無論是否額滿，都顯示為鎖定狀態並不可點擊 |
+| US-COURSE-002 | 一次預約多堂課程 | 作為已啟用會員卡的學員，我希望批量選取多個時段並一次送出預約，以便即便部分時段額滿，我仍能先搶到剩餘可用時段，並立刻知道哪些沒搶到 | /bookings/batch接收session_ids[]；逐筆驗證：各時段start_time≥NOW+24h，各時段CourseSession.status=SCHEDULED且enrolled_count<capacity，學員擁有訂閱會員身份；可預約成功的時段→建立Booking(status=BOOKED)，並enrolled_count+=1；驗證失敗的時段不建立Booking，記錄失敗原因：FULL/WITHIN_24H/MEMBERSHIP_EXPIRED；API回傳success/failed格式；前端彈窗顯示預約結果；日曆同步更新狀態 |
 | US-COURSE-003 | 取消單筆預約(>24h) | 作為學員，我希望在開課24h之前取消已預約時段，以便可釋出名額給其他學員 | 僅接受距離開課>24h取消預約；取消成功→課程可容納人數+1，預約紀錄狀態調成取消；開課<24h→前端沒有取消按鈕，api需要回傳403 CANNOT_CANCEL_WITHIN_24H |
 
 #### 資料 Schema (TypeScript Interface)
 ```typescript
-// 課程時段（User Story中稱為Timeslot）
-interface Timeslot {
+// 課程時段 - 統一使用CourseSession
+interface CourseSession {
   id: string;                  // UUID
   schedule_id: string;         // 課程排程ID
   module_id: string;          // 課程模組ID
@@ -268,11 +449,12 @@ interface Timeslot {
   start_time: string;         // 開始時間 HH:mm
   end_time: string;           // 結束時間 HH:mm
   teacher_id: string;         // 教師ID
+  teacher_name: string;       // 教師姓名
   location: string;           // 上課地點
   capacity: number;           // 容量
-  reserved_count: number;     // 已預約人數 (renamed from enrolled_count)
+  enrolled_count: number;     // 已報名人數
   waitlist_count: number;     // 候補人數
-  status: 'CREATED' | 'FULL' | 'CANCELLED' | 'COMPLETED'; // 時段狀態
+  status: 'SCHEDULED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED' | 'POSTPONED'; // 時段狀態
   booking_deadline: string;   // 預約截止時間 ISO 8601
   is_within_24h: boolean;     // 是否距離開課小於24小時（計算欄位）
   special_instructions?: string; // 特殊說明
@@ -284,8 +466,8 @@ interface Timeslot {
 interface Booking {
   id: string;                  // UUID
   user_id: string;            // 用戶ID
-  timeslot_id: string;        // 課程時段ID (renamed from session_id)
-  member_card_id: string;     // 會員卡ID (renamed from membership_id)
+  session_id: string;         // 課程時段ID (統一使用CourseSession)
+  member_card_id: string;     // 會員卡ID
   status: 'BOOKED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW'; // 預約狀態
   booking_source: 'WEB' | 'MOBILE' | 'ADMIN';     // 預約來源
   cancellation_reason?: string;  // 取消原因
@@ -300,12 +482,12 @@ interface Booking {
 // 批量預約回應格式
 interface BatchBookingResponse {
   success: Array<{
-    timeslot_id: string;
+    session_id: string;
     booking_id: string;
   }>;
   failed: Array<{
-    timeslot_id: string;
-    reason: 'FULL' | 'WITHIN_24H' | 'MEMBERSHIP_EXPIRED' | 'INVALID_TIMESLOT';
+    session_id: string;
+    reason: 'FULL' | 'WITHIN_24H' | 'MEMBERSHIP_EXPIRED' | 'INVALID_SESSION';
   }>;
 }
 
@@ -351,12 +533,12 @@ interface CourseReview {
 #### API 設計
 
 **課程日曆相關**
-- `GET /api/v1/timeslots/calendar`：取得日曆格式的課程時段（僅status=CREATED且reserved_count<capacity）
-- `GET /api/v1/timeslots/:id`：取得特定時段詳情
-- `GET /api/v1/timeslots/available`：取得所有可預約時段
+- `GET /api/v1/course-sessions/calendar`：取得日曆格式的課程時段（僅status=SCHEDULED且enrolled_count<capacity）
+- `GET /api/v1/course-sessions/:id`：取得特定時段詳情
+- `GET /api/v1/course-sessions/available`：取得所有可預約時段
 
 **預約管理相關**
-- `POST /api/v1/bookings/batch`：批量預約多個時段（接收timeslot_ids[]）
+- `POST /api/v1/bookings/batch`：批量預約多個時段（接收session_ids[]）
 - `GET /api/v1/bookings/my`：取得我的預約記錄
 - `GET /api/v1/bookings/:id`：取得預約詳情
 - `DELETE /api/v1/bookings/:id`：取消預約（>24h限制）
@@ -374,11 +556,11 @@ interface CourseReview {
 #### User Story
 | id | 標題 | 內容 | Acceptance Criteria |
 |---|---|---|---|
-| US-COURSEMOD-001 | 建立課程模組 | 作為管理員，我希望能夠建立標準化的課程模組，以便為不同排程使用 | 系統提供課程模組建立功能；包含課程資訊、大綱設定；支援多語言設定 |
-| US-COURSEMOD-002 | 編輯課程模組內容 | 作為管理員，我希望能夠編輯課程模組的詳細內容，以便維護課程品質 | 系統提供完整編輯功能；包含描述、大綱、教材、先修條件；支援版本控制 |
-| US-COURSEMOD-003 | 管理課程模組狀態 | 作為管理員，我希望能夠管理課程模組的發布狀態，以便控制課程可見性 | 系統提供啟用/停用功能；支援預覽模式；記錄狀態變更歷史 |
-| US-COURSEMOD-004 | 複製課程模組 | 作為管理員，我希望能夠複製現有課程模組，以便快速建立相似課程 | 系統提供複製功能；可選擇複製內容範圍；自動產生新的模組ID |
-| US-COURSEMOD-005 | 查看課程模組使用狀況 | 作為管理員，我希望能夠查看課程模組的使用狀況，以便了解課程熱門度 | 系統顯示關聯排程數量；顯示學生報名統計；提供使用趨勢分析 |
+| US-CONTENT-001 | 建立課程模組 | 作為管理員，我希望能夠建立標準化的課程模組，以便為不同排程使用 | 系統提供課程模組建立功能；包含課程資訊、大綱設定；支援多語言設定 |
+| US-CONTENT-002 | 編輯課程模組內容 | 作為管理員，我希望能夠編輯課程模組的詳細內容，以便維護課程品質 | 系統提供完整編輯功能；包含描述、大綱、教材、先修條件；支援版本控制 |
+| US-CONTENT-003 | 管理課程模組狀態 | 作為管理員，我希望能夠管理課程模組的發布狀態，以便控制課程可見性 | 系統提供啟用/停用功能；支援預覽模式；記錄狀態變更歷史 |
+| US-CONTENT-004 | 複製課程模組 | 作為管理員，我希望能夠複製現有課程模組，以便快速建立相似課程 | 系統提供複製功能；可選擇複製內容範圍；自動產生新的模組ID |
+| US-CONTENT-005 | 查看課程模組使用狀況 | 作為管理員，我希望能夠查看課程模組的使用狀況，以便了解課程熱門度 | 系統顯示關聯排程數量；顯示學生報名統計；提供使用趨勢分析 |
 
 #### 資料 Schema (TypeScript Interface)
 ```typescript
@@ -587,16 +769,16 @@ interface CourseSession {
 #### User Story
 | id | 標題 | 內容 | Acceptance Criteria |
 |---|---|---|---|
-| US-STAFF-001 | 課務取消課程 | 作為校務人員，我希望取消整個課程時段，以便老師臨時請假時能通知所有學員 | /timeslots/{id}/cancel將Timeslot.status→CANCELED；系統自動批次：將相關Timeslot狀態改成Canceled |
+| US-STAFF-001 | 課務取消課程 | 作為校務人員，我希望取消整個課程時段，以便老師臨時請假時能通知所有學員 | /course-sessions/{id}/cancel將CourseSession.status→CANCELLED；系統自動批次：將相關CourseSession狀態改成CANCELLED |
 | US-STAFF-002 | 查看學員預約狀況 | 作為校務人員，我希望查看特定課程的學員預約狀況，以便協助處理預約問題 | 系統顯示課程預約清單；可查看學員資訊；可協助取消預約；可編輯學員基本資料 |
 | US-STAFF-003 | 管理課程時段狀態 | 作為校務人員，我希望管理課程時段的狀態，以便處理突發狀況 | 可修改時段狀態；可調整容量；不可刪除已有預約的時段；不可修改全域課程設定 |
 | US-STAFF-004 | 編輯學員個人資料 | 作為校務人員，我希望能夠編輯學員的個人資料，以便協助學員更新資訊或處理資料問題 | 可編輯姓名、電話、地址等基本資料；不可修改email、密碼；記錄修改歷史；需要修改原因 |
 
 #### 資料 Schema (TypeScript Interface)
 ```typescript
-interface TimeslotCancellation {
+interface SessionCancellation {
   id: string;                  // UUID
-  timeslot_id: string;        // 時段ID
+  session_id: string;         // 時段ID
   cancelled_by: string;       // 取消者ID（課務人員）
   cancellation_reason: string; // 取消原因
   notification_sent: boolean; // 是否已發送通知
@@ -608,7 +790,7 @@ interface TimeslotCancellation {
 interface StudentNotification {
   id: string;                 // UUID
   user_id: string;           // 學員ID
-  timeslot_id: string;       // 時段ID
+  session_id: string;        // 時段ID
   booking_id: string;        // 預約ID
   notification_type: 'CANCELLATION' | 'RESCHEDULE' | 'REMINDER'; // 通知類型
   title: string;             // 通知標題
@@ -622,7 +804,7 @@ interface StudentNotification {
 interface StaffPermission {
   id: string;                 // UUID
   staff_id: string;          // 校務人員ID
-  permission_scope: 'TIMESLOT_MANAGEMENT' | 'BOOKING_MANAGEMENT' | 'STUDENT_VIEW' | 'USER_EDIT' | 'BASIC_REPORTS'; // 權限範圍
+  permission_scope: 'SESSION_MANAGEMENT' | 'BOOKING_MANAGEMENT' | 'STUDENT_VIEW' | 'USER_EDIT' | 'BASIC_REPORTS'; // 權限範圍
   resource_restrictions?: {   // 資源限制
     allowed_course_ids?: string[];  // 可管理的課程ID
     allowed_locations?: string[];   // 可管理的地點
@@ -659,13 +841,13 @@ interface UserProfileEdit {
 **校務人員API（權限限制版）**
 
 **課程時段管理**
-- `PUT /api/v1/staff/timeslots/:id/cancel`：取消課程時段（需權限檢查）
-- `PUT /api/v1/staff/timeslots/:id/status`：更新時段狀態（需權限檢查）
-- `PUT /api/v1/staff/timeslots/:id/capacity`：調整時段容量（需權限檢查）
-- `GET /api/v1/staff/timeslots/my-managed`：取得我可管理的時段清單
+- `PUT /api/v1/staff/course-sessions/:id/cancel`：取消課程時段（需權限檢查）
+- `PUT /api/v1/staff/course-sessions/:id/status`：更新時段狀態（需權限檢查）
+- `PUT /api/v1/staff/course-sessions/:id/capacity`：調整時段容量（需權限檢查）
+- `GET /api/v1/staff/course-sessions/my-managed`：取得我可管理的時段清單
 
 **學員預約管理**
-- `GET /api/v1/staff/bookings/by-timeslot/:id`：查看特定時段的預約狀況
+- `GET /api/v1/staff/bookings/by-session/:id`：查看特定時段的預約狀況
 - `DELETE /api/v1/staff/bookings/:id/cancel`：協助取消學員預約（需權限檢查）
 - `GET /api/v1/staff/students/:id/profile`：查看學員完整資訊
 
@@ -676,20 +858,20 @@ interface UserProfileEdit {
 
 **通知管理**
 - `POST /api/v1/staff/notifications/batch`：批量發送通知給學員
-- `GET /api/v1/staff/notifications/:timeslot_id/status`：查看通知發送狀態
+- `GET /api/v1/staff/notifications/:session_id/status`：查看通知發送狀態
 
 **基本報表**
-- `GET /api/v1/staff/reports/timeslot-utilization`：時段使用率報表（限制範圍）
+- `GET /api/v1/staff/reports/session-utilization`：時段使用率報表（限制範圍）
 - `GET /api/v1/staff/reports/booking-statistics`：預約統計報表（限制範圍）
 
 **管理員API（完整權限版）**
 
 **課程時段管理**
-- `PUT /api/v1/admin/timeslots/:id/cancel`：取消課程時段（無權限限制）
-- `PUT /api/v1/admin/timeslots/:id/status`：更新時段狀態（無權限限制）
-- `PUT /api/v1/admin/timeslots/:id/capacity`：調整時段容量（無權限限制）
-- `DELETE /api/v1/admin/timeslots/:id/force-delete`：強制刪除時段（即使有預約）
-- `GET /api/v1/admin/timeslots/all`：取得所有時段清單
+- `PUT /api/v1/admin/course-sessions/:id/cancel`：取消課程時段（無權限限制）
+- `PUT /api/v1/admin/course-sessions/:id/status`：更新時段狀態（無權限限制）
+- `PUT /api/v1/admin/course-sessions/:id/capacity`：調整時段容量（無權限限制）
+- `DELETE /api/v1/admin/course-sessions/:id/force-delete`：強制刪除時段（即使有預約）
+- `GET /api/v1/admin/course-sessions/all`：取得所有時段清單
 
 **學員預約管理**
 - `GET /api/v1/admin/bookings/all`：查看所有預約狀況
@@ -709,7 +891,7 @@ interface UserProfileEdit {
 
 ### 📌 功能名稱：學員Dashboard
 **所屬 APP**：Student Portal  
-**功能描述**：提供學員查看會員卡狀態、下次課程安排等個人化資訊
+**功能描述**：提供學員個人化的學習中心，包含會員卡狀態查看、下次課程安排、學習進度概覽、快速預約入口等綜合性功能，作為學員使用系統的主要入口頁面
 
 #### User Story
 | id | 標題 | 內容 | Acceptance Criteria |
@@ -730,7 +912,7 @@ interface DashboardInfo {
   };
   upcoming_classes: Array<{   // 即將到來的課程
     booking_id: string;
-    timeslot_id: string;
+    session_id: string;
     title: string;            // 課程標題
     date: string;             // 上課日期 YYYY-MM-DD
     start_time: string;       // 開始時間 HH:mm
@@ -753,6 +935,114 @@ interface DashboardInfo {
 - `GET /api/v1/dashboard/member-card-status`：取得會員卡狀態
 - `GET /api/v1/dashboard/upcoming-classes`：取得即將到來的課程
 - `GET /api/v1/dashboard/recent-activity`：取得最近活動記錄
+
+---
+
+### 📌 功能名稱：個人資料管理
+**所屬 APP**：Student Portal, Teacher Portal, Staff Portal, Agent Portal  
+**功能描述**：提供用戶管理個人資料、修改密碼、更新個人設定等自助服務功能，確保用戶可以自主維護個人資訊
+
+#### User Story
+| id | 標題 | 內容 | Acceptance Criteria |
+|---|---|---|---|
+| US-PROFILE-001 | 查看個人資料 | 作為用戶，我希望能夠查看我的個人資料，以便確認資訊正確性 | 顯示姓名、email、電話、地址等基本資料；顯示註冊日期；顯示最後更新時間 |
+| US-PROFILE-002 | 編輯個人資料 | 作為用戶，我希望能夠編輯我的個人資料，以便保持資訊最新 | 可編輯姓名、電話、地址；不可修改email；提供資料驗證；顯示修改成功確認 |
+| US-PROFILE-003 | 修改密碼 | 作為用戶，我希望能夠修改密碼，以便維護帳號安全 | 需要輸入當前密碼驗證；新密碼需符合安全標準；修改成功後強制重新登入；發送郵件通知 |
+| US-PROFILE-004 | 上傳個人照片 | 作為用戶，我希望能夠上傳個人照片，以便個人化我的帳號 | 支援常見圖片格式；自動壓縮和裁切；設定檔案大小限制；提供預覽功能 |
+| US-PROFILE-005 | 個人偏好設定 | 作為用戶，我希望能夠設定個人偏好，以便自定義使用體驗 | 可設定通知偏好；可選擇介面語言；可設定時區；自動儲存設定 |
+| US-PROFILE-006 | 帳號安全設定 | 作為用戶，我希望能夠管理帳號安全設定，以便保護帳號安全 | 顯示登入歷史；可啟用兩步驟驗證；可管理已授權裝置；可設定安全問題 |
+
+#### 資料 Schema (TypeScript Interface)
+```typescript
+interface UserProfile {
+  id: string;                   // UUID
+  user_id: string;              // 用戶ID
+  full_name: string;            // 姓名
+  email: string;                // Email（不可修改）
+  phone?: string;               // 電話
+  address?: string;             // 地址
+  profile_image_url?: string;   // 個人照片URL
+  date_of_birth?: string;       // 生日 YYYY-MM-DD
+  gender?: 'MALE' | 'FEMALE' | 'OTHER'; // 性別
+  emergency_contact?: EmergencyContact; // 緊急聯絡人
+  preferences: UserPreferences; // 個人偏好
+  security_settings: SecuritySettings; // 安全設定
+  last_profile_update: string;  // 最後更新時間 ISO 8601
+  created_at: string;           // ISO 8601 格式
+  updated_at: string;           // ISO 8601 格式
+}
+
+interface EmergencyContact {
+  name: string;                 // 聯絡人姓名
+  relationship: string;         // 關係
+  phone: string;                // 電話
+  email?: string;               // Email
+}
+
+interface UserPreferences {
+  language: 'zh-TW' | 'en-US';  // 介面語言
+  timezone: string;             // 時區
+  notifications: NotificationPreferences; // 通知偏好
+  theme: 'LIGHT' | 'DARK' | 'AUTO'; // 介面主題
+}
+
+interface NotificationPreferences {
+  email_booking_reminders: boolean;     // Email課程提醒
+  email_promotions: boolean;            // Email促銷訊息
+  sms_booking_reminders: boolean;       // SMS課程提醒
+  push_notifications: boolean;          // 推播通知
+  marketing_communications: boolean;    // 行銷溝通
+}
+
+interface SecuritySettings {
+  two_factor_enabled: boolean;          // 兩步驟驗證
+  login_alerts_enabled: boolean;        // 登入警示
+  session_timeout_minutes: number;      // 會話逾時（分鐘）
+  password_last_changed: string;        // 密碼最後修改時間 ISO 8601
+  security_questions: SecurityQuestion[]; // 安全問題
+}
+
+interface SecurityQuestion {
+  question: string;             // 問題
+  answer_hash: string;          // 答案雜湊
+  created_at: string;           // 建立時間 ISO 8601
+}
+
+interface LoginHistory {
+  id: string;                   // UUID
+  user_id: string;              // 用戶ID
+  login_time: string;           // 登入時間 ISO 8601
+  ip_address: string;           // IP位址
+  user_agent: string;           // 瀏覽器資訊
+  device_type: 'DESKTOP' | 'MOBILE' | 'TABLET'; // 裝置類型
+  location?: string;            // 登入地點
+  is_successful: boolean;       // 是否成功
+  logout_time?: string;         // 登出時間 ISO 8601
+}
+```
+
+#### API 設計
+**個人資料管理**
+- `GET /api/v1/profile`：取得個人資料
+- `PUT /api/v1/profile`：更新個人資料
+- `POST /api/v1/profile/upload-image`：上傳個人照片
+- `DELETE /api/v1/profile/image`：刪除個人照片
+
+**密碼管理**
+- `PUT /api/v1/profile/password`：修改密碼
+- `POST /api/v1/profile/verify-password`：驗證密碼
+
+**偏好設定**
+- `GET /api/v1/profile/preferences`：取得偏好設定
+- `PUT /api/v1/profile/preferences`：更新偏好設定
+- `PUT /api/v1/profile/preferences/notifications`：更新通知偏好
+
+**安全設定**
+- `GET /api/v1/profile/security`：取得安全設定
+- `PUT /api/v1/profile/security/two-factor`：設定兩步驟驗證
+- `GET /api/v1/profile/login-history`：取得登入歷史
+- `POST /api/v1/profile/security/questions`：設定安全問題
+- `POST /api/v1/profile/security/logout-all`：登出所有裝置
 
 ---
 
@@ -1028,12 +1318,12 @@ interface SubstituteArrangement {
 #### User Story
 | id | 標題 | 內容 | Acceptance Criteria |
 |---|---|---|---|
-| US-ADMIN-001 | 查看用戶清單 | 作為管理員，我希望能夠查看所有用戶清單，以便管理用戶帳號 | 系統顯示所有用戶資訊；支援角色、狀態篩選；提供搜尋功能 |
-| US-ADMIN-002 | 管理用戶狀態 | 作為管理員，我希望能夠管理用戶帳號狀態，以便維護系統安全 | 系統提供啟用/停用功能；記錄異動歷史；自動通知用戶 |
-| US-ADMIN-003 | 重設用戶密碼 | 作為管理員，我希望能夠重設用戶密碼，以便協助忘記密碼的用戶 | 系統生成臨時密碼；發送至用戶信箱；要求首次登入修改 |
-| US-ADMIN-004 | 管理校務人員權限 | 作為管理員，我希望能夠管理校務人員的權限範圍，以便控制其操作權限 | 系統提供權限設定介面；可指定管理範圍；可設定權限到期時間；記錄權限變更歷史 |
-| US-ADMIN-005 | 執行所有課務操作 | 作為管理員，我希望能夠執行所有校務人員可做的操作，並且沒有權限限制 | 管理員可使用所有/admin/和/staff/ API；無資源存取限制；可強制執行緊急操作 |
-| US-ADMIN-006 | 管理員課務操作 | 作為管理員，我希望擁有所有課務功能的完整權限，以便處理各種緊急狀況 | 擁有所有校務人員功能；可跨越權限限制；可修改全域設定；可強制取消預約；可查看完整學員資料 |
+| US-USER-001 | 查看用戶清單 | 作為管理員，我希望能夠查看所有用戶清單，以便管理用戶帳號 | 系統顯示所有用戶資訊；支援角色、狀態篩選；提供搜尋功能 |
+| US-USER-002 | 管理用戶狀態 | 作為管理員，我希望能夠管理用戶帳號狀態，以便維護系統安全 | 系統提供啟用/停用功能；記錄異動歷史；自動通知用戶 |
+| US-USER-003 | 重設用戶密碼 | 作為管理員，我希望能夠重設用戶密碼，以便協助忘記密碼的用戶 | 系統生成臨時密碼；發送至用戶信箱；要求首次登入修改 |
+| US-USER-004 | 管理校務人員權限 | 作為管理員，我希望能夠管理校務人員的權限範圍，以便控制其操作權限 | 系統提供權限設定介面；可指定管理範圍；可設定權限到期時間；記錄權限變更歷史 |
+| US-USER-005 | 執行所有課務操作 | 作為管理員，我希望能夠執行所有校務人員可做的操作，並且沒有權限限制 | 管理員可使用所有/admin/和/staff/ API；無資源存取限制；可強制執行緊急操作 |
+| US-USER-006 | 管理員課務操作 | 作為管理員，我希望擁有所有課務功能的完整權限，以便處理各種緊急狀況 | 擁有所有校務人員功能；可跨越權限限制；可修改全域設定；可強制取消預約；可查看完整學員資料 |
 
 #### 資料 Schema (TypeScript Interface)
 ```typescript
@@ -1174,17 +1464,17 @@ interface RefundRequest {
 
 ### 📌 功能名稱：企業客戶管理
 **所屬 APP**：Corporate Portal, Admin Portal  
-**功能描述**：提供企業方案諮詢申請、管理員指派企業方案、企業窗口席次管理、學員會員卡啟用等完整企業學習管理功能
+**功能描述**：提供完整企業學習管理功能，包含方案諮詢申請、管理員指派方案、企業窗口席次管理、學員會員卡啟用、學習追蹤等功能
 
 #### User Story
 | id | 標題 | 內容 | Acceptance Criteria |
 |---|---|---|---|
 | US-CORP-001 | 企業方案諮詢申請 | 作為企業客戶，我希望能夠透過諮詢申請企業學習方案，以便為員工提供學習資源 | 系統提供企業諮詢表單；包含企業資訊及需求；自動轉給管理員處理 |
-| US-CORP-002 | 管理員指派企業方案 | 作為管理員，我希望能夠為企業客戶指派適合的方案和席次，以便提供客製化服務 | 系統提供企業方案指派功能；可設定席次數量；設定方案使用期限；建立企業窗口帳號 |
-| US-CORP-003 | 企業窗口管理學員席次 | 作為企業窗口，我希望能夠為員工開通學習帳號，以便員工使用學習資源 | 系統檢查剩餘席次；為學員建立會員卡；記錄開通時間；自動計算結束時間；扣除席次 |
-| US-CORP-004 | 企業窗口查看席次使用狀況 | 作為企業窗口，我希望能夠查看席次使用狀況，以便合理分配學習資源 | 系統顯示總席次、已使用席次、剩餘席次；顯示方案期限；列出已開通學員清單 |
+| US-CORP-002 | 管理員企業方案管理 | 作為管理員，我希望能夠管理企業方案規格和定價，並為企業客戶指派適合的方案，以便提供客製化服務 | 可建立多種企業方案模板；設定不同席次的定價；可為企業客戶指派方案和席次；建立企業窗口帳號；生成專屬推薦連結 |
+| US-CORP-003 | 企業方案展示與購買 | 作為企業窗口，我希望能夠透過專屬連結查看客製化方案並完成購買，以便快速開通企業服務 | 顯示客製化企業方案規格和價格；提供安全的購買流程；購買完成自動觸發指派；生成購買確認資訊 |
+| US-CORP-004 | 企業窗口席次管理 | 作為企業窗口，我希望能夠管理員工學習席次，以便合理分配學習資源 | 可為員工開通學習帳號；查看席次使用狀況；顯示總席次、已使用、剩餘席次；列出已開通學員清單 |
 | US-CORP-005 | 學員啟用企業會員卡 | 作為被分配的學員，我希望能夠啟用企業提供的會員卡，以便使用學習權益 | 系統驗證學員身份；啟用會員卡；設定開始和結束時間；更新會員狀態為ACTIVE |
-| US-CORP-006 | 員工學習追蹤 | 作為企業窗口，我希望能夠追蹤員工學習進度，以便評估培訓效果 | 系統提供學習報表；顯示完課率；支援匯出功能；顯示使用期限狀態 |
+| US-CORP-006 | 員工學習追蹤報告 | 作為企業窗口，我希望能夠追蹤員工學習進度和生成報告，以便評估培訓效果 | 系統提供學習報表；顯示完課率；支援匯出功能；顯示使用期限狀態；管理員可查看企業學習報表 |
 
 #### 資料 Schema (TypeScript Interface)
 ```typescript
@@ -1278,6 +1568,59 @@ interface CorporateInquiry {
   updated_at: string;        // ISO 8601 格式
   processed_at?: string;     // 處理時間 ISO 8601
 }
+
+interface CorporatePlan {
+  id: string;                   // UUID
+  name: string;                 // 方案名稱
+  description: string;          // 方案描述
+  base_price: number;           // 基礎價格
+  price_per_seat: number;       // 每席價格
+  min_seats: number;            // 最少席次
+  max_seats: number;            // 最多席次
+  duration_months: number;      // 方案期限（月）
+  features: string[];           // 功能特色
+  is_active: boolean;           // 是否啟用
+  created_at: string;           // ISO 8601 格式
+  updated_at: string;           // ISO 8601 格式
+}
+
+interface CorporateProposal {
+  id: string;                   // UUID
+  corporate_plan_id: string;    // 企業方案ID
+  proposal_code: string;        // 提案代碼（唯一）
+  company_name: string;         // 公司名稱
+  contact_name: string;         // 聯絡人姓名
+  contact_email: string;        // 聯絡人信箱
+  contact_phone: string;        // 聯絡人電話
+  proposed_seats: number;       // 提議席次
+  custom_price: number;         // 客製化價格
+  duration_months: number;      // 方案期限
+  proposal_url: string;         // 專屬展示連結
+  status: 'PENDING' | 'VIEWED' | 'PURCHASED' | 'EXPIRED'; // 狀態
+  created_by: string;           // 建立人員ID
+  viewed_at?: string;           // 查看時間 ISO 8601
+  purchased_at?: string;        // 購買時間 ISO 8601
+  expires_at: string;           // 過期時間 ISO 8601
+  created_at: string;           // ISO 8601 格式
+  updated_at: string;           // ISO 8601 格式
+}
+
+interface CorporatePurchase {
+  id: string;                   // UUID
+  proposal_id: string;          // 提案ID
+  company_name: string;         // 公司名稱
+  contact_name: string;         // 聯絡人姓名
+  contact_email: string;        // 聯絡人信箱
+  purchased_seats: number;      // 購買席次
+  total_amount: number;         // 總金額
+  payment_method: string;       // 付款方式
+  payment_status: 'PENDING' | 'COMPLETED' | 'FAILED'; // 付款狀態
+  corporate_account_created: boolean; // 是否已建立企業帳號
+  plan_activated: boolean;      // 是否已啟用方案
+  purchase_date: string;        // 購買日期 ISO 8601
+  activation_date?: string;     // 啟用日期 ISO 8601
+  expiry_date: string;          // 到期日期 ISO 8601
+}
 ```
 
 #### API 設計
@@ -1306,224 +1649,526 @@ interface CorporateInquiry {
 - `PUT /api/v1/admin/corporate/subscriptions/:id`：更新企業訂閱（管理員）
 - `GET /api/v1/admin/corporate/:id/reports`：取得企業學習報表（管理員）
 
----
-
-### 📌 功能名稱：代理管理系統
-**所屬 APP**：Admin Portal  
-**功能描述**：提供多角色代理管理、分紅制度設定、銷售追蹤等功能
-
-#### User Story
-| id | 標題 | 內容 | Acceptance Criteria |
-|---|---|---|---|
-| US-AGENT-001 | 查看代理清單 | 作為管理員，我希望能夠查看所有代理的清單，以便管理代理夥伴 | 系統顯示代理基本資訊、角色、業績；支援搜尋和篩選；可按代理類型分類顯示 |
-| US-AGENT-002 | 新增代理 | 作為管理員，我希望能夠新增代理夥伴，以便擴展銷售網絡 | 支援個人和企業代理；可選擇代理角色和分紅比例；自動生成代理代碼和推廣連結 |
-| US-AGENT-003 | 管理代理角色 | 作為管理員，我希望能夠設定不同的代理角色和分紅比例，以便靈活管理獎勵機制 | 可新增/編輯/刪除代理角色；設定分紅比例上限；總分紅比例不可超過100% |
-| US-AGENT-004 | 查看銷售記錄 | 作為管理員，我希望能夠查看代理的銷售記錄，以便追蹤業績表現 | 顯示詳細銷售資訊；包含分紅計算；支援時間篩選；可匯出報表 |
-| US-AGENT-005 | 代理業績統計 | 作為管理員，我希望能夠查看代理業績統計，以便評估代理表現 | 提供總銷售額、分紅金額、排行榜；月度業績比較；最佳代理獎勵顯示 |
-
-#### 資料 Schema (TypeScript Interface)
-```typescript
-interface Agent {
-  id: string;                    // UUID
-  name: string;                  // 代理名稱
-  email: string;                 // 聯絡信箱
-  phone: string;                 // 聯絡電話
-  agent_type: 'AGENT' | 'CONSULTANT' | 'TEACHER' | 'STUDENT' | 'CORPORATE'; // 代理類型
-  role_id: string;              // 代理角色ID
-  role_name: string;            // 代理角色名稱
-  role_percentage: number;      // 分紅比例
-  agent_code: string;           // 代理代碼
-  referral_link: string;        // 推廣連結
-  is_company: boolean;          // 是否為企業代理
-  company_name?: string;        // 公司名稱
-  contact_person?: string;      // 聯絡人
-  bank_account?: string;        // 銀行帳號
-  tax_id?: string;             // 統一編號
-  address?: string;            // 地址
-  join_date: string;           // 加入日期 ISO 8601
-  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED'; // 狀態
-  total_sales: number;         // 總銷售額
-  month_sales: number;         // 月銷售額
-  total_commission: number;    // 總分紅
-  month_commission: number;    // 月分紅
-  sales_count: number;         // 銷售筆數
-  month_sales_count: number;   // 月銷售筆數
-  last_sale_date?: string;     // 最後銷售日期 ISO 8601
-  notes?: string;              // 備註
-  created_at: string;          // ISO 8601 格式
-  updated_at: string;          // ISO 8601 格式
-}
-
-interface AgentRole {
-  id: string;                  // UUID
-  agent_type: 'AGENT' | 'CONSULTANT' | 'TEACHER' | 'STUDENT' | 'CORPORATE'; // 代理類型
-  name: string;               // 角色名稱
-  percentage: number;         // 分紅比例
-  description: string;        // 角色描述
-  is_active: boolean;         // 是否啟用
-  created_at: string;         // ISO 8601 格式
-  updated_at: string;         // ISO 8601 格式
-}
-
-interface CommissionSetting {
-  id: string;                 // UUID
-  agent_type: 'AGENT' | 'CONSULTANT' | 'TEACHER' | 'STUDENT' | 'CORPORATE'; // 代理類型
-  name: string;              // 設定名稱
-  total_commission: number;  // 總分紅比例上限
-  is_active: boolean;        // 是否啟用
-  created_at: string;        // ISO 8601 格式
-  updated_at: string;        // ISO 8601 格式
-}
-
-interface SalesRecord {
-  id: string;                 // UUID
-  agent_id: string;          // 代理ID
-  agent_code: string;        // 代理代碼
-  customer_name: string;     // 客戶姓名
-  customer_email: string;    // 客戶信箱
-  product_type: 'INDIVIDUAL' | 'CORPORATE'; // 產品類型
-  plan_name: string;         // 方案名稱
-  sale_amount: number;       // 銷售金額
-  commission: number;        // 分紅金額
-  commission_rate: number;   // 分紅比例
-  sale_date: string;         // 銷售日期 ISO 8601
-  payment_status: 'PAID' | 'PENDING' | 'FAILED'; // 付款狀態
-  referral_method: 'LINK' | 'CODE'; // 推廣方式
-  order_number: string;      // 訂單編號
-  notes?: string;           // 備註
-  created_at: string;       // ISO 8601 格式
-}
-```
-
-#### API 設計
-
-**代理管理**
-- `GET /api/v1/admin/agents`：取得代理清單
-- `POST /api/v1/admin/agents`：新增代理
-- `GET /api/v1/admin/agents/:id`：取得代理詳情
-- `PUT /api/v1/admin/agents/:id`：更新代理資料
-- `DELETE /api/v1/admin/agents/:id`：刪除代理
-- `PUT /api/v1/admin/agents/:id/status`：更新代理狀態
-
-**角色管理**
-- `GET /api/v1/admin/agent-roles`：取得代理角色清單
-- `POST /api/v1/admin/agent-roles`：新增代理角色
-- `PUT /api/v1/admin/agent-roles/:id`：更新代理角色
-- `DELETE /api/v1/admin/agent-roles/:id`：刪除代理角色
-
-**分紅設定**
-- `GET /api/v1/admin/commission-settings`：取得分紅設定
-- `PUT /api/v1/admin/commission-settings/:type`：更新分紅設定
-
-**銷售記錄**
-- `GET /api/v1/admin/sales-records`：取得銷售記錄
-- `GET /api/v1/admin/agents/:id/sales`：取得特定代理銷售記錄
-- `GET /api/v1/admin/sales-statistics`：取得銷售統計
-
-**數據匯出**
-- `GET /api/v1/admin/agents/export`：匯出代理數據
-- `GET /api/v1/admin/sales-records/export`：匯出銷售記錄
+**企業方案與提案相關**
+- `GET /api/v1/corporate/proposal/{code}`：獲取企業方案展示頁面
+- `POST /api/v1/corporate/proposal/{code}/purchase`：企業方案購買
+- `GET /api/v1/corporate/proposal/{code}/status`：查看提案狀態
+- `POST /api/v1/admin/corporate/proposals`：建立企業提案（管理員）
+- `GET /api/v1/admin/corporate/proposals`：獲取企業提案列表（管理員）
+- `PUT /api/v1/admin/corporate/proposals/{id}`：更新企業提案（管理員）
+- `GET /api/v1/admin/corporate/plans`：獲取企業方案模板（管理員）
+- `POST /api/v1/admin/corporate/plans`：建立企業方案模板（管理員）
+- `PUT /api/v1/admin/corporate/plans/{id}`：更新企業方案模板（管理員）
+- `GET /api/v1/admin/corporate/purchases`：獲取企業購買記錄（管理員）
 
 ---
 
 ### 📌 功能名稱：推薦系統
-**所屬 APP**：Student Portal, Admin Portal  
-**功能描述**：提供推薦代碼生成、使用追蹤、佣金計算等功能
+**所屬 APP**：全平台 (Student Portal, Teacher Portal, Admin Portal, Staff Portal, Agent Portal)  
+**功能描述**：基礎推薦機制，每個用戶都可以成為推薦者，透過推薦代碼和推薦連結分享會員方案，獲得基礎佣金獎勵
 
 #### User Story
 | id | 標題 | 內容 | Acceptance Criteria |
 |---|---|---|---|
-| US-REFERRAL-001 | 查看推薦代碼 | 作為用戶，我希望能夠查看我的推薦代碼，以便分享給朋友獲得佣金 | 顯示個人專屬推薦代碼；提供複製功能；顯示使用統計和佣金收益 |
-| US-REFERRAL-002 | 生成推薦連結 | 作為用戶，我希望能夠生成推薦連結，以便透過不同管道分享 | 自動生成推薦連結；可複製連結；支援UTM參數追蹤 |
-| US-REFERRAL-003 | 查看推薦統計 | 作為用戶，我希望能夠查看推薦統計數據，以便了解推薦成效 | 顯示總推薦數、成功推薦、佣金收益；提供成功率和平均佣金統計 |
-| US-REFERRAL-004 | 使用推薦代碼 | 作為新用戶，我希望能夠使用推薦代碼享受折扣，以便節省費用 | 註冊時可輸入推薦代碼；自動計算折扣；驗證代碼有效性 |
-| US-REFERRAL-005 | 管理推薦系統 | 作為管理員，我希望能夠管理推薦系統，以便控制推薦政策 | 可設定折扣比例；管理代碼有效期；查看全站推薦統計；處理佣金發放 |
+| US-REFERRAL-001 | 查看個人推薦代碼 | 作為用戶，我希望能夠查看我的專屬推薦代碼，以便分享給朋友獲得佣金 | 每個用戶都自動擁有推薦代碼；顯示個人專屬推薦代碼；提供複製功能；顯示使用統計和佣金收益 |
+| US-REFERRAL-002 | 生成推薦連結 | 作為用戶，我希望能夠生成推薦連結，以便透過不同管道分享到個人方案購買頁面 | 自動生成推薦連結；連結導向個人方案購買頁面；可複製連結；支援UTM參數追蹤 |
+| US-REFERRAL-003 | 使用推薦代碼購買 | 作為新用戶，我希望能夠使用推薦代碼購買會員方案，以便享受折扣 | 購買頁面可輸入推薦代碼；自動計算折扣；驗證代碼有效性；只能用於有開啟推薦功能的方案 |
+| US-REFERRAL-004 | 推薦成效追蹤 | 作為推薦者，我希望能夠追蹤我的推薦成效，以便了解推廣效果 | 顯示推薦成交數量；顯示佣金收益；提供推薦統計圖表；顯示推薦轉換率 |
+| US-REFERRAL-005 | 基礎佣金結算 | 作為推薦者，我希望能夠查看和申請基礎佣金結算，以便獲得推薦獎勵 | 顯示可結算佣金；提供結算申請功能；追蹤結算狀態；支援多種結算方式 |
+| US-REFERRAL-006 | 會員方案推薦設定 | 作為管理員，我希望能夠設定會員方案是否套用推薦功能，以便控制哪些方案可被推薦 | 會員方案有推薦功能開關選項；勾選後方案出現在推薦分享中；可設定推薦佣金比例；推薦代碼及連結自動生效 |
+| US-REFERRAL-007 | 推薦數據統計 | 作為管理員，我希望能夠查看整體推薦數據統計，以便評估推薦機制效果 | 顯示推薦系統整體數據；推薦轉換率分析；熱門推薦者排行；推薦收益統計 |
+
+#### 推薦系統 - 資料 Schema (TypeScript Interface)
+```typescript
+interface ReferralUser {
+  id: string;                  // UUID
+  user_id: string;            // 用戶ID
+  referral_code: string;      // 推薦代碼（每個用戶都有）
+  referral_link: string;      // 推薦連結
+  user_role: 'STUDENT' | 'TEACHER' | 'ADMIN' | 'STAFF'; // 用戶角色
+  total_referrals: number;    // 總推薦數
+  successful_referrals: number; // 成功推薦數
+  total_commission: number;   // 總佣金收益
+  pending_commission: number; // 待結算佣金
+  conversion_rate: number;    // 轉換率
+  last_referral_date?: string; // 最後推薦日期 ISO 8601
+  is_active: boolean;         // 是否啟用推薦功能
+  created_at: string;         // ISO 8601 格式
+  updated_at: string;         // ISO 8601 格式
+}
+
+interface ReferralTransaction {
+  id: string;                 // UUID
+  referrer_id: string;        // 推薦者ID
+  referral_code: string;      // 使用的推薦代碼
+  referee_id: string;         // 被推薦者ID
+  order_id: string;           // 訂單ID
+  plan_id: string;            // 方案ID
+  plan_name: string;          // 方案名稱
+  order_amount: number;       // 訂單金額
+  commission_rate: number;    // 佣金比例
+  commission_amount: number;  // 佣金金額
+  transaction_status: 'PENDING' | 'COMPLETED' | 'CANCELLED'; // 交易狀態
+  referral_method: 'CODE' | 'LINK'; // 推薦方式
+  utm_source?: string;        // UTM追蹤來源
+  utm_medium?: string;        // UTM追蹤媒介
+  utm_campaign?: string;      // UTM追蹤活動
+  transaction_date: string;   // 交易日期 ISO 8601
+  created_at: string;         // ISO 8601 格式
+}
+
+interface ReferralCommissionSettlement {
+  id: string;                  // UUID
+  referrer_id: string;         // 推薦者ID
+  settlement_amount: number;   // 結算金額
+  settlement_method: 'BANK_TRANSFER' | 'CREDIT' | 'PAYPAL' | 'CHECK'; // 結算方式
+  settlement_status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED'; // 結算狀態
+  bank_account?: string;       // 銀行帳號
+  settlement_date?: string;    // 結算日期 ISO 8601
+  processing_date?: string;    // 處理日期 ISO 8601
+  completed_date?: string;     // 完成日期 ISO 8601
+  reference_number?: string;   // 結算參考號
+  notes?: string;             // 備註
+  created_at: string;         // ISO 8601 格式
+  updated_at: string;         // ISO 8601 格式
+}
+
+interface ReferralPlanSettings {
+  id: string;                 // UUID
+  plan_id: string;           // 方案ID
+  referral_enabled: boolean; // 是否啟用推薦
+  commission_rate: number;   // 推薦佣金比例
+  referral_discount?: number; // 被推薦者折扣
+  max_referral_discount?: number; // 最大推薦折扣
+  referral_terms?: string;   // 推薦條款
+  created_at: string;        // ISO 8601 格式
+  updated_at: string;        // ISO 8601 格式
+}
+
+interface ReferralStatistics {
+  total_referrers: number;    // 總推薦者數
+  active_referrers: number;   // 活躍推薦者數
+  total_referrals: number;    // 總推薦數
+  successful_referrals: number; // 成功推薦數
+  total_commission_paid: number; // 總已付佣金
+  avg_conversion_rate: number; // 平均轉換率
+  top_referrers: Array<{      // 頂級推薦者
+    user_id: string;
+    referral_count: number;
+    commission_earned: number;
+  }>;
+  monthly_stats: Array<{      // 月度統計
+    year_month: string;       // YYYY-MM
+    referral_count: number;
+    commission_paid: number;
+  }>;
+}
+```
+
+#### 推薦系統 - API 設計
+
+**用戶推薦功能**
+- `GET /api/v1/referral/my-profile`：取得我的推薦資料
+- `POST /api/v1/referral/generate-link`：生成推薦連結
+- `GET /api/v1/referral/statistics`：取得我的推薦統計
+- `GET /api/v1/referral/transactions`：取得我的推薦交易記錄
+- `POST /api/v1/referral/settlement/request`：申請佣金結算
+- `GET /api/v1/referral/settlement/history`：取得結算歷史
+
+**推薦驗證與使用**
+- `POST /api/v1/referral/validate-code`：驗證推薦代碼
+- `GET /api/v1/referral/link/:token`：推薦連結追蹤
+- `POST /api/v1/referral/apply-discount`：應用推薦折扣
+
+**管理員推薦管理**
+- `GET /api/v1/admin/referral/users`：取得所有推薦用戶
+- `GET /api/v1/admin/referral/transactions`：取得所有推薦交易
+- `GET /api/v1/admin/referral/statistics`：取得推薦系統統計
+- `PUT /api/v1/admin/referral/plan-settings/:planId`：設定方案推薦功能
+- `GET /api/v1/admin/referral/settlements`：取得所有結算申請
+- `PUT /api/v1/admin/referral/settlements/:id/status`：更新結算狀態
+- `GET /api/v1/admin/referral/export`：匯出推薦數據
+
+---
+
+### 📌 功能名稱：代理管理系統
+**所屬 APP**：Admin Portal, Agent Portal  
+**功能描述**：專業代理業務管理系統，包含代理招募、等級管理、高級佣金制度、專業代理工具等完整代理業務功能
+
+#### User Story
+| id | 標題 | 內容 | Acceptance Criteria |
+|---|---|---|---|
+| US-AGENT-001 | 代理招募申請 | 作為用戶，我希望能夠申請成為專業代理，以便獲得更高佣金和專業工具 | 提供代理申請表單；包含身分驗證；設定申請審核流程；申請狀態追蹤 |
+| US-AGENT-002 | 代理審核管理 | 作為管理員，我希望能夠審核代理申請，以便控制代理品質 | 審核新代理申請；驗證代理資格；批准或拒絕申請；設定審核標準 |
+| US-AGENT-003 | 代理等級管理 | 作為管理員，我希望能夠管理代理等級和佣金比例，以便激勵代理推廣 | 可設定多層代理等級；不同等級不同佣金比例；自動升級機制；業績達標通知 |
+| US-AGENT-004 | 代理管理面板 | 作為管理員，我希望能夠在統一的代理管理面板中管理所有代理，以便提高管理效率 | 顯示所有代理列表；可篩選和搜尋代理；批量操作功能；匯出代理數據 |
+| US-AGENT-005 | 代理資料編輯 | 作為管理員，我希望能夠編輯代理資料，以便維護代理資訊的準確性 | 可編輯代理基本資料；更新代理等級；設定佣金比例；管理代理狀態 |
+| US-AGENT-006 | 代理業績監控 | 作為管理員，我希望能夠監控代理業績，以便評估代理表現 | 查看代理銷售統計；追蹤代理業績趨勢；比較代理表現；生成業績報表 |
+| US-AGENT-007 | 代理Dashboard | 作為代理，我希望能夠在專屬Dashboard中查看業績概覽，以便快速掌握業務狀況 | 顯示當月業績；顯示佣金收益；顯示推薦統計；提供業績趨勢圖表 |
+| US-AGENT-008 | 客戶管理系統 | 作為代理，我希望能夠管理我的客戶資料，以便提供更好的服務 | 客戶列表管理；客戶資料編輯；客戶購買記錄；客戶溝通記錄 |
+| US-AGENT-009 | 推廣素材庫 | 作為代理，我希望能夠獲取推廣素材，以便進行有效的市場推廣 | 素材分類瀏覽；素材下載功能；個人化素材生成；使用統計追蹤 |
+| US-AGENT-010 | 培訓資源中心 | 作為代理，我希望能夠獲取培訓資源，以便提升專業能力 | 培訓課程列表；學習進度追蹤；考試測驗功能；證書獲取 |
+| US-AGENT-011 | 代理招募管理 | 作為代理，我希望能夠招募下級代理，以便擴展推廣網絡 | 可生成代理招募連結；追蹤招募成效；管理下級代理；多層級佣金分配 |
+| US-AGENT-012 | 高級佣金結算 | 作為代理，我希望能夠查看和申請高級佣金結算，以便獲得專業代理收益 | 顯示可結算佣金；提供結算申請功能；追蹤結算狀態；支援多種結算方式；多層級佣金計算 |
+| US-AGENT-013 | 代理團隊管理 | 作為高級代理，我希望能夠管理我的代理團隊，以便組織化運營 | 查看團隊成員；管理下級代理；團隊業績統計；團隊獎勵分配 |
+
+#### 代理管理系統 - 資料 Schema (TypeScript Interface)
+```typescript
+interface Agent {
+  id: string;                   // UUID
+  user_id: string;              // 用戶ID
+  agent_code: string;           // 代理代碼
+  agent_level: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND'; // 代理等級
+  agent_type: 'INDIVIDUAL' | 'CORPORATE'; // 代理類型
+  parent_agent_id?: string;     // 上級代理ID
+  hierarchy_level: number;      // 階層等級
+  commission_rate: number;      // 個人佣金比例
+  override_rate: number;        // 覆蓋佣金比例
+  recruitment_bonus: number;    // 招募獎金
+  status: 'PENDING' | 'ACTIVE' | 'SUSPENDED' | 'TERMINATED'; // 代理狀態
+  specializations: string[];    // 專業領域
+  territory?: string;           // 負責區域
+  contact_info: AgentContactInfo; // 聯絡資訊
+  bank_info?: BankInfo;         // 銀行資訊
+  performance_metrics: AgentPerformance; // 業績指標
+  qualification_date: string;   // 資格認證日期 ISO 8601
+  last_activity_date: string;   // 最後活動日期 ISO 8601
+  created_at: string;           // ISO 8601 格式
+  updated_at: string;           // ISO 8601 格式
+}
+
+interface AgentContactInfo {
+  name: string;                 // 姓名
+  email: string;                // 信箱
+  phone: string;                // 電話
+  mobile?: string;              // 手機
+  address?: string;             // 地址
+  company_name?: string;        // 公司名稱
+  tax_id?: string;              // 統一編號
+}
+
+interface BankInfo {
+  bank_name: string;            // 銀行名稱
+  account_number: string;       // 帳號
+  account_holder: string;       // 戶名
+  branch_code?: string;         // 分行代碼
+  swift_code?: string;          // SWIFT代碼
+}
+
+interface AgentPerformance {
+  total_sales: number;          // 總銷售額
+  total_commission: number;     // 總佣金
+  current_month_sales: number;  // 當月銷售額
+  current_month_commission: number; // 當月佣金
+  referral_count: number;       // 推薦客戶數
+  recruitment_count: number;    // 招募代理數
+  team_size: number;            // 團隊規模
+  conversion_rate: number;      // 轉換率
+  customer_retention_rate: number; // 客戶留存率
+  last_sale_date?: string;      // 最後成交日期 ISO 8601
+}
+
+interface AgentLevel {
+  id: string;                   // UUID
+  level_name: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND';
+  display_name: string;         // 顯示名稱
+  min_sales_requirement: number; // 最低銷售要求
+  commission_rate: number;      // 佣金比例
+  override_rate: number;        // 覆蓋佣金比例
+  recruitment_bonus: number;    // 招募獎金
+  benefits: string[];           // 級別福利
+  tools_access: string[];       // 工具存取權限
+  is_active: boolean;           // 是否啟用
+  created_at: string;           // ISO 8601 格式
+  updated_at: string;           // ISO 8601 格式
+}
+
+interface AgentApplication {
+  id: string;                   // UUID
+  user_id: string;              // 申請人ID
+  application_type: 'INDIVIDUAL' | 'CORPORATE'; // 申請類型
+  personal_info: AgentContactInfo; // 個人資訊
+  business_info?: {             // 企業資訊（企業代理）
+    company_name: string;
+    business_license: string;
+    tax_id: string;
+    representative: string;
+  };
+  experience_description: string; // 經驗描述
+  motivation: string;           // 申請動機
+  expected_territory?: string;  // 期望負責區域
+  marketing_plan?: string;      // 行銷計劃
+  references?: Reference[];     // 推薦人
+  documents: ApplicationDocument[]; // 申請文件
+  status: 'DRAFT' | 'SUBMITTED' | 'UNDER_REVIEW' | 'APPROVED' | 'REJECTED'; // 申請狀態
+  reviewer_id?: string;         // 審核人ID
+  review_notes?: string;        // 審核備註
+  approval_date?: string;       // 核准日期 ISO 8601
+  submitted_at?: string;        // 提交時間 ISO 8601
+  reviewed_at?: string;         // 審核時間 ISO 8601
+  created_at: string;           // ISO 8601 格式
+  updated_at: string;           // ISO 8601 格式
+}
+
+interface Reference {
+  name: string;                 // 推薦人姓名
+  relationship: string;         // 關係
+  contact: string;              // 聯絡方式
+  company?: string;             // 公司
+}
+
+interface ApplicationDocument {
+  id: string;                   // UUID
+  document_type: 'ID_CARD' | 'BUSINESS_LICENSE' | 'CERTIFICATE' | 'RESUME' | 'OTHER';
+  file_name: string;            // 檔案名稱
+  file_url: string;             // 檔案URL
+  upload_date: string;          // 上傳日期 ISO 8601
+}
+
+interface AgentCustomer {
+  id: string;                   // UUID
+  agent_id: string;             // 代理ID
+  customer_id: string;          // 客戶ID
+  customer_name: string;        // 客戶姓名
+  customer_email: string;       // 客戶信箱
+  customer_phone: string;       // 客戶電話
+  acquisition_date: string;     // 獲客日期 ISO 8601
+  acquisition_method: 'REFERRAL' | 'DIRECT_CONTACT' | 'EVENT' | 'ONLINE'; // 獲客方式
+  relationship_stage: 'PROSPECT' | 'CUSTOMER' | 'VIP' | 'CHURNED'; // 關係階段
+  total_purchases: number;      // 總購買金額
+  purchase_count: number;       // 購買次數
+  last_purchase_date?: string;  // 最後購買日期 ISO 8601
+  next_follow_up?: string;      // 下次跟進日期 ISO 8601
+  notes?: string;               // 備註
+  tags: string[];               // 標籤
+  created_at: string;           // ISO 8601 格式
+  updated_at: string;           // ISO 8601 格式
+}
+
+interface MarketingMaterial {
+  id: string;                   // UUID
+  title: string;                // 素材標題
+  description: string;          // 素材描述
+  category: 'BROCHURE' | 'PRESENTATION' | 'VIDEO' | 'IMAGE' | 'TEMPLATE' | 'DOCUMENT'; // 素材類型
+  target_audience: 'INDIVIDUAL' | 'CORPORATE' | 'ALL'; // 目標受眾
+  access_level: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND' | 'ALL'; // 存取等級
+  file_url: string;             // 檔案URL
+  thumbnail_url?: string;       // 縮圖URL
+  download_count: number;       // 下載次數
+  usage_tracking: boolean;      // 是否追蹤使用
+  is_personalized: boolean;     // 是否可個人化
+  tags: string[];               // 標籤
+  is_active: boolean;           // 是否啟用
+  created_at: string;           // ISO 8601 格式
+  updated_at: string;           // ISO 8601 格式
+}
+
+interface TrainingResource {
+  id: string;                   // UUID
+  title: string;                // 課程標題
+  description: string;          // 課程描述
+  category: 'PRODUCT_KNOWLEDGE' | 'SALES_SKILLS' | 'MARKETING' | 'COMPLIANCE' | 'LEADERSHIP'; // 課程類別
+  content_type: 'VIDEO' | 'DOCUMENT' | 'QUIZ' | 'WEBINAR' | 'WORKSHOP'; // 內容類型
+  difficulty_level: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'; // 難度等級
+  target_level: 'BRONZE' | 'SILVER' | 'GOLD' | 'PLATINUM' | 'DIAMOND' | 'ALL'; // 目標等級
+  duration_minutes?: number;    // 時長（分鐘）
+  content_url: string;          // 內容URL
+  is_mandatory: boolean;        // 是否必修
+  certificate_awarded: boolean; // 是否頒發證書
+  passing_score?: number;       // 及格分數
+  completion_count: number;     // 完成人數
+  average_score?: number;       // 平均分數
+  is_active: boolean;           // 是否啟用
+  created_at: string;           // ISO 8601 格式
+  updated_at: string;           // ISO 8601 格式
+}
+
+interface AgentTrainingProgress {
+  id: string;                   // UUID
+  agent_id: string;             // 代理ID
+  training_resource_id: string; // 培訓資源ID
+  progress_percentage: number;  // 進度百分比
+  completion_status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED' | 'EXPIRED'; // 完成狀態
+  score?: number;               // 考試分數
+  attempts: number;             // 嘗試次數
+  started_at?: string;          // 開始時間 ISO 8601
+  completed_at?: string;        // 完成時間 ISO 8601
+  certificate_issued?: boolean; // 是否已頒發證書
+  certificate_url?: string;     // 證書URL
+  last_accessed_at: string;     // 最後訪問時間 ISO 8601
+}
+```
+
+#### 代理管理系統 - API 設計
+
+**代理申請與審核**
+- `POST /api/v1/agent/apply`：提交代理申請
+- `GET /api/v1/agent/application/status`：查看申請狀態
+- `PUT /api/v1/agent/application/:id`：更新申請資料
+- `GET /api/v1/admin/agent/applications`：取得所有申請
+- `PUT /api/v1/admin/agent/applications/:id/review`：審核申請
+- `POST /api/v1/admin/agent/applications/:id/approve`：批准申請
+- `POST /api/v1/admin/agent/applications/:id/reject`：拒絕申請
+
+**代理管理**
+- `GET /api/v1/admin/agents`：取得代理清單
+- `GET /api/v1/admin/agents/:id`：取得代理詳情
+- `PUT /api/v1/admin/agents/:id`：更新代理資料
+- `PUT /api/v1/admin/agents/:id/status`：更新代理狀態
+- `PUT /api/v1/admin/agents/:id/level`：更新代理等級
+- `DELETE /api/v1/admin/agents/:id`：停用代理
+
+**代理等級管理**
+- `GET /api/v1/admin/agent-levels`：取得代理等級清單
+- `POST /api/v1/admin/agent-levels`：新增代理等級
+- `PUT /api/v1/admin/agent-levels/:id`：更新代理等級
+- `DELETE /api/v1/admin/agent-levels/:id`：刪除代理等級
+
+**代理Dashboard與工具**
+- `GET /api/v1/agent/dashboard`：取得代理Dashboard數據
+- `GET /api/v1/agent/performance`：取得個人業績
+- `GET /api/v1/agent/customers`：取得客戶清單
+- `POST /api/v1/agent/customers`：新增客戶
+- `PUT /api/v1/agent/customers/:id`：更新客戶資料
+- `GET /api/v1/agent/team`：取得團隊資料
+- `GET /api/v1/agent/team/performance`：取得團隊業績
+
+**推廣素材庫**
+- `GET /api/v1/agent/materials`：取得推廣素材
+- `GET /api/v1/agent/materials/:id/download`：下載素材
+- `POST /api/v1/agent/materials/:id/personalize`：個人化素材
+- `GET /api/v1/admin/materials`：管理素材清單
+- `POST /api/v1/admin/materials`：上傳新素材
+- `PUT /api/v1/admin/materials/:id`：更新素材
+- `DELETE /api/v1/admin/materials/:id`：刪除素材
+
+**培訓資源中心**
+- `GET /api/v1/agent/training/resources`：取得培訓資源
+- `GET /api/v1/agent/training/progress`：取得學習進度
+- `POST /api/v1/agent/training/:id/start`：開始培訓
+- `PUT /api/v1/agent/training/:id/progress`：更新進度
+- `POST /api/v1/agent/training/:id/complete`：完成培訓
+- `GET /api/v1/agent/training/certificates`：取得證書清單
+- `GET /api/v1/admin/training/resources`：管理培訓資源
+- `POST /api/v1/admin/training/resources`：新增培訓資源
+- `GET /api/v1/admin/training/statistics`：取得培訓統計
+
+**代理招募與團隊管理**
+- `POST /api/v1/agent/recruit/generate-link`：生成招募連結
+- `GET /api/v1/agent/recruits`：取得招募清單
+- `GET /api/v1/agent/team/hierarchy`：取得團隊階層
+- `GET /api/v1/agent/team/commissions`：取得團隊佣金
+
+**高級佣金與結算**
+- `GET /api/v1/agent/commissions`：取得佣金記錄
+- `GET /api/v1/agent/commissions/summary`：取得佣金摘要
+- `POST /api/v1/agent/commissions/settlement`：申請佣金結算
+- `GET /api/v1/agent/settlements`：取得結算歷史
+- `GET /api/v1/admin/commissions`：管理所有佣金
+- `PUT /api/v1/admin/commissions/:id/approve`：批准佣金
+- `GET /api/v1/admin/settlements`：管理結算申請
+- `PUT /api/v1/admin/settlements/:id/process`：處理結算
+
+**業績監控與報表**
+- `GET /api/v1/admin/agents/performance`：取得代理業績
+- `GET /api/v1/admin/agents/rankings`：取得代理排行
+- `GET /api/v1/admin/agents/statistics`：取得代理統計
+- `GET /api/v1/admin/agents/export`：匯出代理數據
+- `GET /api/v1/admin/performance/reports`：生成業績報表
+
+**代理管理面板功能**
+- `GET /api/v1/admin/referral-agent/management/list`：獲取代理管理列表
+- `GET /api/v1/admin/referral-agent/management/{id}`：獲取單一代理詳細資料
+- `PUT /api/v1/admin/referral-agent/management/{id}`：更新代理資料
+- `DELETE /api/v1/admin/referral-agent/management/{id}`：刪除代理
+- `POST /api/v1/admin/referral-agent/management/batch-update`：批量更新代理
+- `GET /api/v1/admin/referral-agent/management/export`：匯出代理數據
+- `GET /api/v1/admin/referral-agent/management/search`：搜尋代理
+- `GET /api/v1/admin/referral-agent/management/filters`：獲取篩選選項
+
+**代理申請審核功能**
+- `GET /api/v1/admin/referral-agent/applications`：獲取代理申請列表
+- `GET /api/v1/admin/referral-agent/applications/{id}`：獲取申請詳情
+- `PUT /api/v1/admin/referral-agent/applications/{id}/approve`：批准申請
+- `PUT /api/v1/admin/referral-agent/applications/{id}/reject`：拒絕申請
+- `POST /api/v1/referral-agent/apply`：提交代理申請
+
+---
+
+### 📌 功能名稱：預約管理
+**所屬 APP**：Admin Portal, Staff Portal  
+**功能描述**：原時段管理功能，能清楚看到每個被發布課程的預約狀況，依照日期排序，提供完整的預約資訊管理
+
+#### User Story
+| id | 標題 | 內容 | Acceptance Criteria |
+|---|---|---|---|
+| US-BOOKING-001 | 查看預約狀況 | 作為管理員，我希望能夠查看所有課程的預約狀況，以便掌握課程安排 | 顯示所有已發布課程；依日期從近到遠排序；清楚顯示預約人數和狀態 |
+| US-BOOKING-002 | 預約分類篩選 | 作為管理員，我希望能夠按狀態篩選預約，以便快速找到需要處理的課程 | 提供已開課、待開課、已取消、已上課、全部等篩選選項；即時更新篩選結果 |
+| US-BOOKING-003 | 預約詳情查看 | 作為管理員，我希望能夠查看預約詳情，以便了解具體預約資訊 | 顯示完整預約資訊；包含學員名單；提供聯絡資訊；顯示付款狀態 |
+| US-BOOKING-004 | 變更課程教師 | 作為管理員，我希望能夠變更課程教師，以便應對教師請假等突發狀況 | 可選擇可用教師；自動檢查時間衝突；通知相關人員；更新課程資訊 |
+| US-BOOKING-005 | 取消課程 | 作為管理員，我希望能夠取消課程，以便處理特殊情況 | 可設定取消原因；自動通知已預約學員；處理退費事宜；更新課程狀態 |
 
 #### 資料 Schema (TypeScript Interface)
 ```typescript
-interface ReferralCode {
-  id: string;                    // UUID
-  code: string;                  // 推薦代碼
-  referrer_id: string;          // 推薦人ID
-  referrer_name: string;        // 推薦人姓名
-  referrer_email: string;       // 推薦人信箱
-  discount_percentage: number;   // 折扣比例
-  max_uses: number;             // 最大使用次數 (-1為無限制)
-  current_uses: number;         // 當前使用次數
-  expiry_date?: string;         // 到期日期 ISO 8601
-  is_active: boolean;           // 是否啟用
+interface BookingManagement {
+  id: string;                   // UUID
+  course_id: string;            // 課程ID
+  course_name: string;          // 課程名稱
+  unit_number: string;          // 單元編號
+  unit_name: string;            // 單元名稱
+  teacher_id: string;           // 教師ID
+  teacher_name: string;         // 教師姓名
+  schedule_date: string;        // 課程日期 ISO 8601
+  start_time: string;           // 開始時間 HH:mm
+  end_time: string;             // 結束時間 HH:mm
+  max_capacity: number;         // 滿班人數
+  current_bookings: number;     // 當前預約人數
+  status: 'SCHEDULED' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED'; // 狀態
+  booking_status: '已開課' | '待開課' | '已取消' | '已上課'; // 預約狀態
   created_at: string;           // ISO 8601 格式
   updated_at: string;           // ISO 8601 格式
 }
 
-interface ReferralUsage {
+interface BookingDetail {
   id: string;                   // UUID
-  referral_code_id: string;     // 推薦代碼ID
-  referral_code: string;        // 推薦代碼
-  referrer_id: string;          // 推薦人ID
-  referred_user_id: string;     // 被推薦人ID
-  referred_user_name: string;   // 被推薦人姓名
-  referred_user_email: string;  // 被推薦人信箱
-  order_id: string;             // 訂單ID
-  original_amount: number;      // 原價
-  discount_amount: number;      // 折扣金額
-  final_amount: number;         // 最終金額
-  commission: number;           // 佣金金額
-  status: 'PENDING' | 'COMPLETED' | 'CANCELLED'; // 狀態
-  used_at: string;              // 使用時間 ISO 8601
-  completed_at?: string;        // 完成時間 ISO 8601
-}
-
-interface ReferralReward {
-  id: string;                   // UUID
-  referrer_id: string;          // 推薦人ID
-  referral_usage_id: string;    // 推薦使用記錄ID
-  reward_type: 'COMMISSION' | 'BONUS' | 'DISCOUNT'; // 獎勵類型
-  amount: number;               // 獎勵金額
-  currency: 'TWD';              // 幣別
-  status: 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED'; // 狀態
-  description: string;          // 描述
-  earned_at: string;            // 獲得時間 ISO 8601
-  paid_at?: string;             // 支付時間 ISO 8601
-}
-
-interface ReferralLink {
-  id: string;                   // UUID
-  referrer_id: string;          // 推薦人ID
-  url: string;                  // 推薦連結
-  short_url: string;            // 短連結
-  utm_source?: string;          // UTM來源
-  utm_medium?: string;          // UTM媒介
-  utm_campaign?: string;        // UTM活動
-  click_count: number;          // 點擊次數
-  conversion_count: number;     // 轉換次數
-  is_active: boolean;           // 是否啟用
+  booking_management_id: string; // 預約管理ID
+  student_id: string;           // 學員ID
+  student_name: string;         // 學員姓名
+  student_email: string;        // 學員信箱
+  student_phone: string;        // 學員電話
+  booking_date: string;         // 預約日期 ISO 8601
+  payment_status: 'PENDING' | 'PAID' | 'REFUNDED'; // 付款狀態
+  attendance_status: 'REGISTERED' | 'ATTENDED' | 'ABSENT'; // 出席狀態
+  notes?: string;               // 備註
   created_at: string;           // ISO 8601 格式
-  updated_at: string;           // ISO 8601 格式
+}
+
+interface TeacherChange {
+  id: string;                   // UUID
+  booking_management_id: string; // 預約管理ID
+  original_teacher_id: string;  // 原教師ID
+  new_teacher_id: string;       // 新教師ID
+  change_reason: string;        // 變更原因
+  changed_by: string;           // 變更人員ID
+  change_date: string;          // 變更日期 ISO 8601
+  notification_sent: boolean;   // 是否已通知
+}
+
+interface CourseDisplayInfo {
+  display_name: string;         // 顯示名稱：課名 + 單元編號 + - + 單元名稱
+  date_time_display: string;    // 日期時間顯示：2025年08月04日 週一，12:30 - 13:20
+  capacity_display: string;     // 容量顯示：當前預約/滿班人數
 }
 ```
 
 #### API 設計
-
-**用戶推薦功能**
-- `GET /api/v1/referrals/my-codes`：取得我的推薦代碼
-- `POST /api/v1/referrals/generate-link`：生成推薦連結
-- `GET /api/v1/referrals/statistics`：取得推薦統計
-- `GET /api/v1/referrals/rewards`：取得獎勵記錄
-
-**推薦代碼驗證與使用**
-- `POST /api/v1/referrals/validate`：驗證推薦代碼
-- `POST /api/v1/referrals/apply`：使用推薦代碼
-- `GET /api/v1/referrals/link/:token`：推薦連結追蹤
-
-**管理員推薦管理**
-- `GET /api/v1/admin/referrals/codes`：취득所有推薦代碼
-- `GET /api/v1/admin/referrals/statistics`：取得推薦統計
-- `GET /api/v1/admin/referrals/usage`：取得使用記錄
-- `GET /api/v1/admin/referrals/rewards`：取得獎勵記錄
-- `PUT /api/v1/admin/referrals/rewards/:id/status`：更新獎勵狀態
-- `GET /api/v1/admin/referrals/settings`：取得推薦設定
-- `PUT /api/v1/admin/referrals/settings`：更新推薦設定
+- `GET /api/v1/bookings/management`：獲取預約管理列表
+- `GET /api/v1/bookings/management/{id}/details`：獲取預約詳情
+- `PUT /api/v1/bookings/management/{id}/teacher`：變更教師
+- `PUT /api/v1/bookings/management/{id}/cancel`：取消課程
+- `GET /api/v1/bookings/management/statistics`：獲取預約統計
+- `GET /api/v1/bookings/management/filters`：獲取篩選選項
+- `POST /api/v1/bookings/management/{id}/notify`：發送通知
 
 ---
 
@@ -2002,12 +2647,12 @@ interface PaginationParams {
 - **MEMBER_004**: `CARD_NOT_PURCHASED` - 會員卡非PURCHASED狀態
 
 ### 📚 課程相關錯誤碼
-- **COURSE_001**: `TIMESLOT_NOT_FOUND` - 課程時段不存在
-- **COURSE_002**: `TIMESLOT_FULL` - 課程時段已滿 (FULL)
+- **COURSE_001**: `SESSION_NOT_FOUND` - 課程時段不存在
+- **COURSE_002**: `SESSION_FULL` - 課程時段已滿 (FULL)
 - **COURSE_003**: `WITHIN_24H` - 距離開課小於24小時 (WITHIN_24H)
 - **COURSE_004**: `MEMBERSHIP_EXPIRED` - 會員資格過期 (MEMBERSHIP_EXPIRED)
 - **COURSE_005**: `CANNOT_CANCEL_WITHIN_24H` - 開課前24小時內不可取消 (403)
-- **COURSE_006**: `TIMESLOT_CANCELLED` - 課程時段已被取消
+- **COURSE_006**: `SESSION_CANCELLED` - 課程時段已被取消
 
 ### 🛒 訂單相關錯誤碼
 - **ORDER_001**: `ORDER_NOT_FOUND` - 訂單不存在
