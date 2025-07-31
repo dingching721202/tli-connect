@@ -28,7 +28,14 @@
       "WebFetch(domain:connect.tli1956.com)",
       "Bash(true)",
       "Bash(pgrep:*)",
-      "Bash(tsc:*)"
+      "Bash(tsc:*)",
+      "Bash(for file in /home/dingchinghong/project/tli-connect/src/data/{bookings,memberCardPlans,corporateClients,agents,class_appointments,referralData,orders,member_cards,member_card_plans,corporateInquiry,corporateData,class_timeslots,teacherData,memberships}.ts)",
+      "Bash(do)",
+      "Bash(if [ -f \"$file\" ])",
+      "Bash(then)",
+      "Bash(echo:*)",
+      "Bash(fi)",
+      "Bash(done)"
     ],
     "deny": []
   }

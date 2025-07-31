@@ -1,17 +1,26 @@
-// ========================================
-// 向下相容性檔案
-// 將舊的 class_timeslots 對應到新的 courseSessions
-// ========================================
-
 import { courseSessions, getCourseSessionById, getCourseSessionsByScheduleId } from './courseSessions';
 
-// 向下相容的別名
-export const class_timeslots = courseSessions;
-export const classTimeslots = courseSessions; // 另一個別名
+// ========================================
+// 課程時段資料 - 已清空
+// ========================================
 
-// 向下相容的函數別名
-export const getTimeslotById = getCourseSessionById;
-export const getTimeslotsByClassId = getCourseSessionsByScheduleId;
+export const classTimeslots: unknown[] = [];
 
-// 預設匯出
-export default courseSessions;
+// ========================================
+// 輔助函數
+// ========================================
+
+// 根據ID獲取時段
+export const getTimeslotById = (id: number) => {
+  return classTimeslots.find(slot => slot.id === id);
+};
+
+// 獲取統計
+export const getTimeslotStatistics = () => {
+  return {
+    total: classTimeslots.length
+  };
+};
+
+// 向下相容的預設匯出
+export default classTimeslots;

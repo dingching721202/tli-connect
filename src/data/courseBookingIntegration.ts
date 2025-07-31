@@ -1,7 +1,7 @@
 import { courseSchedules } from './courseSchedules';
 import { courseSessions } from './courseSessions';
 import { bookings } from './bookings';
-import { memberships } from './memberships';
+import { userMemberships } from './memberships';
 import { courseModules } from './courseModules';
 import type { CourseSchedule, Booking } from '@/types/business';
 
@@ -48,7 +48,7 @@ export const canUserBookSession = (
   }
 
   // 檢查用戶是否有有效會員卡
-  const activeMembership = memberships.find(m => 
+  const activeMembership = userMemberships.find(m => 
     m.user_id === userId && 
     m.status === 'ACTIVE' &&
     m.remaining_sessions > 0
@@ -93,7 +93,7 @@ export const bookCourseSession = (
   }
 
   const session = courseSessions.find(s => s.id === sessionId);
-  const membership = memberships.find(m => m.id === membershipId);
+  const membership = userMemberships.find(m => m.id === membershipId);
 
   if (!session || !membership) {
     return { success: false, error: '找不到課程或會員卡' };
@@ -161,7 +161,7 @@ export const cancelCourseBooking = (
   session.reserved_count = Math.max(0, session.reserved_count - 1);
 
   // 恢復會員卡課程數
-  const membership = memberships.find(m => m.id === booking.membership_id);
+  const membership = userMemberships.find(m => m.id === booking.membership_id);
   if (membership) {
     membership.remaining_sessions += 1;
     membership.updated_at = new Date().toISOString();
@@ -210,7 +210,7 @@ export const getUserBookingHistory = (userId: number, limit?: number) => {
   const bookingsWithDetails = userBookings.map(booking => {
     const session = courseSessions.find(s => s.id === booking.course_session_id);
     const schedule = session ? courseSchedules.find(s => s.id === session.course_schedule_id) : null;
-    const membership = memberships.find(m => m.id === booking.membership_id);
+    const membership = userMemberships.find(m => m.id === booking.membership_id);
 
     return {
       booking,
@@ -289,7 +289,24 @@ export const checkSessionConflicts = (userId: number, sessionId: number): boolea
 };
 
 // 生成單一排程的預約節次資訊
-export const generateBookingSessions = (scheduleId: number) => {
+export const generateBookingSessions = (scheduleId?: number) => {
+  // 如果沒有提供scheduleId，返回所有排程的節次
+  if (scheduleId === undefined) {
+    return courseSchedules.flatMap(schedule => 
+      courseSessions
+        .filter(s => s.course_schedule_id === schedule.id)
+        .map(session => ({
+          ...session,
+          schedule,
+          availability: {
+            available_slots: session.capacity - session.reserved_count,
+            is_full: session.reserved_count >= session.capacity,
+            can_book: session.status === 'SCHEDULED' && session.reserved_count < session.capacity
+          }
+        }))
+    );
+  }
+
   const schedule = courseSchedules.find(s => s.id === scheduleId);
   if (!schedule) return [];
 

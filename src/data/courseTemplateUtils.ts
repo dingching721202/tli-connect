@@ -8,6 +8,26 @@ import type { CourseModule, CourseSchedule, CourseSession } from '@/types/busine
 // 提供課程模組、排程和節次之間的關聯操作
 // ========================================
 
+// Template session interface for form handling
+export interface TemplateSession {
+  sessionNumber: number;
+  title: string;
+  virtualClassroomLink: string;
+  materialLink: string;
+}
+
+// CourseTemplate type definition - extends CourseModule with UI-specific fields
+export interface CourseTemplate extends CourseModule {
+  totalSessions: number; // UI field mapping from total_sessions
+  schedules?: CourseSchedule[]; // Associated schedules
+  sessions?: TemplateSession[]; // Course content sessions for template
+  globalSettings?: {
+    defaultTitle?: string;
+    defaultVirtualClassroomLink?: string;
+    defaultMaterialLink?: string;
+  };
+}
+
 // 根據課程模組創建新的課程排程
 export const createScheduleFromModule = (
   moduleId: number,
@@ -240,23 +260,35 @@ export const searchCourses = (
 };
 
 // 獲取所有課程範本
-export const getCourseTemplates = () => {
+export const getCourseTemplates = (): CourseTemplate[] => {
   return courseModules.map(module => ({
     ...module,
     totalSessions: module.total_sessions, // 轉換欄位名稱以符合 UI 組件期望
-    schedules: courseSchedules.filter(s => s.course_module_id === module.id)
+    schedules: courseSchedules.filter(s => s.course_module_id === module.id),
+    sessions: [], // 初始化為空陣列，讓使用者在編輯時填入
+    globalSettings: {
+      defaultTitle: '',
+      defaultVirtualClassroomLink: '',
+      defaultMaterialLink: ''
+    }
   }));
 };
 
 // 獲取已發布的課程範本
-export const getPublishedCourseTemplates = () => {
+export const getPublishedCourseTemplates = (): CourseTemplate[] => {
   // 返回所有活躍且已發布的課程模組，讓使用者可以為它們創建排程
   return courseModules
     .filter(module => module.is_active && module.status === 'published')
     .map(module => ({
       ...module,
       totalSessions: module.total_sessions, // 轉換欄位名稱以符合 UI 組件期望
-      schedules: courseSchedules.filter(s => s.course_module_id === module.id)
+      schedules: courseSchedules.filter(s => s.course_module_id === module.id),
+      sessions: [], // 初始化為空陣列，讓使用者在編輯時填入
+      globalSettings: {
+        defaultTitle: '',
+        defaultVirtualClassroomLink: '',
+        defaultMaterialLink: ''
+      }
     }));
 };
 
@@ -293,6 +325,19 @@ export const getCourseStatistics = () => {
   };
 };
 
+// Helper function to convert CourseModule to CourseTemplate
+const moduleToTemplate = (module: CourseModule): CourseTemplate => ({
+  ...module,
+  totalSessions: module.total_sessions,
+  schedules: courseSchedules.filter(s => s.course_module_id === module.id),
+  sessions: [],
+  globalSettings: {
+    defaultTitle: '',
+    defaultVirtualClassroomLink: '',
+    defaultMaterialLink: ''
+  }
+});
+
 // ========================================
 // CRUD operations for CourseModule (Templates)
 // ========================================
@@ -301,7 +346,7 @@ export const getCourseStatistics = () => {
 export const updateCourseTemplate = (
   id: number,
   updates: Partial<Omit<CourseModule, 'id' | 'created_at' | 'updated_at'>>
-): CourseModule | null => {
+): CourseTemplate | null => {
   const index = courseModules.findIndex(m => m.id === id);
   if (index === -1) return null;
 
@@ -312,13 +357,13 @@ export const updateCourseTemplate = (
   };
 
   courseModules[index] = updatedModule;
-  return updatedModule;
+  return moduleToTemplate(updatedModule);
 };
 
 // 創建課程範本
 export const createCourseTemplate = (
   moduleData: Omit<CourseModule, 'id' | 'created_at' | 'updated_at'>
-): CourseModule => {
+): CourseTemplate => {
   const newModule: CourseModule = {
     ...moduleData,
     id: Math.max(...courseModules.map(m => m.id), 0) + 1,
@@ -327,7 +372,7 @@ export const createCourseTemplate = (
   };
 
   courseModules.push(newModule);
-  return newModule;
+  return moduleToTemplate(newModule);
 };
 
 // 刪除課程範本
@@ -369,24 +414,20 @@ export const deleteCourseTemplate = (id: number): boolean => {
 };
 
 // 同步範本到預約系統
-export const syncTemplateToBookingSystem = (templateId: number): boolean => {
-  const template = courseModules.find(m => m.id === templateId);
-  if (!template || !template.is_active) return false;
+export const syncTemplateToBookingSystem = (template: CourseTemplate): boolean => {
+  const moduleIndex = courseModules.findIndex(m => m.id === template.id);
+  if (moduleIndex === -1 || !template.is_active) return false;
 
   // 簡化的同步邏輯 - 實際應該調用外部API
-  console.log(`Syncing template ${templateId} (${template.title}) to booking system`);
+  console.log(`Syncing template ${template.id} (${template.title}) to booking system`);
   
   // 標記為已同步（這裡可以添加同步狀態字段）
-  const updatedTemplate = {
-    ...template,
+  const updatedModule = {
+    ...courseModules[moduleIndex],
     updated_at: new Date().toISOString()
   };
 
-  const index = courseModules.findIndex(m => m.id === templateId);
-  if (index !== -1) {
-    courseModules[index] = updatedTemplate;
-  }
-
+  courseModules[moduleIndex] = updatedModule;
   return true;
 };
 

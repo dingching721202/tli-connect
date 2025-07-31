@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
       });
     } else {
       // 如果沒有指定用戶ID，返回舊的數據結構以保持向後兼容
-      let cards = memberCardService.getAllCards();
+      const cards = memberCardService.getAllCards();
       
       return NextResponse.json({
         success: true,

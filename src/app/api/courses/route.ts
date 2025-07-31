@@ -14,20 +14,20 @@ export async function GET(request: NextRequest) {
     // 轉換為課程格式
     const courses = allSessions.map(session => ({
       id: session.id,
-      title: session.courseTitle,
-      teacher_name: session.teacherName,
-      price: session.price || 0,
-      currency: session.currency || 'TWD',
-      date: session.date,
-      start_time: session.startTime,
-      end_time: session.endTime,
-      max_students: session.maxStudents,
-      current_students: session.currentStudents,
-      available_slots: session.maxStudents - session.currentStudents,
-      level: session.level || 'intermediate',
-      language: session.language || 'english',
-      description: session.description || '',
-      is_available: (session.maxStudents - session.currentStudents) > 0
+      title: session.schedule?.title || session.topic || `第${session.session_number}堂課`,
+      teacher_name: 'TBD',
+      price: 0,
+      currency: 'TWD',
+      date: session.start_time?.split('T')[0] || '',
+      start_time: session.start_time || '',
+      end_time: session.end_time || '',
+      max_students: session.capacity || 0,
+      current_students: session.reserved_count || 0,
+      available_slots: (session.capacity || 0) - (session.reserved_count || 0),
+      level: 'intermediate',
+      language: 'english',
+      description: session.notes || '',
+      is_available: ((session.capacity || 0) - (session.reserved_count || 0)) > 0
     }));
     
     // 根據參數過濾

@@ -7,7 +7,7 @@ import SafeIcon from './common/SafeIcon';
 import { useRouter } from 'next/navigation';
 import {
   CourseTemplate,
-  CourseSession,
+  TemplateSession,
   getCourseTemplates,
   createCourseTemplate,
   updateCourseTemplate,
@@ -31,7 +31,7 @@ const CourseTemplateManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // 表單狀態
-  const [formData, setFormData] = useState<Partial<CourseTemplate> & { sessions: CourseSession[] }>({
+  const [formData, setFormData] = useState<Partial<CourseTemplate> & { sessions: TemplateSession[] }>({
     title: '',
     description: '',
     category: '中文',
@@ -186,7 +186,7 @@ const CourseTemplateManagement = () => {
 
 
   // 處理課程內容變化
-  const handleSessionChange = (sessionIndex: number, field: keyof CourseSession, value: string) => {
+  const handleSessionChange = (sessionIndex: number, field: keyof TemplateSession, value: string) => {
     const newSessions = [...(formData.sessions || [])];
     newSessions[sessionIndex] = {
       ...newSessions[sessionIndex],
@@ -209,14 +209,22 @@ const CourseTemplateManagement = () => {
     }
 
     const templateData = {
-      title: formData.title,
+      title: formData.title || '',
       description: formData.description || '',
-      category: formData.category || '中文',
-      level: formData.level || '不限',
-      totalSessions: formData.totalSessions || 1,
-      capacity: formData.capacity || 20,
-      globalSettings: formData.globalSettings,
-      sessions: formData.sessions || [],
+      cover_image_url: '/images/courses/default.jpg',
+      language: 'chinese' as const,
+      level: (formData.level === '初級' ? 'beginner' : 
+              formData.level === '中級' ? 'intermediate' : 
+              formData.level === '高級' ? 'advanced' : 'beginner') as 'beginner' | 'intermediate' | 'advanced',
+      categories: [formData.category || '中文'],
+      tags: [],
+      total_sessions: formData.totalSessions || 1,
+      session_duration_minutes: 120,
+      materials: [],
+      prerequisites: ['無'],
+      learning_objectives: [],
+      refund_policy: '開課前7天可全額退費',
+      is_active: true,
       status
     };
 
