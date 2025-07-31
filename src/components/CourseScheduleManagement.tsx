@@ -77,7 +77,7 @@ const CourseScheduleManagement = () => {
     const loadData = () => {
       const allSchedules = getCourseSchedules();
       const publishedTemplates = getPublishedCourseTemplates();
-      const allTeachers = teacherDataService.getAllTeachers();
+      const allTeachers = teacherDataService.getAll();
       
       setSchedules(allSchedules);
       setTemplates(publishedTemplates);
@@ -324,7 +324,7 @@ const CourseScheduleManagement = () => {
   // 處理新增教師成功
   const handleTeacherAddSuccess = () => {
     // 重新載入教師列表
-    const updatedTeachers = teacherDataService.getAllTeachers();
+    const updatedTeachers = teacherDataService.getAll();
     setTeachers(updatedTeachers.filter(teacher => teacher.status === 'active'));
   };
 

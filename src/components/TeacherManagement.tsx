@@ -101,7 +101,7 @@ const TeacherManagement: React.FC = () => {
   }, []);
 
   const loadTeachers = () => {
-    setTeachers(teacherDataService.getAllTeachers());
+    setTeachers(teacherDataService.getAll());
   };
 
   const filteredTeachers = teachers.filter(teacher => {

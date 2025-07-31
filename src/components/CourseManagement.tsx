@@ -218,7 +218,7 @@ const CourseManagement = () => {
   useEffect(() => {
     const loadData = () => {
       const coursesData = getManagedCourses();
-      const teachersData = teacherDataService.getAllTeachers();
+      const teachersData = teacherDataService.getAll();
       
       // 調試: 記錄課程資料
       console.log('=== 課程模組調試資訊 ===');
