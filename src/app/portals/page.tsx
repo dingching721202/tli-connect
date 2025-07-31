@@ -36,9 +36,9 @@ export default function PortalRouter() {
     if (targetRoute) {
       router.push(targetRoute);
     } else {
-      // 未知角色，重導向到預設頁面
+      // 未知角色，重導向到登入頁面
       console.warn(`Unknown user role: ${user.role}`);
-      router.push('/dashboard');
+      router.push('/login');
     }
   }, [user, loading, router]);
 

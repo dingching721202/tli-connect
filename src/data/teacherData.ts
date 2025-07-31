@@ -239,18 +239,77 @@ export const addLeaveRequest = (request: Omit<TeacherLeaveRequest, 'id' | 'creat
   teacherLeaveRequests.push(newRequest);
 };
 
+// 獲取所有教師
+export const getAllTeachers = (): Teacher[] => {
+  return teachers;
+};
+
 // 獲取所有活躍教師
 export const getActiveTeachers = (): Teacher[] => {
   return teachers.filter(teacher => teacher.status === 'ACTIVE' && teacher.is_available);
 };
 
+// 根據電子郵件獲取教師
+export const getTeacherByEmail = (email: string): Teacher | null => {
+  const user = require('./users').users.find((u: any) => u.email === email && u.role === 'TEACHER');
+  if (!user) return null;
+  
+  return teachers.find(teacher => teacher.user_id === user.id) || null;
+};
+
+// 新增教師
+export const addTeacher = (teacherData: Omit<Teacher, 'id' | 'created_at' | 'updated_at'>): Teacher => {
+  const newId = Math.max(...teachers.map(t => t.id), 0) + 1;
+  const now = new Date().toISOString();
+  
+  const newTeacher: Teacher = {
+    ...teacherData,
+    id: newId,
+    created_at: now,
+    updated_at: now
+  };
+  
+  teachers.push(newTeacher);
+  return newTeacher;
+};
+
+// 更新教師資料
+export const updateTeacher = (teacherId: number, updates: Partial<Teacher>): Teacher | null => {
+  const index = teachers.findIndex(teacher => teacher.id === teacherId);
+  if (index === -1) return null;
+  
+  const updatedTeacher = {
+    ...teachers[index],
+    ...updates,
+    id: teacherId, // 確保ID不被更改
+    updated_at: new Date().toISOString()
+  };
+  
+  teachers[index] = updatedTeacher;
+  return updatedTeacher;
+};
+
+// 刪除教師
+export const deleteTeacher = (teacherId: number): boolean => {
+  const index = teachers.findIndex(teacher => teacher.id === teacherId);
+  if (index === -1) return false;
+  
+  teachers.splice(index, 1);
+  return true;
+};
+
 // 教師數據服務物件
 export const teacherDataService = {
+  getAllTeachers,
   getTeacherById,
   getTeacherByUserId,
+  getTeacherByEmail,
   getTeachersByStatus,
   getTeachersBySpecialization,
   getActiveTeachers,
+  addTeacher,
+  updateTeacher,
+  deleteTeacher,
   getSchedulesByTeacherId,
   getLeaveRequestsByTeacherId,
   getLeaveRequestsByStatus,

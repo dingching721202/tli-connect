@@ -60,7 +60,7 @@ const PaymentResultContent = () => {
   }, [searchParams]);
 
   const handleBackToDashboard = () => {
-    router.push('/dashboard');
+    router.push('/portals');
   };
 
   const handleRetryPayment = () => {
@@ -106,7 +106,7 @@ const PaymentResultContent = () => {
                 <p className="text-gray-600 mb-6">
                   恭喜您成功購買會員方案！
                   {memberCardGenerated 
-                    ? '您的會員卡已經生成，請前往 Dashboard 啟用會員卡以開始使用。'
+                    ? '您的會員卡已經生成，請前往會員門戶啟用會員卡以開始使用。'
                     : '系統正在處理您的會員資格，請稍候片刻。'
                   }
                 </p>
@@ -118,7 +118,7 @@ const PaymentResultContent = () => {
                       {memberCardGenerated ? '✅ 會員卡已生成 (PURCHASED 狀態)' : '⏳ 會員卡生成中...'}
                     </p>
                     <p className={`font-medium ${memberCardGenerated ? 'text-orange-600' : 'text-gray-500'}`}>
-                      {memberCardGenerated ? '🔄 請前往 Dashboard 啟用會員卡' : '待會員卡生成後需要手動啟用'}
+                      {memberCardGenerated ? '🔄 請前往會員門戶啟用會員卡' : '待會員卡生成後需要手動啟用'}
                     </p>
                   </div>
                 </div>

@@ -35,7 +35,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
 import { FiLoader, FiFilter, FiCheck, FiCalendar, FiList } from 'react-icons/fi';
 import { 
-  generateBookingSessions, 
+  generateAllBookingSessions, 
   getCourseFilters, 
   filterBookingSessions,
   CourseFilter,
@@ -69,7 +69,7 @@ const BookingSystem: React.FC = () => {
       setLoading(true);
       
       // 只載入課程模組的數據
-      const managedSessions = generateBookingSessions();
+      const managedSessions = generateAllBookingSessions();
       let filters = getCourseFilters();
       
       // 單一課程模式：只顯示指定的課程
@@ -255,9 +255,18 @@ const BookingSystem: React.FC = () => {
   const filteredCourses = useMemo(() => {
     const selectedCourseIds = courseFilters
       .filter(filter => filter.selected)
-      .map(filter => filter.id);
+      .map(filter => parseInt(filter.id));
     
-    const filteredManagedSessions = filterBookingSessions(managedCourseSessions, selectedCourseIds);
+    // 如果沒有選中任何課程，顯示所有課程
+    if (selectedCourseIds.length === 0) {
+      return convertManagedSessionsToCourses(managedCourseSessions);
+    }
+    
+    // 根據選中的課程模組ID篩選會話
+    const filteredManagedSessions = managedCourseSessions.filter(session => {
+      return selectedCourseIds.includes(session.schedule.course_module_id);
+    });
+    
     const filteredManagedCourses = convertManagedSessionsToCourses(filteredManagedSessions);
     
     return filteredManagedCourses;

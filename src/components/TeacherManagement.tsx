@@ -105,9 +105,9 @@ const TeacherManagement: React.FC = () => {
   };
 
   const filteredTeachers = teachers.filter(teacher => {
-    const matchesSearch = teacher.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         teacher.expertise.some(exp => exp.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = (teacher.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (teacher.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (teacher.expertise || []).some(exp => (exp || '').toLowerCase().includes(searchTerm.toLowerCase()));
     
     if (!matchesSearch) return false;
     
@@ -245,9 +245,9 @@ const TeacherManagement: React.FC = () => {
       teacher.phone || '',
       (teacher.teachingCategory || []).join('; '),
       teacher.experience || '',
-      teacher.languages.join('; '),
-      teacher.expertise.join('; '),
-      teacher.qualification.join('; '),
+      (teacher.languages || []).join('; '),
+      (teacher.expertise || []).join('; '),
+      (teacher.qualification || []).join('; '),
       teacher.teachingHours || 0,
       teacher.rating || 0,
       teacher.totalStudents || 0,
@@ -349,7 +349,7 @@ const TeacherManagement: React.FC = () => {
         <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-xl">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold">{(teachers.reduce((sum, t) => sum + t.rating, 0) / teachers.length).toFixed(1)}</div>
+              <div className="text-2xl font-bold">{teachers.length > 0 ? (teachers.reduce((sum, t) => sum + (t.rating || 0), 0) / teachers.length).toFixed(1) : '0.0'}</div>
               <div className="text-sm opacity-90">平均評分</div>
             </div>
             <SafeIcon icon={FiStar} className="text-2xl opacity-80" />
@@ -433,15 +433,15 @@ const TeacherManagement: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {teacher.teachingCategory?.slice(0, 2).map((category, index) => (
+                      {(teacher.teachingCategory || []).slice(0, 2).map((category, index) => (
                         <span key={index} className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
                           {category}
                         </span>
                       ))}
-                      {(teacher.teachingCategory?.length || 0) > 2 && (
-                        <span className="text-xs text-gray-500">+{teacher.teachingCategory.length - 2}</span>
+                      {((teacher.teachingCategory || []).length) > 2 && (
+                        <span className="text-xs text-gray-500">+{(teacher.teachingCategory || []).length - 2}</span>
                       )}
-                      {(!teacher.teachingCategory || teacher.teachingCategory.length === 0) && (
+                      {(teacher.teachingCategory || []).length === 0 && (
                         <span className="text-xs text-gray-400">未設定</span>
                       )}
                     </div>
@@ -453,45 +453,45 @@ const TeacherManagement: React.FC = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {teacher.languages.slice(0, 2).map((lang, index) => (
+                      {(teacher.languages || []).slice(0, 2).map((lang, index) => (
                         <span key={index} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
                           {lang}
                         </span>
                       ))}
-                      {teacher.languages.length > 2 && (
-                        <span className="text-xs text-gray-500">+{teacher.languages.length - 2}</span>
+                      {(teacher.languages || []).length > 2 && (
+                        <span className="text-xs text-gray-500">+{(teacher.languages || []).length - 2}</span>
                       )}
-                      {teacher.languages.length === 0 && (
+                      {(teacher.languages || []).length === 0 && (
                         <span className="text-xs text-gray-400">未設定</span>
                       )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {teacher.expertise.slice(0, 2).map((exp, index) => (
+                      {(teacher.expertise || []).slice(0, 2).map((exp, index) => (
                         <span key={index} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
                           {exp}
                         </span>
                       ))}
-                      {teacher.expertise.length > 2 && (
-                        <span className="text-xs text-gray-500">+{teacher.expertise.length - 2}</span>
+                      {(teacher.expertise || []).length > 2 && (
+                        <span className="text-xs text-gray-500">+{(teacher.expertise || []).length - 2}</span>
                       )}
-                      {teacher.expertise.length === 0 && (
+                      {(teacher.expertise || []).length === 0 && (
                         <span className="text-xs text-gray-400">未設定</span>
                       )}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900">
-                      {teacher.qualification.slice(0, 2).map((qual, index) => (
+                      {(teacher.qualification || []).slice(0, 2).map((qual, index) => (
                         <span key={index} className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
                           {qual}
                         </span>
                       ))}
-                      {teacher.qualification.length > 2 && (
-                        <span className="text-xs text-gray-500">+{teacher.qualification.length - 2}</span>
+                      {(teacher.qualification || []).length > 2 && (
+                        <span className="text-xs text-gray-500">+{(teacher.qualification || []).length - 2}</span>
                       )}
-                      {teacher.qualification.length === 0 && (
+                      {(teacher.qualification || []).length === 0 && (
                         <span className="text-xs text-gray-400">未設定</span>
                       )}
                     </div>
@@ -1013,7 +1013,7 @@ const TeacherManagement: React.FC = () => {
                             {category}
                           </span>
                         ))}
-                        {(!selectedTeacher.teachingCategory || selectedTeacher.teachingCategory.length === 0) && (
+                        {(selectedTeacher.teachingCategory || []).length === 0 && (
                           <span className="text-xs text-gray-400">未設定</span>
                         )}
                       </div>
@@ -1086,7 +1086,7 @@ const TeacherManagement: React.FC = () => {
                             {lang}
                           </span>
                         ))}
-                        {selectedTeacher.languages.length === 0 && (
+                        {(selectedTeacher.languages || []).length === 0 && (
                           <span className="text-xs text-gray-400">未設定</span>
                         )}
                       </div>
@@ -1163,7 +1163,7 @@ const TeacherManagement: React.FC = () => {
                             {exp}
                           </span>
                         ))}
-                        {selectedTeacher.expertise.length === 0 && (
+                        {(selectedTeacher.expertise || []).length === 0 && (
                           <span className="text-xs text-gray-400">未設定</span>
                         )}
                       </div>
@@ -1219,7 +1219,7 @@ const TeacherManagement: React.FC = () => {
                             {qual}
                           </span>
                         ))}
-                        {selectedTeacher.qualification.length === 0 && (
+                        {(selectedTeacher.qualification || []).length === 0 && (
                           <span className="text-xs text-gray-400">未設定</span>
                         )}
                       </div>

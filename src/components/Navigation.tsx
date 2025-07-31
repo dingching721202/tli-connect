@@ -40,9 +40,6 @@ const Navigation: React.FC = () => {
     
     // 代理商專用
     { name: '推薦系統', href: '/referral', icon: FiShare2, roles: ['AGENT'] },
-    
-    // 儀表板 (向下相容)
-    { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'STAFF', 'CORPORATE_CONTACT', 'ADMIN'] },
   ];
 
   const handleNavigation = (href: string) => {

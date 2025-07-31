@@ -45,7 +45,7 @@ const CorporateInquiriesPage: React.FC = () => {
   // 檢查權限
   useEffect(() => {
     if (!user || user.role !== 'OPS') {
-      router.push('/dashboard');
+      router.push('/portals/admin');
       return;
     }
     loadInquiries();

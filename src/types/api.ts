@@ -60,6 +60,7 @@ export type ErrorCode =
   | 'ACCOUNT_SUSPENDED'              // 1105
   | 'ACCOUNT_INACTIVE'               // 1106
   | 'TOKEN_EXPIRED'                  // 1107
+  | 'REGISTRATION_FAILED'            // 1108
   | 'TOKEN_INVALID'                  // 1108
   | 'REFRESH_TOKEN_EXPIRED'          // 1109
   | 'PASSWORD_RESET_TOKEN_INVALID'   // 1110

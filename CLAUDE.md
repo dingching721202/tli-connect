@@ -63,3 +63,6 @@ Turn on strict settings in tsconfig.json to prevent variables from silently beco
 Use as const to lock down constant types.
 Use type guards to narrow types safely.
 const arr = [1, 2, 3] as const // arr is readonly [1, 2, 3]
+
+# Development Book
+- Please develop according to TLI-Connect-System-Architecture rules

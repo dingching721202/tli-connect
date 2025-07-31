@@ -4,10 +4,19 @@ import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
-import type { User } from '@/types';
+
+// 使用 AuthContext 中的簡化 User 類型
+interface AdminUser {
+  id: number;
+  email: string;
+  name: string;
+  phone: string;
+  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN';
+  avatar?: string;
+}
 
 interface AdminDashboardData {
-  user: User;
+  user: AdminUser;
   systemStats: {
     totalUsers: number;
     activeMembers: number;
@@ -40,26 +49,20 @@ export default function AdminPortal() {
   const [dashboardData, setDashboardData] = useState<AdminDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (loading) return;
-    
-    // 檢查用戶角色權限
-    if (!user || user.role !== 'ADMIN') {
-      router.push('/login');
-      return;
-    }
-
-    // 載入管理員儀表板資料
-    loadAdminDashboard();
-  }, [user, loading, router, loadAdminDashboard]);
-
   const loadAdminDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
       
       // 模擬載入管理員資料
       setDashboardData({
-        user: user!,
+        user: {
+          id: user!.id,
+          email: user!.email,
+          name: user!.name,
+          phone: user!.phone,
+          role: user!.role,
+          avatar: user!.avatar
+        },
         systemStats: {
           totalUsers: 2456,
           activeMembers: 1823,
@@ -158,6 +161,19 @@ export default function AdminPortal() {
       setIsLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (loading) return;
+    
+    // 檢查用戶角色權限
+    if (!user || user.role !== 'ADMIN') {
+      router.push('/login');
+      return;
+    }
+
+    // 載入管理員儀表板資料
+    loadAdminDashboard();
+  }, [user, loading, router, loadAdminDashboard]);
 
   const getHealthStatusColor = (status: string) => {
     switch (status) {

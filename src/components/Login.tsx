@@ -23,32 +23,25 @@ const Login: React.FC = () => {
   // 會員卡測試帳號 - 不同會員狀態
   const membershipTestAccounts = [
     { 
-      email: 'alice@example.com', 
-      name: 'Alice Wang', 
+      email: 'student.zhang@example.com', 
+      name: '張同學', 
       role: '學生 - 已啟用會員卡',
       status: '✅ ACTIVE',
       description: '已啟用會員卡，可查看完整功能'
     },
     { 
-      email: 'user2@example.com', 
-      name: 'Bob Chen', 
-      role: '學生 - 待啟用會員卡',
-      status: '⏳ PURCHASED',
-      description: '有待啟用會員卡，可測試啟用功能'
+      email: 'student.lee@example.com', 
+      name: '李同學', 
+      role: '學生 - 未購買會員',
+      status: '🛒 未購買',
+      description: '測試未購買會員卡的狀態'
     },
     { 
-      email: 'charlie@example.com', 
-      name: 'Charlie Lin', 
-      role: '學生 - 已啟用會員卡',
-      status: '✅ ACTIVE',
-      description: '已啟用會員卡，用於測試重複啟用'
-    },
-    { 
-      email: 'david@example.com', 
-      name: 'David Wilson', 
-      role: '學生 - 無會員卡',
-      status: '🚫 無會員卡',
-      description: '完全沒有會員卡，可測試購買流程'
+      email: 'student.zhao@example.com', 
+      name: '趙同學', 
+      role: '學生 - 已購未啟用',
+      status: '⏳ 待啟用',
+      description: '測試已購買但未啟用會員卡的狀態'
     }
   ];
 
@@ -89,14 +82,19 @@ const Login: React.FC = () => {
       }
       
       if (result.success && result.user) {
-        // 根據用戶角色決定跳轉頁面
-        if (result.user.role === 'OPS') {
-          router.push('/dashboard');
-        } else if (result.user.role === 'TEACHER') {
-          router.push('/dashboard');
-        } else {
-          router.push('/dashboard'); // 學生跳轉到 dashboard
-        }
+        // 根據用戶角色跳轉到對應的門戶
+        const rolePortalMap = {
+          'STUDENT': '/portals/student',
+          'TEACHER': '/portals/teacher',
+          'STAFF': '/portals/staff',
+          'ADMIN': '/portals/admin',
+          'CORPORATE_CONTACT': '/portals/corporate',
+          'AGENT': '/portals/agent',
+          'OPS': '/portals/admin' // OPS 使用管理員門戶
+        };
+        
+        const portalPath = rolePortalMap[result.user.role as keyof typeof rolePortalMap] || '/portals';
+        router.push(portalPath);
       } else {
         // 處理錯誤碼
         let errorMessage = result.error || (isRegisterMode ? '註冊失敗' : '登入失敗');

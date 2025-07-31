@@ -25,6 +25,60 @@ export default function StudentPortal() {
   const [dashboardData, setDashboardData] = useState<StudentDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const loadStudentDashboard = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      // 並行載入所有資料
+      const membershipUrl = `/api/member-cards?user_id=${user?.id}`;
+      
+      // 檢查 token
+      const token = localStorage.getItem('token');
+      
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const [membershipRes, bookingsRes, coursesRes] = await Promise.all([
+        fetch(membershipUrl, { headers }),
+        fetch(`/api/bookings?user_id=${user?.id}&status=CONFIRMED`, { headers }),
+        fetch('/api/courses?available_only=true&limit=10', { headers })
+      ]);
+
+      const [memberships, bookings, courses] = await Promise.all([
+        membershipRes.json(),
+        bookingsRes.json(), 
+        coursesRes.json()
+      ]);
+
+      // 優先獲取 ACTIVE 會員卡，如果沒有則獲取 PURCHASED 會員卡
+      const activeMembership = memberships.data?.find((m: UserMembership) => m.status === 'ACTIVE') || 
+                               memberships.data?.find((m: UserMembership) => m.status === 'PURCHASED');
+
+      setDashboardData({
+        user: user!,
+        activeMembership,
+        upcomingBookings: bookings.data || [],
+        availableCourses: courses.data || [],
+        recentActivity: []
+      });
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+      
+      // 設置空的 dashboard 數據以防止頁面崩潰
+      setDashboardData({
+        user: user!,
+        activeMembership: undefined,
+        upcomingBookings: [],
+        availableCourses: [],
+        recentActivity: []
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (loading) return;
     
@@ -37,39 +91,6 @@ export default function StudentPortal() {
     // 載入學生儀表板資料
     loadStudentDashboard();
   }, [user, loading, router, loadStudentDashboard]);
-
-  const loadStudentDashboard = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      
-      // 並行載入所有資料
-      const [membershipRes, bookingsRes, coursesRes] = await Promise.all([
-        fetch(`/api/member-cards?user_id=${user?.id}`),
-        fetch(`/api/bookings?user_id=${user?.id}&status=CONFIRMED`),
-        fetch('/api/courses?available_only=true&limit=10')
-      ]);
-
-      const [memberships, bookings, courses] = await Promise.all([
-        membershipRes.json(),
-        bookingsRes.json(), 
-        coursesRes.json()
-      ]);
-
-      const activeMembership = memberships.data?.find((m: UserMembership) => m.status === 'ACTIVE');
-
-      setDashboardData({
-        user: user!,
-        activeMembership,
-        upcomingBookings: bookings.data || [],
-        availableCourses: courses.data || [],
-        recentActivity: []
-      });
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [user]);
 
   if (loading || isLoading) {
     return (
@@ -96,7 +117,7 @@ export default function StudentPortal() {
               </h1>
               <p className="text-gray-600 mt-2">
                 {dashboardData?.activeMembership 
-                  ? `您的會員卡狀態：${dashboardData.activeMembership.status}` 
+                  ? `您的會員卡狀態：${dashboardData.activeMembership.status === 'ACTIVE' ? '已啟用' : dashboardData.activeMembership.status === 'PURCHASED' ? '待啟用' : dashboardData.activeMembership.status}` 
                   : '您目前沒有有效的會員卡'}
               </p>
             </div>
@@ -116,24 +137,72 @@ export default function StudentPortal() {
               
               {dashboardData?.activeMembership ? (
                 <div className="space-y-4">
-                  <div className="bg-green-50 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <span className="text-green-800 font-medium">有效會員</span>
-                      <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
-                        {dashboardData.activeMembership.status}
-                      </span>
+                  {dashboardData.activeMembership.status === 'ACTIVE' ? (
+                    <>
+                      <div className="bg-green-50 p-4 rounded-lg">
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-800 font-medium">有效會員</span>
+                          <span className="bg-green-100 text-green-800 px-2 py-1 rounded text-sm">
+                            已啟用
+                          </span>
+                        </div>
+                        <p className="text-green-600 text-sm mt-2">
+                          到期日：{dashboardData.activeMembership.end_date}
+                        </p>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-600">剩餘課程</span>
+                        <span className="font-bold text-blue-600">
+                          {dashboardData.activeMembership.sessions_remaining || dashboardData.activeMembership.remaining_sessions || 0}
+                        </span>
+                      </div>
+                    </>
+                  ) : dashboardData.activeMembership.status === 'PURCHASED' ? (
+                    <div className="bg-yellow-50 p-4 rounded-lg">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-yellow-800 font-medium">會員卡待啟用</span>
+                        <span className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-sm">
+                          待啟用
+                        </span>
+                      </div>
+                      <div className="text-sm text-yellow-700 space-y-1 mb-4">
+                        <p>購買日期：{new Date(dashboardData.activeMembership.purchase_date || dashboardData.activeMembership.created_at).toLocaleDateString('zh-TW')}</p>
+                        <p>啟用期限：{new Date(dashboardData.activeMembership.activation_deadline || dashboardData.activeMembership.activate_expire_time).toLocaleDateString('zh-TW')}</p>
+                        <p>總課程數：{dashboardData.activeMembership.sessions_total || dashboardData.activeMembership.remaining_sessions || 0}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          // 啟用會員卡的邏輯
+                          const membershipId = dashboardData.activeMembership?.id;
+                          if (membershipId) {
+                            fetch(`/api/member-cards/${membershipId}/activate`, {
+                              method: 'POST',
+                              headers: {
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                              }
+                            })
+                            .then(res => res.json())
+                            .then(result => {
+                              if (result.success) {
+                                alert('會員卡啟用成功！');
+                                loadStudentDashboard(); // 重新載入資料
+                              } else {
+                                alert('啟用失敗：' + result.error);
+                              }
+                            })
+                            .catch(err => {
+                              console.error('啟用失敗:', err);
+                              alert('啟用失敗，請稍後再試');
+                            });
+                          }
+                        }}
+                        className="w-full bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-colors font-medium"
+                      >
+                        立即啟用會員卡
+                      </button>
                     </div>
-                    <p className="text-green-600 text-sm mt-2">
-                      到期日：{dashboardData.activeMembership.end_date}
-                    </p>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">剩餘課程</span>
-                    <span className="font-bold text-blue-600">
-                      {dashboardData.activeMembership.remaining_sessions}
-                    </span>
-                  </div>
+                  ) : null}
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -197,9 +266,9 @@ export default function StudentPortal() {
                       <h3 className="font-medium text-gray-800">{course.title}</h3>
                       <p className="text-gray-600 text-sm mt-1">教師：{course.teacher_name}</p>
                       <div className="flex justify-between items-center mt-3">
-                        <span className="text-blue-600 font-bold">{course.currency} {course.price}</span>
+                        <span className="text-blue-600 font-bold">{course.currency} {course.price || 0}</span>
                         <span className="text-green-600 text-sm">
-                          {course.max_students - course.current_students} 個名額
+                          {(course.max_students || 0) - (course.current_students || 0)} 個名額
                         </span>
                       </div>
                     </div>

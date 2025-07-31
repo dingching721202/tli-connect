@@ -654,7 +654,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                       })}
                       {card.available_course_ids.length > 3 && (
                         <div className="text-xs text-gray-500">
-                          還有 {card.available_course_ids.length - 3} 個課程...
+                          還有 {(card.available_course_ids?.length || 0) - 3} 個課程...
                         </div>
                       )}
                     </div>
@@ -844,7 +844,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                     ))}
                     {plan.features.length > 3 && (
                       <p className="text-xs text-gray-500 pl-3">
-                        還有 {plan.features.length - 3} 項功能...
+                        還有 {(plan.features?.length || 0) - 3} 項功能...
                       </p>
                     )}
                   </div>

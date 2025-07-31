@@ -1318,7 +1318,7 @@ const AgentManagement: React.FC = () => {
                               }
                             }));
                           } else {
-                            alert(`分紅比例總和不能超過 100%\n其他角色總和：${otherTotal}%\n最大可設定：${100 - otherTotal}%`);
+                            alert(`分紅比例總和不能超過 100%\n其他角色總和：${otherTotal || 0}%\n最大可設定：${100 - (otherTotal || 0)}%`);
                           }
                         }}
                         className="w-16 px-2 py-1 border border-gray-300 rounded text-center text-sm"

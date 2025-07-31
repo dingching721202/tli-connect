@@ -72,10 +72,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // 載入用戶會員資料
   const loadUserWithMembership = async (userData: DataUser): Promise<User> => {
+    console.log('🔍 AuthContext - 載入用戶會員資料:', userData);
     // 優先獲取 ACTIVE 會員卡，如果沒有則獲取 PURCHASED 會員卡
     let membership = await memberCardService.getUserMembership(userData.id);
+    console.log('🔍 AuthContext - ACTIVE 會員卡:', membership);
     if (!membership) {
       membership = await memberCardService.getUserPurchasedMembership(userData.id);
+      console.log('🔍 AuthContext - PURCHASED 會員卡:', membership);
     }
     
     return {
@@ -113,11 +116,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         data 
       });
       
-      if (response.ok && data.success && data.user_id && data.jwt) {
+      // 處理新的 API 響應格式
+      if (response.ok && data.success && data.data) {
         console.log('AuthContext: 註冊 API 成功，開始獲取用戶資料');
         
+        const registerData = data.data;
+        const userId = registerData.user.id;
+        const jwt = registerData.access_token;
+        
         // 獲取完整用戶資料
-        const userData = await authService.getUser(data.user_id);
+        const userData = await authService.getUser(userId);
         console.log('AuthContext: 用戶資料', userData);
         
         if (userData) {
@@ -127,8 +135,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setUser(userWithMembership);
           
           // 保存會話
-          localStorage.setItem('userId', data.user_id.toString());
-          localStorage.setItem('jwt', data.jwt);
+          localStorage.setItem('userId', userId.toString());
+          localStorage.setItem('jwt', jwt);
           
           return { success: true, user: userWithMembership };
         } else {
@@ -138,8 +146,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       // 處理特定錯誤狀態碼
-      let errorMessage = data.error || '註冊失敗';
-      if (response.status === 409 && data.error === 'EMAIL_ALREADY_EXISTS') {
+      let errorMessage = data.message || '註冊失敗';
+      if (response.status === 409 && data.error_code === 'EMAIL_ALREADY_EXISTS') {
         errorMessage = 'EMAIL_ALREADY_EXISTS';
       }
       
@@ -168,24 +176,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       const data = await response.json();
       
-      if (response.ok && data.success && data.user_id && data.jwt) {
+      // 處理新的 API 響應格式
+      if (response.ok && data.success && data.data) {
+        const loginData = data.data;
+        const userId = loginData.user.id;
+        const jwt = loginData.access_token;
+        
         // 獲取完整用戶資料
-        const userData = await authService.getUser(data.user_id);
+        const userData = await authService.getUser(userId);
         if (userData) {
           const userWithMembership = await loadUserWithMembership(userData);
           setUser(userWithMembership);
           
           // 保存會話
-          localStorage.setItem('userId', data.user_id.toString());
-          localStorage.setItem('jwt', data.jwt);
+          localStorage.setItem('userId', userId.toString());
+          localStorage.setItem('jwt', jwt);
           
           return { success: true, user: userWithMembership };
         }
       }
       
       // 處理特定錯誤狀態碼
-      let errorMessage = data.error || '登入失敗';
-      if (response.status === 401 && data.error === 'INVALID_CREDENTIALS') {
+      let errorMessage = data.message || '登入失敗';
+      if (response.status === 401 && data.error_code === 'INVALID_CREDENTIALS') {
         errorMessage = 'INVALID_CREDENTIALS';
       }
       

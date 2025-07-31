@@ -114,11 +114,16 @@ const CourseScheduleManagement = () => {
         seriesName: schedule.seriesName || '',
         teacherId: schedule.teacherId,
         teacherName: schedule.teacherName,
-        timeSlots: schedule.timeSlots,
+        timeSlots: schedule.timeSlots || [{
+          id: `slot_${Date.now()}`,
+          weekdays: [],
+          startTime: '09:00',
+          endTime: '10:30',
+        }],
         startDate: schedule.startDate,
         endDate: schedule.endDate,
-        excludeDates: schedule.excludeDates,
-        generatedSessions: schedule.generatedSessions,
+        excludeDates: schedule.excludeDates || [],
+        generatedSessions: schedule.generatedSessions || [],
         status: schedule.status
       });
     } else {
@@ -180,7 +185,7 @@ const CourseScheduleManagement = () => {
           ...formData,
           teacherId: teacherId,
           teacherName: teacher.name,
-          timeSlots: formData.timeSlots.map(slot => ({
+          timeSlots: (formData.timeSlots || []).map(slot => ({
             ...slot,
             teacherId: teacherId
           }))
@@ -196,7 +201,7 @@ const CourseScheduleManagement = () => {
         ...formData,
         teacherId: '',
         teacherName: '',
-        timeSlots: formData.timeSlots.map(slot => ({
+        timeSlots: (formData.timeSlots || []).map(slot => ({
           ...slot,
           teacherId: ''
         }))
@@ -228,7 +233,7 @@ const CourseScheduleManagement = () => {
   const handleRemoveTimeSlot = (slotIndex: number) => {
     setFormData(prev => ({
       ...prev,
-      timeSlots: prev.timeSlots.filter((_, index) => index !== slotIndex)
+      timeSlots: (prev.timeSlots || []).filter((_, index) => index !== slotIndex)
     }));
   };
 
@@ -255,20 +260,23 @@ const CourseScheduleManagement = () => {
 
   // 處理星期切換
   const handleWeekdayToggle = (slotIndex: number, day: number) => {
-    const slot = formData.timeSlots[slotIndex];
-    const newWeekdays = slot.weekdays.includes(day)
-      ? slot.weekdays.filter(d => d !== day)
-      : [...slot.weekdays, day].sort();
+    const slot = (formData.timeSlots || [])[slotIndex];
+    if (!slot) return;
+    
+    const currentWeekdays = slot.weekdays || [];
+    const newWeekdays = currentWeekdays.includes(day)
+      ? currentWeekdays.filter(d => d !== day)
+      : [...currentWeekdays, day].sort();
     
     handleTimeSlotChange(slotIndex, 'weekdays', newWeekdays);
   };
 
   // 處理排除日期
   const handleExcludeDate = (date: string) => {
-    const isExcluded = formData.excludeDates.includes(date);
+    const isExcluded = (formData.excludeDates || []).includes(date);
     const updatedExcludeDates = isExcluded
-      ? formData.excludeDates.filter(d => d !== date)
-      : [...formData.excludeDates, date];
+      ? (formData.excludeDates || []).filter(d => d !== date)
+      : [...(formData.excludeDates || []), date];
     
     const updatedData = {
       ...formData,
@@ -284,7 +292,7 @@ const CourseScheduleManagement = () => {
   // 生成預覽
   const generatePreview = (data = formData, template?: CourseTemplate) => {
     const selectedTemplate = template || templates.find(t => t.id === data.templateId);
-    if (!selectedTemplate || !data.startDate || !data.timeSlots.length) {
+    if (!selectedTemplate || !data.startDate || !(data.timeSlots || []).length) {
       return;
     }
 
@@ -322,12 +330,12 @@ const CourseScheduleManagement = () => {
 
   // 儲存課程排程
   const handleSaveSchedule = (status: 'draft' | 'published' = 'draft') => {
-    if (!formData.templateId || !formData.startDate || !formData.timeSlots.length) {
+    if (!formData.templateId || !formData.startDate || !(formData.timeSlots || []).length) {
       alert('請選擇課程、設定開始日期和時間段');
       return;
     }
 
-    if (status === 'published' && formData.generatedSessions.length === 0) {
+    if (status === 'published' && (formData.generatedSessions || []).length === 0) {
       alert('發布前請先生成課程預覽');
       return;
     }
@@ -522,7 +530,7 @@ const CourseScheduleManagement = () => {
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-500">總課堂：</span>
-                  <span className="font-medium text-purple-600">{schedule.generatedSessions.length} 堂</span>
+                  <span className="font-medium text-purple-600">{(schedule.generatedSessions || []).length} 堂</span>
                 </div>
               </div>
 
@@ -530,10 +538,10 @@ const CourseScheduleManagement = () => {
               <div className="mb-4">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">上課時間：</h4>
                 <div className="space-y-1">
-                  {schedule.timeSlots.map((slot, index) => (
+                  {(schedule.timeSlots || []).map((slot, index) => (
                     <div key={`schedule-${schedule.id}-timeslot-${index}`} className="bg-white rounded-lg p-2 text-xs border">
                       <div className="text-gray-800">
-                        {slot.weekdays.map(d => getWeekdayName(d)).join('、')} 
+                        {(slot.weekdays || []).map(d => getWeekdayName(d)).join('、')} 
                         {' '}
                         {slot.startTime}-{slot.endTime}
                       </div>
@@ -707,11 +715,11 @@ const CourseScheduleManagement = () => {
                   </div>
 
                   <div className="space-y-4">
-                    {formData.timeSlots.map((slot, slotIndex) => (
+                    {(formData.timeSlots || []).map((slot, slotIndex) => (
                       <div key={slot.id} className="bg-white rounded-lg p-4 border border-purple-200">
                         <div className="flex justify-between items-center mb-4">
                           <h6 className="font-medium text-gray-900">時間段 {slotIndex + 1}</h6>
-                          {formData.timeSlots.length > 1 && (
+                          {(formData.timeSlots || []).length > 1 && (
                             <button
                               type="button"
                               onClick={() => handleRemoveTimeSlot(slotIndex)}
@@ -729,7 +737,7 @@ const CourseScheduleManagement = () => {
                           </label>
                           <div className="flex flex-wrap gap-2">
                             {[1, 2, 3, 4, 5, 6, 0].map((day) => {
-                              const isSelected = slot.weekdays.includes(day);
+                              const isSelected = (slot.weekdays || []).includes(day);
                               return (
                                 <button
                                   key={day}
@@ -827,7 +835,7 @@ const CourseScheduleManagement = () => {
                         placeholder="選擇要排除的日期"
                       />
                       <div className="flex flex-wrap gap-2">
-                        {formData.excludeDates.map((date) => (
+                        {(formData.excludeDates || []).map((date) => (
                           <div
                             key={date}
                             className="flex items-center bg-red-100 px-2 py-1 rounded text-xs"
@@ -860,13 +868,13 @@ const CourseScheduleManagement = () => {
                 </div>
 
                 {/* Preview */}
-                {formData.generatedSessions.length > 0 && (
+                {(formData.generatedSessions || []).length > 0 && (
                   <div className="bg-yellow-50 rounded-lg p-4">
                     <div className="flex justify-between items-center mb-4">
                       <h4 className="font-semibold text-gray-900">
                         預約時間預覽
                         <span className="ml-2 bg-yellow-100 text-yellow-800 text-xs font-medium px-2 py-1 rounded-full">
-                          共 {formData.generatedSessions.length} 堂課
+                          共 {(formData.generatedSessions || []).length} 堂課
                         </span>
                       </h4>
                       <button
@@ -890,7 +898,7 @@ const CourseScheduleManagement = () => {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {formData.generatedSessions.map((session, index) => (
+                          {(formData.generatedSessions || []).map((session, index) => (
                             <tr key={session.id} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
                               <td className="px-3 py-2 text-sm text-gray-900">
                                 {formatDateWithWeekday(session.date)}

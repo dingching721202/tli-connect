@@ -222,7 +222,7 @@ export default function CorporateManagementPage() {
     }
 
     if (user.role !== 'CORPORATE_CONTACT') {
-      router.push('/dashboard');
+      router.push('/portals/corporate');
       return;
     }
   }, [user, router]);
@@ -1354,7 +1354,7 @@ function AddUserModal({
               會員類型：{planInfo.planType === 'yearly' ? '年方案' : '季方案'}
             </div>
             <div className="text-blue-600">
-              可用帳號：{planInfo.totalSlots - planInfo.usedSlots}/{planInfo.totalSlots}
+              可用帳號：{(planInfo.totalSlots || 0) - (planInfo.usedSlots || 0)}/{planInfo.totalSlots || 0}
             </div>
           </div>
         </div>

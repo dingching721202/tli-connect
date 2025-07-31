@@ -193,14 +193,23 @@ export interface UserMembership {
   id: number;
   user_id: number;
   member_card_plan_id: number;
-  order_id: number;
+  order_id?: number;
   status: 'PURCHASED' | 'ACTIVE' | 'EXPIRED' | 'SUSPENDED' | 'REFUNDED';
   purchase_date: string;
   activation_deadline: string; // 購買後24小時內需啟用
+  activation_date?: string;
   activated_at?: string;
   start_date?: string;
   end_date?: string;
-  remaining_sessions: number;
+  sessions_total: number;
+  sessions_used: number;
+  sessions_remaining: number;
+  remaining_sessions?: number; // 向下相容
+  purchase_price: number;
+  currency: string;
+  payment_method: string;
+  payment_reference: string;
+  notes?: string;
   created_at: string;
   updated_at: string;
 }

@@ -29,7 +29,7 @@ export const userMemberships: UserMembership[] = [
   },
   {
     id: 2,
-    user_id: 2,
+    user_id: 8, // 改為趙同學
     member_card_plan_id: 1, // 基礎方案
     purchase_date: "2025-07-14T12:00:00+00:00",
     activation_date: undefined,
@@ -44,7 +44,7 @@ export const userMemberships: UserMembership[] = [
     currency: "TWD",
     payment_method: "BANK_TRANSFER",
     payment_reference: "PAY-2025-002",
-    notes: "等待用戶啟用",
+    notes: "已購買但未啟用會員卡（測試用）",
     created_at: "2025-07-14T12:00:00+00:00",
     updated_at: "2025-07-14T12:00:00+00:00"
   },
@@ -132,7 +132,8 @@ export const userMemberships: UserMembership[] = [
     created_at: "2025-07-10T12:00:00+00:00",
     updated_at: "2025-07-29T00:00:00+00:00"
   }
-  // 注意：用戶4沒有會員卡，用於測試「尚未購買會員方案」的情況
+  // 注意：用戶2（李同學）和用戶4沒有會員卡，用於測試「尚未購買會員方案」的情況
+  // 用戶8（趙同學）有已購買但未啟用的會員卡，用於測試「PURCHASED」狀態
 ];
 
 // ========================================

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { memberCardService } from '@/services/dataService';
 import { orderStore } from '@/lib/orderStore';
 import { memberCardPlanStore } from '@/lib/memberCardPlanStore';
+import { getUserMembershipsByUserId } from '@/data/memberships';
 
 // POST - 創建會員卡 (僅限COMPLETED狀態的訂單)
 export async function POST(request: NextRequest) {
@@ -102,17 +103,23 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('user_id');
     
-    let cards = memberCardService.getAllCards();
-    
-    // 過濾會員卡
     if (userId) {
-      cards = cards.filter(card => card.user_id === parseInt(userId));
+      // 使用新的 userMemberships 數據結構
+      const userMemberships = getUserMembershipsByUserId(parseInt(userId));
+      
+      return NextResponse.json({
+        success: true,
+        data: userMemberships
+      });
+    } else {
+      // 如果沒有指定用戶ID，返回舊的數據結構以保持向後兼容
+      let cards = memberCardService.getAllCards();
+      
+      return NextResponse.json({
+        success: true,
+        data: cards
+      });
     }
-    
-    return NextResponse.json({
-      success: true,
-      data: cards
-    });
   } catch (error) {
     console.error('Error fetching member cards:', error);
     return NextResponse.json(

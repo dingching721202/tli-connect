@@ -145,6 +145,25 @@ export const users: User[] = [
     },
     created_at: '2023-01-01T00:00:00+00:00',
     updated_at: '2024-01-15T00:00:00+00:00'
+  },
+  {
+    id: 8,
+    name: '趙同學',
+    email: 'student.zhao@example.com',
+    phone: '0934-567-890',
+    password: 'hashed_password_8',
+    role: 'STUDENT',
+    status: 'ACTIVE',
+    profile: {
+      date_of_birth: '1997-05-10',
+      gender: 'MALE',
+      nationality: '中華民國',
+      language_preference: 'zh-TW',
+      timezone: 'Asia/Taipei',
+      learning_goals: ['英語會話', '雅思考試', '留學準備']
+    },
+    created_at: '2024-01-20T00:00:00+00:00',
+    updated_at: '2024-01-20T00:00:00+00:00'
   }
 ];
 

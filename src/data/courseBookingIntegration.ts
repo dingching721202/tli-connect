@@ -10,6 +10,13 @@ import type { CourseSchedule, Booking } from '@/types/business';
 // 整合課程系統與預約系統的相關函數
 // ========================================
 
+// 課程篩選器界面
+export interface CourseFilter {
+  id: string;
+  title: string;
+  selected: boolean;
+}
+
 // 檢查用戶是否可以預約特定課程節次
 export const canUserBookSession = (
   userId: number,
@@ -281,7 +288,7 @@ export const checkSessionConflicts = (userId: number, sessionId: number): boolea
   return false; // 無衝突
 };
 
-// 生成預約節次資訊
+// 生成單一排程的預約節次資訊
 export const generateBookingSessions = (scheduleId: number) => {
   const schedule = courseSchedules.find(s => s.id === scheduleId);
   if (!schedule) return [];
@@ -299,40 +306,28 @@ export const generateBookingSessions = (scheduleId: number) => {
     }));
 };
 
-// 獲取課程篩選選項
-export const getCourseFilters = () => {
-  const languages = [...new Set(courseSchedules.map(s => {
-    const courseModule = courseModules.find((m: { id: number }) => m.id === s.course_module_id);
-    return courseModule?.language;
-  }).filter(Boolean))];
+// 生成所有已發布排程的預約節次資訊
+export const generateAllBookingSessions = () => {
+  const publishedSchedules = courseSchedules.filter(s => s.status === 'PUBLISHED');
+  const allSessions = [];
 
-  const levels = [...new Set(courseSchedules.map(s => {
-    const courseModule = courseModules.find((m: { id: number }) => m.id === s.course_module_id);
-    return courseModule?.level;
-  }).filter(Boolean))];
+  for (const schedule of publishedSchedules) {
+    const sessions = generateBookingSessions(schedule.id);
+    allSessions.push(...sessions);
+  }
 
-  const teachers = [...new Set(courseSchedules.map(s => ({
-    id: s.teacher_id,
-    name: s.teacher_name
-  })))];
+  return allSessions;
+};
 
-  const locationTypes = [...new Set(courseSchedules.map(s => s.location.type))];
-
-  const priceRange = courseSchedules.reduce(
-    (range, s) => ({
-      min: Math.min(range.min, s.price),
-      max: Math.max(range.max, s.price)
-    }),
-    { min: Infinity, max: 0 }
-  );
-
-  return {
-    languages,
-    levels,
-    teachers,
-    location_types: locationTypes,
-    price_range: priceRange.min === Infinity ? { min: 0, max: 0 } : priceRange
-  };
+// 獲取課程篩選選項 - 返回課程模組作為篩選器
+export const getCourseFilters = (): CourseFilter[] => {
+  return courseModules
+    .filter(module => module.is_active)
+    .map(module => ({
+      id: module.id.toString(),
+      title: module.title,
+      selected: false
+    }));
 };
 
 // 篩選預約節次
@@ -446,6 +441,7 @@ const courseBookingIntegrationModule = {
   checkSessionConflicts,
   getRecommendedCourses,
   generateBookingSessions,
+  generateAllBookingSessions,
   getCourseFilters,
   filterBookingSessions
 };

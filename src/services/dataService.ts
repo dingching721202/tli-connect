@@ -25,7 +25,7 @@ interface LeaveRequest {
 
 // TypeScript 資料匯入
 import { users as usersData } from '@/data/users';
-import { memberships as membershipsData } from '@/data/memberships';
+import { memberships as membershipsData, userMemberships } from '@/data/memberships';
 import { classTimeslots as classTimeslotsData } from '@/data/class_timeslots';
 import { classAppointments as classAppointmentsData } from '@/data/class_appointments';
 
@@ -209,18 +209,58 @@ export const memberCardService = {
     return { success: true, data: membership };
   },
   
-  // 獲取用戶會員資格 (只返回 ACTIVE 狀態)
+  // 獲取用戶會員資格 (只返回 ACTIVE 狀態) - 使用新的 userMemberships 資料
   async getUserMembership(userId: number): Promise<Membership | null> {
-    const activeMembership = memberships.find(m => m.user_id === userId && m.status === 'ACTIVE');
-    console.log(`🔍 getUserMembership - 用戶ID: ${userId}, 找到的 ACTIVE 會員卡:`, activeMembership);
-    return activeMembership || null;
+    const activeMembership = userMemberships.find(m => m.user_id === userId && m.status === 'ACTIVE');
+    console.log(`🔍 getUserMembership - 用戶ID: ${userId}, 在 userMemberships 中找到的 ACTIVE 會員卡:`, activeMembership);
+    
+    // 轉換為舊格式以保持向下相容
+    if (activeMembership) {
+      return {
+        id: activeMembership.id,
+        user_id: activeMembership.user_id,
+        member_card_id: activeMembership.member_card_plan_id,
+        duration_in_days: activeMembership.end_date && activeMembership.start_date 
+          ? Math.ceil((new Date(activeMembership.end_date).getTime() - new Date(activeMembership.start_date).getTime()) / (1000 * 60 * 60 * 24))
+          : 0,
+        start_time: activeMembership.start_date,
+        expire_time: activeMembership.end_date,
+        activated: activeMembership.status === 'ACTIVE',
+        activate_expire_time: activeMembership.activation_deadline,
+        status: activeMembership.status,
+        remaining_sessions: activeMembership.sessions_remaining,
+        created_at: activeMembership.created_at,
+        updated_at: activeMembership.updated_at
+      } as Membership;
+    }
+    
+    return null;
   },
 
-  // 獲取用戶的待啟用會員卡 (PURCHASED 狀態)
+  // 獲取用戶的待啟用會員卡 (PURCHASED 狀態) - 使用新的 userMemberships 資料
   async getUserPurchasedMembership(userId: number): Promise<Membership | null> {
-    const purchasedMembership = memberships.find(m => m.user_id === userId && m.status === 'PURCHASED');
-    console.log(`🔍 getUserPurchasedMembership - 用戶ID: ${userId}, 找到的 PURCHASED 會員卡:`, purchasedMembership);
-    return purchasedMembership || null;
+    const purchasedMembership = userMemberships.find(m => m.user_id === userId && m.status === 'PURCHASED');
+    console.log(`🔍 getUserPurchasedMembership - 用戶ID: ${userId}, 在 userMemberships 中找到的 PURCHASED 會員卡:`, purchasedMembership);
+    
+    // 轉換為舊格式以保持向下相容
+    if (purchasedMembership) {
+      return {
+        id: purchasedMembership.id,
+        user_id: purchasedMembership.user_id,
+        member_card_id: purchasedMembership.member_card_plan_id,
+        duration_in_days: 0, // 未啟用時暫時設為 0
+        start_time: purchasedMembership.start_date,
+        expire_time: purchasedMembership.end_date,
+        activated: false,
+        activate_expire_time: purchasedMembership.activation_deadline,
+        status: purchasedMembership.status,
+        remaining_sessions: purchasedMembership.sessions_remaining,
+        created_at: purchasedMembership.created_at,
+        updated_at: purchasedMembership.updated_at
+      } as Membership;
+    }
+    
+    return null;
   },
   
   // 獲取用戶所有會員資格（包括未啟用的）

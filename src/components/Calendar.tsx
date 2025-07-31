@@ -291,7 +291,7 @@ const Calendar: React.FC<CalendarProps> = ({
                 onClick={(e) => handleMoreClick(date, e)}
                 whileHover={{ scale: 1.05 }}
               >
-                +{dayCourses.length - maxDisplayCourses} 更多
+                +{(dayCourses?.length || 0) - maxDisplayCourses} 更多
               </motion.div>
             )}
           </div>
