@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
@@ -51,9 +51,9 @@ export default function AdminPortal() {
 
     // 載入管理員儀表板資料
     loadAdminDashboard();
-  }, [user, loading, router]);
+  }, [user, loading, router, loadAdminDashboard]);
 
-  const loadAdminDashboard = async () => {
+  const loadAdminDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -157,7 +157,7 @@ export default function AdminPortal() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   const getHealthStatusColor = (status: string) => {
     switch (status) {

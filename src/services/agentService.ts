@@ -131,7 +131,7 @@ export const registerAgent = (
       message: '代理商註冊成功',
       agent: newAgent
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '代理商註冊失敗'
@@ -183,7 +183,7 @@ export const updateAgentLevel = (
       message: `代理商等級已更新為 ${newLevel}`,
       agent
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '代理商等級更新失敗'
@@ -222,7 +222,7 @@ export const deactivateAgent = (agentId: number, reason?: string): AgentResult =
       message: `代理商已停用${reason ? `，原因：${reason}` : ''}`,
       agent
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '代理商停用失敗'
@@ -272,7 +272,6 @@ export const createReferralCode = (
       };
     }
     
-    const now = new Date();
     const validUntil = codeData.valid_until || (() => {
       const date = new Date();
       date.setMonth(date.getMonth() + 6); // 預設6個月有效
@@ -297,7 +296,7 @@ export const createReferralCode = (
       message: '推薦代碼創建成功',
       referralCode: newReferralCode
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '推薦代碼創建失敗'
@@ -379,7 +378,7 @@ export const useReferralCode = (code: string, orderId: number): ReferralResult =
       message: '推薦代碼使用成功',
       referralCode
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '推薦代碼使用失敗'
@@ -479,7 +478,7 @@ export const approveCommission = (commissionId: number): CommissionResult => {
       message: '佣金已核准',
       commission
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '佣金核准失敗'
@@ -589,7 +588,6 @@ export const getAgentPerformance = (agentId: number): AgentPerformance | null =>
   
   const agentReferralCodes = getReferralCodesByUser(agentId);
   const agentCommissions = getCommissionsByAgent(agentId);
-  const agentStats = getReferralStatsByAgent(agentId);
   
   // 計算本月佣金
   const now = new Date();

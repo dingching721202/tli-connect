@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
@@ -49,9 +49,9 @@ export default function StaffPortal() {
 
     // 載入員工儀表板資料
     loadStaffDashboard();
-  }, [user, loading, router]);
+  }, [user, loading, router, loadStaffDashboard]);
 
-  const loadStaffDashboard = async () => {
+  const loadStaffDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -122,7 +122,7 @@ export default function StaffPortal() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {

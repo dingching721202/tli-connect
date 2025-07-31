@@ -223,6 +223,7 @@ export const getActivationDeadlineExpiring = (): UserMembership[] => {
 export const memberships = userMemberships.map(membership => ({
   id: membership.id,
   created_at: membership.created_at,
+  updated_at: membership.updated_at,
   member_card_id: membership.member_card_plan_id, // 映射到方案ID
   duration_in_days: membership.end_date && membership.start_date 
     ? Math.ceil((new Date(membership.end_date).getTime() - new Date(membership.start_date).getTime()) / (1000 * 60 * 60 * 24))
@@ -232,7 +233,8 @@ export const memberships = userMemberships.map(membership => ({
   activated: membership.status === 'ACTIVE',
   activate_expire_time: membership.activation_deadline,
   user_id: membership.user_id,
-  status: membership.status
+  status: membership.status,
+  remaining_sessions: membership.sessions_remaining
 }));
 
 // 向下相容的預設匯出

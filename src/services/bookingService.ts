@@ -1,7 +1,7 @@
 import type { Booking } from '@/types/business';
 import { bookings, getBookingById, getBookingsByUserId, getBookingsBySessionId } from '@/data/bookings';
 import { getCourseSessionById } from '@/data/courseSessions';
-import { canBookCourse, useMembershipSession } from './membershipService';
+import { canBookCourse, consumeMembershipSession } from './membershipService';
 
 // ========================================
 // 批次預約服務 - Phase 2.2
@@ -118,7 +118,7 @@ export const createSingleBooking = (userId: number, sessionId: number, notes?: s
   }
   
   // 使用會員卡課程
-  const membershipUsage = useMembershipSession(userId, sessionId);
+  const membershipUsage = consumeMembershipSession(userId);
   if (!membershipUsage.isValid) {
     return {
       success: false,
@@ -200,7 +200,7 @@ export const createBatchBooking = (request: BatchBookingRequest): BatchBookingRe
     }
     
     // 嘗試使用會員卡課程
-    const membershipUsage = useMembershipSession(user_id, sessionId);
+    const membershipUsage = consumeMembershipSession(user_id);
     if (!membershipUsage.isValid) {
       results.failed_bookings.push({
         session_id: sessionId,

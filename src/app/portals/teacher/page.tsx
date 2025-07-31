@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
@@ -45,9 +45,9 @@ export default function TeacherPortal() {
 
     // 載入教師儀表板資料
     loadTeacherDashboard();
-  }, [user, loading, router]);
+  }, [user, loading, router, loadTeacherDashboard]);
 
-  const loadTeacherDashboard = async () => {
+  const loadTeacherDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -88,7 +88,7 @@ export default function TeacherPortal() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   if (loading || isLoading) {
     return (

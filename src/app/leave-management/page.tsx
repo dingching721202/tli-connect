@@ -7,7 +7,8 @@ import SafeIcon from '@/components/common/SafeIcon';
 import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { leaveService } from '@/services/dataService';
-import { getActiveTeachers, Teacher as TeacherData } from '@/data/teacherData';
+import { getActiveTeachers } from '@/data/teacherData';
+import type { Teacher as TeacherData } from '@/types/business';
 
 const {
   FiClock, FiCalendar, FiUser, FiCheck, FiX, FiUserCheck,
@@ -92,7 +93,7 @@ export default function LeaveManagementPage() {
     }
 
     return availableTeachers.filter(teacher => 
-      teacher.teachingCategory.some(category => 
+      teacher.specializations.some(category => 
         requiredCategories.includes(category)
       )
     );
@@ -266,9 +267,9 @@ export default function LeaveManagementPage() {
       const result = await leaveService.reviewLeaveRequest(
         leaveId,
         'approved',
-        `管理員變更代課老師為：${selectedTeacher.name}`,
+        `管理員變更代課老師為：教師ID${selectedTeacher.id}`,
         user?.name || '管理員',
-        { name: selectedTeacher.name, email: selectedTeacher.email }
+        { name: `教師ID${selectedTeacher.id}`, email: `teacher${selectedTeacher.id}@example.com` }
       );
 
       if (result.success) {
@@ -276,7 +277,7 @@ export default function LeaveManagementPage() {
         setEditingTeacherForRequest(null);
         setSelectedTeacher(null);
         setAvailableTeachersForSlot([]);
-        alert(`✅ 代課老師已變更為：${selectedTeacher.name}`);
+        alert(`✅ 代課老師已變更為：教師ID${selectedTeacher.id}`);
       } else {
         alert('❌ 變更代課老師失敗');
       }
@@ -291,10 +292,8 @@ export default function LeaveManagementPage() {
     if (request && confirm(`確定要取消「${request.courseName}」的已批准請假嗎？\n\n這會將請假狀態恢復為未申請狀態。`)) {
       try {
         // 直接刪除已批准的請假申請
-        // Get teacher ID from teacher email
-        const teacher = availableTeachers.find(t => t.email === request.teacherEmail);
-        const teacherId = teacher?.id || 0;
-        const deleteResult = await leaveService.cancelLeaveRequest(leaveId, teacherId, true);
+        // Use leave request data directly
+        const deleteResult = await leaveService.cancelLeaveRequest(leaveId, 0, true);
         
         if (deleteResult.success) {
           alert('✅ 已批准的請假已取消，課程恢復正常');
@@ -325,14 +324,14 @@ export default function LeaveManagementPage() {
         const result = await leaveService.reviewLeaveRequest(
           requestId, 
           'approved', 
-          `已指派 ${selectedTeacher.name} 為代課老師`,
+          `已指派教師ID${selectedTeacher.id}為代課老師`,
           user?.name || '管理員',
-          { name: selectedTeacher.name, email: selectedTeacher.email }
+          { name: `教師ID${selectedTeacher.id}`, email: `teacher${selectedTeacher.id}@example.com` }
         );
         
         if (result.success) {
           const actionText = request.status === 'approved' ? '已變更' : '已指派';
-          alert(`✅ ${actionText} ${selectedTeacher.name} 為代課老師\n\n課程：${request.courseName}\n時間：${request.courseDate} ${request.courseTime}\n\n系統將自動發送通知給所有學生。`);
+          alert(`✅ ${actionText}教師ID${selectedTeacher.id}為代課老師\n\n課程：${request.courseName}\n時間：${request.courseDate} ${request.courseTime}\n\n系統將自動發送通知給所有學生。`);
           
           // 重新加載數據
           const leaveResult = await leaveService.getAllLeaveRequests();
@@ -682,13 +681,13 @@ export default function LeaveManagementPage() {
                                     <div className="flex items-start justify-between">
                                       <div className="flex-1">
                                         <div className="flex items-center space-x-2 mb-2">
-                                          <h5 className="font-medium text-gray-900">{teacher.name}</h5>
+                                          <h5 className="font-medium text-gray-900">{`教師ID${teacher.id}`}</h5>
                                           <span className={`px-2 py-1 text-xs rounded-full ${
-                                            teacher.contractType === 'full-time' 
+                                            teacher.status === 'ACTIVE' 
                                               ? 'bg-blue-100 text-blue-800' 
                                               : 'bg-purple-100 text-purple-800'
                                           }`}>
-                                            {teacher.contractType === 'full-time' ? '全職' : '兼職'}
+                                            {teacher.status === 'ACTIVE' ? '全職' : '兼職'}
                                           </span>
                                           <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
                                             ⭐ {teacher.rating}
@@ -698,25 +697,25 @@ export default function LeaveManagementPage() {
                                         <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-2">
                                           <div>
                                             <span className="font-medium">專長：</span>
-                                            {teacher.expertise.join('、')}
+                                            {teacher.specializations.join('、')}
                                           </div>
                                           <div>
                                             <span className="font-medium">授課類型：</span>
-                                            {teacher.teachingCategory.join('、')}
+                                            {teacher.languages.join('、')}
                                           </div>
                                           <div>
                                             <span className="font-medium">經驗：</span>
-                                            {teacher.experience}
+                                            {teacher.years_of_experience}
                                           </div>
                                           <div>
                                             <span className="font-medium">教學時數：</span>
-                                            {teacher.teachingHours}小時
+                                            {teacher.max_students_per_class}小時
                                           </div>
                                         </div>
                                         
                                         <div className="text-xs text-gray-500">
                                           <span className="font-medium">證書：</span>
-                                          {teacher.qualification.join('、')}
+                                          {teacher.certifications.map(c => c.name).join('、')}
                                         </div>
                                         
                                         <div className="text-xs text-gray-500 mt-1">
@@ -761,15 +760,15 @@ export default function LeaveManagementPage() {
                                         </div>
                                         <div>
                                           <p className="font-semibold text-green-800">已選擇代課老師</p>
-                                          <p className="text-green-700">{selectedTeacher.name}</p>
+                                          <p className="text-green-700">{`教師ID${selectedTeacher.id}`}</p>
                                         </div>
                                       </div>
                                       <div className="text-right">
                                         <div className="inline-block text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full whitespace-nowrap">
-                                          {selectedTeacher.teachingCategory.join('、')}
+                                          {selectedTeacher.languages.join('、')}
                                         </div>
                                         <div className="text-xs text-green-600 mt-1">
-                                          ⭐ {selectedTeacher.rating} | {selectedTeacher.experience}
+                                          ⭐ {selectedTeacher.rating} | {selectedTeacher.years_of_experience}
                                         </div>
                                       </div>
                                     </div>
@@ -920,18 +919,18 @@ export default function LeaveManagementPage() {
                                     <div className="flex items-start justify-between">
                                       <div className="flex-1">
                                         <div className="flex items-center space-x-2 mb-2">
-                                          <h5 className="font-medium text-gray-900">{teacher.name}</h5>
+                                          <h5 className="font-medium text-gray-900">{`教師ID${teacher.id}`}</h5>
                                           <span className={`px-2 py-1 text-xs rounded-full ${
-                                            teacher.contractType === 'full-time' 
+                                            teacher.status === 'ACTIVE' 
                                               ? 'bg-blue-100 text-blue-800' 
                                               : 'bg-purple-100 text-purple-800'
                                           }`}>
-                                            {teacher.contractType === 'full-time' ? '全職' : '兼職'}
+                                            {teacher.status === 'ACTIVE' ? '全職' : '兼職'}
                                           </span>
                                           <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
                                             ⭐ {teacher.rating}
                                           </span>
-                                          {record.substituteTeacher?.email === teacher.email && (
+                                          {record.substituteTeacher?.email === `teacher${teacher.id}@example.com` && (
                                             <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">
                                               目前代課老師
                                             </span>
@@ -941,25 +940,25 @@ export default function LeaveManagementPage() {
                                         <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-2">
                                           <div>
                                             <span className="font-medium">專長：</span>
-                                            {teacher.expertise.join('、')}
+                                            {teacher.specializations.join('、')}
                                           </div>
                                           <div>
                                             <span className="font-medium">授課類型：</span>
-                                            {teacher.teachingCategory.join('、')}
+                                            {teacher.languages.join('、')}
                                           </div>
                                           <div>
                                             <span className="font-medium">經驗：</span>
-                                            {teacher.experience}
+                                            {teacher.years_of_experience}
                                           </div>
                                           <div>
                                             <span className="font-medium">教學時數：</span>
-                                            {teacher.teachingHours}小時
+                                            {teacher.max_students_per_class}小時
                                           </div>
                                         </div>
                                         
                                         <div className="text-xs text-gray-500">
                                           <span className="font-medium">證書：</span>
-                                          {teacher.qualification.join('、')}
+                                          {teacher.certifications.map(c => c.name).join('、')}
                                         </div>
                                         
                                         <div className="text-xs text-gray-500 mt-1">
@@ -1004,15 +1003,15 @@ export default function LeaveManagementPage() {
                                         </div>
                                         <div>
                                           <p className="font-semibold text-blue-800">將變更代課老師</p>
-                                          <p className="text-blue-700">{selectedTeacher.name}</p>
+                                          <p className="text-blue-700">{`教師ID${selectedTeacher.id}`}</p>
                                         </div>
                                       </div>
                                       <div className="text-right">
                                         <div className="inline-block text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full whitespace-nowrap">
-                                          {selectedTeacher.teachingCategory.join('、')}
+                                          {selectedTeacher.languages.join('、')}
                                         </div>
                                         <div className="text-xs text-blue-600 mt-1">
-                                          ⭐ {selectedTeacher.rating} | {selectedTeacher.experience}
+                                          ⭐ {selectedTeacher.rating} | {selectedTeacher.years_of_experience}
                                         </div>
                                         {record.substituteTeacher && (
                                           <div className="text-xs text-gray-500 mt-1">

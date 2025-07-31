@@ -1,15 +1,17 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiSave, FiX, FiStar, FiUsers, FiCalendar, FiClock, FiUpload, FiDownload, FiBook, FiSettings } from 'react-icons/fi';
 import Navigation from '@/components/Navigation';
 import SafeIcon from '@/components/common/SafeIcon';
-import { memberCards, MemberCard } from '@/data/member_cards';
+import { memberCards } from '@/data/member_cards';
+import type { UserMembership } from '@/types/business';
 import { getCourseTemplates } from '@/data/courseTemplateUtils';
 import { getPublishedCourseSchedules } from '@/data/courseScheduleUtils';
 
-interface MemberCardPlan {
+// Local MemberCardPlan interface for the management UI
+interface LocalMemberCardPlan {
   id: number;
   title: string;
   user_type: 'individual' | 'corporate';
@@ -61,15 +63,15 @@ interface CourseData {
   description?: string;
 }
 
-const MemberCardPlanManagement: React.FC = () => {
-  const [plans, setPlans] = useState<MemberCardPlan[]>([]);
+const LocalMemberCardPlanManagement: React.FC = () => {
+  const [plans, setPlans] = useState<LocalMemberCardPlan[]>([]);
   const [memberCardsData, setMemberCardsData] = useState(memberCards);
   const [courses, setCourses] = useState<CourseData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showMemberCardModal, setShowMemberCardModal] = useState(false);
-  const [editingPlan, setEditingPlan] = useState<MemberCardPlan | null>(null);
-  const [editingMemberCard, setEditingMemberCard] = useState<MemberCard | null>(null);
+  const [editingPlan, setEditingPlan] = useState<LocalMemberCardPlan | null>(null);
+  const [editingMemberCard, setEditingMemberCard] = useState<UserMembership | null>(null);
   const [activeTab, setActiveTab] = useState<'member-cards' | 'plans'>('member-cards');
   const [formData, setFormData] = useState<FormData>({
     title: '',
@@ -99,7 +101,7 @@ const MemberCardPlanManagement: React.FC = () => {
   useEffect(() => {
     loadPlans();
     loadCourses();
-  }, []);
+  }, [loadCourses]);
 
   useEffect(() => {
     if (formData.cta_options.show_payment) {
@@ -122,7 +124,7 @@ const MemberCardPlanManagement: React.FC = () => {
     }
   };
 
-  const loadCourses = async () => {
+  const loadCourses = useCallback(async () => {
     try {
       // 從課程模組獲取真實的課程資料
       const templates = getCourseTemplates();
@@ -137,30 +139,30 @@ const MemberCardPlanManagement: React.FC = () => {
       
       // 1. 優先處理有排程的課程模板（這些是實際可預約的課程）
       schedules.forEach(schedule => {
-        const template = templates.find(t => t.id === schedule.templateId);
-        if (template && template.status === 'published') {
+        const template = templates.find(t => t.id === schedule.course_module_id);
+        if (template) {
           coursesData.push({
             id: `${template.id}_${schedule.id}`, // 組合ID確保唯一性
-            title: schedule.seriesName ? `${template.title} - ${schedule.seriesName}` : template.title,
-            language: getLanguageFromCategory(template.category),
+            title: schedule.title || template.title,
+            language: getLanguageFromCategory(template.categories[0] || 'general'),
             level: template.level,
-            category: template.category,
+            category: template.categories[0] || 'general',
             description: template.description
           });
         }
       });
       
-      // 2. 處理沒有排程但已發布的模板（作為備選課程）
-      const publishedTemplates = templates.filter(t => t.status === 'published');
-      publishedTemplates.forEach(template => {
-        const hasSchedule = schedules.some(s => s.templateId === template.id);
+      // 2. 處理沒有排程的模板（作為備選課程）
+      const templatesWithoutSchedule = templates;
+      templatesWithoutSchedule.forEach(template => {
+        const hasSchedule = schedules.some(s => s.course_module_id === template.id);
         if (!hasSchedule) {
           coursesData.push({
             id: template.id,
             title: template.title,
-            language: getLanguageFromCategory(template.category),
+            language: getLanguageFromCategory(template.categories[0] || 'general'),
             level: template.level,
-            category: template.category,
+            category: template.categories[0] || 'general',
             description: template.description
           });
         }
@@ -172,7 +174,7 @@ const MemberCardPlanManagement: React.FC = () => {
       console.error('載入課程資料失敗:', error);
       setCourses([]);
     }
-  };
+  }, []);
 
   // 根據分類映射語言
   const getLanguageFromCategory = (category: string): string => {
@@ -187,7 +189,7 @@ const MemberCardPlanManagement: React.FC = () => {
     return languageMap[category] || 'chinese';
   };
 
-  const handleOpenModal = (plan?: MemberCardPlan) => {
+  const handleOpenModal = (plan?: LocalMemberCardPlan) => {
     if (plan) {
       setEditingPlan(plan);
       setFormData({
@@ -289,7 +291,7 @@ const MemberCardPlanManagement: React.FC = () => {
     }
   };
 
-  const toggleStatus = async (plan: MemberCardPlan) => {
+  const toggleStatus = async (plan: LocalMemberCardPlan) => {
     try {
       const newStatus = plan.status === 'PUBLISHED' ? 'DRAFT' : 'PUBLISHED';
       
@@ -1425,4 +1427,4 @@ const MemberCardPlanManagement: React.FC = () => {
   );
 };
 
-export default MemberCardPlanManagement;
+export default LocalMemberCardPlanManagement;

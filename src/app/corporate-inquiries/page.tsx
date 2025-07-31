@@ -10,14 +10,14 @@ import { useRouter } from 'next/navigation';
 import { 
   getCorporateInquiries, 
   updateCorporateInquiry, 
-  deleteCorporateInquiry,
-  CorporateInquiry 
+  deleteCorporateInquiry
 } from '@/data/corporateInquiry';
+import type { CorporateInquiry } from '@/types/business';
 
 const {
   FiUsers, FiBriefcase, FiMail, FiCalendar, FiDollarSign,
   FiEye, FiTrash2, FiSearch, FiDownload,
-  FiCheck, FiClock, FiX, FiMessageSquare, FiUser
+  FiClock, FiX, FiMessageSquare, FiUser
 } = FiIcons;
 
 interface FilterState {
@@ -80,29 +80,32 @@ const CorporateInquiriesPage: React.FC = () => {
 
     // 員工規模篩選
     if (filters.employeeCount !== 'all') {
-      filtered = filtered.filter(inquiry => inquiry.employeeCount === filters.employeeCount);
+      filtered = filtered.filter(inquiry => inquiry.company_size === filters.employeeCount);
     }
 
     // 搜索篩選
     if (filters.searchTerm) {
       const searchLower = filters.searchTerm.toLowerCase();
       filtered = filtered.filter(inquiry =>
-        inquiry.companyName.toLowerCase().includes(searchLower) ||
-        inquiry.contactName.toLowerCase().includes(searchLower) ||
-        inquiry.email.toLowerCase().includes(searchLower)
+        inquiry.company_name.toLowerCase().includes(searchLower) ||
+        inquiry.contact_person.toLowerCase().includes(searchLower) ||
+        inquiry.contact_email.toLowerCase().includes(searchLower)
       );
     }
 
     setFilteredInquiries(filtered);
   }, [inquiries, filters]);
 
-  const handleStatusUpdate = async (inquiryId: string, newStatus: CorporateInquiry['status']) => {
+  const handleStatusUpdate = async (inquiryId: number, newStatus: CorporateInquiry['status']) => {
     try {
       const updated = updateCorporateInquiry(inquiryId, { status: newStatus });
       if (updated) {
         loadInquiries();
         if (selectedInquiry?.id === inquiryId) {
-          setSelectedInquiry(updated);
+          const updatedInquiry = inquiries.find(i => i.id === inquiryId);
+          if (updatedInquiry) {
+            setSelectedInquiry({ ...updatedInquiry, status: newStatus });
+          }
         }
       }
     } catch (error) {
@@ -111,7 +114,7 @@ const CorporateInquiriesPage: React.FC = () => {
     }
   };
 
-  const handleDelete = async (inquiryId: string) => {
+  const handleDelete = async (inquiryId: number) => {
     if (window.confirm('確定要刪除這個詢價記錄嗎？')) {
       try {
         const success = deleteCorporateInquiry(inquiryId);
@@ -131,30 +134,27 @@ const CorporateInquiriesPage: React.FC = () => {
 
   const getStatusColor = (status: CorporateInquiry['status']) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'contacted': return 'bg-blue-100 text-blue-800';
-      case 'quoted': return 'bg-purple-100 text-purple-800';
-      case 'closed': return 'bg-green-100 text-green-800';
+      case 'NEW': return 'bg-yellow-100 text-yellow-800';
+      case 'CONTACTED': return 'bg-blue-100 text-blue-800';
+      case 'QUOTED': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusIcon = (status: CorporateInquiry['status']) => {
     switch (status) {
-      case 'pending': return FiClock;
-      case 'contacted': return FiMail;
-      case 'quoted': return FiDollarSign;
-      case 'closed': return FiCheck;
+      case 'NEW': return FiClock;
+      case 'CONTACTED': return FiMail;
+      case 'QUOTED': return FiDollarSign;
       default: return FiClock;
     }
   };
 
   const getStatusText = (status: CorporateInquiry['status']) => {
     switch (status) {
-      case 'pending': return '待處理';
-      case 'contacted': return '已聯繫';
-      case 'quoted': return '已報價';
-      case 'closed': return '已結案';
+      case 'NEW': return '新詢問';
+      case 'CONTACTED': return '已聯繫';
+      case 'QUOTED': return '已報價';
       default: return status;
     }
   };
@@ -165,17 +165,17 @@ const CorporateInquiriesPage: React.FC = () => {
     const csvContent = [
       headers.join(','),
       ...filteredInquiries.map(inquiry => [
-        inquiry.companyName,
-        inquiry.contactName,
-        inquiry.email,
-        inquiry.phone,
-        inquiry.employeeCount,
+        inquiry.company_name,
+        inquiry.contact_person,
+        inquiry.contact_email,
+        inquiry.contact_phone,
+        inquiry.company_size,
         inquiry.industry,
-        inquiry.trainingNeeds.join(';'),
-        inquiry.budget || '-',
+        inquiry.training_needs.join(';'),
+        inquiry.budget_range || '-',
         inquiry.timeline || '-',
         getStatusText(inquiry.status),
-        new Date(inquiry.submittedAt).toLocaleDateString('zh-TW')
+        new Date(inquiry.created_at).toLocaleDateString('zh-TW')
       ].join(','))
     ].join('\n');
 
@@ -230,9 +230,8 @@ const CorporateInquiriesPage: React.FC = () => {
           >
             {[
               { label: '總詢價', count: inquiries.length, color: 'blue', icon: FiBriefcase },
-              { label: '待處理', count: inquiries.filter(i => i.status === 'pending').length, color: 'yellow', icon: FiClock },
-              { label: '進行中', count: inquiries.filter(i => ['contacted', 'quoted'].includes(i.status)).length, color: 'purple', icon: FiUsers },
-              { label: '已結案', count: inquiries.filter(i => i.status === 'closed').length, color: 'green', icon: FiCheck }
+              { label: '新詢問', count: inquiries.filter(i => i.status === 'NEW').length, color: 'yellow', icon: FiClock },
+              { label: '進行中', count: inquiries.filter(i => ['CONTACTED', 'QUOTED'].includes(i.status)).length, color: 'purple', icon: FiUsers }
             ].map((stat) => (
               <div key={`stat-${stat.label}`} className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
                 <div className="flex items-center justify-between">
@@ -375,25 +374,25 @@ const CorporateInquiriesPage: React.FC = () => {
                       <tr key={inquiry.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{inquiry.companyName}</div>
-                            <div className="text-sm text-gray-500">{inquiry.industry} • {inquiry.employeeCount}</div>
+                            <div className="text-sm font-medium text-gray-900">{inquiry.company_name}</div>
+                            <div className="text-sm text-gray-500">{inquiry.industry} • {inquiry.company_size}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{inquiry.contactName}</div>
-                            <div className="text-sm text-gray-500">{inquiry.contactTitle || '未填寫'}</div>
-                            <div className="text-sm text-blue-600">{inquiry.email}</div>
-                            <div className="text-sm text-gray-500">{inquiry.phone}</div>
+                            <div className="text-sm font-medium text-gray-900">{inquiry.contact_person}</div>
+                            <div className="text-sm text-gray-500">聯絡人</div>
+                            <div className="text-sm text-blue-600">{inquiry.contact_email}</div>
+                            <div className="text-sm text-gray-500">{inquiry.contact_phone}</div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="text-sm text-gray-900">
-                            {inquiry.trainingNeeds.slice(0, 2).join(', ')}
-                            {inquiry.trainingNeeds.length > 2 && '...'}
+                            {inquiry.training_needs.slice(0, 2).join(', ')}
+                            {inquiry.training_needs.length > 2 && '...'}
                           </div>
                           <div className="text-sm text-gray-500">
-                            預算: {inquiry.budget || '未填寫'} • 時間: {inquiry.timeline || '未填寫'}
+                            預算: {inquiry.budget_range || '未填寫'} • 時間: {inquiry.timeline || '未填寫'}
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -403,7 +402,7 @@ const CorporateInquiriesPage: React.FC = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-500">
-                          {new Date(inquiry.submittedAt).toLocaleDateString('zh-TW', {
+                          {new Date(inquiry.created_at).toLocaleDateString('zh-TW', {
                             year: 'numeric',
                             month: 'short',
                             day: 'numeric'
@@ -476,7 +475,7 @@ const CorporateInquiriesPage: React.FC = () => {
                     <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                       <div className="flex justify-between">
                         <span className="text-gray-600">公司名稱：</span>
-                        <span className="font-medium">{selectedInquiry.companyName}</span>
+                        <span className="font-medium">{selectedInquiry.company_name}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">行業別：</span>
@@ -484,7 +483,7 @@ const CorporateInquiriesPage: React.FC = () => {
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">員工規模：</span>
-                        <span className="font-medium">{selectedInquiry.employeeCount}</span>
+                        <span className="font-medium">{selectedInquiry.company_size}</span>
                       </div>
                     </div>
                   </div>
@@ -497,19 +496,19 @@ const CorporateInquiriesPage: React.FC = () => {
                     <div className="bg-gray-50 rounded-lg p-4 space-y-3">
                       <div className="flex justify-between">
                         <span className="text-gray-600">姓名：</span>
-                        <span className="font-medium">{selectedInquiry.contactName}</span>
+                        <span className="font-medium">{selectedInquiry.contact_person}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">職稱：</span>
-                        <span className="font-medium">{selectedInquiry.contactTitle || '未填寫'}</span>
+                        <span className="font-medium">聯絡人</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">Email：</span>
-                        <span className="font-medium text-blue-600">{selectedInquiry.email}</span>
+                        <span className="font-medium text-blue-600">{selectedInquiry.contact_email}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">電話：</span>
-                        <span className="font-medium">{selectedInquiry.phone}</span>
+                        <span className="font-medium">{selectedInquiry.contact_phone}</span>
                       </div>
                     </div>
                   </div>
@@ -526,7 +525,7 @@ const CorporateInquiriesPage: React.FC = () => {
                       <div className="mb-3">
                         <span className="text-gray-600 block mb-2">培訓項目：</span>
                         <div className="flex flex-wrap gap-2">
-                          {selectedInquiry.trainingNeeds.map((need, index) => (
+                          {selectedInquiry.training_needs.map((need, index) => (
                             <span key={`need-${need}-${index}`} className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded">
                               {need}
                             </span>
@@ -535,7 +534,7 @@ const CorporateInquiriesPage: React.FC = () => {
                       </div>
                       <div className="flex justify-between mb-3">
                         <span className="text-gray-600">預算範圍：</span>
-                        <span className="font-medium">{selectedInquiry.budget || '未填寫'}</span>
+                        <span className="font-medium">{selectedInquiry.budget_range || '未填寫'}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-600">預計開始：</span>
@@ -544,14 +543,14 @@ const CorporateInquiriesPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {selectedInquiry.message && (
+                  {selectedInquiry.notes && (
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                         <SafeIcon icon={FiMessageSquare} className="mr-2 text-blue-600" />
                         其他需求說明
                       </h3>
                       <div className="bg-gray-50 rounded-lg p-4">
-                        <p className="text-gray-700 whitespace-pre-wrap">{selectedInquiry.message}</p>
+                        <p className="text-gray-700 whitespace-pre-wrap">{selectedInquiry.notes}</p>
                       </div>
                     </div>
                   )}
@@ -585,7 +584,7 @@ const CorporateInquiriesPage: React.FC = () => {
                         ))}
                       </div>
                       <div className="mt-4 text-sm text-gray-500">
-                        提交時間：{new Date(selectedInquiry.submittedAt).toLocaleString('zh-TW')}
+                        提交時間：{new Date(selectedInquiry.created_at).toLocaleString('zh-TW')}
                       </div>
                     </div>
                   </div>

@@ -2,6 +2,7 @@ import { courseSchedules } from './courseSchedules';
 import { courseSessions } from './courseSessions';
 import { bookings } from './bookings';
 import { memberships } from './memberships';
+import { courseModules } from './courseModules';
 import type { CourseSchedule, Booking } from '@/types/business';
 
 // ========================================
@@ -301,12 +302,12 @@ export const generateBookingSessions = (scheduleId: number) => {
 // 獲取課程篩選選項
 export const getCourseFilters = () => {
   const languages = [...new Set(courseSchedules.map(s => {
-    const courseModule = courseModules.find(m => m.id === s.course_module_id);
+    const courseModule = courseModules.find((m: { id: number }) => m.id === s.course_module_id);
     return courseModule?.language;
   }).filter(Boolean))];
 
   const levels = [...new Set(courseSchedules.map(s => {
-    const courseModule = courseModules.find(m => m.id === s.course_module_id);
+    const courseModule = courseModules.find((m: { id: number }) => m.id === s.course_module_id);
     return courseModule?.level;
   }).filter(Boolean))];
 
@@ -362,7 +363,7 @@ export const filterBookingSessions = (filters: {
 
   if (filters.language || filters.level) {
     filteredSchedules = filteredSchedules.filter(s => {
-      const courseModule = courseModules.find(m => m.id === s.course_module_id);
+      const courseModule = courseModules.find((m: { id: number }) => m.id === s.course_module_id);
       if (!courseModule) return false;
       
       if (filters.language && courseModule.language !== filters.language) return false;
@@ -396,7 +397,7 @@ export const filterBookingSessions = (filters: {
       .map(session => ({
         ...session,
         schedule,
-        courseModule: courseModules.find(m => m.id === schedule.course_module_id),
+        courseModule: courseModules.find((m: { id: number }) => m.id === schedule.course_module_id),
         availability: {
           available_slots: session.capacity - session.reserved_count,
           is_full: session.reserved_count >= session.capacity,

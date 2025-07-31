@@ -197,7 +197,7 @@ export const canBookCourse = (userId: number): MembershipValidationResult => {
  * @param userId 用戶ID
  * @returns 是否成功使用
  */
-export const useMembershipSession = (userId: number): MembershipValidationResult => {
+export const consumeMembershipSession = (userId: number): MembershipValidationResult => {
   const validation = canBookCourse(userId);
   
   if (!validation.isValid) {

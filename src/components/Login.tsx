@@ -54,10 +54,11 @@ const Login: React.FC = () => {
 
   // 其他角色示範帳號
   const roleTestAccounts = [
-    { email: 'teacher@example.com', name: '王老師', role: '教師 (TEACHER)' },
-    { email: 'frank@taiwantech.com', name: 'Frank Liu', role: '企業窗口 (CORPORATE_CONTACT)' },
-    { email: 'olivia@example.com', name: 'Olivia Kao', role: '營運 (OPS)' },
-    { email: 'admin@example.com', name: 'Admin User', role: '管理員 (ADMIN)' }
+    { email: 'teacher.wang@tli-connect.com', name: '王老師', role: '教師 (TEACHER)', description: '課程管理、學生成績' },
+    { email: 'hr.lin@abc-company.com', name: '林經理', role: '企業窗口 (CORPORATE)', description: '企業員工管理' },
+    { email: 'staff.chen@tli-connect.com', name: '陳員工', role: '員工 (STAFF)', description: '後台作業管理' },
+    { email: 'agent.wang@example.com', name: '代理商王先生', role: '代理商 (AGENT)', description: '推薦客戶管理' },
+    { email: 'admin@tli-connect.com', name: '系統管理員', role: '管理員 (ADMIN)', description: '系統設定與管理' }
   ];
 
   const fillDemoAccount = (demoEmail: string) => {
@@ -317,11 +318,16 @@ const Login: React.FC = () => {
             className="mt-8 bg-white rounded-2xl shadow-lg p-6"
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">
-              🎯 會員卡測試帳號
+              🎯 測試帳號快速登入
             </h3>
-            <p className="text-sm text-gray-600 text-center mb-4">
-              點擊下方帳號即可快速填入登入資訊 (密碼：password)
-            </p>
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4">
+              <p className="text-sm text-yellow-800 text-center font-medium">
+                📝 所有測試帳號密碼統一為：<span className="bg-yellow-200 px-2 py-1 rounded font-mono text-yellow-900">password</span>
+              </p>
+              <p className="text-xs text-yellow-700 text-center mt-1">
+                點擊下方任一帳號即可自動填入帳號密碼並測試各角色功能
+              </p>
+            </div>
             
             {/* 會員卡狀態測試帳號 */}
             <div className="mb-6">
@@ -343,7 +349,14 @@ const Login: React.FC = () => {
                         <span className="font-medium text-gray-900">{account.name}</span>
                         <span className="text-sm font-medium">{account.status}</span>
                       </div>
-                      <div className="text-xs text-gray-500">{account.email}</div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-xs text-gray-600">帳號:</span>
+                        <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-700">{account.email}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-xs text-gray-600">密碼:</span>
+                        <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-700">password</span>
+                      </div>
                       <div className="text-xs text-gray-400 mt-1">{account.description}</div>
                     </div>
                   </motion.button>
@@ -359,30 +372,40 @@ const Login: React.FC = () => {
                   <motion.button
                     key={account.email}
                     onClick={() => fillDemoAccount(account.email)}
-                    className="flex items-center justify-between p-2 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors text-left border border-gray-200 hover:border-blue-300"
+                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors text-left border border-gray-200 hover:border-blue-300"
                     whileHover={{ scale: 1.01 }}
                     whileTap={{ scale: 0.99 }}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.1 * (index + membershipTestAccounts.length) }}
                   >
-                    <div>
-                      <div className="font-medium text-gray-900 text-sm">{account.name}</div>
-                      <div className="text-xs text-gray-500">{account.email}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-medium text-gray-900 text-sm">{account.name}</span>
+                        <span className={`
+                          px-2 py-1 rounded-full text-xs font-medium
+                          ${account.role.includes('TEACHER') 
+                            ? 'bg-green-100 text-green-800' 
+                            : account.role.includes('CORPORATE')
+                            ? 'bg-orange-100 text-orange-800'
+                            : account.role.includes('ADMIN')
+                            ? 'bg-purple-100 text-purple-800'
+                            : 'bg-blue-100 text-blue-800'
+                          }
+                        `}>
+                          {account.role}
+                        </span>
+                      </div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-xs text-gray-600">帳號:</span>
+                        <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-700">{account.email}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-xs text-gray-600">密碼:</span>
+                        <span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded text-gray-700">password</span>
+                      </div>
+                      <div className="text-xs text-gray-400">{account.description}</div>
                     </div>
-                    <span className={`
-                      px-2 py-1 rounded-full text-xs font-medium
-                      ${account.role.includes('TEACHER') 
-                        ? 'bg-green-100 text-green-800' 
-                        : account.role.includes('CORPORATE')
-                        ? 'bg-orange-100 text-orange-800'
-                        : account.role.includes('ADMIN')
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-blue-100 text-blue-800'
-                      }
-                    `}>
-                      {account.role.split(' ')[0]}
-                    </span>
                   </motion.button>
                 ))}
               </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
@@ -46,9 +46,9 @@ export default function CorporatePortal() {
 
     // 載入企業儀表板資料
     loadCorporateDashboard();
-  }, [user, loading, router]);
+  }, [user, loading, router, loadCorporateDashboard]);
 
-  const loadCorporateDashboard = async () => {
+  const loadCorporateDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -143,7 +143,7 @@ export default function CorporatePortal() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   const getActivityIcon = (type: string) => {
     switch (type) {

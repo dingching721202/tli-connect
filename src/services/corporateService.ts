@@ -110,7 +110,7 @@ export const createCorporateClient = (
       message: '企業客戶創建成功',
       client: newClient
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '企業客戶創建失敗'
@@ -151,7 +151,7 @@ export const updateCorporateClient = (
       message: '企業客戶資料更新成功',
       client: updatedClient
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '企業客戶資料更新失敗'
@@ -268,7 +268,7 @@ export const addCorporateEmployee = (
       employee: newEmployee,
       user: newUser
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '企業員工新增失敗'
@@ -359,7 +359,7 @@ export const deactivateCorporateEmployee = (
       employee,
       user
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '企業員工停用失敗'
@@ -413,7 +413,7 @@ export const createCorporateSubscription = (
       message: '企業訂閱創建成功',
       subscription: newSubscription
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '企業訂閱創建失敗'
@@ -454,7 +454,7 @@ export const updateCorporateSubscription = (
       message: '企業訂閱更新成功',
       subscription: updatedSubscription
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '企業訂閱更新失敗'
@@ -504,7 +504,7 @@ export const processCorporateInquiry = (
         message: '企業詢問處理失敗'
       };
     }
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '企業詢問處理失敗'
@@ -571,7 +571,7 @@ export const convertInquiryToClient = (inquiryId: number): CorporateClientResult
     }
     
     return clientResult;
-  } catch (error) {
+  } catch {
     return {
       success: false,
       message: '詢問轉換失敗'

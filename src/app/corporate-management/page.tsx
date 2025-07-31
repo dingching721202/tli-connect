@@ -7,9 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
 import SafeIcon from '@/components/common/SafeIcon';
-import { 
-  calculateMembershipPeriod
-} from '@/data/corporateData';
+// Corporate data imports removed as not needed
 
 interface CorporateUser {
   id: number;
@@ -149,7 +147,10 @@ export default function CorporateManagementPage() {
 
     // 計算會員期限
     const joinDate = new Date().toISOString().split('T')[0];
-    const membershipPeriod = calculateMembershipPeriod(joinDate, 12); // Default to 12 months
+    const endDate = new Date();
+    endDate.setFullYear(endDate.getFullYear() + 1); // 1年期限
+    const membershipEndDate = endDate.toISOString().split('T')[0];
+    const daysRemaining = Math.ceil((endDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
 
     // 創建新用戶
     const newUser: CorporateUser = {
@@ -158,12 +159,12 @@ export default function CorporateManagementPage() {
       ...userInfo,
       joinDate,
       membershipStartDate: joinDate,
-      membershipEndDate: membershipPeriod.endDate,
-      status: membershipPeriod.daysRemaining > 0 ? 'active' : 'expired',
+      membershipEndDate: membershipEndDate,
+      status: daysRemaining > 0 ? 'active' : 'expired',
       isAccountHolder: false,
       membershipStatus: {
-        isActive: membershipPeriod.daysRemaining > 0,
-        daysRemaining: membershipPeriod.daysRemaining,
+        isActive: daysRemaining > 0,
+        daysRemaining: daysRemaining,
         willExpireWithPlan: true
       },
       learningProgress: {

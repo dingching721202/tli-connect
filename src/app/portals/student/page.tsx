@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import Navigation from '@/components/Navigation';
@@ -36,9 +36,9 @@ export default function StudentPortal() {
 
     // 載入學生儀表板資料
     loadStudentDashboard();
-  }, [user, loading, router]);
+  }, [user, loading, router, loadStudentDashboard]);
 
-  const loadStudentDashboard = async () => {
+  const loadStudentDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
       
@@ -69,7 +69,7 @@ export default function StudentPortal() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   if (loading || isLoading) {
     return (
