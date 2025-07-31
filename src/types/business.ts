@@ -93,6 +93,7 @@ export interface CourseModule {
   learning_objectives: string[];
   refund_policy: string;
   is_active: boolean;
+  status?: 'draft' | 'published'; // 課程模板發布狀態
   created_at: string;
   updated_at: string;
 }

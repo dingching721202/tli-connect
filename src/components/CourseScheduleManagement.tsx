@@ -298,7 +298,7 @@ const CourseScheduleManagement = () => {
 
     const endDate = calculateEndDate(
       data.startDate,
-      selectedTemplate.totalSessions,
+      selectedTemplate.total_sessions,
       data.timeSlots,
       data.excludeDates
     );
@@ -306,7 +306,7 @@ const CourseScheduleManagement = () => {
     const sessions = generateScheduledSessions(
       selectedTemplate.id,
       selectedTemplate.title,
-      selectedTemplate.totalSessions,
+      selectedTemplate.total_sessions,
       selectedTemplate.sessions,
       data.timeSlots,
       data.startDate,
@@ -372,7 +372,7 @@ const CourseScheduleManagement = () => {
   // 刪除排程
   const handleDeleteSchedule = (scheduleId: string) => {
     if (confirm('確定要刪除此課程排程嗎？此操作無法撤銷。')) {
-      const success = deleteCourseSchedule(scheduleId);
+      const success = deleteCourseSchedule(parseInt(scheduleId));
       if (success) {
         // 不要在本地狀態更新，讓事件監聽器處理
         alert('課程排程已刪除');
@@ -382,8 +382,8 @@ const CourseScheduleManagement = () => {
 
   // 切換發布狀態
   const handleToggleStatus = (scheduleId: string, currentStatus: 'draft' | 'published') => {
-    const newStatus = currentStatus === 'published' ? 'draft' : 'published';
-    const updatedSchedule = updateCourseSchedule(scheduleId, { status: newStatus });
+    const newStatus = currentStatus === 'published' ? 'DRAFT' : 'PUBLISHED';
+    const updatedSchedule = updateCourseSchedule(parseInt(scheduleId), { status: newStatus });
     if (updatedSchedule) {
       // 不要在本地狀態更新，讓事件監聽器處理
     }
@@ -641,7 +641,7 @@ const CourseScheduleManagement = () => {
                         <option value="">請選擇課程</option>
                         {templates.map((template) => (
                           <option key={template.id} value={template.id}>
-                            {template.title} ({template.totalSessions} 堂)
+                            {template.title} ({template.total_sessions} 堂)
                           </option>
                         ))}
                       </select>

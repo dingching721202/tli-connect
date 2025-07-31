@@ -43,6 +43,7 @@ export const courseModules: CourseModule[] = [
     ],
     refund_policy: "開課前7天可全額退費",
     is_active: true,
+    status: "published",
     created_at: "2025-07-14T12:00:00+00:00",
     updated_at: "2025-07-20T00:00:00+00:00"
   },
@@ -83,6 +84,7 @@ export const courseModules: CourseModule[] = [
     ],
     refund_policy: "開課前5天可退費80%",
     is_active: true,
+    status: "published",
     created_at: "2025-07-14T12:00:00+00:00",
     updated_at: "2025-07-20T00:00:00+00:00"
   },
@@ -123,6 +125,7 @@ export const courseModules: CourseModule[] = [
     ],
     refund_policy: "開課前7天可全額退費",
     is_active: true,
+    status: "published",
     created_at: "2025-07-14T12:00:00+00:00",
     updated_at: "2025-07-20T00:00:00+00:00"
   },
@@ -163,6 +166,7 @@ export const courseModules: CourseModule[] = [
     ],
     refund_policy: "開課前5天可退費80%",
     is_active: true,
+    status: "published",
     created_at: "2025-07-14T12:00:00+00:00",
     updated_at: "2025-07-20T00:00:00+00:00"
   },
@@ -203,6 +207,7 @@ export const courseModules: CourseModule[] = [
     ],
     refund_policy: "開課前3天可退費50%",
     is_active: true,
+    status: "published",
     created_at: "2025-07-14T12:00:00+00:00",
     updated_at: "2025-07-20T00:00:00+00:00"
   },
@@ -243,6 +248,7 @@ export const courseModules: CourseModule[] = [
     ],
     refund_policy: "開課前7天可全額退費",
     is_active: true,
+    status: "published",
     created_at: "2025-07-14T12:00:00+00:00",
     updated_at: "2025-07-20T00:00:00+00:00"
   }

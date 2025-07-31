@@ -65,7 +65,36 @@ const CourseTemplateManagement = () => {
   const handleOpenModal = (template?: CourseTemplate) => {
     if (template) {
       setEditingTemplate(template);
-      setFormData({ ...template });
+      
+      // 根據課程的總堂數生成對應數量的課程內容
+      const totalSessions = template.totalSessions || template.total_sessions || 1;
+      const generatedSessions = Array.from({ length: totalSessions }, (_, index) => {
+        // 如果原本有課程內容就使用，否則創建新的
+        const existingSession = template.sessions?.[index];
+        return {
+          sessionNumber: existingSession?.sessionNumber || index + 1,
+          title: existingSession?.title || `第${index + 1}堂課`,
+          virtualClassroomLink: existingSession?.virtualClassroomLink || template.globalSettings?.defaultVirtualClassroomLink || '',
+          materialLink: existingSession?.materialLink || template.globalSettings?.defaultMaterialLink || ''
+        };
+      });
+      
+      setFormData({ 
+        ...template,
+        title: template.title || '',
+        description: template.description || '',
+        category: template.category || '中文',
+        level: template.level || '不限',
+        capacity: template.capacity || 20,
+        status: template.status || 'draft',
+        totalSessions: totalSessions,
+        sessions: generatedSessions,
+        globalSettings: {
+          defaultTitle: template.globalSettings?.defaultTitle || '',
+          defaultVirtualClassroomLink: template.globalSettings?.defaultVirtualClassroomLink || '',
+          defaultMaterialLink: template.globalSettings?.defaultMaterialLink || ''
+        }
+      });
     } else {
       setEditingTemplate(null);
       setFormData({
@@ -174,8 +203,8 @@ const CourseTemplateManagement = () => {
       return;
     }
 
-    if (status === 'published' && (!formData.description?.trim() || (formData.totalSessions ?? 0) < 1)) {
-      alert('發布課程需要填寫描述和至少一堂課程');
+    if (status === 'published' && (formData.totalSessions ?? 0) < 1) {
+      alert('發布課程需要至少一堂課程');
       return;
     }
 
@@ -220,11 +249,11 @@ const CourseTemplateManagement = () => {
   // 刪除課程模板
   const handleDeleteTemplate = (templateId: string) => {
     if (confirm('確定要刪除此課程模板嗎？此操作無法撤銷，並會刪除所有相關的課程排程和節次，同時從預約系統中移除對應課程。')) {
-      const success = deleteCourseTemplate(templateId);
+      const success = deleteCourseTemplate(parseInt(templateId));
       if (success) {
         setTemplates(prev => prev.filter(t => t.id !== templateId));
         // 從預約系統中移除對應課程
-        removeCourseFromBookingSystem(templateId);
+        removeCourseFromBookingSystem(parseInt(templateId));
         alert('課程模板已刪除，包括所有相關的課程排程和節次，並已從預約系統中移除');
       } else {
         alert('刪除課程模板時發生錯誤，請稍後再試。');

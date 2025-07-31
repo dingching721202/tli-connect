@@ -243,23 +243,20 @@ export const searchCourses = (
 export const getCourseTemplates = () => {
   return courseModules.map(module => ({
     ...module,
+    totalSessions: module.total_sessions, // 轉換欄位名稱以符合 UI 組件期望
     schedules: courseSchedules.filter(s => s.course_module_id === module.id)
   }));
 };
 
 // 獲取已發布的課程範本
 export const getPublishedCourseTemplates = () => {
-  const publishedScheduleModuleIds = new Set(
-    courseSchedules
-      .filter(s => s.status === 'PUBLISHED')
-      .map(s => s.course_module_id)
-  );
-  
+  // 返回所有活躍且已發布的課程模組，讓使用者可以為它們創建排程
   return courseModules
-    .filter(module => module.is_active && publishedScheduleModuleIds.has(module.id))
+    .filter(module => module.is_active && module.status === 'published')
     .map(module => ({
       ...module,
-      schedules: courseSchedules.filter(s => s.course_module_id === module.id && s.status === 'PUBLISHED')
+      totalSessions: module.total_sessions, // 轉換欄位名稱以符合 UI 組件期望
+      schedules: courseSchedules.filter(s => s.course_module_id === module.id)
     }));
 };
 
