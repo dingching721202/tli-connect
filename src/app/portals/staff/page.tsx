@@ -38,19 +38,6 @@ export default function StaffPortal() {
   const [dashboardData, setDashboardData] = useState<StaffDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (loading) return;
-    
-    // 檢查用戶角色權限 - 員工或管理員都可以進入
-    if (!user || !['STAFF', 'ADMIN'].includes(user.role)) {
-      router.push('/login');
-      return;
-    }
-
-    // 載入員工儀表板資料
-    loadStaffDashboard();
-  }, [user, loading, router, loadStaffDashboard]);
-
   const loadStaffDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -123,6 +110,19 @@ export default function StaffPortal() {
       setIsLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (loading) return;
+    
+    // 檢查用戶角色權限 - 員工或管理員都可以進入
+    if (!user || !['STAFF', 'ADMIN'].includes(user.role)) {
+      router.push('/login');
+      return;
+    }
+
+    // 載入員工儀表板資料
+    loadStaffDashboard();
+  }, [user, loading, router, loadStaffDashboard]);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {

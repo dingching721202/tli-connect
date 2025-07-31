@@ -34,19 +34,6 @@ export default function AgentPortal() {
   const [dashboardData, setDashboardData] = useState<AgentDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (loading) return;
-    
-    // 檢查用戶角色權限
-    if (!user || user.role !== 'AGENT') {
-      router.push('/login');
-      return;
-    }
-
-    // 載入代理商儀表板資料
-    loadAgentDashboard();
-  }, [user, loading, router, loadAgentDashboard]);
-
   const loadAgentDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -135,6 +122,19 @@ export default function AgentPortal() {
       setIsLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (loading) return;
+    
+    // 檢查用戶角色權限
+    if (!user || user.role !== 'AGENT') {
+      router.push('/login');
+      return;
+    }
+
+    // 載入代理商儀表板資料
+    loadAgentDashboard();
+  }, [user, loading, router, loadAgentDashboard]);
 
   const getLevelColor = (level: string) => {
     switch (level) {

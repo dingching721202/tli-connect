@@ -34,19 +34,6 @@ export default function TeacherPortal() {
   const [dashboardData, setDashboardData] = useState<TeacherDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (loading) return;
-    
-    // 檢查用戶角色權限
-    if (!user || user.role !== 'TEACHER') {
-      router.push('/login');
-      return;
-    }
-
-    // 載入教師儀表板資料
-    loadTeacherDashboard();
-  }, [user, loading, router, loadTeacherDashboard]);
-
   const loadTeacherDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -89,6 +76,19 @@ export default function TeacherPortal() {
       setIsLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (loading) return;
+    
+    // 檢查用戶角色權限
+    if (!user || user.role !== 'TEACHER') {
+      router.push('/login');
+      return;
+    }
+
+    // 載入教師儀表板資料
+    loadTeacherDashboard();
+  }, [user, loading, router, loadTeacherDashboard]);
 
   if (loading || isLoading) {
     return (

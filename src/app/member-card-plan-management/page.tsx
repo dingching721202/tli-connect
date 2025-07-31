@@ -65,7 +65,7 @@ interface CourseData {
 
 const LocalMemberCardPlanManagement: React.FC = () => {
   const [plans, setPlans] = useState<LocalMemberCardPlan[]>([]);
-  const [memberCardsData, setMemberCardsData] = useState(memberCards);
+  const [memberCardsData, setMemberCardsData] = useState(memberCards || []);
   const [courses, setCourses] = useState<CourseData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -86,7 +86,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
     description: '',
     hide_price: false,
     activate_deadline_days: 30,
-    member_card_id: memberCards[0]?.id || 1,
+    member_card_id: (memberCards && memberCards[0]?.id) || 1,
     cta_options: {
       show_payment: true,
       show_contact: false
@@ -98,16 +98,60 @@ const LocalMemberCardPlanManagement: React.FC = () => {
     available_course_ids: [] as (number | string)[]
   });
 
-  useEffect(() => {
-    loadPlans();
-    loadCourses();
-  }, [loadCourses]);
-
-  useEffect(() => {
-    if (formData.cta_options.show_payment) {
-      setFormData(prev => ({ ...prev, hide_price: false }));
+  const loadCourses = useCallback(async () => {
+    try {
+      // 從課程模組獲取真實的課程資料
+      const templates = getCourseTemplates() || [];
+      const schedules = getPublishedCourseSchedules() || [];
+      
+      console.log('📚 載入課程模組資料:', { 
+        templates: templates.length, 
+        schedules: schedules.length 
+      });
+      
+      const coursesData: CourseData[] = [];
+      
+      // 1. 優先處理有排程的課程模板（這些是實際可預約的課程）
+      if (Array.isArray(schedules)) {
+        schedules.forEach(schedule => {
+          const template = Array.isArray(templates) ? templates.find(t => t.id === schedule.course_module_id) : null;
+          if (template) {
+            coursesData.push({
+              id: `${template.id}_${schedule.id}`, // 組合ID確保唯一性
+              title: schedule.title || template.title,
+              language: getLanguageFromCategory((template.categories && template.categories[0]) || 'general'),
+              level: template.level,
+              category: (template.categories && template.categories[0]) || 'general',
+              description: template.description
+            });
+          }
+        });
+      }
+      
+      // 2. 處理沒有排程的模板（作為備選課程）
+      if (Array.isArray(templates)) {
+        templates.forEach(template => {
+          const hasSchedule = Array.isArray(schedules) ? schedules.some(s => s.course_module_id === template.id) : false;
+          if (!hasSchedule) {
+            coursesData.push({
+              id: template.id,
+              title: template.title,
+              language: getLanguageFromCategory((template.categories && template.categories[0]) || 'general'),
+              level: template.level,
+              category: (template.categories && template.categories[0]) || 'general',
+              description: template.description
+            });
+          }
+        });
+      }
+      
+      console.log('✅ 成功載入課程資料:', coursesData.length, '個課程');
+      setCourses(coursesData);
+    } catch (error) {
+      console.error('載入課程資料失敗:', error);
+      setCourses([]);
     }
-  }, [formData.cta_options.show_payment]);
+  }, []);
 
   const loadPlans = async () => {
     try {
@@ -124,57 +168,16 @@ const LocalMemberCardPlanManagement: React.FC = () => {
     }
   };
 
-  const loadCourses = useCallback(async () => {
-    try {
-      // 從課程模組獲取真實的課程資料
-      const templates = getCourseTemplates();
-      const schedules = getPublishedCourseSchedules();
-      
-      console.log('📚 載入課程模組資料:', { 
-        templates: templates.length, 
-        schedules: schedules.length 
-      });
-      
-      const coursesData: CourseData[] = [];
-      
-      // 1. 優先處理有排程的課程模板（這些是實際可預約的課程）
-      schedules.forEach(schedule => {
-        const template = templates.find(t => t.id === schedule.course_module_id);
-        if (template) {
-          coursesData.push({
-            id: `${template.id}_${schedule.id}`, // 組合ID確保唯一性
-            title: schedule.title || template.title,
-            language: getLanguageFromCategory(template.categories[0] || 'general'),
-            level: template.level,
-            category: template.categories[0] || 'general',
-            description: template.description
-          });
-        }
-      });
-      
-      // 2. 處理沒有排程的模板（作為備選課程）
-      const templatesWithoutSchedule = templates;
-      templatesWithoutSchedule.forEach(template => {
-        const hasSchedule = schedules.some(s => s.course_module_id === template.id);
-        if (!hasSchedule) {
-          coursesData.push({
-            id: template.id,
-            title: template.title,
-            language: getLanguageFromCategory(template.categories[0] || 'general'),
-            level: template.level,
-            category: template.categories[0] || 'general',
-            description: template.description
-          });
-        }
-      });
-      
-      console.log('✅ 成功載入課程資料:', coursesData.length, '個課程');
-      setCourses(coursesData);
-    } catch (error) {
-      console.error('載入課程資料失敗:', error);
-      setCourses([]);
+  useEffect(() => {
+    loadPlans();
+    loadCourses();
+  }, [loadCourses]);
+
+  useEffect(() => {
+    if (formData.cta_options.show_payment) {
+      setFormData(prev => ({ ...prev, hide_price: false }));
     }
-  }, []);
+  }, [formData.cta_options.show_payment]);
 
   // 根據分類映射語言
   const getLanguageFromCategory = (category: string): string => {
@@ -407,20 +410,22 @@ const LocalMemberCardPlanManagement: React.FC = () => {
   };
 
   const handleDeleteMemberCard = (cardId: number) => {
-    const cardToDelete = memberCardsData.find(card => card.id === cardId);
+    const cardToDelete = (memberCardsData || []).find(card => card.id === cardId);
     if (!cardToDelete) return;
     
+    const cardName = cardToDelete.name || `ID: ${cardId}`;
+    
     // 檢查是否有方案使用此會員卡
-    const relatedPlans = plans.filter(plan => plan.member_card_id === cardId);
+    const relatedPlans = (plans || []).filter(plan => plan.member_card_id === cardId);
     if (relatedPlans.length > 0) {
-      alert(`無法刪除會員卡「${cardToDelete.name}」，因為有 ${relatedPlans.length} 個方案正在使用此會員卡。\n\n請先刪除或修改相關方案後再進行操作。`);
+      alert(`無法刪除會員卡「${cardName}」，因為有 ${relatedPlans.length} 個方案正在使用此會員卡。\n\n請先刪除或修改相關方案後再進行操作。`);
       return;
     }
     
-    if (confirm(`確定要刪除會員卡「${cardToDelete.name}」嗎？`)) {
-      const newMemberCardsData = memberCardsData.filter(card => card.id !== cardId);
+    if (confirm(`確定要刪除會員卡「${cardName}」嗎？`)) {
+      const newMemberCardsData = (memberCardsData || []).filter(card => card.id !== cardId);
       setMemberCardsData(newMemberCardsData);
-      alert(`會員卡「${cardToDelete.name}」已成功刪除！`);
+      alert(`會員卡「${cardName}」已成功刪除！`);
     }
   };
 
@@ -443,8 +448,8 @@ const LocalMemberCardPlanManagement: React.FC = () => {
     });
   };
 
-  const isAllCoursesSelected = memberCardFormData.available_course_ids.length === courses.length;
-  const isSomeCoursesSelected = memberCardFormData.available_course_ids.length > 0 && memberCardFormData.available_course_ids.length < courses.length;
+  const isAllCoursesSelected = memberCardFormData.available_course_ids.length === (courses || []).length;
+  const isSomeCoursesSelected = memberCardFormData.available_course_ids.length > 0 && memberCardFormData.available_course_ids.length < (courses || []).length;
 
   const getPlanTypeConfig = (userType: string, durationType: string) => {
     if (userType === 'individual' && durationType === 'season') {
@@ -586,7 +591,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">會員卡類型</p>
-                    <p className="text-2xl font-bold text-gray-900">{memberCardsData.length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{(memberCardsData || []).length}</p>
                   </div>
                 </div>
               </div>
@@ -597,7 +602,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">可用課程</p>
-                    <p className="text-2xl font-bold text-gray-900">{courses.length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{(courses || []).length}</p>
                   </div>
                 </div>
               </div>
@@ -608,7 +613,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">關聯方案</p>
-                    <p className="text-2xl font-bold text-gray-900">{plans.length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{(plans || []).length}</p>
                   </div>
                 </div>
               </div>
@@ -642,9 +647,9 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                   </div>
                   
                   <div className="mb-4">
-                    <p className="text-sm text-gray-600 mb-2">可存取課程 ({card.available_course_ids.length})</p>
+                    <p className="text-sm text-gray-600 mb-2">可存取課程 ({(card.available_course_ids || []).length})</p>
                     <div className="space-y-1">
-                      {card.available_course_ids.slice(0, 3).map((courseId) => {
+                      {(card.available_course_ids || []).slice(0, 3).map((courseId) => {
                         const course = courses.find(c => c.id === courseId);
                         return course ? (
                           <div key={courseId} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
@@ -652,7 +657,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                           </div>
                         ) : null;
                       })}
-                      {card.available_course_ids.length > 3 && (
+                      {(card.available_course_ids?.length || 0) > 3 && (
                         <div className="text-xs text-gray-500">
                           還有 {(card.available_course_ids?.length || 0) - 3} 個課程...
                         </div>
@@ -661,7 +666,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                   </div>
                   
                   <div className="text-xs text-gray-500">
-                    關聯方案: {plans.filter(p => p.member_card_id === card.id).length} 個
+                    關聯方案: {(plans || []).filter(p => p.member_card_id === card.id).length} 個
                   </div>
                 </motion.div>
               ))}
@@ -694,7 +699,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">總方案數</p>
-                    <p className="text-2xl font-bold text-gray-900">{plans.length}</p>
+                    <p className="text-2xl font-bold text-gray-900">{(plans || []).length}</p>
                   </div>
                 </div>
               </div>
@@ -706,7 +711,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">已發布</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {plans.filter(p => p.status === 'PUBLISHED').length}
+                      {(plans || []).filter(p => p.status === 'PUBLISHED').length}
                     </p>
                   </div>
                 </div>
@@ -719,7 +724,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">草稿</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {plans.filter(p => p.status === 'DRAFT').length}
+                      {(plans || []).filter(p => p.status === 'DRAFT').length}
                     </p>
                   </div>
                 </div>
@@ -732,7 +737,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                   <div className="ml-4">
                     <p className="text-sm font-medium text-gray-600">熱門方案</p>
                     <p className="text-2xl font-bold text-gray-900">
-                      {plans.filter(p => p.popular).length}
+                      {(plans || []).filter(p => p.popular).length}
                     </p>
                   </div>
                 </div>
@@ -741,7 +746,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
 
             {/* Plans Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {plans.map((plan) => {
+              {(plans || []).map((plan) => {
                 const config = getPlanTypeConfig(plan.user_type, plan.duration_type);
                 const Icon = config.icon;
                 const discount = calculateDiscount(plan.original_price, plan.sale_price);
@@ -836,13 +841,13 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                 <div className="mb-6">
                   <p className="text-sm font-medium text-gray-700 mb-2">功能特色：</p>
                   <div className="space-y-1">
-                    {plan.features.slice(0, 3).map((feature, index) => (
+                    {(plan.features || []).slice(0, 3).map((feature, index) => (
                       <div key={`feature-${feature}-${index}`} className="flex items-center space-x-2 text-sm text-gray-600">
                         <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
                         <span className="truncate">{feature}</span>
                       </div>
                     ))}
-                    {plan.features.length > 3 && (
+                    {(plan.features?.length || 0) > 3 && (
                       <p className="text-xs text-gray-500 pl-3">
                         還有 {(plan.features?.length || 0) - 3} 項功能...
                       </p>
@@ -933,7 +938,7 @@ const LocalMemberCardPlanManagement: React.FC = () => {
         </div>
 
             {/* Empty State */}
-            {plans.length === 0 && (
+            {(plans || []).length === 0 && (
               <div className="text-center py-12">
                 <p className="text-gray-500 text-lg mb-4">尚未建立任何會員卡方案</p>
                 <button
@@ -1011,19 +1016,19 @@ const LocalMemberCardPlanManagement: React.FC = () => {
                           className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
                         />
                         <span className="text-sm font-medium text-gray-700">全選</span>
-                        <span className="text-xs text-gray-500">({memberCardFormData.available_course_ids.length}/{courses.length})</span>
+                        <span className="text-xs text-gray-500">({memberCardFormData.available_course_ids.length}/{(courses || []).length})</span>
                       </label>
                     </div>
                     
                     {/* Individual Course Options */}
                     <div className="space-y-2">
-                      {courses.length === 0 ? (
+                      {(courses || []).length === 0 ? (
                         <div className="text-center py-8">
                           <p className="text-gray-500 text-sm">沒有可用的課程</p>
                           <p className="text-xs text-gray-400 mt-1">請先在課程模組中創建並發布課程</p>
                         </div>
                       ) : (
-                        courses.map((course) => (
+                        (courses || []).map((course) => (
                           <label key={course.id} className="flex items-center space-x-3 p-2 hover:bg-white rounded-lg transition-colors">
                             <input
                               type="checkbox"

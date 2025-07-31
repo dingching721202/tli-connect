@@ -35,19 +35,6 @@ export default function CorporatePortal() {
   const [dashboardData, setDashboardData] = useState<CorporateDashboardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    if (loading) return;
-    
-    // 檢查用戶角色權限
-    if (!user || user.role !== 'CORPORATE_CONTACT') {
-      router.push('/login');
-      return;
-    }
-
-    // 載入企業儀表板資料
-    loadCorporateDashboard();
-  }, [user, loading, router, loadCorporateDashboard]);
-
   const loadCorporateDashboard = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -144,6 +131,19 @@ export default function CorporatePortal() {
       setIsLoading(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (loading) return;
+    
+    // 檢查用戶角色權限
+    if (!user || user.role !== 'CORPORATE_CONTACT') {
+      router.push('/login');
+      return;
+    }
+
+    // 載入企業儀表板資料
+    loadCorporateDashboard();
+  }, [user, loading, router, loadCorporateDashboard]);
 
   const getActivityIcon = (type: string) => {
     switch (type) {

@@ -219,13 +219,15 @@ const CourseTemplateManagement = () => {
 
   // 刪除課程模板
   const handleDeleteTemplate = (templateId: string) => {
-    if (confirm('確定要刪除此課程模板嗎？此操作無法撤銷，並會從預約系統中移除對應課程。')) {
+    if (confirm('確定要刪除此課程模板嗎？此操作無法撤銷，並會刪除所有相關的課程排程和節次，同時從預約系統中移除對應課程。')) {
       const success = deleteCourseTemplate(templateId);
       if (success) {
         setTemplates(prev => prev.filter(t => t.id !== templateId));
         // 從預約系統中移除對應課程
         removeCourseFromBookingSystem(templateId);
-        alert('課程模板已刪除，並已從預約系統中移除');
+        alert('課程模板已刪除，包括所有相關的課程排程和節次，並已從預約系統中移除');
+      } else {
+        alert('刪除課程模板時發生錯誤，請稍後再試。');
       }
     }
   };

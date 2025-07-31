@@ -338,13 +338,35 @@ export const deleteCourseTemplate = (id: number): boolean => {
   const index = courseModules.findIndex(m => m.id === id);
   if (index === -1) return false;
 
-  // 檢查是否有相關的課程排程，如果有則不允許刪除
+  // 檢查是否有相關的課程排程
   const relatedSchedules = courseSchedules.filter(s => s.course_module_id === id);
+  
   if (relatedSchedules.length > 0) {
-    console.warn(`Cannot delete course template ${id}: has ${relatedSchedules.length} related schedules`);
-    return false;
+    // 級聯刪除：先刪除相關的課程節次，再刪除課程排程
+    relatedSchedules.forEach(schedule => {
+      // 刪除相關的課程節次
+      const relatedSessionIndices = [];
+      for (let i = courseSessions.length - 1; i >= 0; i--) {
+        if (courseSessions[i].course_schedule_id === schedule.id) {
+          relatedSessionIndices.push(i);
+        }
+      }
+      // 從後往前刪除，避免索引問題
+      relatedSessionIndices.forEach(sessionIndex => {
+        courseSessions.splice(sessionIndex, 1);
+      });
+      
+      // 刪除課程排程
+      const scheduleIndex = courseSchedules.findIndex(s => s.id === schedule.id);
+      if (scheduleIndex !== -1) {
+        courseSchedules.splice(scheduleIndex, 1);
+      }
+    });
+    
+    console.log(`Deleted course template ${id} with ${relatedSchedules.length} related schedules and their sessions`);
   }
 
+  // 刪除課程模板
   courseModules.splice(index, 1);
   return true;
 };
