@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiSave, FiX, FiStar, FiUsers, FiCalendar, FiClock, FiUpload, FiDownload, FiBook, FiSettings } from 'react-icons/fi';
 import Navigation from '@/components/Navigation';
 import SafeIcon from '@/components/common/SafeIcon';
-import { memberCards, MemberCard } from '@/data/member_cards';
+import { MemberCard } from '@/data/member_cards';
 import { getCourseTemplates } from '@/data/courseTemplateUtils';
 import { getPublishedCourseSchedules } from '@/data/courseScheduleUtils';
 
@@ -63,7 +63,7 @@ interface CourseData {
 
 const MemberCardPlanManagement: React.FC = () => {
   const [plans, setPlans] = useState<MemberCardPlan[]>([]);
-  const [memberCardsData, setMemberCardsData] = useState(memberCards);
+  const [memberCardsData, setMemberCardsData] = useState<MemberCard[]>([]);
   const [courses, setCourses] = useState<CourseData[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -84,7 +84,7 @@ const MemberCardPlanManagement: React.FC = () => {
     description: '',
     hide_price: false,
     activate_deadline_days: 30,
-    member_card_id: memberCards[0]?.id || 1,
+    member_card_id: memberCardsData[0]?.id || 1,
     cta_options: {
       show_payment: true,
       show_contact: false
@@ -99,6 +99,7 @@ const MemberCardPlanManagement: React.FC = () => {
   useEffect(() => {
     loadPlans();
     loadCourses();
+    loadMemberCards();
   }, []);
 
   useEffect(() => {
@@ -106,6 +107,16 @@ const MemberCardPlanManagement: React.FC = () => {
       setFormData(prev => ({ ...prev, hide_price: false }));
     }
   }, [formData.cta_options.show_payment]);
+
+  // 當會員卡資料載入完成後，更新預設的 member_card_id
+  useEffect(() => {
+    if (memberCardsData.length > 0 && formData.member_card_id === 1) {
+      setFormData(prev => ({ 
+        ...prev, 
+        member_card_id: memberCardsData[0].id 
+      }));
+    }
+  }, [memberCardsData, formData.member_card_id]);
 
   const loadPlans = async () => {
     try {
@@ -119,6 +130,19 @@ const MemberCardPlanManagement: React.FC = () => {
       console.error('載入會員卡方案失敗:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMemberCards = async () => {
+    try {
+      const response = await fetch('/api/member-cards/admin');
+      if (response.ok) {
+        const data = await response.json();
+        setMemberCardsData(data.data || []);
+        console.log('✅ 載入會員卡資料:', data.data?.length || 0, '個會員卡');
+      }
+    } catch (error) {
+      console.error('載入會員卡失敗:', error);
     }
   };
 
@@ -396,38 +420,43 @@ const MemberCardPlanManagement: React.FC = () => {
     setEditingMemberCard(null);
   };
 
-  const handleSaveMemberCard = () => {
+  const handleSaveMemberCard = async () => {
     try {
-      const newMemberCardsData = [...memberCardsData];
-      
+      const cardData = {
+        name: memberCardFormData.name,
+        available_course_ids: memberCardFormData.available_course_ids
+      };
+
+      let response;
       if (editingMemberCard) {
         // 編輯模式
-        const index = newMemberCardsData.findIndex(card => card.id === editingMemberCard.id);
-        if (index !== -1) {
-          newMemberCardsData[index] = {
-            ...newMemberCardsData[index],
-            name: memberCardFormData.name,
-            available_course_ids: memberCardFormData.available_course_ids
-          };
-        }
+        response = await fetch(`/api/member-cards/admin/${editingMemberCard.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cardData)
+        });
       } else {
         // 新增模式
-        const newId = Math.max(...newMemberCardsData.map(card => card.id), 0) + 1;
-        const newCard = {
-          id: newId,
-          created_at: new Date().toISOString(),
-          name: memberCardFormData.name,
-          available_course_ids: memberCardFormData.available_course_ids
-        };
-        newMemberCardsData.push(newCard);
+        response = await fetch('/api/member-cards/admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(cardData)
+        });
       }
-      
-      setMemberCardsData(newMemberCardsData);
-      handleCloseMemberCardModal();
-      
-      // 顯示成功訊息
-      const action = editingMemberCard ? '更新' : '新增';
-      alert(`會員卡「${memberCardFormData.name}」已成功${action}！`);
+
+      if (response.ok) {
+        // 重新載入會員卡資料
+        await loadMemberCards();
+        handleCloseMemberCardModal();
+        
+        // 顯示成功訊息
+        const action = editingMemberCard ? '更新' : '新增';
+        alert(`會員卡「${memberCardFormData.name}」已成功${action}！`);
+      } else {
+        const errorData = await response.json();
+        console.error('❌ API 錯誤:', errorData);
+        alert(`儲存失敗: ${errorData.error || '未知錯誤'}`);
+      }
     } catch (error) {
       console.error('儲存會員卡失敗:', error);
       alert('操作失敗，請稍後再試。');
@@ -438,7 +467,7 @@ const MemberCardPlanManagement: React.FC = () => {
     handleOpenMemberCardModal(card);
   };
 
-  const handleDeleteMemberCard = (cardId: number) => {
+  const handleDeleteMemberCard = async (cardId: number) => {
     const cardToDelete = memberCardsData.find(card => card.id === cardId);
     if (!cardToDelete) return;
     
@@ -450,9 +479,22 @@ const MemberCardPlanManagement: React.FC = () => {
     }
     
     if (confirm(`確定要刪除會員卡「${cardToDelete.name}」嗎？`)) {
-      const newMemberCardsData = memberCardsData.filter(card => card.id !== cardId);
-      setMemberCardsData(newMemberCardsData);
-      alert(`會員卡「${cardToDelete.name}」已成功刪除！`);
+      try {
+        const response = await fetch(`/api/member-cards/admin/${cardId}`, {
+          method: 'DELETE'
+        });
+
+        if (response.ok) {
+          await loadMemberCards(); // 重新載入資料
+          alert(`會員卡「${cardToDelete.name}」已成功刪除！`);
+        } else {
+          const errorData = await response.json();
+          alert(`刪除失敗: ${errorData.error || '未知錯誤'}`);
+        }
+      } catch (error) {
+        console.error('刪除會員卡失敗:', error);
+        alert('刪除失敗，請稍後再試。');
+      }
     }
   };
 
