@@ -183,6 +183,38 @@ export default function Home() {
         }
         
         @media (max-width: 768px) {
+          .hero-grid,
+          .numbers-grid,
+          .why-card-grid,
+          .topics-grid,
+          .learn-grid,
+          .footer-grid {
+            grid-template-columns: 1fr !important;
+          }
+
+          .hero-grid { gap: 40px !important; }
+          .numbers-grid { gap: 40px !important; }
+          .why-card-grid { gap: 24px !important; padding: 24px !important; }
+          .topics-grid { gap: 48px !important; }
+          .learn-grid { gap: 32px !important; }
+          .footer-grid { gap: 40px !important; }
+
+          .redirect-flex {
+            flex-direction: column !important;
+            text-align: center !important;
+            gap: 32px !important;
+            padding: 48px 24px !important;
+          }
+          
+          .h1 {
+            font-size: 36px !important;
+            line-height: 44px !important;
+          }
+          .h2 {
+            font-size: 28px !important;
+            line-height: 36px !important;
+          }
+
           .products-grid {
             grid-template-columns: 1fr !important;
             gap: 24px !important;
@@ -235,7 +267,7 @@ export default function Home() {
         {/* HERO */}
         <section className="section" style={{background: 'linear-gradient(180deg, #FFFFFF 0%, #F7FAFE 60%, #F5F8FC 100%)'}}>
           <div className="page-container">
-            <div style={{display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 440px', gap: '32px', alignItems: 'start'}}>
+            <div className="hero-grid" style={{display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 440px', gap: '32px', alignItems: 'start'}}>
               <div>
                 <h1 className="h1">Master the Global Stage — Join TLI Connect</h1>
                 <p className="body-l" style={{color: '#7FA8D8'}}>Language × Culture × Business — empowering tomorrow&apos;s global talent.</p>
@@ -418,7 +450,7 @@ export default function Home() {
         <section className="section" style={{background: '#EFF5FC'}}>
           <div className="page-container">
             <h2 className="h2">TLI Connect — The Digital Extension of TLI&apos;s Legacy</h2>
-            <div style={{
+            <div className="numbers-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3,1fr)',
               gap: '24px',
@@ -484,7 +516,7 @@ export default function Home() {
                   solution: "Deep‑dive cultural cases decode unspoken rules so you avoid missteps and communicate confidently."
                 }
               ].map((item, i) => (
-                <div key={i} style={{
+                <div key={i} className="why-card-grid" style={{
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr',
                   gap: '24px',
@@ -559,7 +591,7 @@ export default function Home() {
               background: 'radial-gradient(circle at 50% 0%, rgba(46,110,182,.06), rgba(0,0,0,0) 60%)',
               marginTop: '16px'
             }}>
-              <div style={{
+              <div className="topics-grid" style={{
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3,1fr)',
                 gap: '40px'
@@ -1351,7 +1383,7 @@ export default function Home() {
               background: 'radial-gradient(circle at 50% 0%, rgba(46,110,182,.06), rgba(0,0,0,0) 60%)',
               marginTop: '16px'
             }}>
-              <div style={{
+              <div className="learn-grid" style={{
                 position: 'relative',
                 display: 'grid',
                 gridTemplateColumns: '560px minmax(0,1fr)',
@@ -1453,7 +1485,7 @@ export default function Home() {
             background: 'radial-gradient(90% 140% at 0% 50%, rgba(46,110,182,.15), rgba(255,255,255,0) 55%), radial-gradient(90% 140% at 100% 50%, rgba(242,193,78,.12), rgba(255,255,255,0) 55%)',
             pointerEvents: 'none'
           }} />
-          <div className="page-container" style={{
+          <div className="page-container redirect-flex" style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -1504,7 +1536,7 @@ export default function Home() {
         {/* Footer with Form */}
         <footer className="section" style={{background: 'linear-gradient(to top,#EDF3FA,#F7FAFE)', borderTop: '1px solid var(--divider)'}}>
           <div className="page-container">
-            <div style={{
+            <div className="footer-grid" style={{
               display: 'grid',
               gridTemplateColumns: 'minmax(0,1fr) 600px',
               gap: '48px',
