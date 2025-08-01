@@ -57,8 +57,32 @@ const CourseTemplateManagement = () => {
     const loadTemplates = () => {
       const allTemplates = getCourseTemplates();
       setTemplates(allTemplates);
+      console.log('📚 課程模板已載入:', allTemplates.length, '個模板');
     };
+    
     loadTemplates();
+
+    // 監聽課程模板更新事件
+    const handleTemplatesUpdated = () => {
+      console.log('🔄 檢測到課程模板更新，重新載入...');
+      loadTemplates();
+    };
+
+    // 監聽localStorage變化（用於跨頁面同步）
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'courseModules' || e.key === 'courseTemplateData') {
+        console.log('🔄 檢測到localStorage變化，重新載入模板...');
+        loadTemplates();
+      }
+    };
+
+    window.addEventListener('courseTemplatesUpdated', handleTemplatesUpdated);
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('courseTemplatesUpdated', handleTemplatesUpdated);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   // 處理開啟模態框
@@ -73,9 +97,10 @@ const CourseTemplateManagement = () => {
         const existingSession = template.sessions?.[index];
         return {
           sessionNumber: existingSession?.sessionNumber || index + 1,
-          title: existingSession?.title || `第${index + 1}堂課`,
-          virtualClassroomLink: existingSession?.virtualClassroomLink || template.globalSettings?.defaultVirtualClassroomLink || '',
-          materialLink: existingSession?.materialLink || template.globalSettings?.defaultMaterialLink || ''
+          // 編輯時保持原始值，不自動填充統一設定
+          title: existingSession?.title || '',
+          virtualClassroomLink: existingSession?.virtualClassroomLink || '',
+          materialLink: existingSession?.materialLink || ''
         };
       });
       
@@ -196,6 +221,85 @@ const CourseTemplateManagement = () => {
     setFormData(prev => ({ ...prev, sessions: newSessions }));
   };
 
+  // 檢查個別欄位是否使用統一設定
+  const isUsingGlobalSetting = (sessionIndex: number, field: keyof TemplateSession) => {
+    const session = formData.sessions?.[sessionIndex];
+    if (!session) return false;
+
+    const fieldMapping = {
+      title: 'defaultTitle',
+      virtualClassroomLink: 'defaultVirtualClassroomLink', 
+      materialLink: 'defaultMaterialLink'
+    } as const;
+
+    const globalField = fieldMapping[field];
+    if (!globalField) return false;
+
+    const sessionValue = session[field];
+    const globalValue = formData.globalSettings?.[globalField];
+
+    // 如果個別欄位為空或與統一設定相同，且統一設定有值，則認為使用統一設定
+    return !sessionValue && globalValue;
+  };
+
+
+  // 獲取實際顯示的值（考慮統一設定的回退）
+  const getEffectiveValue = (sessionIndex: number, field: keyof TemplateSession) => {
+    const session = formData.sessions?.[sessionIndex];
+    if (!session) return '';
+
+    const sessionValue = session[field];
+    if (sessionValue) return sessionValue;
+
+    // 如果個別設定為空，使用統一設定
+    const fieldMapping = {
+      title: 'defaultTitle',
+      virtualClassroomLink: 'defaultVirtualClassroomLink',
+      materialLink: 'defaultMaterialLink'
+    } as const;
+
+    const globalField = fieldMapping[field];
+    return globalField ? (formData.globalSettings?.[globalField] || '') : '';
+  };
+
+  // 清空所有課程內容設置
+  const clearAllSessions = () => {
+    if (!formData.sessions) return;
+
+    const updatedSessions = formData.sessions.map(session => ({
+      ...session,
+      title: '',
+      virtualClassroomLink: '',
+      materialLink: ''
+    }));
+
+    setFormData(prev => ({ ...prev, sessions: updatedSessions }));
+  };
+
+  // 獲取欄位的placeholder文字
+  const getFieldPlaceholder = (field: keyof TemplateSession) => {
+    const fieldMapping = {
+      title: 'defaultTitle',
+      virtualClassroomLink: 'defaultVirtualClassroomLink',
+      materialLink: 'defaultMaterialLink'
+    } as const;
+
+    const fieldNames = {
+      title: '單元名稱',
+      virtualClassroomLink: '教室連結',
+      materialLink: '教材連結'
+    } as const;
+
+    const globalField = fieldMapping[field];
+    const globalValue = globalField ? formData.globalSettings?.[globalField] : '';
+    
+    if (globalValue) {
+      return globalValue;
+    }
+
+    return fieldNames[field] || '請輸入';
+  };
+
   // 儲存課程模板
   const handleSaveTemplate = (status: 'draft' | 'published' = 'draft') => {
     if (!formData.title?.trim()) {
@@ -208,13 +312,20 @@ const CourseTemplateManagement = () => {
       return;
     }
 
-    const templateData = {
+    console.log('🔍 儲存前的表單資料:', {
+      category: formData.category,
+      level: formData.level,
+      capacity: formData.capacity
+    });
+
+    const moduleData = {
       title: formData.title || '',
       description: formData.description || '',
       cover_image_url: '/images/courses/default.jpg',
       language: 'chinese' as const,
       level: (formData.level === '初級' ? 'beginner' : 
               formData.level === '中級' ? 'intermediate' : 
+              formData.level === '中高級' ? 'intermediate' :
               formData.level === '高級' ? 'advanced' : 'beginner') as 'beginner' | 'intermediate' | 'advanced',
       categories: [formData.category || '中文'],
       tags: [],
@@ -228,9 +339,38 @@ const CourseTemplateManagement = () => {
       status
     };
 
+    console.log('💾 準備儲存的模組資料:', {
+      level: moduleData.level,
+      categories: moduleData.categories
+    });
+
+    // 準備模板額外資料（統一設定與課程內容設置）
+    // 處理空白欄位，使其使用統一設定的值
+    const processedSessions = (formData.sessions || []).map(session => ({
+      ...session,
+      title: session.title || formData.globalSettings?.defaultTitle || '',
+      virtualClassroomLink: session.virtualClassroomLink || formData.globalSettings?.defaultVirtualClassroomLink || '',
+      materialLink: session.materialLink || formData.globalSettings?.defaultMaterialLink || ''
+    }));
+
+    const templateData = {
+      sessions: processedSessions,
+      globalSettings: formData.globalSettings || {
+        defaultTitle: '',
+        defaultVirtualClassroomLink: '',
+        defaultMaterialLink: ''
+      },
+      capacity: formData.capacity || 20, // 儲存滿班人數
+      uiLevel: formData.level || '不限' // 儲存原始的中文級別
+    };
+
+    console.log('📋 準備儲存的模板額外資料:', {
+      capacity: templateData.capacity
+    });
+
     if (editingTemplate) {
       // 更新現有模板
-      const updatedTemplate = updateCourseTemplate(editingTemplate.id, templateData);
+      const updatedTemplate = updateCourseTemplate(editingTemplate.id, moduleData, templateData);
       if (updatedTemplate) {
         setTemplates(prev => prev.map(t => t.id === editingTemplate.id ? updatedTemplate : t));
         
@@ -238,17 +378,28 @@ const CourseTemplateManagement = () => {
         if (status === 'published') {
           syncTemplateToBookingSystem(updatedTemplate);
         }
+        
+        console.log('✅ 課程模板已更新，包含統一設定與課程內容設置');
+        console.log('📊 儲存的課程內容:', processedSessions);
+        console.log('📊 統一設定:', templateData.globalSettings);
       }
     } else {
       // 創建新模板
-      const newTemplate = createCourseTemplate(templateData);
+      const newTemplate = createCourseTemplate(moduleData, templateData);
       setTemplates(prev => [...prev, newTemplate]);
       
       // 如果是發布狀態，同步到預約系統
       if (status === 'published') {
         syncTemplateToBookingSystem(newTemplate);
       }
+      
+      console.log('✅ 新課程模板已創建，包含統一設定與課程內容設置');
+      console.log('📊 儲存的課程內容:', processedSessions);
+      console.log('📊 統一設定:', templateData.globalSettings);
     }
+
+    // 觸發更新事件，通知其他組件重新載入
+    window.dispatchEvent(new CustomEvent('courseTemplatesUpdated'));
 
     handleCloseModal();
     alert(`課程模板已${status === 'published' ? '發布並同步至預約系統' : '儲存為草稿'}`);
@@ -262,6 +413,10 @@ const CourseTemplateManagement = () => {
         setTemplates(prev => prev.filter(t => t.id !== templateId));
         // 從預約系統中移除對應課程
         removeCourseFromBookingSystem(parseInt(templateId));
+        
+        // 觸發更新事件
+        window.dispatchEvent(new CustomEvent('courseTemplatesUpdated'));
+        
         alert('課程模板已刪除，包括所有相關的課程排程和節次，並已從預約系統中移除');
       } else {
         alert('刪除課程模板時發生錯誤，請稍後再試。');
@@ -302,6 +457,9 @@ const CourseTemplateManagement = () => {
         // 取消發布時，從預約系統中移除
         removeCourseFromBookingSystem(templateId);
       }
+
+      // 觸發更新事件
+      window.dispatchEvent(new CustomEvent('courseTemplatesUpdated'));
     }
   };
 
@@ -646,12 +804,22 @@ const CourseTemplateManagement = () => {
 
                 {/* Global Settings */}
                 <div className="bg-purple-50 rounded-lg p-4">
-                  <div className="mb-4">
-                    <h4 className="font-semibold text-gray-900">統一設定</h4>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h4 className="font-semibold text-gray-900">統一設定</h4>
+                      <p className="text-sm text-gray-600 mt-1">
+                        設定課程的預設資訊
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={clearAllSessions}
+                      className="px-3 py-1.5 bg-red-100 text-red-700 text-sm rounded-lg hover:bg-red-200 transition-colors"
+                      title="清空所有課程內容設置"
+                    >
+                      清除
+                    </button>
                   </div>
-                  <p className="text-sm text-gray-600 mb-4">
-                    設定整個課程的統一資訊。
-                  </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <div className="mb-2">
@@ -700,11 +868,18 @@ const CourseTemplateManagement = () => {
 
                 {/* Course Content */}
                 <div className="bg-green-50 rounded-lg p-4">
-                  <h4 className="font-semibold text-gray-900 mb-4">課程內容設置</h4>
+                  <div className="flex justify-between items-center mb-4">
+                    <h4 className="font-semibold text-gray-900">課程內容設置</h4>
+                    <div className="text-xs text-gray-600">
+                      💡 空白欄位將使用統一設定
+                    </div>
+                  </div>
                   <div className="space-y-4">
                     {(formData.sessions || []).map((session, index) => (
                       <div key={`form-session-${index}`} className="bg-white rounded-lg p-4 border border-green-200">
-                        <h5 className="font-medium text-gray-900 mb-3">Lesson {session.sessionNumber}</h5>
+                        <div className="flex justify-between items-center mb-3">
+                          <h5 className="font-medium text-gray-900">第 {session.sessionNumber} 堂課</h5>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -715,7 +890,7 @@ const CourseTemplateManagement = () => {
                               value={session.title || ''}
                               onChange={(e) => handleSessionChange(index, 'title', e.target.value)}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="單元名稱"
+                              placeholder={getFieldPlaceholder('title')}
                             />
                           </div>
                           <div>
@@ -727,7 +902,7 @@ const CourseTemplateManagement = () => {
                               value={session.virtualClassroomLink || ''}
                               onChange={(e) => handleSessionChange(index, 'virtualClassroomLink', e.target.value)}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="教室連結"
+                              placeholder={getFieldPlaceholder('virtualClassroomLink')}
                             />
                           </div>
                           <div>
@@ -739,7 +914,7 @@ const CourseTemplateManagement = () => {
                               value={session.materialLink || ''}
                               onChange={(e) => handleSessionChange(index, 'materialLink', e.target.value)}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                              placeholder="教材連結"
+                              placeholder={getFieldPlaceholder('materialLink')}
                             />
                           </div>
                         </div>

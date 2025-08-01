@@ -210,27 +210,68 @@ export const getPublishedCourseSchedules = () => {
     }));
 };
 
-// 計算課程結束日期
+// 計算課程結束日期（舊版本，向下相容）
 export const calculateEndDate = (
   startDate: string,
   totalSessions: number,
-  recurringPattern: { type: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'; days_of_week: number[]; exceptions: string[] }
+  recurringPatternOrTimeSlots: 
+    | { type: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'; days_of_week: number[]; exceptions: string[] }
+    | TimeSlot[],
+  excludeDates?: string[]
 ): string => {
   const start = new Date(startDate);
   const currentDate = new Date(start);
   let sessionCount = 0;
+  const maxIterations = 365; // 防止無限循環
+  let iterations = 0;
+
+  // 檢查是否為新格式（TimeSlot[]）
+  const isTimeSlotFormat = Array.isArray(recurringPatternOrTimeSlots);
   
-  while (sessionCount < totalSessions) {
-    const dayOfWeek = currentDate.getDay();
-    const dateString = currentDate.toISOString().split('T')[0];
+  if (isTimeSlotFormat) {
+    // 新格式：使用 TimeSlot[]
+    const timeSlots = recurringPatternOrTimeSlots as TimeSlot[];
+    const excludeList = excludeDates || [];
     
-    if (recurringPattern.days_of_week.includes(dayOfWeek) && 
-        !recurringPattern.exceptions.includes(dateString)) {
-      sessionCount++;
+    while (sessionCount < totalSessions && iterations < maxIterations) {
+      iterations++;
+      const dayOfWeek = currentDate.getDay();
+      const dateString = currentDate.toISOString().split('T')[0];
+      
+      // 檢查是否有匹配的時間段且不在排除列表中
+      const hasMatchingSlot = timeSlots.some(slot => 
+        slot.weekdays && slot.weekdays.includes(dayOfWeek)
+      );
+      
+      if (hasMatchingSlot && !excludeList.includes(dateString)) {
+        sessionCount++;
+      }
+      
+      if (sessionCount < totalSessions) {
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
     }
+  } else {
+    // 舊格式：使用 recurringPattern
+    const recurringPattern = recurringPatternOrTimeSlots as { 
+      type: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY'; 
+      days_of_week: number[]; 
+      exceptions: string[] 
+    };
     
-    if (sessionCount < totalSessions) {
-      currentDate.setDate(currentDate.getDate() + 1);
+    while (sessionCount < totalSessions && iterations < maxIterations) {
+      iterations++;
+      const dayOfWeek = currentDate.getDay();
+      const dateString = currentDate.toISOString().split('T')[0];
+      
+      if (recurringPattern.days_of_week && recurringPattern.days_of_week.includes(dayOfWeek) && 
+          (!recurringPattern.exceptions || !recurringPattern.exceptions.includes(dateString))) {
+        sessionCount++;
+      }
+      
+      if (sessionCount < totalSessions) {
+        currentDate.setDate(currentDate.getDate() + 1);
+      }
     }
   }
   
@@ -287,6 +328,71 @@ export const generateScheduledSessions = (
 
       currentDate.setDate(currentDate.getDate() + 1);
     }
+  }
+
+  return sessions;
+};
+
+// 生成預覽會話（用於課程排程管理界面）
+export const generatePreviewSessions = (
+  templateId: number | string,
+  templateTitle: string,
+  totalSessions: number,
+  templateSessions: any[],
+  timeSlots: TimeSlot[],
+  startDate: string,
+  excludeDates: string[],
+  teacherName: string
+): ScheduledSession[] => {
+  if (!startDate || !timeSlots.length) return [];
+
+  const sessions: ScheduledSession[] = [];
+  let sessionCounter = 1;
+  const currentDate = new Date(startDate);
+  const maxIterations = 365; // 防止無限循環
+  let iterations = 0;
+
+  while (sessionCounter <= totalSessions && iterations < maxIterations) {
+    iterations++;
+    const dateString = currentDate.toISOString().split('T')[0];
+    
+    // 跳過排除的日期
+    if (excludeDates.includes(dateString)) {
+      currentDate.setDate(currentDate.getDate() + 1);
+      continue;
+    }
+
+    const dayOfWeek = currentDate.getDay();
+    
+    // 檢查是否有任何時間段匹配當前星期幾
+    const matchingSlot = timeSlots.find(slot => 
+      slot.weekdays && slot.weekdays.includes(dayOfWeek)
+    );
+
+    if (matchingSlot) {
+      // 使用模板中的會話標題，如果沒有則使用預設標題
+      const sessionTemplate = templateSessions && templateSessions[sessionCounter - 1];
+      const sessionTitle = sessionTemplate?.title || `第${sessionCounter}堂課`;
+
+      const session: ScheduledSession = {
+        id: `preview_${sessionCounter}`,
+        templateId: String(templateId),
+        sessionNumber: sessionCounter,
+        title: sessionTitle,
+        date: dateString,
+        startTime: matchingSlot.startTime,
+        endTime: matchingSlot.endTime,
+        teacherId: matchingSlot.teacherId || '',
+        teacherName: teacherName,
+        virtualClassroomLink: sessionTemplate?.virtualClassroomLink || '',
+        materialLink: sessionTemplate?.materialLink || ''
+      };
+
+      sessions.push(session);
+      sessionCounter++;
+    }
+
+    currentDate.setDate(currentDate.getDate() + 1);
   }
 
   return sessions;
@@ -425,7 +531,8 @@ const courseScheduleUtilsModule = {
   getCourseSchedules,
   getPublishedCourseSchedules,
   calculateEndDate,
-  generateScheduledSessions
+  generateScheduledSessions,
+  generatePreviewSessions
 };
 
 export default courseScheduleUtilsModule;

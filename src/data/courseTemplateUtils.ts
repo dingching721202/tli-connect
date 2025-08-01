@@ -3,11 +3,6 @@ import { courseSchedules } from './courseSchedules';
 import { courseSessions } from './courseSessions';
 import type { CourseModule, CourseSchedule, CourseSession } from '@/types/business';
 
-// ========================================
-// 課程範本工具函數 - MECE架構
-// 提供課程模組、排程和節次之間的關聯操作
-// ========================================
-
 // Template session interface for form handling
 export interface TemplateSession {
   sessionNumber: number;
@@ -16,9 +11,86 @@ export interface TemplateSession {
   materialLink: string;
 }
 
+// 課程模板額外資料存儲（包含sessions和globalSettings）
+interface CourseTemplateData {
+  moduleId: number;
+  sessions: TemplateSession[];
+  globalSettings: {
+    defaultTitle: string;
+    defaultVirtualClassroomLink: string;
+    defaultMaterialLink: string;
+  };
+  capacity?: number; // 滿班人數
+  uiLevel?: string; // UI 中的原始級別（中文）
+}
+
+// 存儲課程模板額外資料的陣列
+const courseTemplateData: CourseTemplateData[] = [];
+
+// 從 localStorage 載入資料
+const loadDataFromLocalStorage = () => {
+  if (typeof localStorage !== 'undefined') {
+    try {
+      // 載入課程模組
+      const savedModules = localStorage.getItem('courseModules');
+      if (savedModules) {
+        const parsedModules = JSON.parse(savedModules);
+        courseModules.length = 0; // 清空現有資料
+        courseModules.push(...parsedModules);
+        console.log('📦 已載入課程模組:', parsedModules.map(m => ({ id: m.id, title: m.title, categories: m.categories, level: m.level })));
+      }
+      
+      // 載入課程排程
+      const savedSchedules = localStorage.getItem('courseSchedules');
+      if (savedSchedules) {
+        const parsedSchedules = JSON.parse(savedSchedules);
+        courseSchedules.length = 0; // 清空現有資料
+        courseSchedules.push(...parsedSchedules);
+      }
+      
+      // 載入課程節次
+      const savedSessions = localStorage.getItem('courseSessions');
+      if (savedSessions) {
+        const parsedSessions = JSON.parse(savedSessions);
+        courseSessions.length = 0; // 清空現有資料
+        courseSessions.push(...parsedSessions);
+      }
+      
+      // 載入課程模板額外資料
+      const savedTemplateData = localStorage.getItem('courseTemplateData');
+      if (savedTemplateData) {
+        const parsedTemplateData = JSON.parse(savedTemplateData);
+        courseTemplateData.length = 0; // 清空現有資料
+        courseTemplateData.push(...parsedTemplateData);
+        console.log('📦 已載入課程模板額外資料:', parsedTemplateData.map(t => ({ moduleId: t.moduleId, capacity: t.capacity })));
+      }
+      
+      console.log('✅ 課程資料已從 localStorage 載入', {
+        modules: courseModules.length,
+        schedules: courseSchedules.length,
+        sessions: courseSessions.length,
+        templateData: courseTemplateData.length
+      });
+    } catch (error) {
+      console.error('❌ 從 localStorage 載入課程資料失敗:', error);
+    }
+  }
+};
+
+// 初始化時載入資料
+loadDataFromLocalStorage();
+
+// ========================================
+// 課程範本工具函數 - MECE架構
+// 提供課程模組、排程和節次之間的關聯操作
+// ========================================
+
 // CourseTemplate type definition - extends CourseModule with UI-specific fields
 export interface CourseTemplate extends CourseModule {
   totalSessions: number; // UI field mapping from total_sessions
+  category: string; // UI field mapping from categories[0] for single category display
+  level: '初級' | '中級' | '高級' | '不限'; // UI field mapping from level with Chinese display
+  capacity: number; // UI field for class capacity
   schedules?: CourseSchedule[]; // Associated schedules
   sessions?: TemplateSession[]; // Course content sessions for template
   globalSettings?: {
@@ -261,17 +333,46 @@ export const searchCourses = (
 
 // 獲取所有課程範本
 export const getCourseTemplates = (): CourseTemplate[] => {
-  return courseModules.map(module => ({
-    ...module,
-    totalSessions: module.total_sessions, // 轉換欄位名稱以符合 UI 組件期望
-    schedules: courseSchedules.filter(s => s.course_module_id === module.id),
-    sessions: [], // 初始化為空陣列，讓使用者在編輯時填入
-    globalSettings: {
-      defaultTitle: '',
-      defaultVirtualClassroomLink: '',
-      defaultMaterialLink: ''
-    }
-  }));
+  console.log('📖 getCourseTemplates 被調用');
+  console.log('📖 courseModules:', courseModules);
+  console.log('📖 courseTemplateData:', courseTemplateData);
+  
+  const result = courseModules.map(module => {
+    // 查找該模組的額外資料
+    const templateData = courseTemplateData.find(data => data.moduleId === module.id);
+    
+    const template = {
+      ...module,
+      totalSessions: module.total_sessions, // 轉換欄位名稱以符合 UI 組件期望
+      category: module.categories?.[0] || '中文', // 轉換categories陣列的第一個元素為category字符串
+      level: templateData?.uiLevel || 
+             (module.level === 'beginner' ? '初級' : 
+              module.level === 'intermediate' ? '中級' : 
+              module.level === 'advanced' ? '高級' : '不限'), // 優先使用儲存的中文級別，否則轉換英文level
+      capacity: templateData?.capacity || 20, // 從templateData載入容量，預設20
+      schedules: courseSchedules.filter(s => s.course_module_id === module.id),
+      sessions: templateData?.sessions || [], // 從 courseTemplateData 載入實際的課程內容
+      globalSettings: templateData?.globalSettings || {
+        defaultTitle: '',
+        defaultVirtualClassroomLink: '',
+        defaultMaterialLink: ''
+      }
+    };
+    
+    console.log(`📖 模組 ${module.id} 結果:`, {
+      原始categories: module.categories,
+      原始level: module.level,
+      原始templateData: templateData,
+      轉換後category: template.category,
+      轉換後level: template.level,
+      轉換後capacity: template.capacity
+    });
+    
+    return template;
+  });
+  
+  console.log('📖 getCourseTemplates 返回結果:', result);
+  return result;
 };
 
 // 獲取已發布的課程範本
@@ -279,17 +380,28 @@ export const getPublishedCourseTemplates = (): CourseTemplate[] => {
   // 返回所有活躍且已發布的課程模組，讓使用者可以為它們創建排程
   return courseModules
     .filter(module => module.is_active && module.status === 'published')
-    .map(module => ({
-      ...module,
-      totalSessions: module.total_sessions, // 轉換欄位名稱以符合 UI 組件期望
-      schedules: courseSchedules.filter(s => s.course_module_id === module.id),
-      sessions: [], // 初始化為空陣列，讓使用者在編輯時填入
-      globalSettings: {
-        defaultTitle: '',
-        defaultVirtualClassroomLink: '',
-        defaultMaterialLink: ''
-      }
-    }));
+    .map(module => {
+      // 查找該模組的額外資料
+      const templateData = courseTemplateData.find(data => data.moduleId === module.id);
+      
+      return {
+        ...module,
+        totalSessions: module.total_sessions, // 轉換欄位名稱以符合 UI 組件期望
+        category: module.categories?.[0] || '中文', // 轉換categories陣列的第一個元素為category字符串
+        level: templateData?.uiLevel || 
+               (module.level === 'beginner' ? '初級' : 
+                module.level === 'intermediate' ? '中級' : 
+                module.level === 'advanced' ? '高級' : '不限'), // 優先使用儲存的中文級別
+        capacity: templateData?.capacity || 20, // 從templateData載入容量，預設20
+        schedules: courseSchedules.filter(s => s.course_module_id === module.id),
+        sessions: templateData?.sessions || [], // 從 courseTemplateData 載入實際的課程內容  
+        globalSettings: templateData?.globalSettings || {
+          defaultTitle: '',
+          defaultVirtualClassroomLink: '',
+          defaultMaterialLink: ''
+        }
+      };
+    });
 };
 
 // 課程統計
@@ -326,17 +438,28 @@ export const getCourseStatistics = () => {
 };
 
 // Helper function to convert CourseModule to CourseTemplate
-const moduleToTemplate = (module: CourseModule): CourseTemplate => ({
-  ...module,
-  totalSessions: module.total_sessions,
-  schedules: courseSchedules.filter(s => s.course_module_id === module.id),
-  sessions: [],
-  globalSettings: {
-    defaultTitle: '',
-    defaultVirtualClassroomLink: '',
-    defaultMaterialLink: ''
-  }
-});
+const moduleToTemplate = (module: CourseModule): CourseTemplate => {
+  // 查找該模組的額外資料
+  const templateData = courseTemplateData.find(data => data.moduleId === module.id);
+  
+  return {
+    ...module,
+    totalSessions: module.total_sessions,
+    category: module.categories?.[0] || '中文', // 轉換categories陣列的第一個元素為category字符串
+    level: templateData?.uiLevel || 
+           (module.level === 'beginner' ? '初級' : 
+            module.level === 'intermediate' ? '中級' : 
+            module.level === 'advanced' ? '高級' : '不限'), // 優先使用儲存的中文級別
+    capacity: templateData?.capacity || 20, // 從templateData載入容量，預設20
+    schedules: courseSchedules.filter(s => s.course_module_id === module.id),
+    sessions: templateData?.sessions || [],
+    globalSettings: templateData?.globalSettings || {
+      defaultTitle: '',
+      defaultVirtualClassroomLink: '',
+      defaultMaterialLink: ''
+    }
+  };
+};
 
 // ========================================
 // CRUD operations for CourseModule (Templates)
@@ -345,7 +468,8 @@ const moduleToTemplate = (module: CourseModule): CourseTemplate => ({
 // 更新課程範本
 export const updateCourseTemplate = (
   id: number,
-  updates: Partial<Omit<CourseModule, 'id' | 'created_at' | 'updated_at'>>
+  updates: Partial<Omit<CourseModule, 'id' | 'created_at' | 'updated_at'>>,
+  templateUpdates?: { sessions?: TemplateSession[]; globalSettings?: { defaultTitle?: string; defaultVirtualClassroomLink?: string; defaultMaterialLink?: string }; capacity?: number; uiLevel?: string }
 ): CourseTemplate | null => {
   const index = courseModules.findIndex(m => m.id === id);
   if (index === -1) return null;
@@ -357,12 +481,56 @@ export const updateCourseTemplate = (
   };
 
   courseModules[index] = updatedModule;
+  
+  // 更新模板額外資料
+  if (templateUpdates) {
+    const templateDataIndex = courseTemplateData.findIndex(data => data.moduleId === id);
+    if (templateDataIndex >= 0) {
+      // 更新現有資料
+      if (templateUpdates.sessions) {
+        courseTemplateData[templateDataIndex].sessions = templateUpdates.sessions;
+      }
+      if (templateUpdates.globalSettings) {
+        courseTemplateData[templateDataIndex].globalSettings = {
+          ...courseTemplateData[templateDataIndex].globalSettings,
+          ...templateUpdates.globalSettings
+        };
+      }
+      if (templateUpdates.capacity !== undefined) {
+        courseTemplateData[templateDataIndex].capacity = templateUpdates.capacity;
+      }
+      if (templateUpdates.uiLevel !== undefined) {
+        courseTemplateData[templateDataIndex].uiLevel = templateUpdates.uiLevel;
+      }
+    } else {
+      // 創建新的模板資料
+      courseTemplateData.push({
+        moduleId: id,
+        sessions: templateUpdates.sessions || [],
+        globalSettings: {
+          defaultTitle: templateUpdates.globalSettings?.defaultTitle || '',
+          defaultVirtualClassroomLink: templateUpdates.globalSettings?.defaultVirtualClassroomLink || '',
+          defaultMaterialLink: templateUpdates.globalSettings?.defaultMaterialLink || ''
+        },
+        capacity: templateUpdates.capacity || 20,
+        uiLevel: templateUpdates.uiLevel || '不限'
+      });
+    }
+  }
+  
+  // 儲存到 localStorage
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('courseModules', JSON.stringify(courseModules));
+    localStorage.setItem('courseTemplateData', JSON.stringify(courseTemplateData));
+  }
+  
   return moduleToTemplate(updatedModule);
 };
 
 // 創建課程範本
 export const createCourseTemplate = (
-  moduleData: Omit<CourseModule, 'id' | 'created_at' | 'updated_at'>
+  moduleData: Omit<CourseModule, 'id' | 'created_at' | 'updated_at'>,
+  templateData?: { sessions?: TemplateSession[]; globalSettings?: { defaultTitle?: string; defaultVirtualClassroomLink?: string; defaultMaterialLink?: string }; capacity?: number; uiLevel?: string }
 ): CourseTemplate => {
   const newModule: CourseModule = {
     ...moduleData,
@@ -372,6 +540,28 @@ export const createCourseTemplate = (
   };
 
   courseModules.push(newModule);
+  
+  // 保存模板額外資料
+  if (templateData) {
+    courseTemplateData.push({
+      moduleId: newModule.id,
+      sessions: templateData.sessions || [],
+      globalSettings: {
+        defaultTitle: templateData.globalSettings?.defaultTitle || '',
+        defaultVirtualClassroomLink: templateData.globalSettings?.defaultVirtualClassroomLink || '',
+        defaultMaterialLink: templateData.globalSettings?.defaultMaterialLink || ''
+      },
+      capacity: templateData.capacity || 20,
+      uiLevel: templateData.uiLevel || '不限'
+    });
+  }
+  
+  // 儲存到 localStorage
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('courseModules', JSON.stringify(courseModules));
+    localStorage.setItem('courseTemplateData', JSON.stringify(courseTemplateData));
+  }
+  
   return moduleToTemplate(newModule);
 };
 
@@ -410,6 +600,21 @@ export const deleteCourseTemplate = (id: number): boolean => {
 
   // 刪除課程模板
   courseModules.splice(index, 1);
+  
+  // 刪除對應的模板額外資料
+  const templateDataIndex = courseTemplateData.findIndex(data => data.moduleId === id);
+  if (templateDataIndex >= 0) {
+    courseTemplateData.splice(templateDataIndex, 1);
+  }
+  
+  // 儲存到 localStorage
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem('courseModules', JSON.stringify(courseModules));
+    localStorage.setItem('courseSchedules', JSON.stringify(courseSchedules));
+    localStorage.setItem('courseSessions', JSON.stringify(courseSessions));
+    localStorage.setItem('courseTemplateData', JSON.stringify(courseTemplateData));
+  }
+  
   return true;
 };
 

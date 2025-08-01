@@ -13,8 +13,8 @@ import {
   updateCourseSchedule,
   deleteCourseSchedule,
   generateScheduledSessions,
-  calculateEndDate,
-  getCourseScheduleFullTitle
+  generatePreviewSessions,
+  calculateEndDate
 } from '@/data/courseScheduleUtils';
 import {
   CourseTemplate,
@@ -159,7 +159,7 @@ const CourseScheduleManagement = () => {
 
   // 處理課程模板選擇
   const handleTemplateSelect = (templateId: string) => {
-    const template = templates.find(t => t.id === templateId);
+    const template = templates.find(t => String(t.id) === templateId);
     if (template) {
       setFormData(prev => ({
         ...prev,
@@ -291,8 +291,29 @@ const CourseScheduleManagement = () => {
 
   // 生成預覽
   const generatePreview = (data = formData, template?: CourseTemplate) => {
-    const selectedTemplate = template || templates.find(t => t.id === data.templateId);
+    // 檢查是否選擇了課程模板
+    if (!data.templateId) {
+      console.log('⚠️ 尚未選擇課程模板，無法生成預覽');
+      return;
+    }
+    
+    const selectedTemplate = template || templates.find(t => String(t.id) === data.templateId);
     if (!selectedTemplate || !data.startDate || !(data.timeSlots || []).length) {
+      console.log('⚠️ 缺少必要資訊，無法生成預覽:', {
+        hasTemplate: !!selectedTemplate,
+        hasStartDate: !!data.startDate,
+        hasTimeSlots: !!(data.timeSlots || []).length
+      });
+      return;
+    }
+
+    // 檢查是否有至少一個時間段設置了星期
+    const hasValidTimeSlots = (data.timeSlots || []).some(slot => 
+      slot.weekdays && slot.weekdays.length > 0
+    );
+    
+    if (!hasValidTimeSlots) {
+      console.log('⚠️ 沒有設置任何上課星期，無法生成預覽');
       return;
     }
 
@@ -300,17 +321,17 @@ const CourseScheduleManagement = () => {
       data.startDate,
       selectedTemplate.total_sessions,
       data.timeSlots,
-      data.excludeDates
+      data.excludeDates || []
     );
 
-    const sessions = generateScheduledSessions(
+    const sessions = generatePreviewSessions(
       selectedTemplate.id,
       selectedTemplate.title,
       selectedTemplate.total_sessions,
       selectedTemplate.sessions,
       data.timeSlots,
       data.startDate,
-      data.excludeDates,
+      data.excludeDates || [],
       data.teacherName || '待安排'
     );
 
@@ -400,7 +421,7 @@ const CourseScheduleManagement = () => {
       // 搜尋過濾
       if (searchTerm) {
         const searchLower = searchTerm.toLowerCase();
-        const fullTitle = getCourseScheduleFullTitle(schedule);
+        const fullTitle = `${schedule.templateTitle}${schedule.seriesName ? `-${schedule.seriesName}` : ''}`;
         return (
           fullTitle?.toLowerCase().includes(searchLower) ||
           schedule.templateTitle?.toLowerCase().includes(searchLower) ||
@@ -506,7 +527,7 @@ const CourseScheduleManagement = () => {
                 <h3 className={`text-xl font-bold mb-0 ${
                   schedule.status === 'published' ? 'text-gray-900' : 'text-gray-600'
                 }`}>
-                  {getCourseScheduleFullTitle(schedule)}
+                  {schedule.templateTitle}{schedule.seriesName ? `-${schedule.seriesName}` : ''}
                 </h3>
                 {schedule.status === 'draft' && (
                   <span className="text-xs text-gray-500 bg-gray-200 px-2 py-1 rounded">
@@ -640,7 +661,7 @@ const CourseScheduleManagement = () => {
                       >
                         <option value="">請選擇課程</option>
                         {templates.map((template) => (
-                          <option key={template.id} value={template.id}>
+                          <option key={template.id} value={String(template.id)}>
                             {template.title} ({template.total_sessions} 堂)
                           </option>
                         ))}
@@ -855,20 +876,23 @@ const CourseScheduleManagement = () => {
                   </div>
                   
                   {/* Generate Preview Button */}
-                  <div className="mt-4">
-                    <button
-                      type="button"
-                      onClick={() => generatePreview()}
-                      className="w-full bg-green-100 text-green-700 py-2 px-4 rounded-lg hover:bg-green-200 transition-colors font-medium flex items-center justify-center space-x-2"
-                    >
-                      <SafeIcon icon={FiRefreshCw} />
-                      <span>生成課程預覽</span>
-                    </button>
-                  </div>
+                  {formData.templateId && (
+                    <div className="mt-4">
+                      <button
+                        type="button"
+                        onClick={() => generatePreview()}
+                        disabled={!formData.startDate || !formData.timeSlots.length || !formData.timeSlots.some(slot => slot.weekdays && slot.weekdays.length > 0)}
+                        className="w-full bg-green-100 text-green-700 py-2 px-4 rounded-lg hover:bg-green-200 transition-colors font-medium flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-100"
+                      >
+                        <SafeIcon icon={FiRefreshCw} />
+                        <span>生成課程預覽</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Preview */}
-                {(formData.generatedSessions || []).length > 0 && (
+                {formData.templateId && (formData.generatedSessions || []).length > 0 && (
                   <div className="bg-yellow-50 rounded-lg p-4">
                     <div className="flex justify-between items-center mb-4">
                       <h4 className="font-semibold text-gray-900">
