@@ -4,7 +4,7 @@ import { memberCardPlanStore } from '@/lib/memberCardPlanStore';
 // GET - 獲取所有方案（包括草稿）
 export async function GET() {
   try {
-    const allPlans = memberCardPlanStore.getAllPlans();
+    const allPlans = await memberCardPlanStore.getAllPlans();
     
     const formattedPlans = allPlans.map(plan => ({
       id: plan.id,
@@ -20,7 +20,9 @@ export async function GET() {
       description: plan.description,
       created_at: plan.created_at,
       member_card_id: plan.member_card_id,
-      hide_price: plan.hide_price
+      hide_price: plan.hide_price,
+      activate_deadline_days: plan.activate_deadline_days,
+      cta_options: plan.cta_options
     }));
 
     return NextResponse.json({
@@ -51,7 +53,9 @@ export async function POST(request: NextRequest) {
       status, 
       popular, 
       description,
-      hide_price 
+      hide_price,
+      activate_deadline_days,
+      cta_options
     } = body;
 
     // 驗證必要欄位
@@ -62,7 +66,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const newPlan = memberCardPlanStore.createPlan({
+    const newPlan = await memberCardPlanStore.createPlan({
       title,
       user_type,
       duration_type,
@@ -73,7 +77,12 @@ export async function POST(request: NextRequest) {
       status: status || 'DRAFT',
       popular: popular || false,
       description: description || '',
-      hide_price: hide_price || false
+      hide_price: hide_price || false,
+      activate_deadline_days: activate_deadline_days || 30,
+      cta_options: cta_options || {
+        show_payment: true,
+        show_contact: false
+      }
     });
 
     return NextResponse.json({

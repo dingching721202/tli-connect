@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       if (updatedOrder && updatedOrder.plan_id) {
         try {
           // 根據訂單中的 plan_id 獲取會員方案
-          const plan = memberCardPlanStore.getPlanById(updatedOrder.plan_id);
+          const plan = await memberCardPlanStore.getPlanById(updatedOrder.plan_id);
           
           if (plan) {
             // 生成新的會員卡ID

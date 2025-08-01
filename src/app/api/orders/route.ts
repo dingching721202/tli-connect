@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     // 但如果提供了user_id，則必須是有效的登入用戶
 
     // 獲取方案資訊
-    const plan = memberCardPlanStore.getPlanById(plan_id);
+    const plan = await memberCardPlanStore.getPlanById(plan_id);
     if (!plan) {
       return NextResponse.json(
         { success: false, error: 'Plan not found' },

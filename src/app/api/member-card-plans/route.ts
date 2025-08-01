@@ -4,7 +4,7 @@ import { memberCardPlanStore } from '@/lib/memberCardPlanStore';
 export async function GET() {
   try {
     // 只返回已發布的方案，按照 USER STORY 02 規格
-    const publishedPlans = memberCardPlanStore.getPublishedPlans();
+    const publishedPlans = await memberCardPlanStore.getPublishedPlans();
 
     // 轉換為 US02 指定的格式
     const formattedPlans = publishedPlans.map(plan => ({

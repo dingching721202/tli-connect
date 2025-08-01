@@ -1,0 +1,116 @@
+[
+  {
+    "id": 1,
+    "created_at": "2025-07-14T12:00:00+00:00",
+    "member_card_id": 1,
+    "title": "個人季度方案",
+    "user_type": "individual",
+    "duration_type": "season",
+    "duration_days": 90,
+    "original_price": "3500.00",
+    "sale_price": "3000.00",
+    "features": [
+      "無限觀看所有學習影片",
+      "參加線上團體課程",
+      "免費預約課程活動",
+      "專屬學習進度追蹤",
+      "24/7 線上客服支援"
+    ],
+    "status": "PUBLISHED",
+    "popular": false,
+    "description": "適合想要短期學習體驗的個人學員",
+    "activate_deadline_days": 30,
+    "cta_options": {
+      "show_payment": true,
+      "show_contact": true
+    }
+  },
+  {
+    "id": 2,
+    "created_at": "2025-07-14T12:00:00+00:00",
+    "member_card_id": 2,
+    "title": "個人年度方案",
+    "user_type": "individual",
+    "duration_type": "annual",
+    "duration_days": 365,
+    "original_price": "12000.00",
+    "sale_price": "10000.00",
+    "features": [
+      "無限觀看所有學習影片",
+      "參加線上團體課程",
+      "免費預約課程活動",
+      "專屬學習進度追蹤",
+      "24/7 線上客服支援",
+      "優先預約熱門課程",
+      "專屬學習顧問諮詢",
+      "免費參加特殊講座"
+    ],
+    "status": "PUBLISHED",
+    "popular": true,
+    "description": "最受歡迎！適合長期學習的個人學員",
+    "activate_deadline_days": 30,
+    "cta_options": {
+      "show_payment": true,
+      "show_contact": false
+    }
+  },
+  {
+    "id": 3,
+    "created_at": "2025-07-14T12:00:00+00:00",
+    "member_card_id": 3,
+    "title": "企業年度方案",
+    "user_type": "corporate",
+    "duration_type": "annual",
+    "duration_days": 365,
+    "original_price": "60000.00",
+    "sale_price": "55000",
+    "features": [
+      "無限員工帳號數量",
+      "企業專屬課程內容",
+      "客製化學習路徑",
+      "企業學習成效報表",
+      "專屬企業客戶經理",
+      "優先技術支援",
+      "企業內訓服務",
+      "批量帳號管理",
+      "API 整合服務"
+    ],
+    "status": "PUBLISHED",
+    "popular": false,
+    "description": "為企業客戶量身打造的完整學習解決方案",
+    "activate_deadline_days": 30,
+    "cta_options": {
+      "show_payment": false,
+      "show_contact": true
+    },
+    "hide_price": true
+  },
+  {
+    "id": 4,
+    "created_at": "2025-07-14T12:00:00+00:00",
+    "member_card_id": 4,
+    "title": "企業季度方案",
+    "user_type": "corporate",
+    "duration_type": "season",
+    "duration_days": 90,
+    "original_price": "18000.00",
+    "sale_price": "15000.00",
+    "features": [
+      "最多50個員工帳號",
+      "企業專屬課程內容",
+      "客製化學習路徑",
+      "企業學習成效報表",
+      "專屬企業客戶經理",
+      "優先技術支援"
+    ],
+    "status": "DRAFT",
+    "popular": false,
+    "description": "適合中小企業的短期培訓方案",
+    "hide_price": true,
+    "activate_deadline_days": 30,
+    "cta_options": {
+      "show_payment": false,
+      "show_contact": true
+    }
+  }
+]

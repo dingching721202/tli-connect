@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiCreditCard, FiUser, FiMail, FiPhone, FiBriefcase, FiMessageSquare } from 'react-icons/fi';
+import { FiX, FiCreditCard, FiUser, FiMail, FiPhone, FiBriefcase, FiMessageSquare, FiUsers } from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
 import { MemberCardPlan } from '@/data/member_card_plans';
 
@@ -18,8 +18,9 @@ interface ContactFormData {
   email: string;
   phone: string;
   company_name: string;
-  industry: string;
-  learning_subjects: string[];
+  job_title: string;
+  training_needs: string[];
+  training_size: string;
   requirements: string;
 }
 
@@ -33,23 +34,13 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
     email: '',
     phone: '',
     company_name: '',
-    industry: '',
-    learning_subjects: [],
+    job_title: '',
+    training_needs: [],
+    training_size: '',
     requirements: ''
   });
 
-  const industries = [
-    '科技業',
-    '金融業',
-    '製造業',
-    '教育業',
-    '醫療業',
-    '零售業',
-    '服務業',
-    '其他'
-  ];
-
-  const learningSubjects = [
+  const trainingNeeds = [
     '中文',
     '英文', 
     '文化',
@@ -57,16 +48,24 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
     '師培'
   ];
 
-  const handleLearningSubjectChange = (subject: string, checked: boolean) => {
+  const trainingSizes = [
+    '<50',
+    '50–100',
+    '100–300',
+    '300–500',
+    '500+'
+  ];
+
+  const handleTrainingNeedChange = (need: string, checked: boolean) => {
     if (checked) {
       setContactData({
         ...contactData,
-        learning_subjects: [...contactData.learning_subjects, subject]
+        training_needs: [...contactData.training_needs, need]
       });
     } else {
       setContactData({
         ...contactData,
-        learning_subjects: contactData.learning_subjects.filter(s => s !== subject)
+        training_needs: contactData.training_needs.filter(n => n !== need)
       });
     }
   };
@@ -257,7 +256,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    電話 *
+                    電話
                   </label>
                   <div className="relative">
                     <SafeIcon icon={FiPhone} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -267,14 +266,13 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
                       onChange={(e) => setContactData({ ...contactData, phone: e.target.value })}
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="請輸入您的電話"
-                      required
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    企業名稱
+                    企業名稱 *
                   </label>
                   <div className="relative">
                     <SafeIcon icon={FiBriefcase} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
@@ -284,48 +282,44 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
                       onChange={(e) => setContactData({ ...contactData, company_name: e.target.value })}
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       placeholder="請輸入企業名稱"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    職稱
+                  </label>
+                  <div className="relative">
+                    <SafeIcon icon={FiUser} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <input
+                      type="text"
+                      value={contactData.job_title}
+                      onChange={(e) => setContactData({ ...contactData, job_title: e.target.value })}
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="請輸入您的職稱"
                     />
                   </div>
                 </div>
               </div>
 
-              {/* Optional Info */}
+              {/* Training Info */}
               <div className="space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    產業別
-                  </label>
-                  <div className="relative">
-                    <SafeIcon icon={FiBriefcase} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-                    <select
-                      value={contactData.industry}
-                      onChange={(e) => setContactData({ ...contactData, industry: e.target.value })}
-                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                      <option value="">請選擇產業別</option>
-                      {industries.map((industry) => (
-                        <option key={industry} value={industry}>
-                          {industry}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-3">
-                    想學習的項目 (可複選)
+                    主要培訓需求（複選）
                   </label>
                   <div className="space-y-2">
-                    {learningSubjects.map((subject) => (
-                      <label key={subject} className="flex items-center space-x-3 cursor-pointer">
+                    {trainingNeeds.map((need) => (
+                      <label key={need} className="flex items-center space-x-3 cursor-pointer">
                         <input
                           type="checkbox"
-                          checked={contactData.learning_subjects.includes(subject)}
-                          onChange={(e) => handleLearningSubjectChange(subject, e.target.checked)}
+                          checked={contactData.training_needs.includes(need)}
+                          onChange={(e) => handleTrainingNeedChange(need, e.target.checked)}
                           className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                         />
-                        <span className="text-sm text-gray-700">{subject}</span>
+                        <span className="text-sm text-gray-700">{need}</span>
                       </label>
                     ))}
                   </div>
@@ -333,7 +327,28 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    需求說明
+                    預計培訓人數
+                  </label>
+                  <div className="relative">
+                    <SafeIcon icon={FiUsers} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                    <select
+                      value={contactData.training_size}
+                      onChange={(e) => setContactData({ ...contactData, training_size: e.target.value })}
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">請選擇培訓人數規模</option>
+                      {trainingSizes.map((size) => (
+                        <option key={size} value={size}>
+                          {size}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    簡述您的需求
                   </label>
                   <div className="relative">
                     <SafeIcon icon={FiMessageSquare} className="absolute left-3 top-3 text-gray-400" size={16} />
@@ -342,7 +357,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
                       onChange={(e) => setContactData({ ...contactData, requirements: e.target.value })}
                       rows={3}
                       className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      placeholder="請描述您的學習需求或其他要求"
+                      placeholder="請簡述您的培訓需求或其他要求"
                     />
                   </div>
                 </div>
@@ -351,7 +366,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
               {/* Submit Button */}
               <button
                 onClick={handleContactSubmit}
-                disabled={isProcessing || !contactData.name || !contactData.email || !contactData.phone}
+                disabled={isProcessing || !contactData.name || !contactData.email || !contactData.company_name}
                 className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center space-x-2"
               >
                 {isProcessing ? (

@@ -24,7 +24,7 @@ export async function PUT(
       requestBody: body
     });
     
-    const updatedPlan = memberCardPlanStore.updatePlan(planId, body);
+    const updatedPlan = await memberCardPlanStore.updatePlan(planId, body);
     
     if (!updatedPlan) {
       console.log('❌ 方案未找到:', planId);
@@ -58,7 +58,7 @@ export async function DELETE(
     const params = await context.params;
     const planId = parseInt(params.id);
     
-    const success = memberCardPlanStore.deletePlan(planId);
+    const success = await memberCardPlanStore.deletePlan(planId);
     
     if (!success) {
       return NextResponse.json(

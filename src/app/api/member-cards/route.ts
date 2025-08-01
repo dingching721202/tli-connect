@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 檢查方案是否存在
-    const plan = memberCardPlanStore.getPlanById(plan_id);
+    const plan = await memberCardPlanStore.getPlanById(plan_id);
     if (!plan) {
       return NextResponse.json(
         { success: false, error: 'Plan not found' },

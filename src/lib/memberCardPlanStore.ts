@@ -1,13 +1,22 @@
 import { memberCardPlans, MemberCardPlan } from '@/data/member_card_plans';
+import { promises as fs } from 'fs';
+import path from 'path';
 
 // localStorage 持久化儲存
 class MemberCardPlanStore {
   private static instance: MemberCardPlanStore;
   private plans: MemberCardPlan[] = [];
   private readonly STORAGE_KEY = 'memberCardPlans';
+  private readonly FILE_PATH = path.join(process.cwd(), 'data', 'memberCardPlans.json');
+  private isServerSide = typeof window === 'undefined';
 
   private constructor() {
-    this.loadFromStorage();
+    if (!this.isServerSide) {
+      this.loadFromStorage();
+    } else {
+      // 服務端使用預設資料，在需要時再從檔案載入
+      this.plans = [...memberCardPlans];
+    }
   }
 
   static getInstance(): MemberCardPlanStore {
@@ -42,6 +51,24 @@ class MemberCardPlanStore {
     }
   }
 
+
+  // 服務端檔案儲存
+  private async saveToFile(): Promise<void> {
+    if (!this.isServerSide) return;
+    
+    try {
+      // 確保目錄存在
+      const dir = path.dirname(this.FILE_PATH);
+      await fs.mkdir(dir, { recursive: true });
+      
+      // 儲存資料
+      await fs.writeFile(this.FILE_PATH, JSON.stringify(this.plans, null, 2));
+      console.log('💾 方案數據已儲存到檔案');
+    } catch (error) {
+      console.error('❌ 儲存方案數據到檔案失敗:', error);
+    }
+  }
+
   private saveToStorage(): void {
     if (typeof window === 'undefined') return;
 
@@ -53,25 +80,84 @@ class MemberCardPlanStore {
     }
   }
 
-  getAllPlans(): MemberCardPlan[] {
+  // 統一的儲存方法
+  private async save(): Promise<void> {
+    if (this.isServerSide) {
+      await this.saveToFile();
+    } else {
+      this.saveToStorage();
+    }
+  }
+
+  async getAllPlans(): Promise<MemberCardPlan[]> {
+    if (this.isServerSide) {
+      // 服務端從檔案載入最新資料
+      await this.loadFromFile();
+    }
     return [...this.plans];
   }
 
-  getPublishedPlans(): MemberCardPlan[] {
+  // 同步版本（為了向後相容）
+  getAllPlansSync(): MemberCardPlan[] {
+    return [...this.plans];
+  }
+
+  // 服務端檔案載入
+  private async loadFromFile(): Promise<void> {
+    if (!this.isServerSide) return;
+    
+    try {
+      await fs.access(this.FILE_PATH);
+      const fileContent = await fs.readFile(this.FILE_PATH, 'utf-8');
+      this.plans = JSON.parse(fileContent);
+      console.log('📚 服務端從檔案載入方案數據:', this.plans.length, '個方案');
+    } catch (error) {
+      // 檔案不存在，使用預設資料
+      console.log('📄 檔案不存在，使用預設資料');
+      this.plans = [...memberCardPlans];
+    }
+  }
+
+  async getPublishedPlans(): Promise<MemberCardPlan[]> {
+    if (this.isServerSide) {
+      // 服務端從檔案載入最新資料
+      await this.loadFromFile();
+    }
     return this.plans.filter(plan => plan.status === 'PUBLISHED');
   }
 
-  getPlansByType(userType?: 'individual' | 'corporate'): MemberCardPlan[] {
-    const publishedPlans = this.getPublishedPlans();
+  // 同步版本（為了向後相容）
+  getPublishedPlansSync(): MemberCardPlan[] {
+    return this.plans.filter(plan => plan.status === 'PUBLISHED');
+  }
+
+  async getPlansByType(userType?: 'individual' | 'corporate'): Promise<MemberCardPlan[]> {
+    const publishedPlans = await this.getPublishedPlans();
     if (!userType) return publishedPlans;
     return publishedPlans.filter(plan => plan.user_type === userType);
   }
 
-  getPlanById(id: number): MemberCardPlan | null {
+  // 同步版本（為了向後相容）
+  getPlansByTypeSync(userType?: 'individual' | 'corporate'): MemberCardPlan[] {
+    const publishedPlans = this.getPublishedPlansSync();
+    if (!userType) return publishedPlans;
+    return publishedPlans.filter(plan => plan.user_type === userType);
+  }
+
+  async getPlanById(id: number): Promise<MemberCardPlan | null> {
+    if (this.isServerSide) {
+      // 服務端從檔案載入最新資料
+      await this.loadFromFile();
+    }
     return this.plans.find(plan => plan.id === id) || null;
   }
 
-  createPlan(planData: Omit<MemberCardPlan, 'id' | 'created_at' | 'member_card_id'>): MemberCardPlan {
+  // 同步版本（為了向後相容）
+  getPlanByIdSync(id: number): MemberCardPlan | null {
+    return this.plans.find(plan => plan.id === id) || null;
+  }
+
+  async createPlan(planData: Omit<MemberCardPlan, 'id' | 'created_at' | 'member_card_id'>): Promise<MemberCardPlan> {
     const newId = Math.max(...this.plans.map(p => p.id), 0) + 1;
     
     const newPlan: MemberCardPlan = {
@@ -82,11 +168,11 @@ class MemberCardPlanStore {
     };
 
     this.plans.push(newPlan);
-    this.saveToStorage(); // 持久化儲存
+    await this.save(); // 持久化儲存
     return newPlan;
   }
 
-  updatePlan(id: number, updates: Partial<MemberCardPlan>): MemberCardPlan | null {
+  async updatePlan(id: number, updates: Partial<MemberCardPlan>): Promise<MemberCardPlan | null> {
     const planIndex = this.plans.findIndex(plan => plan.id === id);
     
     if (planIndex === -1) {
@@ -120,7 +206,15 @@ class MemberCardPlanStore {
       
       // 確保布林值欄位正確處理
       hide_price: updates.hide_price !== undefined ? Boolean(updates.hide_price) : this.plans[planIndex].hide_price,
-      popular: updates.popular !== undefined ? Boolean(updates.popular) : this.plans[planIndex].popular
+      popular: updates.popular !== undefined ? Boolean(updates.popular) : this.plans[planIndex].popular,
+      
+      // 確保 cta_options 正確處理
+      cta_options: updates.cta_options !== undefined ? 
+        {
+          show_payment: Boolean(updates.cta_options.show_payment),
+          show_contact: Boolean(updates.cta_options.show_contact)
+        } : 
+        this.plans[planIndex].cta_options
     };
 
     const updatedPlan = {
@@ -130,7 +224,7 @@ class MemberCardPlanStore {
     };
 
     this.plans[planIndex] = updatedPlan;
-    this.saveToStorage(); // 持久化儲存
+    await this.save(); // 持久化儲存
     
     // 輸出更新日誌以便調試
     console.log('💾 方案更新成功:', {
@@ -139,17 +233,19 @@ class MemberCardPlanStore {
       status: updatedPlan.status,
       hide_price: updatedPlan.hide_price,
       popular: updatedPlan.popular,
+      cta_options: updatedPlan.cta_options,
       updatedFields: Object.keys(updates),
       newValues: {
         hide_price: processedUpdates.hide_price,
-        popular: processedUpdates.popular
+        popular: processedUpdates.popular,
+        cta_options: processedUpdates.cta_options
       }
     });
     
     return updatedPlan;
   }
 
-  deletePlan(id: number): boolean {
+  async deletePlan(id: number): Promise<boolean> {
     const planIndex = this.plans.findIndex(plan => plan.id === id);
     
     if (planIndex === -1) {
@@ -157,7 +253,7 @@ class MemberCardPlanStore {
     }
 
     this.plans.splice(planIndex, 1);
-    this.saveToStorage(); // 持久化儲存
+    await this.save(); // 持久化儲存
     return true;
   }
 
