@@ -96,29 +96,20 @@ const MemberCardPlanManagement: React.FC = () => {
     available_course_ids: [] as (number | string)[]
   });
 
-  useEffect(() => {
-    loadPlans();
-    loadCourses();
-    loadMemberCards();
-  }, [loadCourses]);
+  // 根據分類映射語言
+  const getLanguageFromCategory = (category: string): string => {
+    const languageMap: { [key: string]: string } = {
+      '中文': 'chinese',
+      '英文': 'english',
+      '文化': 'chinese',
+      '商業': 'english',
+      '師資': 'chinese',
+      '其它': 'chinese'
+    };
+    return languageMap[category] || 'chinese';
+  };
 
-  useEffect(() => {
-    if (formData.cta_options.show_payment) {
-      setFormData(prev => ({ ...prev, hide_price: false }));
-    }
-  }, [formData.cta_options.show_payment]);
-
-  // 當會員卡資料載入完成後，更新預設的 member_card_id
-  useEffect(() => {
-    if (memberCardsData.length > 0 && formData.member_card_id === 1) {
-      setFormData(prev => ({ 
-        ...prev, 
-        member_card_id: memberCardsData[0].id 
-      }));
-    }
-  }, [memberCardsData, formData.member_card_id]);
-
-  const loadPlans = async () => {
+  const loadPlans = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/member-card-plans/admin');
@@ -131,9 +122,9 @@ const MemberCardPlanManagement: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const loadMemberCards = async () => {
+  const loadMemberCards = useCallback(async () => {
     try {
       const response = await fetch('/api/member-cards/admin');
       if (response.ok) {
@@ -144,7 +135,7 @@ const MemberCardPlanManagement: React.FC = () => {
     } catch (error) {
       console.error('載入會員卡失敗:', error);
     }
-  };
+  }, []);
 
   const loadCourses = useCallback(async () => {
     try {
@@ -198,18 +189,27 @@ const MemberCardPlanManagement: React.FC = () => {
     }
   }, []);
 
-  // 根據分類映射語言
-  const getLanguageFromCategory = (category: string): string => {
-    const languageMap: { [key: string]: string } = {
-      '中文': 'chinese',
-      '英文': 'english',
-      '文化': 'chinese',
-      '商業': 'english',
-      '師資': 'chinese',
-      '其它': 'chinese'
-    };
-    return languageMap[category] || 'chinese';
-  };
+  useEffect(() => {
+    loadPlans();
+    loadCourses();
+    loadMemberCards();
+  }, [loadPlans, loadCourses, loadMemberCards]);
+
+  useEffect(() => {
+    if (formData.cta_options.show_payment) {
+      setFormData(prev => ({ ...prev, hide_price: false }));
+    }
+  }, [formData.cta_options.show_payment]);
+
+  // 當會員卡資料載入完成後，更新預設的 member_card_id
+  useEffect(() => {
+    if (memberCardsData.length > 0 && formData.member_card_id === 1) {
+      setFormData(prev => ({ 
+        ...prev, 
+        member_card_id: memberCardsData[0].id 
+      }));
+    }
+  }, [memberCardsData, formData.member_card_id]);
 
   const handleOpenModal = (plan?: MemberCardPlan) => {
     if (plan) {
