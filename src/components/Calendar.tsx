@@ -92,7 +92,18 @@ const Calendar: React.FC<CalendarProps> = ({
     const dateStr = date.getFullYear() + '-' + 
       String(date.getMonth() + 1).padStart(2, '0') + '-' + 
       String(date.getDate()).padStart(2, '0');
-    return courses.filter(course => course.date === dateStr);
+    const filteredCourses = courses.filter(course => course.date === dateStr);
+    
+    // 按時間排序：解析 timeSlot (格式: "HH:MM-HH:MM") 並按開始時間排序
+    return filteredCourses.sort((a, b) => {
+      const getStartTime = (timeSlot: string) => {
+        const startTime = timeSlot.split('-')[0]; // 取得開始時間部分
+        const [hours, minutes] = startTime.split(':').map(Number);
+        return hours * 60 + minutes; // 轉換為分鐘數便於比較
+      };
+      
+      return getStartTime(a.timeSlot) - getStartTime(b.timeSlot);
+    });
   };
 
   const isDateToday = (date: Date) => {
