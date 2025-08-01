@@ -100,7 +100,7 @@ const MemberCardPlanManagement: React.FC = () => {
     loadPlans();
     loadCourses();
     loadMemberCards();
-  }, []);
+  }, [loadCourses]);
 
   useEffect(() => {
     if (formData.cta_options.show_payment) {
