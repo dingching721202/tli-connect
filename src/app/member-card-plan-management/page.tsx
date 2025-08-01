@@ -189,6 +189,14 @@ const MemberCardPlanManagement: React.FC = () => {
 
   const handleOpenModal = (plan?: MemberCardPlan) => {
     if (plan) {
+      console.log('📝 載入編輯方案資料:', {
+        id: plan.id,
+        title: plan.title,
+        hide_price: plan.hide_price,
+        popular: plan.popular,
+        cta_options: plan.cta_options
+      });
+      
       setEditingPlan(plan);
       setFormData({
         title: plan.title,
@@ -201,7 +209,7 @@ const MemberCardPlanManagement: React.FC = () => {
         status: plan.status,
         popular: plan.popular || false,
         description: plan.description || '',
-        hide_price: plan.hide_price || false,
+        hide_price: plan.hide_price ?? false,
         activate_deadline_days: plan.activate_deadline_days || 30,
         member_card_id: plan.member_card_id,
         cta_options: plan.cta_options || {
@@ -249,14 +257,27 @@ const MemberCardPlanManagement: React.FC = () => {
         cta_options: formData.cta_options
       };
 
+      console.log('📤 準備儲存方案資料:', {
+        isEditing: !!editingPlan,
+        editingPlanId: editingPlan?.id,
+        planData,
+        formData: {
+          hide_price: formData.hide_price,
+          popular: formData.popular,
+          cta_options: formData.cta_options
+        }
+      });
+
       let response;
       if (editingPlan) {
+        console.log(`🔄 更新方案 ID: ${editingPlan.id}`);
         response = await fetch(`/api/member-card-plans/admin/${editingPlan.id}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(planData)
         });
       } else {
+        console.log('✨ 創建新方案');
         response = await fetch('/api/member-card-plans/admin', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -264,12 +285,25 @@ const MemberCardPlanManagement: React.FC = () => {
         });
       }
 
+      console.log('📥 API 回應狀態:', response.status);
+
       if (response.ok) {
+        const result = await response.json();
+        console.log('✅ 儲存成功:', result);
+        
         await loadPlans();
         handleCloseModal();
+        
+        const action = editingPlan ? '更新' : '創建';
+        alert(`方案「${planData.title}」已成功${action}！`);
+      } else {
+        const errorData = await response.json();
+        console.error('❌ API 錯誤:', errorData);
+        alert(`儲存失敗: ${errorData.error || '未知錯誤'}`);
       }
     } catch (error) {
-      console.error('儲存方案失敗:', error);
+      console.error('❌ 儲存方案失敗:', error);
+      alert('儲存失敗，請檢查網路連線後重試。');
     }
   };
 
