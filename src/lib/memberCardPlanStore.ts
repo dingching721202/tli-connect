@@ -113,7 +113,7 @@ class MemberCardPlanStore {
       console.log('📚 服務端從檔案載入方案數據:', this.plans.length, '個方案');
     } catch (error) {
       // 檔案不存在，使用預設資料
-      console.log('📄 檔案不存在，使用預設資料');
+      console.log('📄 檔案不存在，使用預設資料:', error);
       this.plans = [...memberCardPlans];
     }
   }

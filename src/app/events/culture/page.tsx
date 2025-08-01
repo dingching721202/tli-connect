@@ -215,7 +215,7 @@ const CulturalEventsPage: React.FC = () => {
               Cultural Events & Experiences
             </h1>
             <p className="text-xl md:text-2xl mb-8 text-purple-100">
-              Discover the world's rich cultural heritage through immersive experiences
+              Discover the world&apos;s rich cultural heritage through immersive experiences
             </p>
             <div className="flex flex-wrap justify-center gap-6 text-sm">
               <div className="flex items-center space-x-2">

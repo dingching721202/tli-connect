@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     const currentTime = new Date();
     const twentyFourHoursFromNow = new Date(currentTime.getTime() + 24 * 60 * 60 * 1000);
 
-    let filteredTimeslots = classTimeslots.filter(timeslot => {
+    const filteredTimeslots = classTimeslots.filter(timeslot => {
       // 1. 僅列出 status = CREATED 的時段
       if (timeslot.status !== 'CREATED') {
         return false;

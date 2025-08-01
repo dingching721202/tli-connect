@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiSave, FiX, FiStar, FiUsers, FiCalendar, FiClock, FiUpload, FiDownload, FiBook, FiSettings } from 'react-icons/fi';
 import Navigation from '@/components/Navigation';
@@ -146,7 +146,7 @@ const MemberCardPlanManagement: React.FC = () => {
     }
   };
 
-  const loadCourses = async () => {
+  const loadCourses = useCallback(async () => {
     try {
       // 從課程模組獲取真實的課程資料
       const templates = getCourseTemplates();
@@ -196,7 +196,7 @@ const MemberCardPlanManagement: React.FC = () => {
       console.error('載入課程資料失敗:', error);
       setCourses([]);
     }
-  };
+  }, []);
 
   // 根據分類映射語言
   const getLanguageFromCategory = (category: string): string => {

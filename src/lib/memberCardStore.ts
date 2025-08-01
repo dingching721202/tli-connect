@@ -62,7 +62,7 @@ class MemberCardStore {
       console.log('📚 服務端從檔案載入會員卡數據:', this.cards.length, '個會員卡');
     } catch (error) {
       // 檔案不存在，使用預設資料
-      console.log('📄 檔案不存在，使用預設會員卡資料');
+      console.log('📄 檔案不存在，使用預設會員卡資料:', error);
       this.cards = [...memberCards];
     }
   }
