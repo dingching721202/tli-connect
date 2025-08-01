@@ -181,6 +181,51 @@ export default function Home() {
             line-height: 38px;
           }
         }
+        
+        @media (max-width: 768px) {
+          .products-grid {
+            grid-template-columns: 1fr !important;
+            gap: 24px !important;
+          }
+          
+          .product-section-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          
+          .product-card {
+            padding: 12px !important;
+          }
+          
+          .product-icon {
+            width: 40px !important;
+            height: 40px !important;
+          }
+          
+          .product-title {
+            font-size: 14px !important;
+          }
+          
+          .product-section-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 12px !important;
+          }
+          
+          .product-section-icon {
+            width: 48px !important;
+            height: 48px !important;
+          }
+          
+          .product-section-title {
+            font-size: 20px !important;
+            line-height: 28px !important;
+          }
+          
+          .product-card-image {
+            height: 120px !important;
+          }
+        }
       `}</style>
       
       <div style={{minHeight: '100vh', background: 'var(--black)'}}>
@@ -587,6 +632,534 @@ export default function Home() {
                 ))}
               </div>
             </div>
+
+            {/* Products Section */}
+            <section style={{
+              marginTop: '64px',
+              marginBottom: '48px'
+            }}>
+              <h3 style={{
+                fontSize: '18px',
+                lineHeight: '28px',
+                fontWeight: '700',
+                letterSpacing: '.08em',
+                textTransform: 'uppercase',
+                color: '#2E6EB6',
+                marginBottom: '40px'
+              }}>
+                Our Products
+              </h3>
+              
+              {/* 横向产品展示 */}
+              <div style={{
+                display: 'grid',
+                gap: '48px'
+              }}>
+                {/* 影音課程 */}
+                <div>
+                  <div className="product-section-header" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    marginBottom: '24px'
+                  }}>
+                    <div className="product-section-icon" style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '16px',
+                      background: 'linear-gradient(135deg, #2E6EB6, #4A90E2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 8px 24px rgba(46,110,182,.20)'
+                    }}>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 5v14l11-7L8 5z" fill="white"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="product-section-title" style={{
+                        fontSize: '24px',
+                        lineHeight: '32px',
+                        fontWeight: '800',
+                        color: 'var(--ink)',
+                        margin: '0 0 4px'
+                      }}>
+                        影音課程
+                      </h4>
+                      <p style={{
+                        fontSize: '16px',
+                        color: 'var(--ink-dim)',
+                        margin: '0'
+                      }}>
+                        隨時隨地學習，自主掌握進度
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="product-section-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: '16px'
+                  }}>
+                    {[
+                      {
+                        title: 'Pronunciation',
+                        description: '標準發音技巧與聲調練習',
+                        image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80',
+                        level: '基礎',
+                        duration: '4週'
+                      },
+                      {
+                        title: 'Beginner 1',
+                        description: '中文基礎字詞與日常對話',
+                        image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80',
+                        level: '初級',
+                        duration: '8週'
+                      },
+                      {
+                        title: 'Beginner 2', 
+                        description: '生活中文與基本文法',
+                        image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=800&auto=format&fit=crop&q=80',
+                        level: '初級',
+                        duration: '8週'
+                      },
+                      {
+                        title: 'Intermediate 1',
+                        description: '商務中文與進階表達',
+                        image: 'https://images.unsplash.com/photo-1551836022-4c4c79ecde51?w=800&auto=format&fit=crop&q=80',
+                        level: '中級',
+                        duration: '10週'
+                      },
+                      {
+                        title: 'Intermediate 2',
+                        description: '文化理解與專業溝通',
+                        image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80',
+                        level: '中級',
+                        duration: '10週'
+                      }
+                    ].map((course, i) => (
+                      <a
+                        key={i}
+                        href="/membership"
+                        style={{
+                          display: 'block',
+                          background: '#FFFFFF',
+                          border: '1px solid var(--divider)',
+                          borderRadius: '20px',
+                          textDecoration: 'none',
+                          color: 'var(--ink)',
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 4px 16px rgba(16,58,99,.08)',
+                          overflow: 'hidden'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-4px)';
+                          e.currentTarget.style.boxShadow = '0 12px 32px rgba(16,58,99,.15)';
+                          e.currentTarget.style.borderColor = '#2E6EB6';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,58,99,.08)';
+                          e.currentTarget.style.borderColor = 'var(--divider)';
+                        }}
+                      >
+                        <div className="product-card-image" style={{position: 'relative', height: '160px', overflow: 'hidden'}}>
+                          <Image 
+                            src={course.image}
+                            alt={course.title}
+                            fill
+                            style={{
+                              objectFit: 'cover',
+                              filter: 'brightness(0.9)'
+                            }}
+                          />
+                          <div style={{
+                            position: 'absolute',
+                            top: '12px',
+                            left: '12px',
+                            background: 'rgba(46,110,182,.9)',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {course.level}
+                          </div>
+                          <div style={{
+                            position: 'absolute',
+                            top: '12px',
+                            right: '12px',
+                            background: 'rgba(255,255,255,.9)',
+                            color: 'var(--ink)',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {course.duration}
+                          </div>
+                        </div>
+                        <div style={{padding: '20px'}}>
+                          <h5 style={{
+                            fontSize: '18px',
+                            fontWeight: '700',
+                            color: 'var(--ink)',
+                            margin: '0 0 8px'
+                          }}>
+                            {course.title}
+                          </h5>
+                          <p style={{
+                            fontSize: '14px',
+                            color: 'var(--ink-dim)',
+                            margin: '0',
+                            lineHeight: '20px'
+                          }}>
+                            {course.description}
+                          </p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 活動專區 */}
+                <div>
+                  <div className="product-section-header" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    marginBottom: '24px'
+                  }}>
+                    <div className="product-section-icon" style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '16px',
+                      background: 'linear-gradient(135deg, #1CA87A, #2DD4BF)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 8px 24px rgba(28,168,122,.20)'
+                    }}>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M8 6L21 12L8 18V6Z" fill="white"/>
+                        <path d="M2 6V18" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="product-section-title" style={{
+                        fontSize: '24px',
+                        lineHeight: '32px',
+                        fontWeight: '800',
+                        color: 'var(--ink)',
+                        margin: '0 0 4px'
+                      }}>
+                        活動專區
+                      </h4>
+                      <p style={{
+                        fontSize: '16px',
+                        color: 'var(--ink-dim)',
+                        margin: '0'
+                      }}>
+                        多元活動體驗，實際互動學習
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="product-section-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                    gap: '16px'
+                  }}>
+                    {[
+                      {
+                        title: '華語師資研討',
+                        description: '專業教學方法與經驗分享交流',
+                        image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80',
+                        type: '研討會',
+                        frequency: '每月'
+                      },
+                      {
+                        title: '分校移地教學',
+                        description: '實地文化體驗與語言環境沉浸',
+                        image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80',
+                        type: '實地教學',
+                        frequency: '季度'
+                      },
+                      {
+                        title: 'Language Corner',
+                        description: '輕鬆聊天練習，母語交換機會',
+                        image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&auto=format&fit=crop&q=80',
+                        type: '語言交換',
+                        frequency: '每週'
+                      }
+                    ].map((activity, i) => (
+                      <a
+                        key={i}
+                        href="/membership"
+                        style={{
+                          display: 'block',
+                          background: '#FFFFFF',
+                          border: '1px solid var(--divider)',
+                          borderRadius: '20px',
+                          textDecoration: 'none',
+                          color: 'var(--ink)',
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 4px 16px rgba(16,58,99,.08)',
+                          overflow: 'hidden'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-4px)';
+                          e.currentTarget.style.boxShadow = '0 12px 32px rgba(16,58,99,.15)';
+                          e.currentTarget.style.borderColor = '#1CA87A';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,58,99,.08)';
+                          e.currentTarget.style.borderColor = 'var(--divider)';
+                        }}
+                      >
+                        <div style={{position: 'relative', height: '160px', overflow: 'hidden'}}>
+                          <Image 
+                            src={activity.image}
+                            alt={activity.title}
+                            fill
+                            style={{
+                              objectFit: 'cover',
+                              filter: 'brightness(0.9)'
+                            }}
+                          />
+                          <div style={{
+                            position: 'absolute',
+                            top: '12px',
+                            left: '12px',
+                            background: 'rgba(28,168,122,.9)',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {activity.type}
+                          </div>
+                          <div style={{
+                            position: 'absolute',
+                            top: '12px',
+                            right: '12px',
+                            background: 'rgba(255,255,255,.9)',
+                            color: 'var(--ink)',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {activity.frequency}
+                          </div>
+                        </div>
+                        <div style={{padding: '20px'}}>
+                          <h5 style={{
+                            fontSize: '18px',
+                            fontWeight: '700',
+                            color: 'var(--ink)',
+                            margin: '0 0 8px'
+                          }}>
+                            {activity.title}
+                          </h5>
+                          <p style={{
+                            fontSize: '14px',
+                            color: 'var(--ink-dim)',
+                            margin: '0',
+                            lineHeight: '20px'
+                          }}>
+                            {activity.description}
+                          </p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 聯盟專區 */}
+                <div>
+                  <div className="product-section-header" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    marginBottom: '24px'
+                  }}>
+                    <div className="product-section-icon" style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '16px',
+                      background: 'linear-gradient(135deg, #F2C14E, #F4D03F)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 8px 24px rgba(242,193,78,.20)'
+                    }}>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <circle cx="9" cy="7" r="4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="m22 21-3-3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <circle cx="19.5" cy="16.5" r="2.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="product-section-title" style={{
+                        fontSize: '24px',
+                        lineHeight: '32px',
+                        fontWeight: '800',
+                        color: 'var(--ink)',
+                        margin: '0 0 4px'
+                      }}>
+                        聯盟專區
+                      </h4>
+                      <p style={{
+                        fontSize: '16px',
+                        color: 'var(--ink-dim)',
+                        margin: '0'
+                      }}>
+                        與頂尖機構合作，拓展學習視野
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="product-section-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: '16px'
+                  }}>
+                    {[
+                      {
+                        title: 'Aexo Bio',
+                        description: '生技產業專業中文與商務溝通',
+                        image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&auto=format&fit=crop&q=80',
+                        category: '生技',
+                        level: '專業'
+                      },
+                      {
+                        title: 'Light Dao',
+                        description: '區塊鏈與金融科技中文教學',
+                        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
+                        category: 'Fintech',
+                        level: '專業'
+                      },
+                      {
+                        title: '普渡大學',
+                        description: '學術中文與研究交流合作',
+                        image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9d1?w=800&auto=format&fit=crop&q=80',
+                        category: '學術',
+                        level: '高等'
+                      },
+                      {
+                        title: 'INSEAD',
+                        description: '國際商學院中文商務課程',
+                        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
+                        category: 'MBA',
+                        level: '高等'
+                      },
+                      {
+                        title: '于美人',
+                        description: '媒體中文與口語表達技巧',
+                        image: 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=800&auto=format&fit=crop&q=80',
+                        category: '媒體',
+                        level: '進階'
+                      },
+                      {
+                        title: '孟柱億老師',
+                        description: '商業談判與跨文化溝通',
+                        image: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?w=800&auto=format&fit=crop&q=80',
+                        category: '商務',
+                        level: '專業'
+                      }
+                    ].map((partner, i) => (
+                      <a
+                        key={i}
+                        href="/membership"
+                        style={{
+                          display: 'block',
+                          background: '#FFFFFF',
+                          border: '1px solid var(--divider)',
+                          borderRadius: '20px',
+                          textDecoration: 'none',
+                          color: 'var(--ink)',
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 4px 16px rgba(16,58,99,.08)',
+                          overflow: 'hidden'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-4px)';
+                          e.currentTarget.style.boxShadow = '0 12px 32px rgba(16,58,99,.15)';
+                          e.currentTarget.style.borderColor = '#F2C14E';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,58,99,.08)';
+                          e.currentTarget.style.borderColor = 'var(--divider)';
+                        }}
+                      >
+                        <div style={{position: 'relative', height: '160px', overflow: 'hidden'}}>
+                          <Image 
+                            src={partner.image}
+                            alt={partner.title}
+                            fill
+                            style={{
+                              objectFit: 'cover',
+                              filter: 'brightness(0.9)'
+                            }}
+                          />
+                          <div style={{
+                            position: 'absolute',
+                            top: '12px',
+                            left: '12px',
+                            background: 'rgba(242,193,78,.9)',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {partner.category}
+                          </div>
+                          <div style={{
+                            position: 'absolute',
+                            top: '12px',
+                            right: '12px',
+                            background: 'rgba(255,255,255,.9)',
+                            color: 'var(--ink)',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {partner.level}
+                          </div>
+                        </div>
+                        <div style={{padding: '20px'}}>
+                          <h5 style={{
+                            fontSize: '18px',
+                            fontWeight: '700',
+                            color: 'var(--ink)',
+                            margin: '0 0 8px'
+                          }}>
+                            {partner.title}
+                          </h5>
+                          <p style={{
+                            fontSize: '14px',
+                            color: 'var(--ink-dim)',
+                            margin: '0',
+                            lineHeight: '20px'
+                          }}>
+                            {partner.description}
+                          </p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </section>
 
             <h3 style={{
               fontSize: '18px',
