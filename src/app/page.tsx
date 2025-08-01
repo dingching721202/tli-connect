@@ -685,14 +685,14 @@ export default function Home() {
                         color: 'var(--ink)',
                         margin: '0 0 4px'
                       }}>
-                        影音課程
+                        Video Courses
                       </h4>
                       <p style={{
                         fontSize: '16px',
                         color: 'var(--ink-dim)',
                         margin: '0'
                       }}>
-                        隨時隨地學習，自主掌握進度
+                        Learn anytime, anywhere at your own pace
                       </p>
                     </div>
                   </div>
@@ -705,38 +705,38 @@ export default function Home() {
                     {[
                       {
                         title: 'Pronunciation',
-                        description: '標準發音技巧與聲調練習',
+                        description: 'Standard pronunciation techniques and tone practice',
                         image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80',
-                        level: '基礎',
-                        duration: '4週'
+                        level: 'Basic',
+                        duration: '4 weeks'
                       },
                       {
                         title: 'Beginner 1',
-                        description: '中文基礎字詞與日常對話',
+                        description: 'Basic Chinese vocabulary and daily conversation',
                         image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80',
-                        level: '初級',
-                        duration: '8週'
+                        level: 'Beginner',
+                        duration: '8 weeks'
                       },
                       {
                         title: 'Beginner 2', 
-                        description: '生活中文與基本文法',
+                        description: 'Everyday Chinese and basic grammar',
                         image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=800&auto=format&fit=crop&q=80',
-                        level: '初級',
-                        duration: '8週'
+                        level: 'Beginner',
+                        duration: '8 weeks'
                       },
                       {
                         title: 'Intermediate 1',
-                        description: '商務中文與進階表達',
+                        description: 'Business Chinese and advanced expression',
                         image: 'https://images.unsplash.com/photo-1551836022-4c4c79ecde51?w=800&auto=format&fit=crop&q=80',
-                        level: '中級',
-                        duration: '10週'
+                        level: 'Intermediate',
+                        duration: '10 weeks'
                       },
                       {
                         title: 'Intermediate 2',
-                        description: '文化理解與專業溝通',
+                        description: 'Cultural understanding and professional communication',
                         image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80',
-                        level: '中級',
-                        duration: '10週'
+                        level: 'Intermediate',
+                        duration: '10 weeks'
                       }
                     ].map((course, i) => (
                       <a
@@ -824,6 +824,178 @@ export default function Home() {
                   </div>
                 </div>
 
+                {/* 互動團課 */}
+                <div>
+                  <div className="product-section-header" style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    marginBottom: '24px'
+                  }}>
+                    <div className="product-section-icon" style={{
+                      width: '64px',
+                      height: '64px',
+                      borderRadius: '16px',
+                      background: 'linear-gradient(135deg, #10B981, #059669)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 8px 24px rgba(16,185,129,.20)'
+                    }}>
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <circle cx="9" cy="7" r="4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="product-section-title" style={{
+                        fontSize: '24px',
+                        lineHeight: '32px',
+                        fontWeight: '800',
+                        color: 'var(--ink)',
+                        margin: '0 0 4px'
+                      }}>
+                        Interactive Group Classes
+                      </h4>
+                      <p style={{
+                        fontSize: '16px',
+                        color: 'var(--ink-dim)',
+                        margin: '0'
+                      }}>
+                        Small group interactive learning with real-time communication practice
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="product-section-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: '16px'
+                  }}>
+                    {[
+                      {
+                        title: 'Pronunciation',
+                        description: 'Pronunciation correction and tone training group classes',
+                        image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80',
+                        level: 'Basic',
+                        students: '20 students'
+                      },
+                      {
+                        title: 'Beginner 1',
+                        description: 'Interactive Chinese beginner group learning',
+                        image: 'https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=800&auto=format&fit=crop&q=80',
+                        level: 'Beginner',
+                        students: '20 students'
+                      },
+                      {
+                        title: 'Beginner 2', 
+                        description: 'Daily conversation practice courses',
+                        image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80',
+                        level: 'Beginner',
+                        students: '20 students'
+                      },
+                      {
+                        title: 'Intermediate 1',
+                        description: 'Business Chinese interactive discussion courses',
+                        image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&auto=format&fit=crop&q=80',
+                        level: 'Intermediate',
+                        students: '20 students'
+                      },
+                      {
+                        title: 'Intermediate 2',
+                        description: 'Cultural exchange and in-depth dialogue practice',
+                        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
+                        level: 'Intermediate',
+                        students: '20 students'
+                      }
+                    ].map((course, i) => (
+                      <a
+                        key={i}
+                        href="/membership"
+                        style={{
+                          display: 'block',
+                          background: '#FFFFFF',
+                          border: '1px solid var(--divider)',
+                          borderRadius: '20px',
+                          textDecoration: 'none',
+                          color: 'var(--ink)',
+                          transition: 'all 0.3s ease',
+                          boxShadow: '0 4px 16px rgba(16,58,99,.08)',
+                          overflow: 'hidden'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateY(-4px)';
+                          e.currentTarget.style.boxShadow = '0 12px 32px rgba(16,58,99,.15)';
+                          e.currentTarget.style.borderColor = '#10B981';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,58,99,.08)';
+                          e.currentTarget.style.borderColor = 'var(--divider)';
+                        }}
+                      >
+                        <div className="product-card-image" style={{position: 'relative', height: '160px', overflow: 'hidden'}}>
+                          <Image 
+                            src={course.image}
+                            alt={course.title}
+                            fill
+                            style={{
+                              objectFit: 'cover',
+                              filter: 'brightness(0.9)'
+                            }}
+                          />
+                          <div style={{
+                            position: 'absolute',
+                            top: '12px',
+                            left: '12px',
+                            background: 'rgba(16,185,129,.9)',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {course.level}
+                          </div>
+                          <div style={{
+                            position: 'absolute',
+                            top: '12px',
+                            right: '12px',
+                            background: 'rgba(255,255,255,.9)',
+                            color: 'var(--ink)',
+                            padding: '4px 8px',
+                            borderRadius: '12px',
+                            fontSize: '12px',
+                            fontWeight: '600'
+                          }}>
+                            {course.students}
+                          </div>
+                        </div>
+                        <div style={{padding: '20px'}}>
+                          <h5 style={{
+                            fontSize: '18px',
+                            fontWeight: '700',
+                            color: 'var(--ink)',
+                            margin: '0 0 8px'
+                          }}>
+                            {course.title}
+                          </h5>
+                          <p style={{
+                            fontSize: '14px',
+                            color: 'var(--ink-dim)',
+                            margin: '0',
+                            lineHeight: '20px'
+                          }}>
+                            {course.description}
+                          </p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+
                 {/* 活動專區 */}
                 <div>
                   <div className="product-section-header" style={{
@@ -855,14 +1027,14 @@ export default function Home() {
                         color: 'var(--ink)',
                         margin: '0 0 4px'
                       }}>
-                        活動專區
+                        Events & Activities
                       </h4>
                       <p style={{
                         fontSize: '16px',
                         color: 'var(--ink-dim)',
                         margin: '0'
                       }}>
-                        多元活動體驗，實際互動學習
+                        Diverse activity experiences with hands-on interactive learning
                       </p>
                     </div>
                   </div>
@@ -874,25 +1046,25 @@ export default function Home() {
                   }}>
                     {[
                       {
-                        title: '華語師資研討',
-                        description: '專業教學方法與經驗分享交流',
+                        title: 'Chinese Teacher Workshop',
+                        description: 'Professional teaching methods and experience sharing',
                         image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80',
-                        type: '研討會',
-                        frequency: '每月'
+                        type: 'Workshop',
+                        frequency: 'Monthly'
                       },
                       {
-                        title: '分校移地教學',
-                        description: '實地文化體驗與語言環境沉浸',
+                        title: 'Immersion Field Study',
+                        description: 'On-site cultural experience and language immersion',
                         image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80',
-                        type: '實地教學',
-                        frequency: '季度'
+                        type: 'Field Study',
+                        frequency: 'Quarterly'
                       },
                       {
                         title: 'Language Corner',
-                        description: '輕鬆聊天練習，母語交換機會',
+                        description: 'Casual conversation practice and language exchange opportunities',
                         image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&auto=format&fit=crop&q=80',
-                        type: '語言交換',
-                        frequency: '每週'
+                        type: 'Language Exchange',
+                        frequency: 'Weekly'
                       }
                     ].map((activity, i) => (
                       <a
@@ -1013,14 +1185,14 @@ export default function Home() {
                         color: 'var(--ink)',
                         margin: '0 0 4px'
                       }}>
-                        聯盟專區
+                        Partnership Zone
                       </h4>
                       <p style={{
                         fontSize: '16px',
                         color: 'var(--ink-dim)',
                         margin: '0'
                       }}>
-                        與頂尖機構合作，拓展學習視野
+                        Collaborate with top institutions to expand learning horizons
                       </p>
                     </div>
                   </div>
@@ -1033,45 +1205,45 @@ export default function Home() {
                     {[
                       {
                         title: 'Aexo Bio',
-                        description: '生技產業專業中文與商務溝通',
+                        description: 'Professional Chinese for biotech industry and business communication',
                         image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&auto=format&fit=crop&q=80',
-                        category: '生技',
-                        level: '專業'
+                        category: 'Biotech',
+                        level: 'Professional'
                       },
                       {
                         title: 'Light Dao',
-                        description: '區塊鏈與金融科技中文教學',
+                        description: 'Chinese language education for blockchain and fintech',
                         image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
                         category: 'Fintech',
-                        level: '專業'
+                        level: 'Professional'
                       },
                       {
-                        title: '普渡大學',
-                        description: '學術中文與研究交流合作',
+                        title: 'Purdue University',
+                        description: 'Academic Chinese and research collaboration exchange',
                         image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9d1?w=800&auto=format&fit=crop&q=80',
-                        category: '學術',
-                        level: '高等'
+                        category: 'Academic',
+                        level: 'Advanced'
                       },
                       {
                         title: 'INSEAD',
-                        description: '國際商學院中文商務課程',
+                        description: 'International business school Chinese business courses',
                         image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
                         category: 'MBA',
-                        level: '高等'
+                        level: 'Advanced'
                       },
                       {
-                        title: '于美人',
-                        description: '媒體中文與口語表達技巧',
+                        title: 'Yu Mei-ren',
+                        description: 'Media Chinese and oral expression techniques',
                         image: 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=800&auto=format&fit=crop&q=80',
-                        category: '媒體',
-                        level: '進階'
+                        category: 'Media',
+                        level: 'Advanced'
                       },
                       {
-                        title: '孟柱億老師',
-                        description: '商業談判與跨文化溝通',
+                        title: 'Professor Meng Zhu-yi',
+                        description: 'Business negotiation and cross-cultural communication',
                         image: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?w=800&auto=format&fit=crop&q=80',
-                        category: '商務',
-                        level: '專業'
+                        category: 'Business',
+                        level: 'Professional'
                       }
                     ].map((partner, i) => (
                       <a
