@@ -1220,7 +1220,7 @@ export default function Home() {
                       {
                         title: 'Purdue University',
                         description: 'Academic Chinese and research collaboration exchange',
-                        image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9d1?w=800&auto=format&fit=crop&q=80',
+                        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
                         category: 'Academic',
                         level: 'Advanced'
                       },

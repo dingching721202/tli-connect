@@ -13,6 +13,28 @@ export interface JWTPayload {
 class SimpleJWT {
   private readonly secret = 'your-secret-key'; // 生產環境應使用環境變數
 
+  // 跨平台 Base64 編碼
+  private base64Encode(str: string): string {
+    if (typeof window !== 'undefined') {
+      // 瀏覽器環境
+      return btoa(str);
+    } else {
+      // Node.js 環境
+      return Buffer.from(str).toString('base64');
+    }
+  }
+
+  // 跨平台 Base64 解碼
+  private base64Decode(str: string): string {
+    if (typeof window !== 'undefined') {
+      // 瀏覽器環境
+      return atob(str);
+    } else {
+      // Node.js 環境
+      return Buffer.from(str, 'base64').toString();
+    }
+  }
+
   // 生成 JWT token
   generateToken(payload: Omit<JWTPayload, 'iat' | 'exp'>): string {
     const now = Math.floor(Date.now() / 1000);
@@ -22,10 +44,10 @@ class SimpleJWT {
       exp: now + (24 * 60 * 60) // 24 小時過期
     };
 
-    // 簡化實現：使用 Base64 編碼
-    const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-    const encodedPayload = btoa(JSON.stringify(fullPayload));
-    const signature = btoa(`${header}.${encodedPayload}.${this.secret}`);
+    // 簡化實現：使用 Base64 編碼（支援 Node.js 和瀏覽器）
+    const header = this.base64Encode(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+    const encodedPayload = this.base64Encode(JSON.stringify(fullPayload));
+    const signature = this.base64Encode(`${header}.${encodedPayload}.${this.secret}`);
 
     return `${header}.${encodedPayload}.${signature}`;
   }
@@ -41,13 +63,13 @@ class SimpleJWT {
       const [header, payload, signature] = parts;
       
       // 驗證簽名
-      const expectedSignature = btoa(`${header}.${payload}.${this.secret}`);
+      const expectedSignature = this.base64Encode(`${header}.${payload}.${this.secret}`);
       if (signature !== expectedSignature) {
         return null;
       }
 
       // 解析 payload
-      const decodedPayload: JWTPayload = JSON.parse(atob(payload));
+      const decodedPayload: JWTPayload = JSON.parse(this.base64Decode(payload));
       
       // 檢查過期時間
       const now = Math.floor(Date.now() / 1000);
