@@ -118,6 +118,7 @@ function getDefaultConsultations(): Consultation[] {
     source: 'corporate_form'
   }
 ];
+}
 
 // GET - 取得諮詢列表
 export async function GET(request: NextRequest) {
