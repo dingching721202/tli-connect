@@ -8,7 +8,7 @@ import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { bookingService, dashboardService, leaveService } from '@/services/dataService';
 import { } from '@/types';
-import { getCourseLinksForLesson, parseCourseNameAndLesson } from '@/utils/courseLinksUtils';
+import { getCourseLinksFromBooking } from '@/utils/courseLinksUtils';
 
 const {
   FiCalendar, FiClock, FiUser, FiUsers, FiExternalLink,
@@ -893,23 +893,7 @@ export default function MyBookingsPage() {
             {/* 課程連結 (for non-leave requests) */}
             {!selectedBooking.leaveReason && (() => {
               // 🔧 動態獲取課程連結：根據課程名稱和Lesson編號從課程模組中查找
-              let courseLinks = { classroom: null, materials: null, hasValidClassroom: false, hasValidMaterials: false };
-              
-              if (selectedBooking.sessionNumber) {
-                // 如果有sessionNumber，直接使用課程名稱和編號
-                const baseName = selectedBooking.courseName.split(' - ')[0]; // 取得基本課程名稱
-                courseLinks = getCourseLinksForLesson(baseName, selectedBooking.sessionNumber) as typeof courseLinks;
-                console.log(`🔗 為課程"${baseName}" Lesson ${selectedBooking.sessionNumber}獲取到的連結:`, courseLinks);
-              } else {
-                // 如果沒有sessionNumber，嘗試從課程名稱中解析
-                const parsed = parseCourseNameAndLesson(selectedBooking.courseName);
-                if (parsed) {
-                  courseLinks = getCourseLinksForLesson(parsed.courseName, parsed.lessonNumber) as typeof courseLinks;
-                  console.log(`🔗 從課程名稱"${selectedBooking.courseName}"解析出的連結:`, courseLinks);
-                } else {
-                  console.warn(`⚠️ 無法從課程名稱"${selectedBooking.courseName}"獲取Lesson編號`);
-                }
-              }
+              const courseLinks = getCourseLinksFromBooking(selectedBooking);
               
               return (
                 <div className="p-4 bg-green-50 rounded-lg">
@@ -1249,18 +1233,8 @@ export default function MyBookingsPage() {
                       )}
                       
                       {booking.status === 'upcoming' && (() => {
-                        // 獲取課程連結邏輯（與查看詳情一致）
-                        let courseLinks = { classroom: null, materials: null, hasValidClassroom: false, hasValidMaterials: false };
-                        
-                        if (booking.sessionNumber) {
-                          const baseName = booking.courseName.split(' - ')[0];
-                          courseLinks = getCourseLinksForLesson(baseName, booking.sessionNumber) as typeof courseLinks;
-                        } else {
-                          const parsed = parseCourseNameAndLesson(booking.courseName);
-                          if (parsed) {
-                            courseLinks = getCourseLinksForLesson(parsed.courseName, parsed.lessonNumber) as typeof courseLinks;
-                          }
-                        }
+                        // 獲取課程連結
+                        const courseLinks = getCourseLinksFromBooking(booking);
                         
                         return (
                           <>

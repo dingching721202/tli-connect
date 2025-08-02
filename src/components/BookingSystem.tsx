@@ -52,7 +52,7 @@ const BookingSystem: React.FC = () => {
   
   // 新增課程篩選相關狀態
   const [courseFilters, setCourseFilters] = useState<CourseFilter[]>([]);
-  const [managedCourseSessions, setManagedCourseSessions] = useState<BookingCourseSession[]>([]);
+  const [templateSessions, setTemplateSessions] = useState<BookingCourseSession[]>([]);
   const [showCourseSelection, setShowCourseSelection] = useState(false);
   const [loading, setLoading] = useState(true);
   
@@ -107,8 +107,8 @@ const BookingSystem: React.FC = () => {
         }
       }
       
-      // 載入課程模組的數據
-      setManagedCourseSessions(managedSessions);
+      // 載入課程模板的數據
+      setTemplateSessions(managedSessions);
       setCourseFilters(filters);
     } catch (error) {
       console.error('載入課程時段失敗:', error);
@@ -257,11 +257,11 @@ const BookingSystem: React.FC = () => {
       .filter(filter => filter.selected)
       .map(filter => filter.id);
     
-    const filteredManagedSessions = filterBookingSessions(managedCourseSessions, selectedCourseIds);
-    const filteredManagedCourses = convertManagedSessionsToCourses(filteredManagedSessions);
+    const filteredTemplateSessions = filterBookingSessions(templateSessions, selectedCourseIds);
+    const filteredTemplateCourses = convertManagedSessionsToCourses(filteredTemplateSessions);
     
-    return filteredManagedCourses;
-  }, [courseFilters, managedCourseSessions, convertManagedSessionsToCourses]);
+    return filteredTemplateCourses;
+  }, [courseFilters, templateSessions, convertManagedSessionsToCourses]);
 
   const handleDateSelect = (date: Date, specificCourse?: BookingCourse) => {
     setSelectedDate(date);
@@ -432,9 +432,9 @@ const BookingSystem: React.FC = () => {
       setSelectedCourses([]);
       setShowCourseSelection(false);
       
-      // US06.7: 重新載入課程模組資料以更新狀態（包含已預約狀態）
-      const updatedManagedSessions = generateBookingSessions();
-      setManagedCourseSessions(updatedManagedSessions);
+      // US06.7: 重新載入課程模板資料以更新狀態（包含已預約狀態）
+      const updatedTemplateSessions = generateBookingSessions();
+      setTemplateSessions(updatedTemplateSessions);
 
     } catch (error) {
       console.error('預約失敗:', error);

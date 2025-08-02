@@ -12,7 +12,8 @@ import MembershipCard from './MembershipCard';
 import { dashboardService, leaveService, bookingService } from '@/services/dataService';
 import { teacherDataService } from '@/data/teacherData';
 import { Membership, ClassAppointment } from '@/types';
-import { getCourseLinksForLesson, parseCourseNameAndLesson } from '@/utils/courseLinksUtils';
+import { getCourseLinksFromBooking } from '@/utils/courseLinksUtils';
+// 調試工具已移除
 
 interface BookedCourse {
   appointment: ClassAppointment;
@@ -1308,15 +1309,8 @@ const Dashboard = () => {
                         {course.status === 'upcoming' && (
                           <>
                             {(() => {
-                              // 獲取課程連結邏輯（與查看詳情一致）
-                              let courseLinks = { classroom: null, materials: null, hasValidClassroom: false, hasValidMaterials: false };
-                              
-                              const courseName = course.title || course.courseName || '';
-                              const parsed = parseCourseNameAndLesson(courseName);
-                              
-                              if (parsed) {
-                                courseLinks = getCourseLinksForLesson(parsed.courseName, parsed.lessonNumber) as any;
-                              }
+                              // 獲取課程連結
+                              const courseLinks = getCourseLinksFromBooking(course);
                               
                               return (
                                 <>
@@ -1913,19 +1907,10 @@ const Dashboard = () => {
 
                 {/* 課程連結 */}
                 {(() => {
-                  // 🔧 動態獲取課程連結：根據課程名稱和Lesson編號從課程模組中查找
-                  let courseLinks = { classroom: null, materials: null, hasValidClassroom: false, hasValidMaterials: false };
-                  
-                  // 嘗試從課程標題中解析課程名稱和Lesson編號
-                  const courseName = selectedBooking.title || selectedBooking.courseName || '';
-                  const parsed = parseCourseNameAndLesson(courseName);
-                  
-                  if (parsed) {
-                    courseLinks = getCourseLinksForLesson(parsed.courseName, parsed.lessonNumber) as any;
-                    console.log(`🔗 Dashboard - 為課程"${parsed.courseName}" Lesson ${parsed.lessonNumber}獲取到的連結:`, courseLinks);
-                  } else {
-                    console.warn(`⚠️ Dashboard - 無法從課程名稱"${courseName}"獲取Lesson編號`);
-                  }
+                  // 🔧 使用新的統一方法獲取課程連結
+                  console.log(`🔗 Dashboard - 獲取預約詳情的課程連結:`, selectedBooking);
+                  const courseLinks = getCourseLinksFromBooking(selectedBooking);
+                  console.log(`🔗 Dashboard - 獲取到的連結:`, courseLinks);
                   
                   return (
                     <div className="p-4 bg-green-50 rounded-lg">

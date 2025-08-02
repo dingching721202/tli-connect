@@ -28,7 +28,7 @@ interface Schedule {
 interface Session {
   title: string;
   classroom: string;
-  materials: string;
+  material_link: string;
 }
 
 interface GeneratedSession {
@@ -39,7 +39,7 @@ interface GeneratedSession {
   teacherId: string | number;
   teacherName: string;
   classroom: string;
-  materials: string;
+  material_link: string;
 }
 
 interface Course {
@@ -414,8 +414,8 @@ const CourseManagementModals: React.FC<CourseManagementModalsProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={session.materials}
-                    onChange={(e) => handleSessionChange(sessionIndex, 'materials', e.target.value)}
+                    value={session.material_link}
+                    onChange={(e) => handleSessionChange(sessionIndex, 'material_link', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                     placeholder="請輸入教材連結"
                   />

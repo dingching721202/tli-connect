@@ -31,7 +31,9 @@
       "Bash(npm run typecheck:*)",
       "WebFetch(domain:sat.cool)",
       "Bash(copy:*)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(npx kill-port:*)",
+      "Bash(npm run:*)"
     ],
     "deny": []
   }

@@ -6,7 +6,7 @@ import { FiCalendar, FiClock, FiUser, FiAlertTriangle, FiX, FiEye, FiSearch, FiF
 import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { getActiveTeachers, Teacher as TeacherData } from '@/data/teacherData';
-import { getAllTimeslotsWithBookings, TimeslotWithBookings } from '@/services/timeslotService';
+import { getAllTimeslotsWithBookings, TimeslotWithBookings, cancelTimeslot, restoreTimeslot } from '@/services/timeslotService';
 
 // 使用統一的 TimeslotWithBookings 接口
 type TimeslotWithDetails = TimeslotWithBookings;
@@ -16,7 +16,7 @@ const TimeslotManagement: React.FC = () => {
   const [timeslots, setTimeslots] = useState<TimeslotWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'started' | 'completed' | 'CANCELED'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'started' | 'completed' | 'canceled'>('all');
   const [dateFilter, setDateFilter] = useState('');
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [selectedTimeslot, setSelectedTimeslot] = useState<TimeslotWithDetails | null>(null);
@@ -181,10 +181,18 @@ const TimeslotManagement: React.FC = () => {
       loadTimeslots();
     };
     
+    // 監聽時段更新事件（取消/恢復）
+    const handleTimeslotUpdate = () => {
+      console.log('📅 收到時段更新事件，重新載入時段數據');
+      loadTimeslots();
+    };
+    
     window.addEventListener('bookingsUpdated', handleBookingsUpdate);
+    window.addEventListener('timeslotUpdated', handleTimeslotUpdate);
     
     return () => {
       window.removeEventListener('bookingsUpdated', handleBookingsUpdate);
+      window.removeEventListener('timeslotUpdated', handleTimeslotUpdate);
     };
   }, [user]);
 
@@ -199,8 +207,8 @@ const TimeslotManagement: React.FC = () => {
     );
   }
 
-  // 過濾時段
-  const filteredTimeslots = timeslots.filter(timeslot => {
+  // 過濾時段（添加防禦性檢查）
+  const filteredTimeslots = (timeslots || []).filter(timeslot => {
     // 狀態過濾
     if (statusFilter !== 'all') {
       if (statusFilter === 'pending' && timeslot.timeStatus !== 'pending') {
@@ -212,7 +220,7 @@ const TimeslotManagement: React.FC = () => {
       if (statusFilter === 'completed' && timeslot.timeStatus !== 'completed') {
         return false;
       }
-      if (statusFilter === 'CANCELED' && timeslot.status === 'available') {
+      if (statusFilter === 'canceled' && timeslot.timeStatus !== 'canceled') {
         return false;
       }
     }
@@ -247,11 +255,10 @@ const TimeslotManagement: React.FC = () => {
     try {
       setCancelling(true);
       
-      // 注意：這裡應該呼叫適當的 API 取消時段
-      // 目前使用假的成功回應
-      const result = { success: true };
+      // 調用取消時段服務
+      const success = cancelTimeslot(selectedTimeslot.id);
       
-      if (result.success) {
+      if (success) {
         alert(`✅ 課程時段已成功取消！
 
 課程：${selectedTimeslot.title}
@@ -261,9 +268,7 @@ const TimeslotManagement: React.FC = () => {
 
 相關學生將收到取消通知。`);
         
-        // 重新載入時段資料
-        const updatedTimeslots = getAllTimeslotsWithBookings();
-        setTimeslots(updatedTimeslots);
+        // 時段服務會自動觸發更新事件，無需手動重新載入
         
       } else {
         alert('❌ 取消課程時段失敗');
@@ -276,6 +281,30 @@ const TimeslotManagement: React.FC = () => {
       setCancelling(false);
       setShowCancelModal(false);
       setSelectedTimeslot(null);
+    }
+  };
+
+  // 處理恢復時段
+  const handleRestoreTimeslot = async (timeslot: TimeslotWithDetails) => {
+    try {
+      const success = restoreTimeslot(timeslot.id);
+      
+      if (success) {
+        alert(`✅ 課程時段已成功恢復！
+
+課程：${timeslot.title}
+教師：${timeslot.teacherName}
+時間：${formatDateTime(`${timeslot.date} ${timeslot.startTime}`)} - ${formatTime(`${timeslot.date} ${timeslot.endTime}`)}
+
+時段現在重新開放預約。`);
+        
+      } else {
+        alert('❌ 恢復課程時段失敗');
+      }
+      
+    } catch (error) {
+      console.error('恢復課程時段錯誤:', error);
+      alert('恢復過程中發生錯誤，請稍後再試');
     }
   };
 
@@ -309,10 +338,10 @@ const TimeslotManagement: React.FC = () => {
 
   // 獲取狀態顏色
   const getStatusColor = (timeslot: TimeslotWithDetails) => {
-    if (timeslot.status === 'past') {
-      return 'text-gray-700 bg-gray-50 border-gray-200';
+    if (timeslot.timeStatus === 'canceled') {
+      return 'text-red-700 bg-red-50 border-red-200';
     }
-    if (timeslot.timeStatus === 'completed') {
+    if (timeslot.status === 'past' || timeslot.timeStatus === 'completed') {
       return 'text-gray-700 bg-gray-50 border-gray-200';
     }
     if (timeslot.timeStatus === 'started') {
@@ -323,11 +352,11 @@ const TimeslotManagement: React.FC = () => {
 
   // 獲取狀態文字
   const getStatusText = (timeslot: TimeslotWithDetails) => {
-    if (timeslot.status === 'past') {
-      return '已結束';
+    if (timeslot.timeStatus === 'canceled') {
+      return '已取消';
     }
-    if (timeslot.timeStatus === 'completed') {
-      return '已上課';
+    if (timeslot.status === 'past' || timeslot.timeStatus === 'completed') {
+      return '已結束';
     }
     if (timeslot.timeStatus === 'started') {
       return '已開課';
@@ -348,7 +377,7 @@ const TimeslotManagement: React.FC = () => {
       {/* 標題 */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">課程時段管理</h2>
+          <h2 className="text-2xl font-bold text-gray-900">時段管理</h2>
           <p className="text-sm text-gray-600 mt-1">管理和取消課程時段</p>
         </div>
       </div>
@@ -420,9 +449,9 @@ const TimeslotManagement: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => setStatusFilter('CANCELED')}
+            onClick={() => setStatusFilter('canceled')}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
-              statusFilter === 'CANCELED'
+              statusFilter === 'canceled'
                 ? 'bg-blue-600 text-white shadow-md'
                 : 'bg-white text-blue-600 border border-blue-300 hover:bg-blue-50'
             }`}
@@ -463,7 +492,7 @@ const TimeslotManagement: React.FC = () => {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-2xl font-bold text-blue-600">{timeslots.length}</div>
+              <div className="text-2xl font-bold text-blue-600">{(timeslots || []).length}</div>
               <div className="text-sm text-gray-600">總時段數</div>
             </div>
             <SafeIcon icon={FiCalendar} className="text-2xl text-blue-600" />
@@ -473,8 +502,7 @@ const TimeslotManagement: React.FC = () => {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <div className="text-2xl font-bold text-blue-600">{timeslots.filter(t => t.timeStatus === 'started' && (t as any).status !== 'CANCELED').length}</div>
+              <div className="text-2xl font-bold text-blue-600">{(timeslots || []).filter(t => t.timeStatus === 'started').length}</div>
               <div className="text-sm text-gray-600">已開課</div>
             </div>
             <SafeIcon icon={FiUser} className="text-2xl text-blue-600" />
@@ -484,8 +512,7 @@ const TimeslotManagement: React.FC = () => {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <div className="text-2xl font-bold text-blue-600">{timeslots.filter(t => t.timeStatus === 'pending' && (t as any).status !== 'CANCELED').length}</div>
+              <div className="text-2xl font-bold text-blue-600">{(timeslots || []).filter(t => t.timeStatus === 'pending').length}</div>
               <div className="text-sm text-gray-600">待開課</div>
             </div>
             <SafeIcon icon={FiClock} className="text-2xl text-blue-600" />
@@ -495,8 +522,7 @@ const TimeslotManagement: React.FC = () => {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <div className="text-2xl font-bold text-blue-600">{timeslots.filter(t => t.timeStatus === 'completed' && (t as any).status !== 'CANCELED').length}</div>
+              <div className="text-2xl font-bold text-blue-600">{(timeslots || []).filter(t => t.timeStatus === 'completed').length}</div>
               <div className="text-sm text-gray-600">已上課</div>
             </div>
             <SafeIcon icon={FiUser} className="text-2xl text-blue-600" />
@@ -506,8 +532,7 @@ const TimeslotManagement: React.FC = () => {
         <div className="bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center justify-between">
             <div>
-              {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-              <div className="text-2xl font-bold text-blue-600">{timeslots.filter(t => (t as any).status === 'CANCELED').length}</div>
+              <div className="text-2xl font-bold text-blue-600">{(timeslots || []).filter(t => t.timeStatus === 'canceled').length}</div>
               <div className="text-sm text-gray-600">已取消</div>
             </div>
             <SafeIcon icon={FiX} className="text-2xl text-blue-600" />
@@ -605,7 +630,19 @@ const TimeslotManagement: React.FC = () => {
                           </motion.button>
                         )}
                         
-                        {timeslot.canCancel && (
+                        {/* 取消/恢復按鈕 */}
+                        {timeslot.timeStatus === 'canceled' ? (
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleRestoreTimeslot(timeslot)}
+                            className="flex items-center space-x-1 px-3 py-1.5 bg-green-100 text-green-700 rounded-lg hover:bg-green-200 transition-colors text-sm"
+                            title="恢復時段"
+                          >
+                            <SafeIcon icon={FiCheck} className="text-xs" />
+                            <span>恢復</span>
+                          </motion.button>
+                        ) : timeslot.canCancel && (
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -784,7 +821,7 @@ const TimeslotManagement: React.FC = () => {
                     <span className="text-sm text-green-700">學生人數：{selectedTimeslotForDetail.bookedCount}人</span>
                   </div>
                   <div className="space-y-3">
-                    {selectedTimeslotForDetail.enrolledStudents.length === 0 ? (
+                    {!selectedTimeslotForDetail.enrolledStudents || selectedTimeslotForDetail.enrolledStudents.length === 0 ? (
                       <div className="bg-white p-3 rounded border text-center text-gray-500">
                         暫無學生預約
                       </div>
@@ -816,10 +853,16 @@ const TimeslotManagement: React.FC = () => {
                 <div className="space-y-3">
                   <button
                     onClick={() => {
-                      console.log('🚀 進入教室');
-                      // Could add actual classroom link functionality here
+                      if (selectedTimeslotForDetail?.classroom_link) {
+                        window.open(selectedTimeslotForDetail.classroom_link, '_blank');
+                      }
                     }}
-                    className="w-full flex items-center justify-center space-x-2 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+                    disabled={!selectedTimeslotForDetail?.classroom_link}
+                    className={`w-full flex items-center justify-center space-x-2 text-white py-2 px-4 rounded-lg transition-colors ${
+                      !selectedTimeslotForDetail?.classroom_link
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-green-600 hover:bg-green-700'
+                    }`}
                   >
                     <SafeIcon icon={FiExternalLink} />
                     <span>進入線上教室</span>
@@ -827,10 +870,16 @@ const TimeslotManagement: React.FC = () => {
                   
                   <button
                     onClick={() => {
-                      console.log('📄 查看教材');
-                      // Could add actual materials link functionality here
+                      if (selectedTimeslotForDetail?.material_link) {
+                        window.open(selectedTimeslotForDetail.material_link, '_blank');
+                      }
                     }}
-                    className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                    disabled={!selectedTimeslotForDetail?.material_link}
+                    className={`w-full flex items-center justify-center space-x-2 text-white py-2 px-4 rounded-lg transition-colors ${
+                      !selectedTimeslotForDetail?.material_link
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-blue-600 hover:bg-blue-700'
+                    }`}
                   >
                     <SafeIcon icon={FiEye} />
                     <span>查看課程教材</span>

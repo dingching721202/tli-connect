@@ -4,6 +4,7 @@ import {
 } from '@/types';
 import { generateBookingSessions } from '@/data/courseBookingIntegration';
 import { teacherDataService } from '@/data/teacherData';
+import { hashString } from '@/utils/enrollmentUtils';
 
 interface LeaveRequest {
   id: string;
@@ -255,17 +256,6 @@ export const timeslotService = {
 
 // 預約服務 (US06, US07)
 export const bookingService = {
-  // 字符串 hash 函數（與 BookingSystem 中的保持一致）
-  hashString(str: string): number {
-    let hash = 0;
-    if (str.length === 0) return hash;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash);
-  },
   // 批量預約課程
   async batchBooking(userId: number, timeslotIds: number[]): Promise<BatchBookingResponse> {
     await delay(1000);
@@ -300,7 +290,7 @@ export const bookingService = {
       
       // 根據 timeslotId 查找對應的課程時段
       const session = allSessions.find(s => {
-        const sessionHashId = this.hashString(s.id);
+        const sessionHashId = hashString(s.id);
         return sessionHashId === timeslotId;
       });
       
@@ -338,6 +328,7 @@ export const bookingService = {
       };
       
       console.log(`✅ 創建新預約:`, newAppointment);
+      console.log(`🔧 預約詳情 - sessionId: ${session.id}, sessionHashId: ${hashString(session.id)}, timeslotId: ${timeslotId}`);
       classAppointments.push(newAppointment);
       
       // 同步更新到 localStorage（帶數據驗證）
@@ -364,6 +355,14 @@ export const bookingService = {
         timeslot_id: timeslotId,
         booking_id: newAppointment.id
       });
+    }
+    
+    // 如果有成功的預約，觸發更新事件通知其他組件
+    if (successBookings.length > 0) {
+      console.log(`🔔 觸發 bookingsUpdated 事件，通知其他組件更新，成功預約數量: ${successBookings.length}`);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('bookingsUpdated'));
+      }
     }
     
     return { success: successBookings, failed: failedBookings };
@@ -497,7 +496,7 @@ export const bookingService = {
     // 從課程預約日曆系統獲取時段資訊來做24小時檢查
     const allSessions = generateBookingSessions();
     const session = allSessions.find(s => {
-      const sessionHashId = this.hashString(s.id);
+      const sessionHashId = hashString(s.id);
       return sessionHashId === appointment!.class_timeslot_id;
     });
     
@@ -739,7 +738,7 @@ export const dashboardService = {
       const teacherBookings = [];
       
       for (const session of teacherSessions) {
-        const sessionHashId = this.hashString(session.id);
+        const sessionHashId = hashString(session.id);
         
         // 找出預約了此時段的學生
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -812,7 +811,7 @@ export const dashboardService = {
       for (const appointment of appointments) {
         // 使用 timeslot_id 查找對應的課程時段
         const session = allSessions.find(s => {
-          const sessionHashId = this.hashString(s.id);
+          const sessionHashId = hashString(s.id);
           return sessionHashId === appointment.class_timeslot_id;
         });
         
@@ -876,18 +875,6 @@ export const dashboardService = {
     }
   },
 
-  // 字符串 hash 函數（與 BookingSystem 中的保持一致）
-  hashString(str: string): number {
-    let hash = 0;
-    if (str.length === 0) return hash;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return Math.abs(hash);
-  },
-
   // 獲取老師的課程時段（從課程預約日曆系統）
   async getTeacherCoursesFromCalendar(teacherId: number) {
     
@@ -919,7 +906,7 @@ export const dashboardService = {
       
       for (const session of teacherSessions) {
         // 獲取該時段的所有預約
-        const sessionHashId = this.hashString(session.id);
+        const sessionHashId = hashString(session.id);
         console.log(`📊 檢查課程時段 ID 匹配:`, {
           sessionId: session.id,
           sessionHashId,

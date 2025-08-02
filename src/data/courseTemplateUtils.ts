@@ -14,8 +14,8 @@ export interface CourseTemplate {
   // 統一設定 - 作為所有課程的預設值
   globalSettings?: {
     defaultTitle?: string; // 統一單元名稱模板，例如 "Lesson {n}"
-    defaultVirtualClassroomLink?: string; // 統一虛擬教室連結
-    defaultMaterialLink?: string; // 統一教材連結
+    default_classroom_link?: string; // 統一教室連結
+    default_material_link?: string; // 統一教材連結
   };
   sessions: CourseSession[];
   status: 'draft' | 'published';
@@ -26,11 +26,11 @@ export interface CourseTemplate {
 export interface CourseSession {
   sessionNumber: number;
   title: string;
-  virtualClassroomLink?: string;
-  materialLink?: string; // 可以是 URL 或 PDF 路徑
+  classroom_link?: string;
+  material_link?: string; // 可以是 URL 或 PDF 路徑
   // 如果這些欄位為空或未特別設定，則自動使用 globalSettings 中的預設值
   useGlobalTitle?: boolean; // 是否使用統一標題（預設 true）
-  useGlobalClassroom?: boolean; // 是否使用統一虛擬教室（預設 true）
+  useGlobalClassroom?: boolean; // 是否使用統一教室（預設 true）
   useGlobalMaterial?: boolean; // 是否使用統一教材（預設 true）
 }
 
@@ -89,6 +89,13 @@ export function createCourseTemplate(template: Omit<CourseTemplate, 'id' | 'crea
     const templates = getCourseTemplates();
     templates.push(newTemplate);
     localStorage.setItem('courseTemplates', JSON.stringify(templates));
+    
+    // 觸發更新事件
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('courseTemplatesUpdated', { 
+        detail: { action: 'create', template: newTemplate } 
+      }));
+    }
   }
 
   return newTemplate;
@@ -104,6 +111,9 @@ export function updateCourseTemplate(id: string, updates: Partial<CourseTemplate
     
     const oldTemplate = templates[index];
     const titleChanged = updates.title && updates.title !== oldTemplate.title;
+    const totalSessionsChanged = updates.totalSessions && updates.totalSessions !== oldTemplate.totalSessions;
+    const sessionsChanged = updates.sessions && JSON.stringify(updates.sessions) !== JSON.stringify(oldTemplate.sessions);
+    const capacityChanged = updates.capacity && updates.capacity !== oldTemplate.capacity;
     
     templates[index] = {
       ...templates[index],
@@ -113,15 +123,31 @@ export function updateCourseTemplate(id: string, updates: Partial<CourseTemplate
     
     localStorage.setItem('courseTemplates', JSON.stringify(templates));
     
-    // 如果標題有變更，同步更新課程排程中的標題
-    if (titleChanged) {
-      console.log(`課程模板標題已更新: ${oldTemplate.title} → ${updates.title}`);
-      // 動態導入以避免循環依賴
-      import('./courseScheduleUtils').then(({ syncCourseScheduleTitles }) => {
-        syncCourseScheduleTitles();
-      }).catch(error => {
-        console.error('同步課程排程標題失敗:', error);
+    // 檢查是否有重要變更需要同步到課程排程
+    const hasSignificantChanges = titleChanged || totalSessionsChanged || sessionsChanged || capacityChanged;
+    
+    if (hasSignificantChanges) {
+      console.log('課程模板有重要變更，開始同步課程排程...');
+      console.log('變更項目:', {
+        titleChanged: titleChanged ? `${oldTemplate.title} → ${updates.title}` : false,
+        totalSessionsChanged: totalSessionsChanged ? `${oldTemplate.totalSessions} → ${updates.totalSessions}` : false,
+        sessionsChanged,
+        capacityChanged: capacityChanged ? `${oldTemplate.capacity} → ${updates.capacity}` : false
       });
+      
+      // 動態導入以避免循環依賴
+      import('./courseScheduleUtils').then(({ syncCourseScheduleWithTemplate }) => {
+        syncCourseScheduleWithTemplate(id, templates[index]);
+      }).catch(error => {
+        console.error('同步課程排程失敗:', error);
+      });
+    }
+    
+    // 觸發更新事件
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('courseTemplatesUpdated', { 
+        detail: { action: 'update', template: templates[index] } 
+      }));
     }
     
     return templates[index];
@@ -189,6 +215,7 @@ export function duplicateCourseTemplate(id: string): CourseTemplate | null {
   const template = getCourseTemplateById(id);
   if (!template) return null;
   
+  // createCourseTemplate 內部已經會觸發事件
   return createCourseTemplate({
     ...template,
     title: `${template.title} (複製)`,
@@ -233,7 +260,7 @@ export function syncTemplateToBookingSystem(template: CourseTemplate): void {
     categories: [template.category],
     language: getLanguageFromCategory(template.category),
     level: mapLevelToEnglish(template.level),
-    max_students: 15,
+    capacity: 15,
     current_students: 0,
     rating: 4.5,
     total_sessions: template.totalSessions,
@@ -243,7 +270,7 @@ export function syncTemplateToBookingSystem(template: CourseTemplate): void {
     status: template.status === 'published' ? 'active' : 'draft',
     tags: [template.category, template.level],
     prerequisites: "無特殊要求",
-    materials: template.sessions.map(session => session.materialLink || `Lesson ${session.sessionNumber} Materials`).filter(Boolean),
+    material_link: template.sessions.map(session => session.materialLink || `Lesson ${session.sessionNumber} Materials`).filter(Boolean),
     refund_policy: "課程開始前7天可申請退費",
     start_date: "2025-08-01T00:00:00+00:00",
     end_date: "2025-12-31T23:59:59+00:00",

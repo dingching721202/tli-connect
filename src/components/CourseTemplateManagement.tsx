@@ -40,14 +40,14 @@ const CourseTemplateManagement = () => {
     capacity: 20, // 預設滿班人數
     globalSettings: {
       defaultTitle: '',
-      defaultVirtualClassroomLink: '',
-      defaultMaterialLink: ''
+      default_classroom_link: '',
+      default_material_link: ''
     },
     sessions: [{
       sessionNumber: 1,
       title: '',
-      virtualClassroomLink: '',
-      materialLink: ''
+      classroom_link: '',
+      material_link: ''
     }],
     status: 'draft'
   });
@@ -58,7 +58,20 @@ const CourseTemplateManagement = () => {
       const allTemplates = getCourseTemplates();
       setTemplates(allTemplates);
     };
+    
     loadTemplates();
+    
+    // 監聽課程模板更新事件
+    const handleTemplatesUpdated = () => {
+      console.log('收到課程模板更新事件，重新載入模板');
+      loadTemplates();
+    };
+    
+    window.addEventListener('courseTemplatesUpdated', handleTemplatesUpdated);
+    
+    return () => {
+      window.removeEventListener('courseTemplatesUpdated', handleTemplatesUpdated);
+    };
   }, []);
 
   // 處理開啟模態框
@@ -77,14 +90,14 @@ const CourseTemplateManagement = () => {
         capacity: 20,
         globalSettings: {
           defaultTitle: '',
-          defaultVirtualClassroomLink: '',
-          defaultMaterialLink: ''
+          default_classroom_link: '',
+          default_material_link: ''
         },
         sessions: [{
           sessionNumber: 1,
           title: '',
-          virtualClassroomLink: '',
-          materialLink: ''
+          classroom_link: '',
+          material_link: ''
         }],
         status: 'draft'
       });
@@ -105,14 +118,14 @@ const CourseTemplateManagement = () => {
       capacity: 20,
       globalSettings: {
         defaultTitle: '',
-        defaultVirtualClassroomLink: '',
-        defaultMaterialLink: ''
+        default_classroom_link: '',
+        default_material_link: ''
       },
       sessions: [{
         sessionNumber: 1,
         title: '',
-        virtualClassroomLink: '',
-        materialLink: ''
+        classroom_link: '',
+        material_link: ''
       }],
       status: 'draft'
     });
@@ -129,8 +142,8 @@ const CourseTemplateManagement = () => {
         return {
           sessionNumber: index + 1,
           title: '',
-          virtualClassroomLink: '',
-          materialLink: ''
+          classroom_link: '',
+          material_link: ''
         };
       }
     });
@@ -195,26 +208,42 @@ const CourseTemplateManagement = () => {
       // 更新現有模板
       const updatedTemplate = updateCourseTemplate(editingTemplate.id, templateData);
       if (updatedTemplate) {
-        setTemplates(prev => prev.map(t => t.id === editingTemplate.id ? updatedTemplate : t));
+        // 不需要手動更新 state，因為會監聽事件自動更新
+        // setTemplates(prev => prev.map(t => t.id === editingTemplate.id ? updatedTemplate : t));
         
         // 如果是發布狀態，同步到預約系統
         if (status === 'published') {
           syncTemplateToBookingSystem(updatedTemplate);
         }
+        
+        // 檢查是否有重要變更需要同步提示
+        const hasSignificantChanges = 
+          editingTemplate.title !== templateData.title ||
+          editingTemplate.totalSessions !== templateData.totalSessions ||
+          JSON.stringify(editingTemplate.sessions) !== JSON.stringify(templateData.sessions) ||
+          editingTemplate.capacity !== templateData.capacity;
+        
+        if (hasSignificantChanges) {
+          alert(`課程模板已${status === 'published' ? '發布' : '更新'}！\n\n⚡ 系統正在自動同步相關的課程排程，請稍候查看課程排程頁面確認變更。`);
+        } else {
+          alert(`課程模板已${status === 'published' ? '發布' : '更新'}！`);
+        }
       }
     } else {
       // 創建新模板
       const newTemplate = createCourseTemplate(templateData);
-      setTemplates(prev => [...prev, newTemplate]);
+      // 不需要手動更新 state，因為會監聽事件自動更新
+      // setTemplates(prev => [...prev, newTemplate]);
       
       // 如果是發布狀態，同步到預約系統
       if (status === 'published') {
         syncTemplateToBookingSystem(newTemplate);
       }
+      
+      alert(`課程模板已${status === 'published' ? '發布並同步至預約系統' : '儲存為草稿'}`);
     }
 
     handleCloseModal();
-    alert(`課程模板已${status === 'published' ? '發布並同步至預約系統' : '儲存為草稿'}`);
   };
 
   // 刪除課程模板
@@ -222,7 +251,8 @@ const CourseTemplateManagement = () => {
     if (confirm('確定要刪除此課程模板嗎？此操作無法撤銷，並會從預約系統中移除對應課程。')) {
       const success = deleteCourseTemplate(templateId);
       if (success) {
-        setTemplates(prev => prev.filter(t => t.id !== templateId));
+        // 不需要手動更新 state，因為會監聽事件自動更新
+        // setTemplates(prev => prev.filter(t => t.id !== templateId));
         // 從預約系統中移除對應課程
         removeCourseFromBookingSystem(templateId);
         alert('課程模板已刪除，並已從預約系統中移除');
@@ -234,7 +264,8 @@ const CourseTemplateManagement = () => {
   const handleDuplicateTemplate = (template: CourseTemplate) => {
     const duplicatedTemplate = duplicateCourseTemplate(template.id);
     if (duplicatedTemplate) {
-      setTemplates(prev => [...prev, duplicatedTemplate]);
+      // 不需要手動更新 state，因為會監聽事件自動更新
+      // setTemplates(prev => [...prev, duplicatedTemplate]);
       alert('課程模板已複製');
     }
   };
@@ -254,7 +285,8 @@ const CourseTemplateManagement = () => {
     const newStatus = currentStatus === 'published' ? 'draft' : 'published';
     const updatedTemplate = updateCourseTemplate(templateId, { status: newStatus });
     if (updatedTemplate) {
-      setTemplates(prev => prev.map(t => t.id === templateId ? updatedTemplate : t));
+      // 不需要手動更新 state，因為會監聽事件自動更新
+      // setTemplates(prev => prev.map(t => t.id === templateId ? updatedTemplate : t));
       
       // 同步狀態變更到預約系統
       if (newStatus === 'published') {
@@ -406,10 +438,10 @@ const CourseTemplateManagement = () => {
                         {session.sessionNumber}
                       </span>
                       <span className="truncate">{session.title}</span>
-                      {session.virtualClassroomLink && (
+                      {session.classroom_link && (
                         <SafeIcon icon={FiLink} className="text-green-500" />
                       )}
-                      {session.materialLink && (
+                      {session.material_link && (
                         <SafeIcon icon={FiFileText} className="text-purple-500" />
                       )}
                     </div>
@@ -636,8 +668,8 @@ const CourseTemplateManagement = () => {
                       </div>
                       <input
                         type="url"
-                        value={formData.globalSettings?.defaultVirtualClassroomLink || ''}
-                        onChange={(e) => handleGlobalSettingChange('defaultVirtualClassroomLink', e.target.value)}
+                        value={formData.globalSettings?.default_classroom_link || ''}
+                        onChange={(e) => handleGlobalSettingChange('default_classroom_link', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="教室連結"
                       />
@@ -650,8 +682,8 @@ const CourseTemplateManagement = () => {
                       </div>
                       <input
                         type="text"
-                        value={formData.globalSettings?.defaultMaterialLink || ''}
-                        onChange={(e) => handleGlobalSettingChange('defaultMaterialLink', e.target.value)}
+                        value={formData.globalSettings?.default_material_link || ''}
+                        onChange={(e) => handleGlobalSettingChange('default_material_link', e.target.value)}
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="教材連結"
                       />
@@ -685,8 +717,8 @@ const CourseTemplateManagement = () => {
                             </label>
                             <input
                               type="url"
-                              value={session.virtualClassroomLink || ''}
-                              onChange={(e) => handleSessionChange(index, 'virtualClassroomLink', e.target.value)}
+                              value={session.classroom_link || ''}
+                              onChange={(e) => handleSessionChange(index, 'classroom_link', e.target.value)}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                               placeholder="教室連結"
                             />
@@ -697,8 +729,8 @@ const CourseTemplateManagement = () => {
                             </label>
                             <input
                               type="text"
-                              value={session.materialLink || ''}
-                              onChange={(e) => handleSessionChange(index, 'materialLink', e.target.value)}
+                              value={session.material_link || ''}
+                              onChange={(e) => handleSessionChange(index, 'material_link', e.target.value)}
                               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                               placeholder="教材連結"
                             />

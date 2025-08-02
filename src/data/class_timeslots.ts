@@ -11,6 +11,15 @@ export interface ClassTimeslot {
   capacity: number;
   reserved_count: number;
   updated_at: string;
+  // 從課程排程同步的欄位
+  class_name?: string;
+  teacher_id?: string;
+  unit_name?: string; // 單元名稱
+  classroom_link?: string; // 教室連結
+  material_link?: string; // 教材連結
+  categories?: string[];
+  level?: 'beginner' | 'intermediate' | 'advanced';
+  language?: 'english' | 'chinese' | 'japanese';
 }
 
 export const classTimeslots: ClassTimeslot[] = [

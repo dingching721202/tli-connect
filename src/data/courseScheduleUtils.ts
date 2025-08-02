@@ -6,6 +6,7 @@ export interface CourseSchedule {
   seriesName?: string; // 系列名稱，用於區分不同班別（如"B班"）
   teacherId: string;
   teacherName: string; // 冗余字段，便於顯示
+  capacity: number; // 從模板同步的滿班人數
   timeSlots: TimeSlot[];
   startDate: string;
   endDate: string; // 自動計算
@@ -33,8 +34,8 @@ export interface ScheduledSession {
   endTime: string;
   teacherId: string;
   teacherName: string;
-  virtualClassroomLink?: string;
-  materialLink?: string;
+  classroom_link?: string;
+  material_link?: string;
 }
 
 // 獲取所有課程排程
@@ -66,8 +67,9 @@ export function createCourseSchedule(schedule: Omit<CourseSchedule, 'id' | 'crea
     schedules.push(newSchedule);
     localStorage.setItem('courseSchedules', JSON.stringify(schedules));
     
-    // 觸發更新事件
+    // 觸發更新事件，讓時段管理也能即時更新
     window.dispatchEvent(new CustomEvent('courseSchedulesUpdated'));
+    window.dispatchEvent(new CustomEvent('timeslotUpdated'));
   }
 
   return newSchedule;
@@ -81,16 +83,18 @@ export function updateCourseSchedule(id: string, updates: Partial<CourseSchedule
     
     if (index === -1) return null;
     
+    const originalSchedule = schedules[index];
     schedules[index] = {
-      ...schedules[index],
+      ...originalSchedule,
       ...updates,
       updatedAt: new Date().toISOString()
     };
     
     localStorage.setItem('courseSchedules', JSON.stringify(schedules));
     
-    // 觸發更新事件
+    // 觸發更新事件，讓時段管理也能即時更新
     window.dispatchEvent(new CustomEvent('courseSchedulesUpdated'));
+    window.dispatchEvent(new CustomEvent('timeslotUpdated'));
     
     return schedules[index];
   }
@@ -107,8 +111,9 @@ export function deleteCourseSchedule(id: string): boolean {
     if (filteredSchedules.length !== schedules.length) {
       localStorage.setItem('courseSchedules', JSON.stringify(filteredSchedules));
       
-      // 觸發更新事件
+      // 觸發更新事件，讓時段管理也能即時更新
       window.dispatchEvent(new CustomEvent('courseSchedulesUpdated'));
+      window.dispatchEvent(new CustomEvent('timeslotUpdated'));
       
       return true;
     }
@@ -122,11 +127,12 @@ export function generateScheduledSessions(
   templateId: string,
   templateTitle: string,
   totalSessions: number,
-  sessions: { sessionNumber: number; title: string; virtualClassroomLink?: string; materialLink?: string }[],
+  sessions: { sessionNumber: number; title: string; classroom_link?: string; material_link?: string }[],
   timeSlots: TimeSlot[],
   startDate: string,
   excludeDates: string[],
-  teacherName: string
+  teacherName: string,
+  globalSettings?: { default_classroom_link?: string; default_material_link?: string }
 ): ScheduledSession[] {
   if (!timeSlots.length || !startDate || !totalSessions) {
     return [];
@@ -150,6 +156,10 @@ export function generateScheduledSessions(
       if (timeSlot.weekdays.includes(dayOfWeek) && !excludeSet.has(dateStr) && sessionCount < totalSessions) {
         const sessionTemplate = sessions[sessionCount % sessions.length];
         
+        // 使用 session 的連結，如果為空則回退到 globalSettings
+        const classroom_link = sessionTemplate.classroom_link || globalSettings?.default_classroom_link;
+        const material_link = sessionTemplate.material_link || globalSettings?.default_material_link;
+
         generatedSessions.push({
           id: `session_${templateId}_${sessionCount + 1}`,
           date: dateStr,
@@ -159,8 +169,8 @@ export function generateScheduledSessions(
           endTime: timeSlot.endTime,
           teacherId: timeSlot.teacherId,
           teacherName: teacherName,
-          virtualClassroomLink: sessionTemplate.virtualClassroomLink,
-          materialLink: sessionTemplate.materialLink
+          classroom_link,
+          material_link
         });
 
         sessionCount++;
@@ -249,13 +259,144 @@ export function syncCourseScheduleTitles(): void {
       
       if (hasUpdates) {
         localStorage.setItem('courseSchedules', JSON.stringify(updatedSchedules));
-        // 觸發更新事件
+        // 觸發更新事件，讓時段管理也能即時更新
         window.dispatchEvent(new CustomEvent('courseSchedulesUpdated'));
+        window.dispatchEvent(new CustomEvent('timeslotUpdated'));
         console.log('課程排程標題同步完成');
       }
     });
   } catch (error) {
     console.error('同步課程排程標題時發生錯誤:', error);
+  }
+}
+
+// 同步課程排程與課程模板（當模板有重要變更時調用）
+export function syncCourseScheduleWithTemplate(templateId: string, updatedTemplate: { 
+  id: string;
+  title: string; 
+  totalSessions: number; 
+  sessions: { sessionNumber: number; title: string; classroom_link?: string; material_link?: string }[];
+  capacity?: number;
+  globalSettings?: { default_classroom_link?: string; default_material_link?: string };
+}): void {
+  if (typeof localStorage === 'undefined') return;
+  
+  try {
+    const schedules = getCourseSchedules();
+    const relatedSchedules = schedules.filter(schedule => schedule.templateId === templateId);
+    
+    if (relatedSchedules.length === 0) {
+      console.log(`沒有找到模板 ${templateId} 的相關課程排程`);
+      return;
+    }
+    
+    console.log(`找到 ${relatedSchedules.length} 個相關的課程排程需要同步`);
+    
+    let hasUpdates = false;
+    const updatedSchedules = schedules.map(schedule => {
+      if (schedule.templateId !== templateId) {
+        return schedule;
+      }
+      
+      // 創建更新的排程
+      const updatedSchedule = { ...schedule };
+      let scheduleChanged = false;
+      
+      // 同步標題
+      if (updatedTemplate.title !== schedule.templateTitle) {
+        console.log(`同步排程標題: ${schedule.templateTitle} → ${updatedTemplate.title}`);
+        updatedSchedule.templateTitle = updatedTemplate.title;
+        scheduleChanged = true;
+      }
+      
+      // 同步容量
+      if (updatedTemplate.capacity && updatedTemplate.capacity !== schedule.capacity) {
+        console.log(`同步排程容量: ${schedule.capacity} → ${updatedTemplate.capacity}`);
+        updatedSchedule.capacity = updatedTemplate.capacity;
+        scheduleChanged = true;
+      }
+      
+      // 如果總堂數有變更，需要重新生成sessions
+      if (updatedTemplate.totalSessions !== schedule.generatedSessions.length) {
+        console.log(`總堂數已變更: ${schedule.generatedSessions.length} → ${updatedTemplate.totalSessions}，重新生成課程時間表`);
+        
+        const newSessions = generateScheduledSessions(
+          schedule.templateId,
+          updatedTemplate.title,
+          updatedTemplate.totalSessions,
+          updatedTemplate.sessions,
+          schedule.timeSlots,
+          schedule.startDate,
+          schedule.excludeDates,
+          schedule.teacherName,
+          updatedTemplate.globalSettings
+        );
+        
+        // 重新計算結束日期
+        const newEndDate = calculateEndDate(
+          schedule.startDate,
+          updatedTemplate.totalSessions,
+          schedule.timeSlots,
+          schedule.excludeDates
+        );
+        
+        updatedSchedule.generatedSessions = newSessions;
+        updatedSchedule.endDate = newEndDate;
+        scheduleChanged = true;
+      } else if (updatedTemplate.sessions && 
+                 JSON.stringify(updatedTemplate.sessions) !== JSON.stringify(schedule.generatedSessions.map(s => ({
+                   sessionNumber: s.sessionNumber,
+                   title: s.title,
+                   classroom_link: s.classroom_link,
+                   material_link: s.material_link
+                 })))) {
+        // 如果課程內容有變更，更新現有sessions的內容
+        console.log('課程內容已變更，更新現有課程時間表內容');
+        
+        const updatedSessions = schedule.generatedSessions.map(session => {
+          const templateSession = updatedTemplate.sessions.find(ts => ts.sessionNumber === session.sessionNumber);
+          if (templateSession) {
+            return {
+              ...session,
+              title: templateSession.title,
+              classroom_link: templateSession.classroom_link,
+              material_link: templateSession.material_link
+            };
+          }
+          return session;
+        });
+        
+        updatedSchedule.generatedSessions = updatedSessions;
+        scheduleChanged = true;
+      }
+      
+      if (scheduleChanged) {
+        updatedSchedule.updatedAt = new Date().toISOString();
+        hasUpdates = true;
+      }
+      
+      return updatedSchedule;
+    });
+    
+    if (hasUpdates) {
+      localStorage.setItem('courseSchedules', JSON.stringify(updatedSchedules));
+      // 觸發更新事件，讓時段管理也能即時更新
+      window.dispatchEvent(new CustomEvent('courseSchedulesUpdated'));
+      window.dispatchEvent(new CustomEvent('timeslotUpdated'));
+      console.log('課程排程同步完成');
+      
+      // 如果有發布的排程，也需要通知時段管理更新
+      const hasPublishedSchedules = relatedSchedules.some(schedule => schedule.status === 'published');
+      if (hasPublishedSchedules) {
+        window.dispatchEvent(new CustomEvent('bookingsUpdated'));
+        console.log('已通知時段管理更新預約數據');
+      }
+    } else {
+      console.log('沒有需要同步的變更');
+    }
+    
+  } catch (error) {
+    console.error('同步課程排程時發生錯誤:', error);
   }
 }
 

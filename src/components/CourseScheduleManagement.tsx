@@ -45,6 +45,7 @@ const CourseScheduleManagement = () => {
     seriesName: string;
     teacherId: string;
     teacherName: string;
+    capacity: number;
     timeSlots: TimeSlot[];
     startDate: string;
     endDate: string;
@@ -57,6 +58,7 @@ const CourseScheduleManagement = () => {
     seriesName: '',
     teacherId: '',
     teacherName: '',
+    capacity: 20,
     timeSlots: [{
       id: `slot_${Date.now()}`,
       weekdays: [],
@@ -96,11 +98,19 @@ const CourseScheduleManagement = () => {
       loadData();
     };
 
+    const handleTemplatesUpdated = () => {
+      console.log('收到課程模板更新事件，重新載入課程排程數據');
+      loadData();
+    };
+
     window.addEventListener('courseSchedulesUpdated', handleUpdate);
     window.addEventListener('teachersUpdated', handleTeachersUpdated);
+    window.addEventListener('courseTemplatesUpdated', handleTemplatesUpdated);
+    
     return () => {
       window.removeEventListener('courseSchedulesUpdated', handleUpdate);
       window.removeEventListener('teachersUpdated', handleTeachersUpdated);
+      window.removeEventListener('courseTemplatesUpdated', handleTemplatesUpdated);
     };
   }, []);
 
@@ -114,6 +124,7 @@ const CourseScheduleManagement = () => {
         seriesName: schedule.seriesName || '',
         teacherId: schedule.teacherId,
         teacherName: schedule.teacherName,
+        capacity: schedule.capacity,
         timeSlots: schedule.timeSlots,
         startDate: schedule.startDate,
         endDate: schedule.endDate,
@@ -129,6 +140,7 @@ const CourseScheduleManagement = () => {
         seriesName: '',
         teacherId: '',
         teacherName: '',
+        capacity: 20,
         timeSlots: [{
           id: `slot_${Date.now()}`,
           weekdays: [],
@@ -338,6 +350,7 @@ const CourseScheduleManagement = () => {
       seriesName: formData.seriesName,
       teacherId: formData.teacherId,
       teacherName: formData.teacherName,
+      capacity: formData.capacity || 20, // 添加容量字段
       timeSlots: formData.timeSlots,
       startDate: formData.startDate,
       endDate: formData.endDate,
@@ -347,11 +360,8 @@ const CourseScheduleManagement = () => {
     };
 
     if (editingSchedule) {
-      // 更新現有排程
-      const updatedSchedule = updateCourseSchedule(editingSchedule.id, scheduleData);
-      if (updatedSchedule) {
-        setSchedules(prev => prev.map(s => s.id === editingSchedule.id ? updatedSchedule : s));
-      }
+      // 更新現有排程 - 不需要手動更新 state，因為會監聽事件自動更新
+      updateCourseSchedule(editingSchedule.id, scheduleData);
     } else {
       // 創建新排程 - 不要在本地狀態更新，讓事件監聽器處理
       createCourseSchedule(scheduleData);

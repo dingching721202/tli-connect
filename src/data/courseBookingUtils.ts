@@ -13,8 +13,8 @@ export interface BookableSession {
   endTime: string;
   teacherId: string;
   teacherName: string;
-  virtualClassroomLink?: string;
-  materialLink?: string;
+  classroom_link?: string;
+  material_link?: string;
   capacity: number;
   bookedCount: number;
   status: 'available' | 'full' | 'past';
@@ -62,8 +62,8 @@ export function getAllBookableSessions(): BookableSession[] {
         endTime: session.endTime,
         teacherId: session.teacherId,
         teacherName: session.teacherName,
-        virtualClassroomLink: session.virtualClassroomLink,
-        materialLink: session.materialLink,
+        classroom_link: session.classroom_link,
+        material_link: session.material_link,
         capacity: 20, // 預設容量
         bookedCount: getSessionBookings(session.id).length,
         status

@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Navigation from '@/components/Navigation';
-import NewCourseManagement from '@/components/NewCourseManagement';
+import CourseManagement from '@/components/CourseManagement';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function CourseManagementPage() {
@@ -26,7 +26,7 @@ export default function CourseManagementPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
-      <NewCourseManagement />
+      <CourseManagement />
     </div>
   );
 }

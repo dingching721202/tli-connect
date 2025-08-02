@@ -13,7 +13,7 @@ export interface Course {
   categories: string[];
   language: 'english' | 'chinese' | 'japanese';
   level: 'beginner' | 'intermediate' | 'advanced';
-  max_students: number;
+  capacity: number;
   current_students: number;
   rating: number;
   total_sessions: number;
@@ -23,7 +23,8 @@ export interface Course {
   status: string;
   tags: string[];
   prerequisites: string;
-  materials: string[];
+  material_link: string[];
+  classroom_link?: string;
   refund_policy: string;
   start_date: string;
   end_date: string;
@@ -54,7 +55,7 @@ export const courses: Course[] = [
     ],
     language: "english",
     level: "beginner",
-    max_students: 15,
+    capacity: 15,
     current_students: 12,
     rating: 4.8,
     total_sessions: 16,
@@ -64,7 +65,8 @@ export const courses: Course[] = [
     status: "active",
     tags: ["英文", "會話", "初學者", "小班制"],
     prerequisites: "無",
-    materials: ["英文會話教材", "聽力練習CD"],
+    material_link: ["英文會話教材", "聽力練習CD"],
+    classroom_link: "https://meet.google.com/english-class",
     refund_policy: "開課前7天可全額退費",
     start_date: "2025-08-01",
     end_date: "2025-09-26",
@@ -93,7 +95,7 @@ export const courses: Course[] = [
     ],
     language: "chinese",
     level: "beginner",
-    max_students: 12,
+    capacity: 12,
     current_students: 8,
     rating: 4.7,
     total_sessions: 20,
@@ -103,7 +105,8 @@ export const courses: Course[] = [
     status: "active",
     tags: ["中文", "會話", "初學者", "發音訓練"],
     prerequisites: "無",
-    materials: ["中文會話教材", "聽力練習CD"],
+    material_link: ["中文會話教材", "聽力練習CD"],
+    classroom_link: "https://meet.google.com/chinese-class",
     refund_policy: "開課前5天可退費80%",
     start_date: "2025-08-06",
     end_date: "2025-10-08",
@@ -132,7 +135,7 @@ export const courses: Course[] = [
     ],
     language: "english",
     level: "intermediate",
-    max_students: 20,
+    capacity: 20,
     current_students: 16,
     rating: 4.9,
     total_sessions: 24,
@@ -142,7 +145,8 @@ export const courses: Course[] = [
     status: "active",
     tags: ["商務英語", "職場溝通", "簡報技巧", "談判"],
     prerequisites: "基礎英語能力",
-    materials: ["商務英語教材", "線上練習平台"],
+    material_link: ["商務英語教材", "線上練習平台"],
+    classroom_link: "https://meet.google.com/business-english",
     refund_policy: "開課前7天可全額退費",
     start_date: "2025-08-05",
     end_date: "2025-10-21",
@@ -171,7 +175,7 @@ export const courses: Course[] = [
     ],
     language: "japanese",
     level: "beginner",
-    max_students: 18,
+    capacity: 18,
     current_students: 14,
     rating: 4.6,
     total_sessions: 28,
@@ -181,7 +185,8 @@ export const courses: Course[] = [
     status: "active",
     tags: ["日語", "五十音", "入門", "基礎語法"],
     prerequisites: "無",
-    materials: ["日語入門教材", "發音練習CD"],
+    material_link: ["日語入門教材", "發音練習CD"],
+    classroom_link: "https://meet.google.com/japanese-class",
     refund_policy: "開課前5天可退費80%",
     start_date: "2025-08-02",
     end_date: "2025-11-01",
@@ -210,7 +215,7 @@ export const courses: Course[] = [
     ],
     language: "english",
     level: "intermediate",
-    max_students: 25,
+    capacity: 25,
     current_students: 22,
     rating: 4.8,
     total_sessions: 12,
@@ -220,7 +225,8 @@ export const courses: Course[] = [
     status: "active",
     tags: ["TOEIC", "證照考試", "密集班", "考試技巧"],
     prerequisites: "中級英語程度",
-    materials: ["TOEIC官方指南", "模擬試題"],
+    material_link: ["TOEIC官方指南", "模擬試題"],
+    classroom_link: "https://meet.google.com/toeic-prep",
     refund_policy: "開課前3天可退費50%",
     start_date: "2025-08-03",
     end_date: "2025-09-08",
@@ -249,7 +255,7 @@ export const courses: Course[] = [
     ],
     language: "english",
     level: "advanced",
-    max_students: 15,
+    capacity: 15,
     current_students: 11,
     rating: 4.9,
     total_sessions: 16,
@@ -259,7 +265,8 @@ export const courses: Course[] = [
     status: "active",
     tags: ["IELTS", "雅思", "寫作", "學術英語"],
     prerequisites: "高中級英語程度",
-    materials: ["雅思寫作指南", "範文集"],
+    material_link: ["雅思寫作指南", "範文集"],
+    classroom_link: "https://meet.google.com/ielts-writing",
     refund_policy: "開課前7天可全額退費",
     start_date: "2025-08-07",
     end_date: "2025-09-25",
