@@ -21,7 +21,7 @@ export default function Home() {
   const validEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
   const validPhone = (v: string) => !v || /^[0-9+\-()\s]+$/.test(v);
 
-  const handleSubmit = (formType: string, formData: { name: string; email: string; phone: string }) => (e: React.FormEvent) => {
+  const handleSubmit = (formType: string, formData: { name: string; email: string; phone: string }) => async (e: React.FormEvent) => {
     e.preventDefault();
     
     const newErrors: Record<string, string> = {};
@@ -32,10 +32,39 @@ export default function Home() {
     setErrors({...errors, [formType]: newErrors});
 
     if (Object.keys(newErrors).length === 0) {
-      setSuccess(formType);
-      if (formType === 'hero') setHeroForm({ name: '', email: '', phone: '' });
-      if (formType === 'footer') setFooterForm({ name: '', email: '', phone: '' });
-      setTimeout(() => setSuccess(''), 5000);
+      try {
+        // 發送到諮詢API
+        const response = await fetch('/api/consultations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            type: 'individual',
+            contactName: formData.name.trim(),
+            email: formData.email.trim(),
+            phone: formData.phone.trim(),
+            message: `來自首頁${formType === 'hero' ? '主要' : '頁尾'}聯絡表單的諮詢`,
+            source: `homepage_${formType}`
+          }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          setSuccess(formType);
+          if (formType === 'hero') setHeroForm({ name: '', email: '', phone: '' });
+          if (formType === 'footer') setFooterForm({ name: '', email: '', phone: '' });
+          setTimeout(() => setSuccess(''), 5000);
+        } else {
+          console.error('Failed to submit consultation:', result.error);
+          // 可以在這裡添加錯誤處理，比如顯示錯誤訊息
+          setErrors({...errors, [formType]: { submit: 'Failed to submit. Please try again.' }});
+        }
+      } catch (error) {
+        console.error('Error submitting consultation:', error);
+        setErrors({...errors, [formType]: { submit: 'Network error. Please try again.' }});
+      }
     }
   };
 
@@ -392,6 +421,20 @@ export default function Home() {
                         fontSize: '14px'
                       }}>
                         Thanks! We&apos;ll contact you within 1–2 business days.
+                      </div>
+                    )}
+                    {errors.hero?.submit && (
+                      <div style={{
+                        display: 'block',
+                        borderLeft: '4px solid var(--error)',
+                        background: 'rgba(213,72,72,.08)',
+                        color: '#B91C1C',
+                        padding: '12px 16px',
+                        borderRadius: '12px',
+                        marginTop: '16px',
+                        fontSize: '14px'
+                      }}>
+                        {errors.hero.submit}
                       </div>
                     )}
                   </div>
@@ -1652,6 +1695,20 @@ export default function Home() {
                         fontSize: '14px'
                       }}>
                         Thanks! We&apos;ll contact you within 1–2 business days.
+                      </div>
+                    )}
+                    {errors.footer?.submit && (
+                      <div style={{
+                        display: 'block',
+                        borderLeft: '4px solid var(--error)',
+                        background: 'rgba(213,72,72,.08)',
+                        color: '#B91C1C',
+                        padding: '12px 16px',
+                        borderRadius: '12px',
+                        marginTop: '16px',
+                        fontSize: '14px'
+                      }}>
+                        {errors.footer.submit}
                       </div>
                     )}
                   </div>

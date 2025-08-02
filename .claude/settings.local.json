@@ -29,7 +29,9 @@
       "WebFetch(domain:connect.tli1956.com)",
       "Bash(true)",
       "Bash(npm run typecheck:*)",
-      "WebFetch(domain:sat.cool)"
+      "WebFetch(domain:sat.cool)",
+      "Bash(copy:*)",
+      "Bash(cp:*)"
     ],
     "deny": []
   }

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
-import { createCorporateInquiry, CorporateInquiry } from '@/data/corporateInquiry';
+import { ConsultationType } from '@/types/consultation';
 
 const {
   FiX, FiUser, FiBriefcase, FiUsers,
@@ -17,17 +17,13 @@ interface CorporateInquiryFormProps {
 }
 
 interface FormData {
-  companyName: string;
   contactName: string;
-  contactTitle: string;
   email: string;
   phone: string;
-  employeeCount: string;
-  industry: string;
-  enterpriseName: string;
+  companyName: string;
+  contactTitle: string;
   trainingNeeds: string[];
-  budget: string;
-  timeline: string;
+  trainingSize: string;
   message: string;
 }
 
@@ -36,17 +32,13 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
   onClose
 }) => {
   const [formData, setFormData] = useState<FormData>({
-    companyName: '',
     contactName: '',
-    contactTitle: '',
     email: '',
     phone: '',
-    employeeCount: '',
-    industry: '',
-    enterpriseName: '',
+    companyName: '',
+    contactTitle: '',
     trainingNeeds: [],
-    budget: '',
-    timeline: '',
+    trainingSize: '',
     message: ''
   });
 
@@ -54,59 +46,22 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
-  // 訓練需求選項
+  // 主要培訓需求選項
   const trainingOptions = [
-    '英語會話訓練',
-    '商務英語培訓',
-    '技術培訓課程',
-    '領導力發展',
-    '團隊建設',
-    '專業技能認證',
-    '客製化課程',
-    '線上學習平台'
+    '中文',
+    '英文',
+    '文化',
+    '商業',
+    '師培'
   ];
 
-  // 員工規模選項
-  const employeeCountOptions = [
-    '1-10人',
-    '11-50人',
-    '51-100人',
-    '101-500人',
-    '500-1000人',
-    '1000人以上'
-  ];
-
-  // 預算範圍選項
-  const budgetOptions = [
-    '50萬以下',
-    '50-100萬',
-    '100-300萬',
-    '300-500萬',
-    '500萬以上',
-    '需要討論'
-  ];
-
-  // 時間期限選項
-  const timelineOptions = [
-    '立即開始',
-    '1個月內',
-    '2-3個月內',
-    '半年內',
-    '年內',
-    '需要討論'
-  ];
-
-  // 行業選項
-  const industryOptions = [
-    '科技業',
-    '製造業',
-    '金融服務',
-    '醫療保健',
-    '教育',
-    '零售業',
-    '建築工程',
-    '政府機關',
-    '其他'
+  // 預計培訓人數選項
+  const trainingSizeOptions = [
+    '<50',
+    '50–100',
+    '100–300',
+    '300–500',
+    '500+'
   ];
 
   const handleInputChange = (field: keyof FormData, value: string) => {
@@ -130,34 +85,18 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
   const validateForm = () => {
     const newErrors: Partial<FormData> = {};
 
-    if (!formData.companyName.trim()) {
-      newErrors.companyName = '請輸入公司名稱';
-    }
-
     if (!formData.contactName.trim()) {
-      newErrors.contactName = '請輸入聯絡人姓名';
+      newErrors.contactName = '請輸入姓名';
     }
 
     if (!formData.email.trim()) {
-      newErrors.email = '請輸入 Email';
+      newErrors.email = '請輸入電子郵件';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = '請輸入有效的 Email 格式';
+      newErrors.email = '請輸入有效的電子郵件格式';
     }
 
-    if (!formData.phone.trim()) {
-      newErrors.phone = '請輸入聯絡電話';
-    }
-
-    if (!formData.employeeCount) {
-      newErrors.employeeCount = '請選擇員工規模';
-    }
-
-    if (!formData.industry) {
-      newErrors.industry = '請選擇行業別';
-    }
-
-    if (formData.trainingNeeds.length === 0) {
-      newErrors.trainingNeeds = ['請至少選擇一項培訓需求'];
+    if (!formData.companyName.trim()) {
+      newErrors.companyName = '請輸入企業名稱';
     }
 
     setErrors(newErrors);
@@ -172,13 +111,29 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
     try {
       setIsSubmitting(true);
       
-      // 創建企業詢價表單
-      const inquiryData: Omit<CorporateInquiry, 'id' | 'submittedAt' | 'updatedAt'> = {
-        ...formData,
-        status: 'pending'
-      };
+      // 創建企業諮詢表單
+      const response = await fetch('/api/consultations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: ConsultationType.CORPORATE,
+          contactName: formData.contactName,
+          email: formData.email,
+          phone: formData.phone,
+          companyName: formData.companyName,
+          contactTitle: formData.contactTitle,
+          trainingNeeds: formData.trainingNeeds,
+          trainingSize: formData.trainingSize,
+          message: formData.message,
+          source: 'corporate_form'
+        }),
+      });
 
-      await createCorporateInquiry(inquiryData);
+      if (!response.ok) {
+        throw new Error('提交失敗');
+      }
       
       setIsSubmitted(true);
       
@@ -187,17 +142,13 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
         onClose();
         setIsSubmitted(false);
         setFormData({
-          companyName: '',
           contactName: '',
-          contactTitle: '',
           email: '',
           phone: '',
-          employeeCount: '',
-          industry: '',
-          enterpriseName: '',
+          companyName: '',
+          contactTitle: '',
           trainingNeeds: [],
-          budget: '',
-          timeline: '',
+          trainingSize: '',
           message: ''
         });
       }, 3000);
@@ -230,7 +181,7 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
           </div>
           <h3 className="text-xl font-bold text-gray-900 mb-2">提交成功！</h3>
           <p className="text-gray-600 mb-4">
-            感謝您的詢問，我們的專業顧問將於 24 小時內與您聯繫。
+            感謝您的詢問，我們的專業顧問將於 48 小時內與您聯繫。
           </p>
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
             <p className="text-sm text-blue-800">
@@ -275,98 +226,18 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
 
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* 左側：公司資訊 */}
+          <div className="space-y-6">
+            {/* 基本資訊 */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-                <SafeIcon icon={FiBriefcase} className="mr-2 text-blue-600" />
-                公司資訊
-              </h3>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  公司名稱 *
-                </label>
-                <input
-                  type="text"
-                  value={formData.companyName}
-                  onChange={(e) => handleInputChange('companyName', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.companyName ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="請輸入公司完整名稱"
-                />
-                {errors.companyName && (
-                  <p className="text-red-500 text-xs mt-1">{errors.companyName}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    員工規模 *
-                  </label>
-                  <select
-                    value={formData.employeeCount}
-                    onChange={(e) => handleInputChange('employeeCount', e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.employeeCount ? 'border-red-500' : 'border-gray-300'
-                    }`}
-                  >
-                    <option value="">請選擇</option>
-                    {employeeCountOptions.map(option => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                  {errors.employeeCount && (
-                    <p className="text-red-500 text-xs mt-1">{errors.employeeCount}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    企業名稱
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.enterpriseName}
-                    onChange={(e) => handleInputChange('enterpriseName', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="請輸入企業名稱"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  行業別 *
-                </label>
-                <select
-                  value={formData.industry}
-                  onChange={(e) => handleInputChange('industry', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.industry ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                >
-                  <option value="">請選擇</option>
-                  {industryOptions.map(option => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-                {errors.industry && (
-                  <p className="text-red-500 text-xs mt-1">{errors.industry}</p>
-                )}
-              </div>
-
-              <h3 className="text-lg font-semibold text-gray-800 mb-4 mt-8 flex items-center">
                 <SafeIcon icon={FiUser} className="mr-2 text-blue-600" />
-                聯絡人資訊
+                基本資訊
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    聯絡人姓名 *
+                    姓名 *
                   </label>
                   <input
                     type="text"
@@ -375,11 +246,44 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
                     className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                       errors.contactName ? 'border-red-500' : 'border-gray-300'
                     }`}
-                    placeholder="請輸入聯絡人姓名"
+                    placeholder="請輸入您的姓名"
                   />
                   {errors.contactName && (
                     <p className="text-red-500 text-xs mt-1">{errors.contactName}</p>
                   )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    電子郵件 *
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.email ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                    placeholder="your@company.com"
+                  />
+                  {errors.email && (
+                    <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    電話
+                  </label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="+886 2 1234 5678"
+                  />
                 </div>
 
                 <div>
@@ -398,42 +302,24 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email *
+                  企業名稱 *
                 </label>
                 <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  type="text"
+                  value={formData.companyName}
+                  onChange={(e) => handleInputChange('companyName', e.target.value)}
                   className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.email ? 'border-red-500' : 'border-gray-300'
+                    errors.companyName ? 'border-red-500' : 'border-gray-300'
                   }`}
-                  placeholder="your@company.com"
+                  placeholder="請輸入企業名稱"
                 />
-                {errors.email && (
-                  <p className="text-red-500 text-xs mt-1">{errors.email}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  聯絡電話 *
-                </label>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.phone ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="+886 2 1234 5678"
-                />
-                {errors.phone && (
-                  <p className="text-red-500 text-xs mt-1">{errors.phone}</p>
+                {errors.companyName && (
+                  <p className="text-red-500 text-xs mt-1">{errors.companyName}</p>
                 )}
               </div>
             </div>
 
-            {/* 右側：需求資訊 */}
+            {/* 培訓需求 */}
             <div className="space-y-4">
               <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                 <SafeIcon icon={FiUsers} className="mr-2 text-blue-600" />
@@ -442,9 +328,9 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  培訓項目 * (可多選)
+                  主要培訓需求（可多選）
                 </label>
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
                   {trainingOptions.map(option => (
                     <label key={option} className="flex items-center">
                       <input
@@ -457,55 +343,34 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
                     </label>
                   ))}
                 </div>
-                {errors.trainingNeeds && (
-                  <p className="text-red-500 text-xs mt-1">{errors.trainingNeeds[0]}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    預算範圍
-                  </label>
-                  <select
-                    value={formData.budget}
-                    onChange={(e) => handleInputChange('budget', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">請選擇</option>
-                    {budgetOptions.map(option => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    預計開始時間
-                  </label>
-                  <select
-                    value={formData.timeline}
-                    onChange={(e) => handleInputChange('timeline', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">請選擇</option>
-                    {timelineOptions.map(option => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  其他需求說明
+                  預計培訓人數
+                </label>
+                <select
+                  value={formData.trainingSize}
+                  onChange={(e) => handleInputChange('trainingSize', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">請選擇培訓人數</option>
+                  {trainingSizeOptions.map(option => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  簡述您的需求
                 </label>
                 <textarea
                   value={formData.message}
                   onChange={(e) => handleInputChange('message', e.target.value)}
                   rows={4}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="請詳細描述您的培訓需求、特殊要求或其他相關資訊..."
+                  placeholder="請簡述您的培訓需求或其他要求..."
                 />
               </div>
 
@@ -515,7 +380,7 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
                   <li>• 專業顧問免費諮詢</li>
                   <li>• 客製化培訓方案</li>
                   <li>• 詳細報價與時程安排</li>
-                  <li>• 24小時內回覆</li>
+                  <li>• 48小時內回覆</li>
                 </ul>
               </div>
             </div>

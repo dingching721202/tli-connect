@@ -7,6 +7,8 @@ import Navigation from '@/components/Navigation';
 import SafeIcon from '@/components/common/SafeIcon';
 import PurchaseModal from '@/components/PurchaseModal';
 import RegisterModal from '@/components/RegisterModal';
+import CorporateInquiryForm from '@/components/CorporateInquiryForm';
+import IndividualContactForm from '@/components/IndividualContactForm';
 import { MemberCardPlan } from '@/data/member_card_plans';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -18,6 +20,8 @@ const MembershipPage: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<MemberCardPlan | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showCorporateForm, setShowCorporateForm] = useState(false);
+  const [showIndividualForm, setShowIndividualForm] = useState(false);
 
   useEffect(() => {
     loadPlans();
@@ -185,11 +189,25 @@ const MembershipPage: React.FC = () => {
 
   const handleContactClick = (plan: MemberCardPlan) => {
     setSelectedPlan(plan);
-    setShowContactModal(true);
+    if (plan.user_type === 'individual') {
+      setShowIndividualForm(true);
+    } else {
+      setShowCorporateForm(true);
+    }
   };
 
   const handleCloseContactModal = () => {
     setShowContactModal(false);
+    setSelectedPlan(null);
+  };
+
+  const handleCloseCorporateForm = () => {
+    setShowCorporateForm(false);
+    setSelectedPlan(null);
+  };
+
+  const handleCloseIndividualForm = () => {
+    setShowIndividualForm(false);
     setSelectedPlan(null);
   };
 
@@ -494,6 +512,19 @@ const MembershipPage: React.FC = () => {
           onRegisterSuccess={handleRegisterSuccess}
         />
       )}
+
+      {/* Individual Contact Form */}
+      <IndividualContactForm
+        isOpen={showIndividualForm}
+        onClose={handleCloseIndividualForm}
+        source="membership_page"
+      />
+
+      {/* Corporate Contact Form */}
+      <CorporateInquiryForm
+        isOpen={showCorporateForm}
+        onClose={handleCloseCorporateForm}
+      />
     </div>
   );
 };

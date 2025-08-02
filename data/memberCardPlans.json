@@ -21,7 +21,7 @@
     "description": "適合想要短期學習體驗的個人學員",
     "activate_deadline_days": 30,
     "cta_options": {
-      "show_payment": true,
+      "show_payment": false,
       "show_contact": true
     }
   },
@@ -50,8 +50,8 @@
     "description": "最受歡迎！適合長期學習的個人學員",
     "activate_deadline_days": 30,
     "cta_options": {
-      "show_payment": true,
-      "show_contact": false
+      "show_payment": false,
+      "show_contact": true
     }
   },
   {

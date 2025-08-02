@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiX, FiCreditCard, FiUser, FiMail, FiPhone, FiBriefcase, FiMessageSquare, FiUsers } from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
 import { MemberCardPlan } from '@/data/member_card_plans';
+import CorporateInquiryForm from '@/components/CorporateInquiryForm';
+import IndividualContactForm from '@/components/IndividualContactForm';
 
 interface PurchaseModalProps {
   isOpen: boolean;
@@ -24,6 +26,12 @@ interface ContactFormData {
   requirements: string;
 }
 
+interface IndividualContactData {
+  name: string;
+  email: string;
+  phone: string;
+}
+
 const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mode = 'purchase' }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showContactForm, setShowContactForm] = useState(
@@ -39,6 +47,13 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
     training_size: '',
     requirements: ''
   });
+  const [individualContactData, setIndividualContactData] = useState<IndividualContactData>({
+    name: '',
+    email: '',
+    phone: ''
+  });
+  const [showCorporateForm, setShowCorporateForm] = useState(false);
+  const [showIndividualForm, setShowIndividualForm] = useState(false);
 
   const trainingNeeds = [
     '中文',
@@ -131,6 +146,11 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
     try {
       setIsProcessing(true);
       
+      // 根據用戶類型提交不同的表單數據
+      const formData = plan.user_type === 'individual' 
+        ? { ...individualContactData, inquiry_type: 'individual' }
+        : { ...contactData, inquiry_type: 'corporate' };
+
       // 提交聯繫表單
       const response = await fetch('/api/contact-inquiry', {
         method: 'POST',
@@ -138,7 +158,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          ...contactData,
+          ...formData,
           plan_id: plan.id,
           plan_title: plan.title,
         }),
@@ -155,6 +175,14 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
       alert('提交失敗，請稍後再試');
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleContactClick = () => {
+    if (plan.user_type === 'individual') {
+      setShowIndividualForm(true);
+    } else {
+      setShowCorporateForm(true);
     }
   };
 
@@ -400,7 +428,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
               {/* Contact Option */}
               {plan.cta_options?.show_contact && plan.cta_options?.show_payment && (
                 <button
-                  onClick={() => setShowContactForm(true)}
+                  onClick={handleContactClick}
                   className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center space-x-2"
                 >
                   <SafeIcon icon={FiUser} />
@@ -411,6 +439,19 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
           )}
         </motion.div>
       </motion.div>
+
+      {/* Individual Contact Form */}
+      <IndividualContactForm
+        isOpen={showIndividualForm}
+        onClose={() => setShowIndividualForm(false)}
+        source="membership_purchase"
+      />
+
+      {/* Corporate Contact Form */}
+      <CorporateInquiryForm
+        isOpen={showCorporateForm}
+        onClose={() => setShowCorporateForm(false)}
+      />
     </AnimatePresence>
   );
 };

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "cons_individual_1",
+    "type": "individual",
+    "status": "lead",
+    "contactName": "李小華",
+    "email": "li@example.com",
+    "phone": "+886 912 345 678",
+    "submittedAt": "2025-07-28T14:20:00Z",
+    "updatedAt": "2025-07-28T14:20:00Z",
+    "source": "homepage",
+    "message": "從首頁表單提交"
+  },
+  {
+    "id": "cons_individual_2",
+    "type": "individual",
+    "status": "lead",
+    "contactName": "王小明",
+    "email": "wang@example.com",
+    "phone": "+886 987 654 321",
+    "submittedAt": "2025-07-25T10:15:00Z",
+    "updatedAt": "2025-07-25T10:15:00Z",
+    "source": "membership",
+    "message": "從會員管理提交"
+  },
+  {
+    "id": "cons_corporate_1",
+    "type": "corporate",
+    "status": "lead",
+    "contactName": "張小明",
+    "email": "zhang@example.com",
+    "phone": "+886 2 1234 5678",
+    "companyName": "ABC科技股份有限公司",
+    "contactTitle": "人資經理",
+    "trainingNeeds": ["中文", "英文"],
+    "trainingSize": "50–100",
+    "message": "希望為員工提供語言培訓課程",
+    "submittedAt": "2025-07-20T09:30:00Z",
+    "updatedAt": "2025-07-20T09:30:00Z",
+    "source": "corporate_form"
+  }
+]
