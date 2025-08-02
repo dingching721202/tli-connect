@@ -171,7 +171,7 @@ const ConsultationManagementPage: React.FC = () => {
   };
 
   // 載入諮詢數據
-  const loadConsultations = useCallback(async (isFilterChange = false) => {
+  const loadConsultations = useCallback(async () => {
     try {
       // 初次載入顯示完整載入畫面，篩選變更只顯示小的載入指示
       setFilterLoading(true);
@@ -221,7 +221,7 @@ const ConsultationManagementPage: React.FC = () => {
       router.push('/dashboard');
       return;
     }
-    loadConsultations();
+    loadConsultations()
   }, [user, router, loadConsultations]);
 
   // 點擊外部關閉下拉選單
@@ -244,12 +244,12 @@ const ConsultationManagementPage: React.FC = () => {
     if (user) {
       console.log('當前用戶角色:', user.role);
       if (['OPS', 'ADMIN'].includes(user.role)) {
-        loadConsultations(false);
+        loadConsultations();
       } else {
         console.log('用戶角色不符合要求，需要 OPS 或 ADMIN 角色');
         // 臨時允許所有用戶查看，用於測試
         console.log('臨時允許查看諮詢數據進行測試...');
-        loadConsultations(false);
+        loadConsultations();
       }
     }
   }, [user, loadConsultations]);
@@ -258,7 +258,7 @@ const ConsultationManagementPage: React.FC = () => {
   useEffect(() => {
     if (user) {
       // 臨時允許所有用戶使用篩選功能
-      loadConsultations(true);
+      loadConsultations();
     }
   }, [filters, user, loadConsultations]);
 
@@ -463,7 +463,7 @@ const ConsultationManagementPage: React.FC = () => {
   // 導出數據
   const exportConsultations = () => {
     // 輔助函式：格式化CSV欄位，處理逗號和引號
-    const formatCsvField = (field: any): string => {
+    const formatCsvField = (field: unknown): string => {
       if (field === null || field === undefined || field === '') {
         return '""';
       }
