@@ -71,7 +71,8 @@ const ConsultationManagementPage: React.FC = () => {
     type: 'all',
     status: 'all',
     searchTerm: '',
-    dateRange: undefined
+    dateRange: undefined,
+    assignedTo: 'all'
   });
 
   // 日期篩選狀態
@@ -173,11 +174,7 @@ const ConsultationManagementPage: React.FC = () => {
   const loadConsultations = useCallback(async (isFilterChange = false) => {
     try {
       // 初次載入顯示完整載入畫面，篩選變更只顯示小的載入指示
-      if (isFilterChange) {
-        setFilterLoading(true);
-      } else {
-        setLoading(true);
-      }
+      setFilterLoading(true);
       
       // 構建查詢參數
       const params = new URLSearchParams();
@@ -187,6 +184,10 @@ const ConsultationManagementPage: React.FC = () => {
       if (filters.dateRange) {
         params.append('startDate', filters.dateRange.start);
         params.append('endDate', filters.dateRange.end);
+      }
+      
+      if (filters.assignedTo && filters.assignedTo !== 'all') {
+        params.append('assignedTo', filters.assignedTo);
       }
       
       const response = await fetch(`/api/consultations?${params.toString()}`, {
@@ -209,11 +210,8 @@ const ConsultationManagementPage: React.FC = () => {
       console.error('載入諮詢數據失敗:', error);
       alert('載入諮詢數據失敗，請稍後再試');
     } finally {
-      if (isFilterChange) {
-        setFilterLoading(false);
-      } else {
-        setLoading(false);
-      }
+      setFilterLoading(false);
+      setLoading(false);
     }
   }, [filters]);
 
@@ -464,36 +462,65 @@ const ConsultationManagementPage: React.FC = () => {
 
   // 導出數據
   const exportConsultations = () => {
+    // 輔助函式：格式化CSV欄位，處理逗號和引號
+    const formatCsvField = (field: any): string => {
+      if (field === null || field === undefined || field === '') {
+        return '""';
+      }
+      const str = String(field);
+      // 將雙引號替換為兩個雙引號來進行轉義
+      const escapedStr = str.replace(/"/g, '""');
+      return `"${escapedStr}"`;
+    };
+
     const headers = [
-      '類型', '姓名', '電子郵件', '電話', '企業名稱', '職稱', 
-      '培訓需求', '培訓人數', '狀態', '來源', '指派處理者', '最後更新者', '提交時間', '更新時間'
+      'ID', '類型', '狀態', '姓名', '電子郵件', '電話', '企業名稱', '職稱',
+      '培訓需求', '培訓人數', '來源', '訊息', '備註', '顧問', '派發者',
+      '指派時間', '最後更新者', '提交時間', '更新時間'
     ];
     
+    const csvRows = filteredConsultations.map(c => {
+      const row = [
+        c.id,
+        c.type === ConsultationType.INDIVIDUAL ? '個人' : '企業',
+        STATUS_CONFIG[c.status].label,
+        c.contactName,
+        c.email,
+        c.phone,
+        c.companyName,
+        c.contactTitle,
+        c.trainingNeeds?.join('; '),
+        c.trainingSize,
+        c.source,
+        c.message,
+        c.notes,
+        c.assignedTo,
+        c.assignedBy,
+        c.assignedAt ? new Date(c.assignedAt).toLocaleString('zh-TW') : '',
+        c.lastUpdatedBy,
+        new Date(c.submittedAt).toLocaleString('zh-TW'),
+        new Date(c.updatedAt).toLocaleString('zh-TW')
+      ];
+      return row.map(formatCsvField).join(',');
+    });
+
     const csvContent = [
-      headers.join(','),
-      ...filteredConsultations.map(consultation => [
-        consultation.type === ConsultationType.INDIVIDUAL ? '個人' : '企業',
-        consultation.contactName,
-        consultation.email,
-        consultation.phone || '-',
-        consultation.companyName || '-',
-        consultation.contactTitle || '-',
-        consultation.trainingNeeds?.join(';') || '-',
-        consultation.trainingSize || '-',
-        STATUS_CONFIG[consultation.status].label,
-        consultation.source || '-',
-        consultation.assignedTo || '-',
-        consultation.lastUpdatedBy || '-',
-        new Date(consultation.submittedAt).toLocaleDateString('zh-TW'),
-        new Date(consultation.updatedAt).toLocaleDateString('zh-TW')
-      ].join(','))
+      headers.map(formatCsvField).join(','),
+      ...csvRows
     ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    // 加入BOM以確保Excel能正確讀取UTF-8編碼的繁體中文
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `諮詢記錄_${new Date().toLocaleDateString('zh-TW')}.csv`);
+    
+    const timestamp = new Date().toLocaleString('zh-TW', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    }).replace(/[\/:]/g, '').replace(/\s/g, '_');
+    
+    link.setAttribute('download', `諮詢記錄_${timestamp}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -610,7 +637,7 @@ const ConsultationManagementPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8"
           >
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">搜索</label>
                 <div className="relative">
@@ -644,10 +671,29 @@ const ConsultationManagementPage: React.FC = () => {
                 </select>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">顧問篩選</label>
+                <select
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  value={filters.assignedTo}
+                  onChange={(e) => setFilters(prev => ({
+                    ...prev,
+                    assignedTo: e.target.value
+                  }))}
+                >
+                  <option value="all">全部顧問</option>
+                  {opsPersonnel.map(person => (
+                    <option key={person.id} value={person.name}>
+                      {person.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div className="flex items-end">
                 <button
                   onClick={() => {
-                    setFilters({ type: 'all', status: 'all', searchTerm: '', dateRange: undefined });
+                    setFilters({ type: 'all', status: 'all', searchTerm: '', dateRange: undefined, assignedTo: 'all' });
                     setDateFilter({ type: 'all' });
                   }}
                   className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
@@ -776,7 +822,7 @@ const ConsultationManagementPage: React.FC = () => {
                     </div>
                   </div>
                 )}
-                <div className={`overflow-x-auto transition-opacity duration-200 ${filterLoading ? 'opacity-50' : 'opacity-100'}`}>
+                <div className={`overflow-x-auto transition-opacity duration-200 ${filterLoading ? 'opacity-50' : 'opacity-100'}`} style={{ minHeight: '500px' }}>
                 <table className="w-full table-fixed">
                   <thead className="bg-gray-50">
                     <tr>
@@ -796,7 +842,7 @@ const ConsultationManagementPage: React.FC = () => {
                         狀態
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
-                        指派者/更新者
+                        顧問/更新者
                       </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
                         時間
@@ -1219,7 +1265,7 @@ const ConsultationManagementPage: React.FC = () => {
                       <div className="md:col-span-2 lg:col-span-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">指派處理者</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">顧問</label>
                             <select
                               value={editingConsultation.assignedTo || ''}
                               onChange={(e) => {
@@ -1233,7 +1279,7 @@ const ConsultationManagementPage: React.FC = () => {
                               }}
                               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                             >
-                              <option value="">請選擇處理者</option>
+                              <option value="">請選擇顧問</option>
                               {opsPersonnel.map(person => (
                                 <option key={person.id} value={person.name}>
                                   {person.name}
@@ -1243,14 +1289,14 @@ const ConsultationManagementPage: React.FC = () => {
                           </div>
                           {editingConsultation.assignedTo && (
                             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-1">指派資訊</label>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">處理資訊</label>
                               <div className="text-xs text-blue-700 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg space-y-1">
-                                <div>✅ 處理者：{editingConsultation.assignedTo}</div>
+                                <div>✅ 顧問：{editingConsultation.assignedTo}</div>
                                 {editingConsultation.assignedBy && (
-                                  <div>👤 指派者：{editingConsultation.assignedBy}</div>
+                                  <div>👤 派發者：{editingConsultation.assignedBy}</div>
                                 )}
                                 {editingConsultation.assignedAt && (
-                                  <div>📅 時間：{new Date(editingConsultation.assignedAt).toLocaleDateString('zh-TW')}</div>
+                                  <div>📅 派發時間：{new Date(editingConsultation.assignedAt).toLocaleDateString('zh-TW')}</div>
                                 )}
                               </div>
                             </div>
@@ -1261,7 +1307,7 @@ const ConsultationManagementPage: React.FC = () => {
                       // 企業類型：指派處理者佔2欄，指派資訊佔2欄
                       <>
                         <div className="md:col-span-1 lg:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">指派處理者</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">顧問</label>
                           <select
                             value={editingConsultation.assignedTo || ''}
                             onChange={(e) => {
@@ -1275,7 +1321,7 @@ const ConsultationManagementPage: React.FC = () => {
                             }}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           >
-                            <option value="">請選擇處理者</option>
+                            <option value="">請選擇顧問</option>
                             {opsPersonnel.map(person => (
                               <option key={person.id} value={person.name}>
                                 {person.name}
@@ -1284,20 +1330,20 @@ const ConsultationManagementPage: React.FC = () => {
                           </select>
                         </div>
                         <div className="md:col-span-1 lg:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">指派資訊</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">處理資訊</label>
                           {editingConsultation.assignedTo ? (
                             <div className="text-xs text-blue-700 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg space-y-1">
-                              <div>✅ 處理者：{editingConsultation.assignedTo}</div>
+                              <div>✅ 顧問：{editingConsultation.assignedTo}</div>
                               {editingConsultation.assignedBy && (
-                                <div>👤 指派者：{editingConsultation.assignedBy}</div>
+                                <div>👤 派發者：{editingConsultation.assignedBy}</div>
                               )}
                               {editingConsultation.assignedAt && (
-                                <div>📅 時間：{new Date(editingConsultation.assignedAt).toLocaleDateString('zh-TW')}</div>
+                                <div>📅 派發時間：{new Date(editingConsultation.assignedAt).toLocaleDateString('zh-TW')}</div>
                               )}
                             </div>
                           ) : (
                             <div className="text-sm text-gray-500 px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg">
-                              尚未指派處理者
+                              尚未指派顧問
                             </div>
                           )}
                         </div>

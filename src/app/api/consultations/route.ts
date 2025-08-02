@@ -65,7 +65,7 @@ function getDefaultConsultations(): Consultation[] {
     phone: '+886 987 654 321',
     submittedAt: '2025-07-25T10:15:00Z',
     updatedAt: '2025-07-25T10:15:00Z',
-    source: 'membership',
+    source: 'individual_form',
     notes: '從會員管理提交'
   },
   // 企業諮詢範例
@@ -132,6 +132,7 @@ export async function GET(request: NextRequest) {
     const source = searchParams.get('source');
     const startDate = searchParams.get('startDate');
     const endDate = searchParams.get('endDate');
+    const assignedTo = searchParams.get('assignedTo');
 
     const consultations = loadConsultations();
     let filtered = [...consultations];
@@ -154,6 +155,13 @@ export async function GET(request: NextRequest) {
     if (source && source !== 'all') {
       filtered = filtered.filter(consultation => 
         consultation.source === source
+      );
+    }
+
+    // 顧問篩選
+    if (assignedTo && assignedTo !== 'all') {
+      filtered = filtered.filter(consultation =>
+        consultation.assignedTo === assignedTo
       );
     }
 
@@ -237,7 +245,7 @@ export async function POST(request: NextRequest) {
         },
         bySource: {
           homepage: consultations.filter(c => c.source === 'homepage').length,
-          membership: consultations.filter(c => c.source === 'membership').length,
+          individual_form: consultations.filter(c => c.source === 'individual_form').length,
           corporate_form: consultations.filter(c => c.source === 'corporate_form').length
         }
       };

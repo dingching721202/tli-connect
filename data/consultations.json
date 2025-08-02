@@ -109,5 +109,44 @@
       "文化"
     ],
     "trainingSize": "<50"
+  },
+  {
+    "id": "cons_individual_1754127630710",
+    "type": "individual",
+    "status": "lead",
+    "contactName": "123",
+    "email": "123@gmail.com",
+    "phone": "123",
+    "submittedAt": "2025-08-02T09:40:30.710Z",
+    "updatedAt": "2025-08-02T09:40:30.710Z",
+    "source": "individual_form",
+    "message": "來自個人方案諮詢表單"
+  },
+  {
+    "id": "cons_individual_1754127643552",
+    "type": "individual",
+    "status": "lead",
+    "contactName": "1234",
+    "email": "1234@gmail.com",
+    "phone": "",
+    "submittedAt": "2025-08-02T09:40:43.552Z",
+    "updatedAt": "2025-08-02T09:53:11.621Z",
+    "source": "individual_form",
+    "message": "來自個人方案諮詢表單",
+    "assignedTo": "張雅婷",
+    "assignedBy": "Admin User",
+    "assignedAt": "2025-08-02T09:42:07.674Z",
+    "lastUpdatedBy": "Admin User",
+    "notes": "已打電話",
+    "statusHistory": [
+      {
+        "status": "contacted",
+        "timestamp": "2025-08-02T09:42:30.702Z"
+      },
+      {
+        "status": "lead",
+        "timestamp": "2025-08-02T09:53:11.621Z"
+      }
+    ]
   }
 ]

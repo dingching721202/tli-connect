@@ -140,6 +140,7 @@ export interface FilterState {
     start: string;
     end: string;
   };
+  assignedTo?: string | 'all';
 }
 
 // 創建諮詢請求格式

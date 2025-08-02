@@ -517,7 +517,7 @@ const MembershipPage: React.FC = () => {
       <IndividualContactForm
         isOpen={showIndividualForm}
         onClose={handleCloseIndividualForm}
-        source="membership_page"
+        source="individual_form"
       />
 
       {/* Corporate Contact Form */}
