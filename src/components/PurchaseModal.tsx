@@ -34,7 +34,7 @@ interface IndividualContactData {
 
 const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mode = 'purchase' }) => {
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showContactForm, setShowContactForm] = useState(
+  const [showContactForm] = useState(
     mode === 'contact' || plan.hide_price || (plan.cta_options?.show_contact && !plan.cta_options?.show_payment)
   );
   const [contactData, setContactData] = useState<ContactFormData>({
@@ -47,7 +47,7 @@ const PurchaseModal: React.FC<PurchaseModalProps> = ({ isOpen, onClose, plan, mo
     training_size: '',
     requirements: ''
   });
-  const [individualContactData, setIndividualContactData] = useState<IndividualContactData>({
+  const [individualContactData] = useState<IndividualContactData>({
     name: '',
     email: '',
     phone: ''

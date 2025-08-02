@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
+import { IconType } from 'react-icons';
 import SafeIcon from '@/components/common/SafeIcon';
 import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -16,11 +17,10 @@ import {
 } from '@/types/consultation';
 
 const {
-  FiUsers, FiBriefcase, FiMail, FiCalendar, FiDollarSign,
-  FiEye, FiTrash2, FiSearch, FiDownload, FiEdit,
-  FiCheck, FiClock, FiX, FiMessageSquare, FiUser,
+  FiUsers, FiBriefcase, FiTrash2, FiSearch, FiDownload, FiEdit,
+  FiCheck, FiClock, FiX, FiUser,
   FiPhone, FiFileText, FiMessageCircle, FiCheckCircle,
-  FiXCircle, FiFilter, FiPlus, FiChevronDown, FiUserCheck
+  FiXCircle, FiChevronDown
 } = FiIcons;
 
 const ConsultationManagementPage: React.FC = () => {
@@ -37,7 +37,7 @@ const ConsultationManagementPage: React.FC = () => {
   const [editingConsultation, setEditingConsultation] = useState<Consultation | null>(null);
 
   // 更新編輯中的諮詢欄位
-  const updateEditingField = (field: keyof Consultation, value: any) => {
+  const updateEditingField = (field: keyof Consultation, value: Consultation[keyof Consultation]) => {
     if (!editingConsultation) return;
     setEditingConsultation(prev => prev ? { ...prev, [field]: value } : null);
   };
@@ -163,38 +163,14 @@ const ConsultationManagementPage: React.FC = () => {
     } else {
       const range = getDateRange(type);
       if (range) {
-        setDateFilter({ type: type as any });
+        setDateFilter({ type: type as typeof dateFilter.type });
         setFilters(prev => ({ ...prev, dateRange: range }));
       }
     }
   };
 
-  // 權限檢查
-  useEffect(() => {
-    if (!user || !['OPS', 'ADMIN'].includes(user.role)) {
-      router.push('/dashboard');
-      return;
-    }
-    loadConsultations();
-  }, [user, router]);
-
-  // 點擊外部關閉下拉選單
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.status-dropdown')) {
-        closeAllDropdowns();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
   // 載入諮詢數據
-  const loadConsultations = async (isFilterChange = false) => {
+  const loadConsultations = useCallback(async (isFilterChange = false) => {
     try {
       // 初次載入顯示完整載入畫面，篩選變更只顯示小的載入指示
       if (isFilterChange) {
@@ -239,7 +215,31 @@ const ConsultationManagementPage: React.FC = () => {
         setLoading(false);
       }
     }
-  };
+  }, [filters]);
+
+  // 權限檢查
+  useEffect(() => {
+    if (!user || !['OPS', 'ADMIN'].includes(user.role)) {
+      router.push('/dashboard');
+      return;
+    }
+    loadConsultations();
+  }, [user, router, loadConsultations]);
+
+  // 點擊外部關閉下拉選單
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.status-dropdown')) {
+        closeAllDropdowns();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // 初次載入
   useEffect(() => {
@@ -254,7 +254,7 @@ const ConsultationManagementPage: React.FC = () => {
         loadConsultations(false);
       }
     }
-  }, [user]);
+  }, [user, loadConsultations]);
 
   // 監聽篩選條件變化（不包括初次載入）
   useEffect(() => {
@@ -262,7 +262,7 @@ const ConsultationManagementPage: React.FC = () => {
       // 臨時允許所有用戶使用篩選功能
       loadConsultations(true);
     }
-  }, [filters]);
+  }, [filters, user, loadConsultations]);
 
   // 本地頁籤篩選（API已處理其他篩選）
   useEffect(() => {
@@ -448,9 +448,9 @@ const ConsultationManagementPage: React.FC = () => {
   };
 
   // 獲取狀態圖標
-  const getStatusIcon = (status: ConsultationStatus) => {
+  const getStatusIcon = (status: ConsultationStatus): IconType => {
     const iconName = STATUS_CONFIG[status].icon;
-    const iconMap: { [key: string]: any } = {
+    const iconMap: { [key: string]: IconType } = {
       'FiUser': FiUser,
       'FiPhone': FiPhone,
       'FiSearch': FiSearch,

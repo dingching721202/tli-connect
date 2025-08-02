@@ -6,7 +6,7 @@ import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
 
 const {
-  FiX, FiUser, FiMail, FiPhone,
+  FiX, FiUser,
   FiCheck, FiSend
 } = FiIcons;
 
