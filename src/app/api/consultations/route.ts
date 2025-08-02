@@ -360,7 +360,8 @@ export async function PUT(request: NextRequest) {
     // 更新其他欄位
     Object.keys(updateData).forEach(key => {
       if (updateData[key as keyof typeof updateData] !== undefined) {
-        (currentConsultation as Record<string, any>)[key] = updateData[key as keyof typeof updateData];
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (currentConsultation as any)[key] = updateData[key as keyof typeof updateData];
       }
     });
 
