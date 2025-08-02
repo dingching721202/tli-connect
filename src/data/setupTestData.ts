@@ -112,6 +112,7 @@ export function setupPronunciationTestData() {
       seriesName: '',
       teacherId: teacherId,
       teacherName: '王老師',
+      capacity: pronunciationTemplate.capacity, // 添加 capacity 屬性
       timeSlots: [
         {
           id: 'slot_1',
@@ -208,8 +209,8 @@ export function validatePronunciationSetup() {
   
   pronunciationTemplate.sessions.forEach(session => {
     console.log(`  - Lesson ${session.sessionNumber}: ${session.title}`);
-    console.log(`    🔗 虛擬教室: ${session.virtualClassroomLink}`);
-    console.log(`    📄 教材: ${session.materialLink}`);
+    console.log(`    🔗 虛擬教室: ${session.classroom_link}`);
+    console.log(`    📄 教材: ${session.material_link}`);
   });
   
   // 2. 驗證課程排程
