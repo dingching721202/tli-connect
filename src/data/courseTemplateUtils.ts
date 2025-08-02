@@ -270,7 +270,7 @@ export function syncTemplateToBookingSystem(template: CourseTemplate): void {
     status: template.status === 'published' ? 'active' : 'draft',
     tags: [template.category, template.level],
     prerequisites: "無特殊要求",
-    material_link: template.sessions.map(session => session.materialLink || `Lesson ${session.sessionNumber} Materials`).filter(Boolean),
+    material_link: template.sessions.map(session => session.material_link || `Lesson ${session.sessionNumber} Materials`).filter(Boolean),
     refund_policy: "課程開始前7天可申請退費",
     start_date: "2025-08-01T00:00:00+00:00",
     end_date: "2025-12-31T23:59:59+00:00",
@@ -438,8 +438,8 @@ function getDefaultCourseTemplates(): CourseTemplate[] {
         sessions.push({
           sessionNumber: i,
           title: `Lesson ${i}`,
-          virtualClassroomLink: 'https://meet.google.com/course-session',
-          materialLink: ''
+          classroom_link: 'https://meet.google.com/course-session',
+          material_link: ''
         });
       }
       return sessions;
