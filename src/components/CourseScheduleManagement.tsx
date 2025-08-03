@@ -20,7 +20,7 @@ import {
   CourseTemplate,
   getPublishedCourseTemplates
 } from '@/data/courseTemplateUtils';
-import { teacherDataService, Teacher } from '@/data/teacherData';
+import { teacherDataService, Teacher } from '@/data/teachers';
 import TeacherFormModal from './TeacherFormModal';
 
 const {

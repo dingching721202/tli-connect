@@ -1,7 +1,7 @@
 // 課程模組 - 專注於課程架構建立
 // 導入預設課程資料
 import { courses } from './courses';
-import { teacherDataService } from './teacherData';
+import { teacherDataService } from './teachers';
 
 export interface CourseTemplate {
   id: string;

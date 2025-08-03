@@ -10,7 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import ReferralSystem from './ReferralSystem';
 import MembershipCard from './MembershipCard';
 import { dashboardService, leaveService, bookingService } from '@/services/dataService';
-import { teacherDataService } from '@/data/teacherData';
+import { teacherDataService } from '@/data/teachers';
 import { Membership, ClassAppointment } from '@/types';
 import { getCourseLinksFromBooking } from '@/utils/courseLinksUtils';
 // 調試工具已移除

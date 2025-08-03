@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { FiCalendar, FiClock, FiUser, FiAlertTriangle, FiX, FiEye, FiSearch, FiFilter, FiInfo, FiEdit, FiUserPlus, FiCheck, FiAlertCircle, FiExternalLink } from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
-import { getActiveTeachers, Teacher as TeacherData } from '@/data/teacherData';
+import { getActiveTeachers, Teacher as TeacherData } from '@/data/teachers';
 import { getAllTimeslotsWithBookings, TimeslotWithBookings, cancelTimeslot, restoreTimeslot } from '@/services/timeslotService';
 
 // 使用統一的 TimeslotWithBookings 接口

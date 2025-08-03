@@ -7,7 +7,7 @@ import SafeIcon from '@/components/common/SafeIcon';
 import Navigation from '@/components/Navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { leaveService } from '@/services/dataService';
-import { getActiveTeachers, Teacher as TeacherData } from '@/data/teacherData';
+import { getActiveTeachers, Teacher as TeacherData } from '@/data/teachers';
 
 const {
   FiClock, FiCalendar, FiUser, FiCheck, FiX, FiUserCheck,

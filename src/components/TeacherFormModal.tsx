@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
-import { teacherDataService } from '@/data/teacherData';
+import { teacherDataService } from '@/data/teachers';
 
 const { FiX } = FiIcons;
 

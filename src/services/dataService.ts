@@ -5,7 +5,7 @@ import {
 import { Agent } from '@/data/agents';
 import { SalesRecord } from '@/types/sales';
 import { generateBookingSessions } from '@/data/courseBookingIntegration';
-import { teacherDataService } from '@/data/teacherData';
+import { teacherDataService } from '@/data/teachers';
 import { hashString } from '@/utils/enrollmentUtils';
 
 interface LeaveRequest {

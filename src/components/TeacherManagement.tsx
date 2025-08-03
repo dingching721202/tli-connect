@@ -4,14 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
-import { teacherDataService, Teacher } from '@/data/teacherData';
+import { teacherDataService, Teacher } from '@/data/teachers';
 
 const {
   FiUsers, FiUserPlus, FiTrash2, FiSearch, FiDownload, FiX, FiEye,
   FiStar, FiClock, FiUser
 } = FiIcons;
 
-// Teacher interface is now imported from teacherData service
+// Teacher interface is now imported from teachers service
 
 interface NewTeacher {
   name: string;
