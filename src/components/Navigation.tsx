@@ -53,6 +53,7 @@ const Navigation: React.FC = () => {
     { name: '會員卡方案管理', href: '/member-card-plan-management', icon: FiSettings, roles: ['OPS', 'ADMIN'] },
     { name: '諮詢管理', href: '/consultation-management', icon: FiBriefcase, roles: ['OPS', 'ADMIN'] },
     { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['OPS', 'ADMIN'] },
+    { name: '帳號管理', href: '/account-management', icon: FiUsers, roles: ['ADMIN'] },
     { name: '企業管理', href: '/corporate-management', icon: FiBriefcase, roles: ['CORPORATE_CONTACT'] },
     { name: '系統設定', href: '/system-settings', icon: FiSettings, roles: ['OPS', 'ADMIN'] },
   ];
@@ -73,7 +74,14 @@ const Navigation: React.FC = () => {
   const canAccess = (roles: string[]) => {
     if (roles.includes('all')) return true;
     if (!user) return roles.includes('guest');
-    return roles.includes(user.role);
+    
+    // 檢查主要角色
+    if (roles.includes(user.primary_role)) return true;
+    
+    // 檢查附加角色
+    if (user.roles && user.roles.some(role => roles.includes(role))) return true;
+    
+    return false;
   };
 
   return (

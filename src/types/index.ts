@@ -5,8 +5,20 @@ export interface User {
   email: string;
   phone: string;
   password: string;
-  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
+  primary_role: 'USER' | 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
+  user_status: 'USER' | 'MEMBER';
   created_at: string;
+  updated_at?: string;
+}
+
+// 用戶角色管理
+export interface UserRole {
+  id: number;
+  user_id: number;
+  role: 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'OPS' | 'ADMIN';
+  granted_by: number;
+  granted_at: string;
+  is_active: boolean;
 }
 
 // 課程相關類型

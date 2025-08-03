@@ -4,13 +4,16 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService, memberCardService, agentService } from '@/services/dataService';
 import { User as DataUser, Membership } from '@/types';
 import { Agent } from '@/data/agents';
+import { userRoles } from '@/data/user_roles';
 
 interface User {
   id: number;
   email: string;
   name: string;
   phone: string;
-  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
+  primary_role: 'USER' | 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
+  user_status: 'USER' | 'MEMBER';
+  roles: string[]; // 多重角色
   membership?: Membership | null;
   avatar?: string;
   agentData?: Agent | null; // 代理專用資料
@@ -30,6 +33,11 @@ interface AuthContextType {
   isOps: boolean;
   isAdmin: boolean;
   isAgent: boolean;
+  isMember: boolean;
+  isCorporateContact: boolean;
+  hasRole: (role: string) => boolean;
+  hasAnyRole: (roles: string[]) => boolean;
+  hasAllRoles: (roles: string[]) => boolean;
   refreshMembership: () => Promise<void>;
 }
 
@@ -73,7 +81,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     loadUserSession();
   }, []);
 
-  // 載入用戶會員資料
+  // 載入用戶會員資料和角色
   const loadUserWithMembership = async (userData: DataUser): Promise<User> => {
     // 優先獲取 ACTIVE 會員卡，如果沒有則獲取 PURCHASED 會員卡
     let membership = await memberCardService.getUserMembership(userData.id);
@@ -81,9 +89,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       membership = await memberCardService.getUserPurchasedMembership(userData.id);
     }
     
+    // 載入用戶的所有角色
+    const activeRoles = userRoles.filter(ur => ur.user_id === userData.id && ur.is_active);
+    const roles = activeRoles.map(ur => ur.role);
+    
     // 如果是 AGENT 角色，載入代理資料
     let agentData = null;
-    if (userData.role === 'AGENT') {
+    if (userData.primary_role === 'AGENT' || roles.includes('AGENT')) {
       agentData = await agentService.getAgentByUserId(userData.id);
     }
     
@@ -92,7 +104,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email: userData.email,
       name: userData.name,
       phone: userData.phone,
-      role: userData.role,
+      primary_role: userData.primary_role,
+      user_status: userData.user_status,
+      roles,
       membership,
       agentData,
       avatar: `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face`
@@ -222,16 +236,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const hasActiveMembership = () => {
     if (!user) return false;
-    if (user.role !== 'STUDENT' && user.role !== 'AGENT') return true; // 非學生和代理角色總是有權限
     
-    // AGENT 角色只能看到自己的資料，但有基本權限
-    if (user.role === 'AGENT') {
-      // 檢查代理狀態是否為 ACTIVE
+    // 管理員和營運人員總是有權限
+    if (user.primary_role === 'ADMIN' || user.primary_role === 'OPS' || 
+        user.roles.includes('ADMIN') || user.roles.includes('OPS')) {
+      return true;
+    }
+    
+    // 教師和企業窗口有基本權限
+    if (user.primary_role === 'TEACHER' || user.primary_role === 'CORPORATE_CONTACT' ||
+        user.roles.includes('TEACHER') || user.roles.includes('CORPORATE_CONTACT')) {
+      return true;
+    }
+    
+    // AGENT 角色檢查代理狀態
+    if (user.primary_role === 'AGENT' || user.roles.includes('AGENT')) {
       return user.agentData?.status === 'ACTIVE';
     }
     
-    // 允許 ACTIVE 和 PURCHASED 狀態的會員預約
-    return user.membership?.status === 'ACTIVE' || user.membership?.status === 'PURCHASED';
+    // 會員狀態或有 STUDENT 角色
+    if (user.user_status === 'MEMBER' || user.roles.includes('STUDENT')) {
+      return user.membership?.status === 'ACTIVE' || user.membership?.status === 'PURCHASED';
+    }
+    
+    return false;
+  };
+
+  // 檢查是否有特定角色
+  const hasRole = (role: string) => {
+    if (!user) return false;
+    return user.primary_role === role || user.roles.includes(role);
+  };
+
+  // 檢查是否有任一角色
+  const hasAnyRole = (roles: string[]) => {
+    if (!user) return false;
+    return roles.some(role => user.primary_role === role || user.roles.includes(role));
+  };
+
+  // 檢查是否有全部角色
+  const hasAllRoles = (roles: string[]) => {
+    if (!user) return false;
+    return roles.every(role => user.primary_role === role || user.roles.includes(role));
   };
 
   // 刷新會員資料
@@ -259,11 +305,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     hasActiveMembership,
     loading,
     isAuthenticated: !!user,
-    isStudent: user?.role === 'STUDENT',
-    isTeacher: user?.role === 'TEACHER',
-    isOps: user?.role === 'OPS',
-    isAdmin: user?.role === 'ADMIN',
-    isAgent: user?.role === 'AGENT',
+    isStudent: user?.primary_role === 'STUDENT' || user?.roles.includes('STUDENT') || false,
+    isTeacher: user?.primary_role === 'TEACHER' || user?.roles.includes('TEACHER') || false,
+    isOps: user?.primary_role === 'OPS' || user?.roles.includes('OPS') || false,
+    isAdmin: user?.primary_role === 'ADMIN' || user?.roles.includes('ADMIN') || false,
+    isAgent: user?.primary_role === 'AGENT' || user?.roles.includes('AGENT') || false,
+    isMember: user?.user_status === 'MEMBER' || user?.roles.includes('STUDENT') || false,
+    isCorporateContact: user?.primary_role === 'CORPORATE_CONTACT' || user?.roles.includes('CORPORATE_CONTACT') || false,
+    hasRole,
+    hasAnyRole,
+    hasAllRoles,
     refreshMembership
   };
 

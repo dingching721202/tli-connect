@@ -1211,5 +1211,251 @@ export const leaveService = {
       console.error('取消請假申請失敗:', error);
       return { success: false, error: 'Failed to cancel leave request' };
     }
+  },
+
+  // 角色管理相關功能
+  async getUserRoles(userId: number) {
+    await delay(200);
+    
+    try {
+      const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+      const activeRoles = userRoles.filter((ur: any) => ur.user_id === userId && ur.is_active);
+      return { success: true, data: activeRoles };
+    } catch (error) {
+      console.error('獲取用戶角色失敗:', error);
+      return { success: false, error: 'Failed to get user roles' };
+    }
+  },
+
+  async updateUserRoles(userId: number, roles: string[], adminId: number, primaryRole?: string) {
+    await delay(500);
+    
+    try {
+      const timestamp = new Date().toISOString();
+      
+      // 更新主要角色（如果提供）
+      if (primaryRole) {
+        const userIndex = users.findIndex(u => u.id === userId);
+        if (userIndex !== -1) {
+          users[userIndex].primary_role = primaryRole as any;
+          users[userIndex].updated_at = timestamp;
+          
+          // 同步到 localStorage
+          const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+          const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+          if (localUserIndex !== -1) {
+            localUsers[localUserIndex].primary_role = primaryRole;
+            localUsers[localUserIndex].updated_at = timestamp;
+            localStorage.setItem('users', JSON.stringify(localUsers));
+          }
+        }
+      }
+      
+      // 更新附加角色
+      let userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+      
+      // 停用該用戶的所有角色
+      userRoles = userRoles.map((ur: any) => 
+        ur.user_id === userId ? { ...ur, is_active: false } : ur
+      );
+      
+      // 添加新角色
+      roles.forEach(role => {
+        const newRole = {
+          id: Math.max(0, ...userRoles.map((r: any) => r.id)) + 1,
+          user_id: userId,
+          role: role,
+          granted_by: adminId,
+          granted_at: timestamp,
+          is_active: true
+        };
+        userRoles.push(newRole);
+      });
+      
+      localStorage.setItem('userRoles', JSON.stringify(userRoles));
+      
+      console.log('✅ 用戶角色已更新:', { userId, primaryRole, roles, adminId });
+      return { success: true, data: { primaryRole, roles } };
+    } catch (error) {
+      console.error('更新用戶角色失敗:', error);
+      return { success: false, error: 'Failed to update user roles' };
+    }
+  },
+
+  async updateUserStatus(userId: number, status: 'USER' | 'MEMBER', adminId: number) {
+    await delay(300);
+    
+    try {
+      const userIndex = users.findIndex(u => u.id === userId);
+      if (userIndex === -1) {
+        return { success: false, error: 'User not found' };
+      }
+      
+      const now = new Date().toISOString();
+      users[userIndex].user_status = status;
+      users[userIndex].updated_at = now;
+      
+      // 同步到 localStorage 以保持一致性
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+      if (localUserIndex !== -1) {
+        localUsers[localUserIndex].user_status = status;
+        localUsers[localUserIndex].updated_at = now;
+        localStorage.setItem('users', JSON.stringify(localUsers));
+      }
+      
+      console.log('✅ 用戶狀態已更新:', { userId, status, adminId });
+      return { success: true, data: users[userIndex] };
+    } catch (error) {
+      console.error('更新用戶狀態失敗:', error);
+      return { success: false, error: 'Failed to update user status' };
+    }
+  },
+
+  async getAllUsersWithRoles() {
+    await delay(300);
+    
+    try {
+      const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+      
+      const usersWithRoles = users.map(user => {
+        const activeRoles = userRoles
+          .filter((ur: any) => ur.user_id === user.id && ur.is_active)
+          .map((ur: any) => ur.role);
+        
+        return {
+          ...user,
+          roles: activeRoles
+        };
+      });
+      
+      return { success: true, data: usersWithRoles };
+    } catch (error) {
+      console.error('獲取用戶和角色失敗:', error);
+      return { success: false, error: 'Failed to get users with roles' };
+    }
+  },
+
+  // 創建新用戶
+  async createUser(userData: any, adminId: number) {
+    await delay(500);
+    
+    try {
+      const timestamp = new Date().toISOString();
+      const newId = Math.max(0, ...users.map(u => u.id)) + 1;
+      
+      // 檢查 email 是否已存在
+      const existingUser = users.find(u => u.email === userData.email);
+      if (existingUser) {
+        return { success: false, error: 'Email already exists' };
+      }
+      
+      const newUser = {
+        id: newId,
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        password: userData.password, // 實際環境中應該要 hash
+        primary_role: userData.primary_role,
+        user_status: userData.user_status,
+        created_at: timestamp,
+        updated_at: timestamp
+      };
+      
+      users.push(newUser as any);
+      
+      // 同步到 localStorage
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      localUsers.push(newUser);
+      localStorage.setItem('users', JSON.stringify(localUsers));
+      
+      console.log('✅ 新用戶已創建:', newUser);
+      return { success: true, data: newUser };
+    } catch (error) {
+      console.error('創建用戶失敗:', error);
+      return { success: false, error: 'Failed to create user' };
+    }
+  },
+
+  // 更新用戶基本資訊
+  async updateUser(userData: any, adminId: number) {
+    await delay(300);
+    
+    try {
+      const userIndex = users.findIndex(u => u.id === userData.id);
+      if (userIndex === -1) {
+        return { success: false, error: 'User not found' };
+      }
+      
+      // 檢查 email 是否與其他用戶重複
+      const existingUser = users.find(u => u.email === userData.email && u.id !== userData.id);
+      if (existingUser) {
+        return { success: false, error: 'Email already exists' };
+      }
+      
+      const timestamp = new Date().toISOString();
+      users[userIndex] = {
+        ...users[userIndex],
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        primary_role: userData.primary_role,
+        user_status: userData.user_status,
+        updated_at: timestamp
+      };
+      
+      // 同步到 localStorage
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      const localUserIndex = localUsers.findIndex((u: any) => u.id === userData.id);
+      if (localUserIndex !== -1) {
+        localUsers[localUserIndex] = users[userIndex];
+        localStorage.setItem('users', JSON.stringify(localUsers));
+      }
+      
+      console.log('✅ 用戶資訊已更新:', users[userIndex]);
+      return { success: true, data: users[userIndex] };
+    } catch (error) {
+      console.error('更新用戶失敗:', error);
+      return { success: false, error: 'Failed to update user' };
+    }
+  },
+
+  // 刪除用戶
+  async deleteUser(userId: number, adminId: number) {
+    await delay(300);
+    
+    try {
+      const userIndex = users.findIndex(u => u.id === userId);
+      if (userIndex === -1) {
+        return { success: false, error: 'User not found' };
+      }
+      
+      // 防止刪除管理員自己
+      if (userId === adminId) {
+        return { success: false, error: 'Cannot delete yourself' };
+      }
+      
+      const deletedUser = users[userIndex];
+      users.splice(userIndex, 1);
+      
+      // 同步到 localStorage
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+      if (localUserIndex !== -1) {
+        localUsers.splice(localUserIndex, 1);
+        localStorage.setItem('users', JSON.stringify(localUsers));
+      }
+      
+      // 同時刪除相關的角色記錄
+      let userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+      userRoles = userRoles.filter((ur: any) => ur.user_id !== userId);
+      localStorage.setItem('userRoles', JSON.stringify(userRoles));
+      
+      console.log('✅ 用戶已刪除:', deletedUser);
+      return { success: true, data: deletedUser };
+    } catch (error) {
+      console.error('刪除用戶失敗:', error);
+      return { success: false, error: 'Failed to delete user' };
+    }
   }
 };
