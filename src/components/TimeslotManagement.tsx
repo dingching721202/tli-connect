@@ -550,16 +550,16 @@ const TimeslotManagement: React.FC = () => {
       ) : filteredTimeslots.length > 0 ? (
         <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full table-fixed">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期時間</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">課程名稱</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">教師</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">容量</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">學生預約</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                  <th className="w-44 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期時間</th>
+                  <th className="w-64 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">課程名稱</th>
+                  <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">教師</th>
+                  <th className="w-20 px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">容量</th>
+                  <th className="w-28 px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">學生預約</th>
+                  <th className="w-24 px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
+                  <th className="w-auto px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -570,25 +570,25 @@ const TimeslotManagement: React.FC = () => {
                     animate={{ opacity: 1 }}
                     className="hover:bg-gray-50"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="w-44 px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div>
                         <div className="font-medium">{formatDateTime(`${timeslot.date} ${timeslot.startTime}`)}</div>
-                        <div className="text-gray-500">{timeslot.startTime} - {timeslot.endTime}</div>
+                        <div className="text-gray-500 text-xs">{timeslot.startTime} - {timeslot.endTime}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">
-                      <div className="max-w-xs">
-                        <div className="font-medium text-gray-900 truncate">{timeslot.title}</div>
+                    <td className="w-64 px-6 py-4 text-sm text-gray-900">
+                      <div className="truncate">
+                        <div className="font-medium text-gray-900 truncate" title={timeslot.title}>{timeslot.title}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {timeslot.teacherName}
+                    <td className="w-32 px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="truncate" title={timeslot.teacherName}>{timeslot.teacherName}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="w-20 px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
                       {timeslot.capacity}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex items-center">
+                    <td className="w-28 px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <div className="flex items-center justify-center">
                         <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
                           timeslot.bookedCount > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                         }`}>
@@ -596,12 +596,14 @@ const TimeslotManagement: React.FC = () => {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(timeslot)}`}>
-                        {getStatusText(timeslot)}
-                      </span>
+                    <td className="w-24 px-6 py-4 whitespace-nowrap">
+                      <div className="flex justify-center">
+                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(timeslot)}`}>
+                          {getStatusText(timeslot)}
+                        </span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="w-auto px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       <div className="flex space-x-2">
                         <motion.button
                           whileHover={{ scale: 1.05 }}
@@ -779,17 +781,13 @@ const TimeslotManagement: React.FC = () => {
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h4 className="font-medium mb-3 text-gray-900">課程資訊</h4>
                 <div className="space-y-2 text-sm">
-                  <div>
+                  <div className="flex justify-between">
                     <span className="text-gray-600">課程名稱：</span>
-                    <div className="font-medium mt-1 break-words">{selectedTimeslotForDetail.title || '未知課程'}</div>
+                    <span className="font-medium break-words text-right max-w-xs">{selectedTimeslotForDetail.title || '未知課程'}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">上課時間：</span>
-                    <span>{formatDate(selectedTimeslotForDetail.date)} {selectedTimeslotForDetail.startTime || ''}-{selectedTimeslotForDetail.endTime || ''}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">學生人數：</span>
-                    <span>{selectedTimeslotForDetail.bookedCount || 0} 位</span>
+                    <span className="text-right">{formatDate(selectedTimeslotForDetail.date)} {selectedTimeslotForDetail.startTime || ''}-{selectedTimeslotForDetail.endTime || ''}</span>
                   </div>
                 </div>
               </div>
@@ -800,16 +798,109 @@ const TimeslotManagement: React.FC = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-blue-600">教師姓名：</span>
-                    <span className="font-medium">{selectedTimeslotForDetail.teacherName || '未知教師'}</span>
+                    <span className="font-medium text-right">{selectedTimeslotForDetail.teacherName || '未知教師'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-600">教師ID：</span>
-                    <span>{selectedTimeslotForDetail.teacherId || 'N/A'}</span>
+                    <span className="text-blue-600">電子信箱：</span>
+                    <span className="text-right">{(() => {
+                      const teacherId = selectedTimeslotForDetail.teacherId;
+                      const teacher = availableTeachers.find(t => t.id.toString() === teacherId);
+                      return teacher ? teacher.email : 'teacher@tli.com';
+                    })()}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-blue-600">教學地點：</span>
-                    <span>線上教室</span>
-                  </div>
+                  {(() => {
+                    // 根據教師ID查找教師專業資訊
+                    const teacherId = selectedTimeslotForDetail.teacherId;
+                    const teacher = availableTeachers.find(t => t.id.toString() === teacherId);
+                    
+                    if (teacher) {
+                      return (
+                        <div className="mt-3 space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-blue-600">教學經驗：</span>
+                            <span className="text-right">{teacher.experience}</span>
+                          </div>
+                          <div className="flex justify-between items-start">
+                            <span className="text-blue-600">語言能力：</span>
+                            <div className="flex flex-wrap gap-1 justify-end max-w-xs">
+                              {teacher.languages.map((lang, index) => (
+                                <span key={index} className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
+                                  {lang}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-start">
+                            <span className="text-blue-600">專業領域：</span>
+                            <div className="flex flex-wrap gap-1 justify-end max-w-xs">
+                              {teacher.expertise.map((exp, index) => (
+                                <span key={index} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                                  {exp}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-start">
+                            <span className="text-blue-600">專業證照：</span>
+                            <div className="flex flex-wrap gap-1 justify-end max-w-xs">
+                              {teacher.qualification.map((qual, index) => (
+                                <span key={index} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                                  {qual}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    } else {
+                      // 如果找不到教師資訊，顯示預設資訊
+                      const defaultTeacherInfo = {
+                        expertise: ['商務英語', '簡報技巧', '談判英語'],
+                        experience: '10年以上',
+                        qualification: ['TESOL', 'Business English Certificate'],
+                        languages: ['English(母語)', '中文(流利)']
+                      };
+                      
+                      return (
+                        <div className="mt-3 space-y-2">
+                          <div className="flex justify-between">
+                            <span className="text-blue-600">教學經驗：</span>
+                            <span className="text-right">{defaultTeacherInfo.experience}</span>
+                          </div>
+                          <div className="flex justify-between items-start">
+                            <span className="text-blue-600">語言能力：</span>
+                            <div className="flex flex-wrap gap-1 justify-end max-w-xs">
+                              {defaultTeacherInfo.languages.map((lang, index) => (
+                                <span key={index} className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded">
+                                  {lang}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-start">
+                            <span className="text-blue-600">專業領域：</span>
+                            <div className="flex flex-wrap gap-1 justify-end max-w-xs">
+                              {defaultTeacherInfo.expertise.map((exp, index) => (
+                                <span key={index} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                                  {exp}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <div className="flex justify-between items-start">
+                            <span className="text-blue-600">專業證照：</span>
+                            <div className="flex flex-wrap gap-1 justify-end max-w-xs">
+                              {defaultTeacherInfo.qualification.map((qual, index) => (
+                                <span key={index} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded">
+                                  {qual}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
               </div>
 
@@ -828,16 +919,18 @@ const TimeslotManagement: React.FC = () => {
                     ) : (
                       selectedTimeslotForDetail.enrolledStudents.map((student) => (
                         <div key={student.bookingId} className="bg-white p-3 rounded border">
-                          <div className="flex justify-between items-start">
-                            <div className="space-y-1">
-                              <div className="font-medium text-gray-900">{student.userName}</div>
-                              <div className="text-sm text-gray-600">{student.userEmail}</div>
-                              <div className="text-sm text-gray-500">
-                                預約時間: {new Date(student.bookedAt).toLocaleString('zh-TW')}
-                              </div>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-green-600">學生姓名：</span>
+                              <span className="font-medium text-gray-900 text-right">{student.userName}</span>
                             </div>
-                            <div className="text-xs text-gray-400">
-                              ID: {student.bookingId}
+                            <div className="flex justify-between">
+                              <span className="text-green-600">電子信箱：</span>
+                              <span className="text-gray-700 text-right">{student.userEmail}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-green-600">預約時間：</span>
+                              <span className="text-gray-700 text-right">{new Date(student.bookedAt).toLocaleString('zh-TW')}</span>
                             </div>
                           </div>
                         </div>
