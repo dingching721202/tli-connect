@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService, memberCardService, agentService } from '@/services/dataService';
 import { User as DataUser, Membership } from '@/types';
+import { Agent } from '@/data/agents';
 
 interface User {
   id: number;
@@ -12,7 +13,7 @@ interface User {
   role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
   membership?: Membership | null;
   avatar?: string;
-  agentData?: any; // 代理專用資料
+  agentData?: Agent | null; // 代理專用資料
 }
 
 interface AuthContextType {

@@ -3,6 +3,7 @@ import {
   ApiResponse, LoginResponse, BatchBookingResponse
 } from '@/types';
 import { Agent } from '@/data/agents';
+import { SalesRecord } from '@/types/sales';
 import { generateBookingSessions } from '@/data/courseBookingIntegration';
 import { teacherDataService } from '@/data/teacherData';
 import { hashString } from '@/utils/enrollmentUtils';
@@ -1023,7 +1024,7 @@ export const agentService = {
   },
 
   // 獲取代理的銷售紀錄 (僅限該代理自己的資料)
-  async getAgentSalesRecords(agentUserId: number): Promise<any[]> {
+  async getAgentSalesRecords(agentUserId: number): Promise<SalesRecord[]> {
     await delay(200);
     const agent = agents.find(a => a.user_id === agentUserId);
     if (!agent) return [];
