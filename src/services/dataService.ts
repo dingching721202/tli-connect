@@ -70,6 +70,9 @@ export const authService = {
       phone,
       password: `$2b$10$${password}`, // 模擬密碼雜湊
       role: 'STUDENT',
+      primary_role: 'STUDENT',
+      membership_status: 'NON_MEMBER',
+      account_status: 'ACTIVE',
       created_at: new Date().toISOString()
     };
     
@@ -124,6 +127,344 @@ export const authService = {
   // 獲取用戶資料
   async getUser(id: number): Promise<User | null> {
     return users.find(user => user.id === id) || null;
+  },
+
+  // 角色管理相關功能
+  async getUserRoles(userId: number) {
+    await delay(200);
+    
+    try {
+      const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+      const activeRoles = userRoles.filter((ur: any) => ur.user_id === userId && ur.is_active);
+      return { success: true, data: activeRoles };
+    } catch (error) {
+      console.error('獲取用戶角色失敗:', error);
+      return { success: false, error: 'Failed to get user roles' };
+    }
+  },
+
+  async updateUserRoles(userId: number, roles: string[], adminId: number, primaryRole?: string) {
+    await delay(500);
+    
+    try {
+      const timestamp = new Date().toISOString();
+      
+      // 更新主要角色（如果提供）
+      if (primaryRole) {
+        const userIndex = users.findIndex(u => u.id === userId);
+        if (userIndex !== -1) {
+          users[userIndex].primary_role = primaryRole as any;
+          users[userIndex].updated_at = timestamp;
+          
+          // 同步到 localStorage
+          const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+          const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+          if (localUserIndex !== -1) {
+            localUsers[localUserIndex].primary_role = primaryRole;
+            localUsers[localUserIndex].updated_at = timestamp;
+            localStorage.setItem('users', JSON.stringify(localUsers));
+          }
+        }
+      }
+      
+      // 更新附加角色
+      let userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+      
+      // 停用該用戶的所有角色
+      userRoles = userRoles.map((ur: any) => 
+        ur.user_id === userId ? { ...ur, is_active: false } : ur
+      );
+      
+      // 添加新角色
+      roles.forEach(role => {
+        const newRole = {
+          id: Math.max(0, ...userRoles.map((r: any) => r.id)) + 1,
+          user_id: userId,
+          role: role,
+          granted_by: adminId,
+          granted_at: timestamp,
+          is_active: true
+        };
+        userRoles.push(newRole);
+      });
+      
+      localStorage.setItem('userRoles', JSON.stringify(userRoles));
+      
+      console.log('✅ 用戶角色已更新:', { userId, primaryRole, roles, adminId });
+      return { success: true, data: { primaryRole, roles } };
+    } catch (error) {
+      console.error('更新用戶角色失敗:', error);
+      return { success: false, error: 'Failed to update user roles' };
+    }
+  },
+
+  async updateUserStatus(userId: number, status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER' | 'USER', adminId: number) {
+    await delay(300);
+    
+    try {
+      const userIndex = users.findIndex(u => u.id === userId);
+      if (userIndex === -1) {
+        return { success: false, error: 'User not found' };
+      }
+      
+      const now = new Date().toISOString();
+      users[userIndex].membership_status = status;
+      users[userIndex].updated_at = now;
+      
+      // 同步到 localStorage 以保持一致性
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+      if (localUserIndex !== -1) {
+        localUsers[localUserIndex].membership_status = status;
+        localUsers[localUserIndex].updated_at = now;
+        localStorage.setItem('users', JSON.stringify(localUsers));
+      }
+      
+      console.log('✅ 用戶狀態已更新:', { userId, status, adminId });
+      return { success: true, data: users[userIndex] };
+    } catch (error) {
+      console.error('更新用戶狀態失敗:', error);
+      return { success: false, error: 'Failed to update user status' };
+    }
+  },
+
+  async getAllUsersWithRoles() {
+    await delay(300);
+    
+    try {
+      const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+      
+      const usersWithRoles = users.map(user => {
+        const activeRoles = userRoles
+          .filter((ur: any) => ur.user_id === user.id && ur.is_active)
+          .map((ur: any) => ur.role);
+        
+        return {
+          ...user,
+          roles: activeRoles
+        };
+      });
+      
+      return { success: true, data: usersWithRoles };
+    } catch (error) {
+      console.error('獲取用戶和角色失敗:', error);
+      return { success: false, error: 'Failed to get users with roles' };
+    }
+  },
+
+  // 創建新用戶
+  async createUser(userData: any, adminId: number) {
+    await delay(500);
+    
+    try {
+      const timestamp = new Date().toISOString();
+      const newId = Math.max(0, ...users.map(u => u.id)) + 1;
+      
+      // 檢查 email 是否已存在
+      const existingUser = users.find(u => u.email === userData.email);
+      if (existingUser) {
+        return { success: false, error: 'Email already exists' };
+      }
+      
+      const newUser = {
+        id: newId,
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        password: userData.password, // 實際環境中應該要 hash
+        primary_role: userData.primary_role,
+        membership_status: userData.membership_status,
+        created_at: timestamp,
+        updated_at: timestamp
+      };
+      
+      users.push(newUser as any);
+      
+      // 同步到 localStorage
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      localUsers.push(newUser);
+      localStorage.setItem('users', JSON.stringify(localUsers));
+      
+      console.log('✅ 新用戶已創建:', newUser);
+      return { success: true, data: newUser };
+    } catch (error) {
+      console.error('創建用戶失敗:', error);
+      return { success: false, error: 'Failed to create user' };
+    }
+  },
+
+  // 更新用戶基本資訊
+  async updateUser(userData: any, adminId: number) {
+    await delay(300);
+    
+    try {
+      const userIndex = users.findIndex(u => u.id === userData.id);
+      if (userIndex === -1) {
+        return { success: false, error: 'User not found' };
+      }
+      
+      // 檢查 email 是否與其他用戶重複
+      const existingUser = users.find(u => u.email === userData.email && u.id !== userData.id);
+      if (existingUser) {
+        return { success: false, error: 'Email already exists' };
+      }
+      
+      const timestamp = new Date().toISOString();
+      users[userIndex] = {
+        ...users[userIndex],
+        name: userData.name,
+        email: userData.email,
+        phone: userData.phone,
+        primary_role: userData.primary_role,
+        membership_status: userData.membership_status,
+        updated_at: timestamp
+      };
+      
+      // 同步到 localStorage
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      const localUserIndex = localUsers.findIndex((u: any) => u.id === userData.id);
+      if (localUserIndex !== -1) {
+        localUsers[localUserIndex] = users[userIndex];
+        localStorage.setItem('users', JSON.stringify(localUsers));
+      }
+      
+      console.log('✅ 用戶資訊已更新:', users[userIndex]);
+      return { success: true, data: users[userIndex] };
+    } catch (error) {
+      console.error('更新用戶失敗:', error);
+      return { success: false, error: 'Failed to update user' };
+    }
+  },
+
+  // 刪除用戶
+  async deleteUser(userId: number, adminId: number) {
+    await delay(300);
+    
+    try {
+      const userIndex = users.findIndex(u => u.id === userId);
+      if (userIndex === -1) {
+        return { success: false, error: 'User not found' };
+      }
+      
+      // 防止刪除管理員自己
+      if (userId === adminId) {
+        return { success: false, error: 'Cannot delete yourself' };
+      }
+      
+      const deletedUser = users[userIndex];
+      users.splice(userIndex, 1);
+      
+      // 同步到 localStorage
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+      if (localUserIndex !== -1) {
+        localUsers.splice(localUserIndex, 1);
+        localStorage.setItem('users', JSON.stringify(localUsers));
+      }
+      
+      // 同時刪除相關的角色記錄
+      let userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
+      userRoles = userRoles.filter((ur: any) => ur.user_id !== userId);
+      localStorage.setItem('userRoles', JSON.stringify(userRoles));
+      
+      console.log('✅ 用戶已刪除:', deletedUser);
+      return { success: true, data: deletedUser };
+    } catch (error) {
+      console.error('刪除用戶失敗:', error);
+      return { success: false, error: 'Failed to delete user' };
+    }
+  },
+
+  // 自動判斷並更新會員狀態
+  async autoUpdateMembershipStatus(userId: number) {
+    try {
+      const user = users.find(u => u.id === userId);
+      if (!user) return { success: false, error: 'User not found' };
+
+      let newStatus: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER' | 'USER' = 'NON_MEMBER';
+
+      // 檢查用戶角色
+      if (user.primary_role !== 'STUDENT') {
+        // 非學生角色自動變成使用者
+        newStatus = 'USER';
+      } else {
+        // 學生角色需要檢查會員卡狀態
+        const activeMembership = await memberCardService.getUserMembership(userId);
+        if (activeMembership) {
+          if (activeMembership.status === 'ACTIVE') {
+            // 檢查是否過期
+            const now = new Date();
+            const expireTime = new Date(activeMembership.expire_time || '');
+            if (expireTime > now) {
+              newStatus = 'MEMBER';
+            } else {
+              newStatus = 'EXPIRED_MEMBER';
+              // 同時更新會員卡狀態為過期
+              const membershipIndex = memberships.findIndex(m => m.id === activeMembership.id);
+              if (membershipIndex !== -1) {
+                memberships[membershipIndex].status = 'EXPIRED';
+              }
+            }
+          } else if (activeMembership.status === 'EXPIRED') {
+            newStatus = 'EXPIRED_MEMBER';
+          }
+        }
+        // 如果沒有會員卡，保持為 NON_MEMBER
+      }
+
+      // 更新用戶狀態
+      if (user.membership_status !== newStatus) {
+        const userIndex = users.findIndex(u => u.id === userId);
+        if (userIndex !== -1) {
+          users[userIndex].membership_status = newStatus;
+          users[userIndex].updated_at = new Date().toISOString();
+
+          // 同步到 localStorage
+          const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+          const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+          if (localUserIndex !== -1) {
+            localUsers[localUserIndex].membership_status = newStatus;
+            localUsers[localUserIndex].updated_at = new Date().toISOString();
+            localStorage.setItem('users', JSON.stringify(localUsers));
+          }
+        }
+      }
+
+      return { success: true, data: { userId, oldStatus: user.membership_status, newStatus } };
+    } catch (error) {
+      console.error('自動更新會員狀態失敗:', error);
+      return { success: false, error: 'Failed to auto update membership status' };
+    }
+  },
+
+  async updateUserAccountStatus(userId: number, status: 'ACTIVE' | 'SUSPENDED', adminId: number) {
+    await delay(300);
+    
+    try {
+      const userIndex = users.findIndex(u => u.id === userId);
+      if (userIndex === -1) {
+        return { success: false, error: 'User not found' };
+      }
+      
+      const now = new Date().toISOString();
+      users[userIndex].account_status = status;
+      users[userIndex].updated_at = now;
+      
+      // 同步到 localStorage 以保持一致性
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+      if (localUserIndex !== -1) {
+        localUsers[localUserIndex].account_status = status;
+        localUsers[localUserIndex].updated_at = now;
+        localStorage.setItem('users', JSON.stringify(localUsers));
+      }
+      
+      console.log('✅ 用戶帳號狀態已更新:', { userId, status, adminId });
+      return { success: true, data: users[userIndex] };
+    } catch (error) {
+      console.error('更新用戶帳號狀態失敗:', error);
+      return { success: false, error: 'Failed to update user account status' };
+    }
   }
 };
 
@@ -231,6 +572,45 @@ export const memberCardService = {
   // 獲取用戶所有會員資格（包括未啟用的）
   async getAllUserMemberships(userId: number): Promise<Membership[]> {
     return memberships.filter(m => m.user_id === userId);
+  },
+
+  // 檢查並更新過期的會員卡
+  async checkAndUpdateExpiredMemberships(): Promise<{ updated: number; expired: Membership[] }> {
+    const now = new Date();
+    const expiredMemberships: Membership[] = [];
+    let updatedCount = 0;
+
+    for (const membership of memberships) {
+      if (membership.status === 'ACTIVE' && membership.expire_time) {
+        const expireTime = new Date(membership.expire_time);
+        if (expireTime <= now) {
+          // 會員卡已過期，更新狀態
+          membership.status = 'EXPIRED';
+          expiredMemberships.push(membership);
+          updatedCount++;
+
+          // 同時更新該用戶的會員狀態
+          await authService.autoUpdateMembershipStatus(membership.user_id);
+        }
+      }
+    }
+
+    console.log(`🔍 檢查會員卡過期 - 更新了 ${updatedCount} 張過期會員卡`);
+    return { updated: updatedCount, expired: expiredMemberships };
+  },
+
+  // 獲取即將過期的會員卡（7天內）
+  async getExpiringMemberships(days: number = 7): Promise<Membership[]> {
+    const now = new Date();
+    const checkDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
+
+    return memberships.filter(m => {
+      if (m.status === 'ACTIVE' && m.expire_time) {
+        const expireTime = new Date(m.expire_time);
+        return expireTime > now && expireTime <= checkDate;
+      }
+      return false;
+    });
   }
 };
 
@@ -379,7 +759,7 @@ export const bookingService = {
       
       // 同步更新到 localStorage（帶數據驗證）
       if (typeof localStorage !== 'undefined') {
-        const existingAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]');
+        const existingAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]') as ClassAppointment[];
         
         // 檢查是否已存在相同的預約（避免重複）
         const isDuplicate = existingAppointments.some((apt: { user_id: number; class_timeslot_id: number; status: string }) => 
@@ -746,7 +1126,7 @@ export const dashboardService = {
       console.log('📅 所有課程時段數量:', allSessions.length);
       
       // 獲取所有預約記錄
-      const allAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]');
+      const allAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]') as ClassAppointment[];
       console.log('📋 所有預約記錄數量:', allAppointments.length);
       
       // 獲取教師資料以匹配教師ID
@@ -1093,7 +1473,7 @@ export const leaveService = {
         courseDate: requestData.courseDate,
         courseTime: requestData.courseTime,
         leaveReason: requestData.reason, // 對應介面定義
-        requestDate: new Date().toISOString().split('T')[0], // 對應介面定義
+        requestDate: new Date().toISOString().split('T'), // 對應介面定義
         note: requestData.reason || '', // 將原因同時存為note以保持兼容性
         studentCount: requestData.studentCount || 0,
         classroom: requestData.classroom || '線上教室',
@@ -1210,252 +1590,6 @@ export const leaveService = {
     } catch (error) {
       console.error('取消請假申請失敗:', error);
       return { success: false, error: 'Failed to cancel leave request' };
-    }
-  },
-
-  // 角色管理相關功能
-  async getUserRoles(userId: number) {
-    await delay(200);
-    
-    try {
-      const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
-      const activeRoles = userRoles.filter((ur: any) => ur.user_id === userId && ur.is_active);
-      return { success: true, data: activeRoles };
-    } catch (error) {
-      console.error('獲取用戶角色失敗:', error);
-      return { success: false, error: 'Failed to get user roles' };
-    }
-  },
-
-  async updateUserRoles(userId: number, roles: string[], adminId: number, primaryRole?: string) {
-    await delay(500);
-    
-    try {
-      const timestamp = new Date().toISOString();
-      
-      // 更新主要角色（如果提供）
-      if (primaryRole) {
-        const userIndex = users.findIndex(u => u.id === userId);
-        if (userIndex !== -1) {
-          users[userIndex].primary_role = primaryRole as any;
-          users[userIndex].updated_at = timestamp;
-          
-          // 同步到 localStorage
-          const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-          const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
-          if (localUserIndex !== -1) {
-            localUsers[localUserIndex].primary_role = primaryRole;
-            localUsers[localUserIndex].updated_at = timestamp;
-            localStorage.setItem('users', JSON.stringify(localUsers));
-          }
-        }
-      }
-      
-      // 更新附加角色
-      let userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
-      
-      // 停用該用戶的所有角色
-      userRoles = userRoles.map((ur: any) => 
-        ur.user_id === userId ? { ...ur, is_active: false } : ur
-      );
-      
-      // 添加新角色
-      roles.forEach(role => {
-        const newRole = {
-          id: Math.max(0, ...userRoles.map((r: any) => r.id)) + 1,
-          user_id: userId,
-          role: role,
-          granted_by: adminId,
-          granted_at: timestamp,
-          is_active: true
-        };
-        userRoles.push(newRole);
-      });
-      
-      localStorage.setItem('userRoles', JSON.stringify(userRoles));
-      
-      console.log('✅ 用戶角色已更新:', { userId, primaryRole, roles, adminId });
-      return { success: true, data: { primaryRole, roles } };
-    } catch (error) {
-      console.error('更新用戶角色失敗:', error);
-      return { success: false, error: 'Failed to update user roles' };
-    }
-  },
-
-  async updateUserStatus(userId: number, status: 'USER' | 'MEMBER', adminId: number) {
-    await delay(300);
-    
-    try {
-      const userIndex = users.findIndex(u => u.id === userId);
-      if (userIndex === -1) {
-        return { success: false, error: 'User not found' };
-      }
-      
-      const now = new Date().toISOString();
-      users[userIndex].user_status = status;
-      users[userIndex].updated_at = now;
-      
-      // 同步到 localStorage 以保持一致性
-      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
-      if (localUserIndex !== -1) {
-        localUsers[localUserIndex].user_status = status;
-        localUsers[localUserIndex].updated_at = now;
-        localStorage.setItem('users', JSON.stringify(localUsers));
-      }
-      
-      console.log('✅ 用戶狀態已更新:', { userId, status, adminId });
-      return { success: true, data: users[userIndex] };
-    } catch (error) {
-      console.error('更新用戶狀態失敗:', error);
-      return { success: false, error: 'Failed to update user status' };
-    }
-  },
-
-  async getAllUsersWithRoles() {
-    await delay(300);
-    
-    try {
-      const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
-      
-      const usersWithRoles = users.map(user => {
-        const activeRoles = userRoles
-          .filter((ur: any) => ur.user_id === user.id && ur.is_active)
-          .map((ur: any) => ur.role);
-        
-        return {
-          ...user,
-          roles: activeRoles
-        };
-      });
-      
-      return { success: true, data: usersWithRoles };
-    } catch (error) {
-      console.error('獲取用戶和角色失敗:', error);
-      return { success: false, error: 'Failed to get users with roles' };
-    }
-  },
-
-  // 創建新用戶
-  async createUser(userData: any, adminId: number) {
-    await delay(500);
-    
-    try {
-      const timestamp = new Date().toISOString();
-      const newId = Math.max(0, ...users.map(u => u.id)) + 1;
-      
-      // 檢查 email 是否已存在
-      const existingUser = users.find(u => u.email === userData.email);
-      if (existingUser) {
-        return { success: false, error: 'Email already exists' };
-      }
-      
-      const newUser = {
-        id: newId,
-        name: userData.name,
-        email: userData.email,
-        phone: userData.phone,
-        password: userData.password, // 實際環境中應該要 hash
-        primary_role: userData.primary_role,
-        user_status: userData.user_status,
-        created_at: timestamp,
-        updated_at: timestamp
-      };
-      
-      users.push(newUser as any);
-      
-      // 同步到 localStorage
-      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      localUsers.push(newUser);
-      localStorage.setItem('users', JSON.stringify(localUsers));
-      
-      console.log('✅ 新用戶已創建:', newUser);
-      return { success: true, data: newUser };
-    } catch (error) {
-      console.error('創建用戶失敗:', error);
-      return { success: false, error: 'Failed to create user' };
-    }
-  },
-
-  // 更新用戶基本資訊
-  async updateUser(userData: any, adminId: number) {
-    await delay(300);
-    
-    try {
-      const userIndex = users.findIndex(u => u.id === userData.id);
-      if (userIndex === -1) {
-        return { success: false, error: 'User not found' };
-      }
-      
-      // 檢查 email 是否與其他用戶重複
-      const existingUser = users.find(u => u.email === userData.email && u.id !== userData.id);
-      if (existingUser) {
-        return { success: false, error: 'Email already exists' };
-      }
-      
-      const timestamp = new Date().toISOString();
-      users[userIndex] = {
-        ...users[userIndex],
-        name: userData.name,
-        email: userData.email,
-        phone: userData.phone,
-        primary_role: userData.primary_role,
-        user_status: userData.user_status,
-        updated_at: timestamp
-      };
-      
-      // 同步到 localStorage
-      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      const localUserIndex = localUsers.findIndex((u: any) => u.id === userData.id);
-      if (localUserIndex !== -1) {
-        localUsers[localUserIndex] = users[userIndex];
-        localStorage.setItem('users', JSON.stringify(localUsers));
-      }
-      
-      console.log('✅ 用戶資訊已更新:', users[userIndex]);
-      return { success: true, data: users[userIndex] };
-    } catch (error) {
-      console.error('更新用戶失敗:', error);
-      return { success: false, error: 'Failed to update user' };
-    }
-  },
-
-  // 刪除用戶
-  async deleteUser(userId: number, adminId: number) {
-    await delay(300);
-    
-    try {
-      const userIndex = users.findIndex(u => u.id === userId);
-      if (userIndex === -1) {
-        return { success: false, error: 'User not found' };
-      }
-      
-      // 防止刪除管理員自己
-      if (userId === adminId) {
-        return { success: false, error: 'Cannot delete yourself' };
-      }
-      
-      const deletedUser = users[userIndex];
-      users.splice(userIndex, 1);
-      
-      // 同步到 localStorage
-      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
-      if (localUserIndex !== -1) {
-        localUsers.splice(localUserIndex, 1);
-        localStorage.setItem('users', JSON.stringify(localUsers));
-      }
-      
-      // 同時刪除相關的角色記錄
-      let userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
-      userRoles = userRoles.filter((ur: any) => ur.user_id !== userId);
-      localStorage.setItem('userRoles', JSON.stringify(userRoles));
-      
-      console.log('✅ 用戶已刪除:', deletedUser);
-      return { success: true, data: deletedUser };
-    } catch (error) {
-      console.error('刪除用戶失敗:', error);
-      return { success: false, error: 'Failed to delete user' };
     }
   }
 };

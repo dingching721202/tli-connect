@@ -5,8 +5,10 @@ export interface User {
   email: string;
   phone: string;
   password: string;
-  primary_role: 'USER' | 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
-  user_status: 'USER' | 'MEMBER';
+  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
+  primary_role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
+  membership_status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER' | 'USER';
+  account_status: 'ACTIVE' | 'SUSPENDED';
   created_at: string;
   updated_at?: string;
 }
