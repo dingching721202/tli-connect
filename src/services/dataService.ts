@@ -2,6 +2,7 @@ import {
   User, Membership, ClassTimeslot, ClassAppointment,
   ApiResponse, LoginResponse, BatchBookingResponse
 } from '@/types';
+import { Agent } from '@/data/agents';
 import { generateBookingSessions } from '@/data/courseBookingIntegration';
 import { teacherDataService } from '@/data/teacherData';
 import { hashString } from '@/utils/enrollmentUtils';
@@ -29,12 +30,14 @@ import { users as usersData } from '@/data/users';
 import { memberships as membershipsData } from '@/data/memberships';
 import { classTimeslots as classTimeslotsData } from '@/data/class_timeslots';
 import { classAppointments as classAppointmentsData } from '@/data/class_appointments';
+import { agents as agentsData } from '@/data/agents';
 
 // 模擬資料庫
 const users: User[] = [...usersData] as User[];
 const memberships: Membership[] = [...membershipsData] as Membership[];
 const classTimeslots: ClassTimeslot[] = [...classTimeslotsData] as ClassTimeslot[];
 const classAppointments: ClassAppointment[] = [...classAppointmentsData] as ClassAppointment[];
+const agents: Agent[] = [...agentsData] as Agent[];
 
 // 輔助函數
 const generateId = (array: { id: number }[]): number => {
@@ -256,6 +259,40 @@ export const timeslotService = {
 
 // 預約服務 (US06, US07)
 export const bookingService = {
+  // 檢查用戶是否已經預約過特定時段
+  async checkExistingBooking(userId: number, timeslotId: number): Promise<boolean> {
+    // 檢查內存中的預約
+    const memoryBooking = classAppointments.find(a => 
+      a.user_id === userId && 
+      a.class_timeslot_id === timeslotId && 
+      a.status === 'CONFIRMED'
+    );
+    
+    if (memoryBooking) {
+      return true;
+    }
+    
+    // 檢查localStorage中的預約
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const storedAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]') as ClassAppointment[];
+        const localStorageBooking = storedAppointments.find((a: ClassAppointment) => 
+          a.user_id === userId && 
+          a.class_timeslot_id === timeslotId && 
+          a.status === 'CONFIRMED'
+        );
+        
+        if (localStorageBooking) {
+          return true;
+        }
+      } catch (error) {
+        console.error('檢查localStorage預約時發生錯誤:', error);
+      }
+    }
+    
+    return false;
+  },
+
   // 批量預約課程
   async batchBooking(userId: number, timeslotIds: number[]): Promise<BatchBookingResponse> {
     await delay(1000);
@@ -315,6 +352,14 @@ export const bookingService = {
       if (session.currentEnrollments >= session.capacity) {
         console.log(`❌ 時段已額滿: ${session.currentEnrollments}/${session.capacity}`);
         failedBookings.push({ timeslot_id: timeslotId, reason: 'FULL' });
+        continue;
+      }
+      
+      // 檢查用戶是否已經預約過這個時段（防止重複預約）
+      const existingAppointment = await this.checkExistingBooking(userId, timeslotId);
+      if (existingAppointment) {
+        console.log(`❌ 用戶 ${userId} 已預約過時段 ${timeslotId}`);
+        failedBookings.push({ timeslot_id: timeslotId, reason: 'FULL' }); // 使用FULL作為已預約的原因
         continue;
       }
       
@@ -957,6 +1002,64 @@ export const dashboardService = {
 };
 
 // 請假管理服務
+// 代理管理服務
+export const agentService = {
+  // 獲取所有代理
+  async getAllAgents(): Promise<Agent[]> {
+    await delay(200);
+    return [...agents];
+  },
+
+  // 根據 user_id 獲取代理資料
+  async getAgentByUserId(userId: number): Promise<Agent | null> {
+    await delay(200);
+    return agents.find(agent => agent.user_id === userId) || null;
+  },
+
+  // 根據代理 ID 獲取代理資料
+  async getAgentById(agentId: number): Promise<Agent | null> {
+    await delay(200);
+    return agents.find(agent => agent.id === agentId) || null;
+  },
+
+  // 獲取代理的銷售紀錄 (僅限該代理自己的資料)
+  async getAgentSalesRecords(agentUserId: number): Promise<any[]> {
+    await delay(200);
+    const agent = agents.find(a => a.user_id === agentUserId);
+    if (!agent) return [];
+    
+    // 這裡返回該代理的銷售紀錄
+    // 目前為模擬資料，實際應該從銷售紀錄表中查詢
+    return [];
+  },
+
+  // 更新代理資料
+  async updateAgent(agentId: number, updateData: Partial<Agent>): Promise<boolean> {
+    await delay(300);
+    const index = agents.findIndex(agent => agent.id === agentId);
+    if (index === -1) return false;
+    
+    agents[index] = {
+      ...agents[index],
+      ...updateData,
+      updated_at: new Date().toISOString()
+    };
+    return true;
+  },
+
+  // 檢查使用者是否為代理
+  async isUserAgent(userId: number): Promise<boolean> {
+    await delay(100);
+    return agents.some(agent => agent.user_id === userId);
+  },
+
+  // 根據代理代碼獲取代理
+  async getAgentByCode(agentCode: string): Promise<Agent | null> {
+    await delay(200);
+    return agents.find(agent => agent.agent_code === agentCode) || null;
+  }
+};
+
 export const leaveService = {
   // 創建請假申請
   async createLeaveRequest(requestData: {

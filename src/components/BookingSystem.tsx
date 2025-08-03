@@ -343,11 +343,29 @@ const BookingSystem: React.FC = () => {
 
     try {
       
-      // 提取 timeslot IDs (US06.1)
-      const timeslotIds = selectedCourses.map(course => {
-        const courseWithStatus = course;
-        return courseWithStatus.timeslot_id;
+      // 提取 timeslot IDs，並過濾掉已預約的課程 (防止重複預約)
+      const coursesToBook = selectedCourses.filter(course => {
+        const isAlreadyBooked = checkUserBooking(user.id, course.timeslot_id);
+        if (isAlreadyBooked) {
+          console.log(`⚠️ 課程 ${course.title} 已預約，跳過`);
+        }
+        return !isAlreadyBooked;
       });
+
+      if (coursesToBook.length === 0) {
+        alert('所有選擇的課程都已預約過！');
+        return;
+      }
+
+      if (coursesToBook.length < selectedCourses.length) {
+        const skippedCount = selectedCourses.length - coursesToBook.length;
+        const confirmMessage = `檢測到 ${skippedCount} 門課程已預約過，將只預約剩餘的 ${coursesToBook.length} 門課程。\n\n是否繼續預約？`;
+        if (!confirm(confirmMessage)) {
+          return;
+        }
+      }
+
+      const timeslotIds = coursesToBook.map(course => course.timeslot_id);
 
       // 呼叫批量預約 API (US06)
       const result = await bookingService.batchBooking(user.id, timeslotIds);

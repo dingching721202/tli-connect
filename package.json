@@ -3,11 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node force-port-3000.js",
-    "dev:safe": "node force-port-3000.js",
-    "dev:smart": "node find-port-and-start.js",
+    "dev": "next dev",
     "dev:3000": "next dev --port 3000 --hostname localhost",
-    "dev:3001": "next dev --port 3001 --hostname localhost",
     "dev:8000": "next dev --port 8000 --hostname localhost",
     "build": "next build",
     "start": "next start",

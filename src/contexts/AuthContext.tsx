@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService, memberCardService } from '@/services/dataService';
+import { authService, memberCardService, agentService } from '@/services/dataService';
 import { User as DataUser, Membership } from '@/types';
 
 interface User {
@@ -9,9 +9,10 @@ interface User {
   email: string;
   name: string;
   phone: string;
-  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN';
+  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
   membership?: Membership | null;
   avatar?: string;
+  agentData?: any; // 代理專用資料
 }
 
 interface AuthContextType {
@@ -27,6 +28,7 @@ interface AuthContextType {
   isTeacher: boolean;
   isOps: boolean;
   isAdmin: boolean;
+  isAgent: boolean;
   refreshMembership: () => Promise<void>;
 }
 
@@ -78,6 +80,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       membership = await memberCardService.getUserPurchasedMembership(userData.id);
     }
     
+    // 如果是 AGENT 角色，載入代理資料
+    let agentData = null;
+    if (userData.role === 'AGENT') {
+      agentData = await agentService.getAgentByUserId(userData.id);
+    }
+    
     return {
       id: userData.id,
       email: userData.email,
@@ -85,6 +93,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       phone: userData.phone,
       role: userData.role,
       membership,
+      agentData,
       avatar: `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face`
     };
   };
@@ -212,7 +221,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const hasActiveMembership = () => {
     if (!user) return false;
-    if (user.role !== 'STUDENT') return true; // 非學生角色總是有權限
+    if (user.role !== 'STUDENT' && user.role !== 'AGENT') return true; // 非學生和代理角色總是有權限
+    
+    // AGENT 角色只能看到自己的資料，但有基本權限
+    if (user.role === 'AGENT') {
+      // 檢查代理狀態是否為 ACTIVE
+      return user.agentData?.status === 'ACTIVE';
+    }
     
     // 允許 ACTIVE 和 PURCHASED 狀態的會員預約
     return user.membership?.status === 'ACTIVE' || user.membership?.status === 'PURCHASED';
@@ -247,6 +262,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isTeacher: user?.role === 'TEACHER',
     isOps: user?.role === 'OPS',
     isAdmin: user?.role === 'ADMIN',
+    isAgent: user?.role === 'AGENT',
     refreshMembership
   };
 

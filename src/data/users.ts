@@ -4,7 +4,7 @@ export interface User {
   email: string;
   phone: string;
   password: string;
-  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN';
+  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
   created_at: string;
 }
 
@@ -80,6 +80,52 @@ export const users: User[] = [
     role: "STUDENT",
     id: 8,
     created_at: "2025-07-14T12:00:00+00:00"
+  },
+  // Agent users
+  {
+    name: "張代理",
+    email: "agent1@example.com",
+    phone: "0912-345-678",
+    password: "password",
+    role: "AGENT",
+    id: 9,
+    created_at: "2024-01-15T00:00:00+00:00"
+  },
+  {
+    name: "王顧問",
+    email: "consultant1@example.com",
+    phone: "0923-456-789",
+    password: "password",
+    role: "AGENT",
+    id: 10,
+    created_at: "2024-02-01T00:00:00+00:00"
+  },
+  {
+    name: "創新科技有限公司",
+    email: "contact@innovation.com",
+    phone: "02-1234-5678",
+    password: "password",
+    role: "AGENT",
+    id: 11,
+    created_at: "2024-03-10T00:00:00+00:00"
+  },
+  {
+    name: "陳老師",
+    email: "teacher.agent@example.com",
+    phone: "0934-567-890",
+    password: "password",
+    role: "AGENT",
+    id: 12,
+    created_at: "2024-03-01T00:00:00+00:00"
+  },
+  {
+    name: "林同學",
+    email: "student.agent@example.com",
+    phone: "0945-678-901",
+    password: "password",
+    role: "AGENT",
+    id: 13,
+    created_at: "2024-06-01T00:00:00+00:00"
   }
 ];
 
