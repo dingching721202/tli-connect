@@ -397,18 +397,18 @@ const TeacherManagement: React.FC = () => {
       {/* Teachers Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
+          <table className="min-w-full table-fixed divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">教師資訊</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">教授類別</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">年資</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">外語能力</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">專業領域</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">資格認證</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">教學數據</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                <th className="w-40 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">教師資訊</th>
+                <th className="w-36 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">教授類別</th>
+                <th className="w-20 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">年資</th>
+                <th className="w-40 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">外語能力</th>
+                <th className="w-40 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">專業領域</th>
+                <th className="w-48 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">資格認證</th>
+                <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">教學數據</th>
+                <th className="w-16 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
+                <th className="w-20 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
@@ -419,22 +419,28 @@ const TeacherManagement: React.FC = () => {
                   animate={{ opacity: 1 }}
                   className="hover:bg-gray-50"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="w-40 px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
-                        <SafeIcon icon={FiUser} className="text-white text-sm" />
+                      <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
+                        <SafeIcon icon={FiUser} className="text-white text-xs" />
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{teacher.name}</div>
-                        <div className="text-sm text-gray-500">{teacher.email}</div>
-                        <div className="text-xs text-gray-400">{teacher.phone}</div>
+                      <div className="ml-2 min-w-0 flex-1">
+                        <div className="text-sm font-medium text-gray-900 truncate" title={teacher.name}>
+                          {teacher.name}
+                        </div>
+                        <div className="text-xs text-gray-500 truncate" title={teacher.email}>
+                          {teacher.email}
+                        </div>
+                        <div className="text-xs text-gray-400 truncate" title={teacher.phone}>
+                          {teacher.phone}
+                        </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="w-36 px-6 py-4">
+                    <div className="flex flex-wrap gap-1">
                       {teacher.teachingCategory?.slice(0, 2).map((category, index) => (
-                        <span key={index} className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                        <span key={index} className="inline-block bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">
                           {category}
                         </span>
                       ))}
@@ -446,15 +452,15 @@ const TeacherManagement: React.FC = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="w-20 px-6 py-4 whitespace-nowrap">
+                    <div className="text-xs text-gray-900">
                       {teacher.experience || '未設定'}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="w-40 px-6 py-4">
+                    <div className="flex flex-wrap gap-1">
                       {teacher.languages.slice(0, 2).map((lang, index) => (
-                        <span key={index} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                        <span key={index} className="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
                           {lang}
                         </span>
                       ))}
@@ -466,10 +472,10 @@ const TeacherManagement: React.FC = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="w-40 px-6 py-4">
+                    <div className="flex flex-wrap gap-1">
                       {teacher.expertise.slice(0, 2).map((exp, index) => (
-                        <span key={index} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                        <span key={index} className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
                           {exp}
                         </span>
                       ))}
@@ -481,10 +487,10 @@ const TeacherManagement: React.FC = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="w-48 px-6 py-4">
+                    <div className="flex flex-wrap gap-1">
                       {teacher.qualification.slice(0, 2).map((qual, index) => (
-                        <span key={index} className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">
+                        <span key={index} className="inline-block bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
                           {qual}
                         </span>
                       ))}
@@ -496,8 +502,8 @@ const TeacherManagement: React.FC = () => {
                       )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">
+                  <td className="w-32 px-6 py-4 whitespace-nowrap">
+                    <div className="text-xs text-gray-900 space-y-1">
                       <div>授課: {teacher.teachingHours}h</div>
                       <div>學生: {teacher.totalStudents}人</div>
                       <div className="flex items-center">
@@ -506,13 +512,13 @@ const TeacherManagement: React.FC = () => {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(teacher.status)}`}>
+                  <td className="w-16 px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-1 py-1 text-xs font-semibold rounded-full ${getStatusColor(teacher.status)}`}>
                       {getStatusText(teacher.status)}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div className="flex space-x-2">
+                  <td className="w-20 px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <div className="flex space-x-1">
                       <motion.button
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
@@ -521,7 +527,7 @@ const TeacherManagement: React.FC = () => {
                           setIsEditing(false);
                           setShowDetailModal(true);
                         }}
-                        className="text-blue-600 hover:text-blue-900"
+                        className="text-blue-600 hover:text-blue-900 p-1"
                         title="查看/編輯"
                       >
                         <SafeIcon icon={FiEye} />
@@ -530,7 +536,7 @@ const TeacherManagement: React.FC = () => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         onClick={() => handleDeleteTeacher(teacher.id)}
-                        className="text-red-600 hover:text-red-900"
+                        className="text-red-600 hover:text-red-900 p-1"
                         title="刪除"
                       >
                         <SafeIcon icon={FiTrash2} />
