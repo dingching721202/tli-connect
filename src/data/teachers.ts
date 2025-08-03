@@ -234,7 +234,10 @@ class TeacherDataService {
     if (typeof window !== 'undefined') {
       try {
         const storedTeachers = localStorage.getItem('teachers');
-        if (storedTeachers) {
+        const dataVersion = localStorage.getItem('teachersDataVersion');
+        const currentVersion = '2.0'; // 版本號用於檢測數據結構變化
+        
+        if (storedTeachers && dataVersion === currentVersion) {
           const parsed = JSON.parse(storedTeachers);
           // 如果 localStorage 是空數組，重新載入默認數據
           if (Array.isArray(parsed) && parsed.length === 0) {
@@ -244,13 +247,17 @@ class TeacherDataService {
             this.teachers = parsed;
           }
         } else {
+          // 第一次使用或版本不匹配，載入新的默認數據
+          console.log('Loading new teacher data (6 teachers)...');
           this.teachers = [...defaultTeachers];
           this.saveTeachers();
+          localStorage.setItem('teachersDataVersion', currentVersion);
         }
       } catch (error) {
         console.error('Error loading teachers:', error);
         this.teachers = [...defaultTeachers];
         this.saveTeachers();
+        localStorage.setItem('teachersDataVersion', '2.0');
       }
     } else {
       this.teachers = [...defaultTeachers];
@@ -405,6 +412,16 @@ class TeacherDataService {
       averageRating
     };
   }
+
+  // Reset to default teachers (for testing/admin use)
+  public resetToDefaultTeachers(): void {
+    this.teachers = [...defaultTeachers];
+    this.saveTeachers();
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('teachersDataVersion', '2.0');
+      console.log('Teachers data reset to 6 default teachers');
+    }
+  }
 }
 
 // Export singleton instance
@@ -422,6 +439,7 @@ export const deleteTeacher = (id: number) => teacherDataService.deleteTeacher(id
 export const getTeachersForScheduling = () => teacherDataService.getTeachersForScheduling();
 export const searchTeachers = (query: string) => teacherDataService.searchTeachers(query);
 export const getTeacherStatistics = () => teacherDataService.getTeacherStatistics();
+export const resetToDefaultTeachers = () => teacherDataService.resetToDefaultTeachers();
 
 // Export types
 // Teacher is already exported as an interface above

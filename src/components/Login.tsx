@@ -60,6 +60,15 @@ const Login: React.FC = () => {
     { email: 'admin@example.com', name: 'Admin User', role: '管理員 (ADMIN)' }
   ];
 
+  // AGENT 角色測試帳號
+  const agentTestAccounts = [
+    { email: 'agent1@example.com', name: '張代理', role: '代理 (AGENT)', type: 'AGENT', description: '一般代理，分紅15%' },
+    { email: 'consultant1@example.com', name: '王顧問', role: '顧問 (CONSULTANT)', type: 'CONSULTANT', description: '顧問代理，分紅8%' },
+    { email: 'contact@innovation.com', name: '創新科技有限公司', role: '企業代理 (COMPANY)', type: 'COMPANY', description: '企業代理，統編12345678' },
+    { email: 'teacher.agent@example.com', name: '陳老師', role: '教師代理 (TEACHER_AGENT)', type: 'TEACHER_AGENT', description: '教師兼代理' },
+    { email: 'student.agent@example.com', name: '林同學', role: '學生代理 (STUDENT_AGENT)', type: 'STUDENT_AGENT', description: '學生代理推廣' }
+  ];
+
   const fillDemoAccount = (demoEmail: string) => {
     setEmail(demoEmail);
     setPassword('password');
@@ -351,6 +360,48 @@ const Login: React.FC = () => {
               </div>
             </div>
 
+            {/* AGENT 角色測試帳號 */}
+            <div className="mb-6">
+              <h4 className="text-sm font-medium text-gray-700 mb-3">🎯 AGENT 代理測試帳號</h4>
+              <div className="grid gap-2">
+                {agentTestAccounts.map((account, index) => (
+                  <motion.button
+                    key={account.email}
+                    onClick={() => fillDemoAccount(account.email)}
+                    className="flex items-center justify-between p-3 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 rounded-lg transition-colors text-left border border-amber-200 hover:border-orange-300"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.1 * (index + membershipTestAccounts.length) }}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-medium text-gray-900">{account.name}</span>
+                        <span className={`
+                          px-2 py-1 rounded-full text-xs font-medium
+                          ${account.type === 'AGENT' 
+                            ? 'bg-amber-100 text-amber-800' 
+                            : account.type === 'CONSULTANT'
+                            ? 'bg-blue-100 text-blue-800'
+                            : account.type === 'COMPANY'
+                            ? 'bg-purple-100 text-purple-800'
+                            : account.type === 'TEACHER_AGENT'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-pink-100 text-pink-800'
+                          }
+                        `}>
+                          {account.type}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500">{account.email}</div>
+                      <div className="text-xs text-gray-400 mt-1">{account.description}</div>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+
             {/* 其他角色測試帳號 */}
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-3">其他角色測試</h4>
@@ -364,7 +415,7 @@ const Login: React.FC = () => {
                     whileTap={{ scale: 0.99 }}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * (index + membershipTestAccounts.length) }}
+                    transition={{ delay: 0.1 * (index + membershipTestAccounts.length + agentTestAccounts.length) }}
                   >
                     <div>
                       <div className="font-medium text-gray-900 text-sm">{account.name}</div>
