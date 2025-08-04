@@ -11,8 +11,8 @@ interface User {
   email: string;
   name: string;
   phone: string;
-  primary_role: 'USER' | 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
-  user_status: 'USER' | 'MEMBER';
+  primary_role: 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'OPS' | 'ADMIN';
+  membership_status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER';
   roles: string[]; // 多重角色
   membership?: Membership | null;
   avatar?: string;
@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       name: userData.name,
       phone: userData.phone,
       primary_role: userData.primary_role,
-      user_status: userData.user_status,
+      membership_status: userData.membership_status,
       roles,
       membership,
       agentData,
@@ -255,7 +255,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     // 會員狀態或有 STUDENT 角色
-    if (user.user_status === 'MEMBER' || user.roles.includes('STUDENT')) {
+    if (user.membership_status === 'MEMBER' || user.roles.includes('STUDENT')) {
       return user.membership?.status === 'ACTIVE' || user.membership?.status === 'PURCHASED';
     }
     
@@ -310,7 +310,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isOps: user?.primary_role === 'OPS' || user?.roles.includes('OPS') || false,
     isAdmin: user?.primary_role === 'ADMIN' || user?.roles.includes('ADMIN') || false,
     isAgent: user?.primary_role === 'AGENT' || user?.roles.includes('AGENT') || false,
-    isMember: user?.user_status === 'MEMBER' || user?.roles.includes('STUDENT') || false,
+    isMember: user?.membership_status === 'MEMBER' || user?.roles.includes('STUDENT') || false,
     isCorporateContact: user?.primary_role === 'CORPORATE_CONTACT' || user?.roles.includes('CORPORATE_CONTACT') || false,
     hasRole,
     hasAnyRole,

@@ -148,10 +148,10 @@ const Dashboard = () => {
       try {
         setLoading(true);
         
-        if (user.role === 'STUDENT') {
+        if (user.primary_role === 'STUDENT') {
           const data = await dashboardService.getDashboardData(user.id);
           setDashboardData(data as { membership: Membership | null; upcomingClasses: BookedCourse[] });
-        } else if (user.role === 'TEACHER') {
+        } else if (user.primary_role === 'TEACHER') {
           // 🔧 教師也使用 getDashboardData，與我的預約頁面保持一致
           const data = await dashboardService.getDashboardData(user.id, 'TEACHER');
           setDashboardData(data as { membership: Membership | null; upcomingClasses: BookedCourse[] });

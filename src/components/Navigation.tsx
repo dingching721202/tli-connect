@@ -42,7 +42,7 @@ const Navigation: React.FC = () => {
   ];
 
   const navigationItems = [
-    { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'OPS', 'CORPORATE_CONTACT', 'ADMIN', 'AGENT'] },
+    { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'OPS', 'ADMIN'] },
     { name: '課程預約', href: '/booking', icon: FiBook, roles: ['STUDENT'] },
     { name: '會員管理', href: '/member-management', icon: FiUsers, roles: ['OPS', 'ADMIN'] },
     { name: '教師管理', href: '/teacher-management', icon: FiUserCheck, roles: ['OPS', 'ADMIN'] },

@@ -115,6 +115,9 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    overflow-y: scroll;
+  }
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-geist-sans), 'Noto Sans TC', 'Microsoft JhengHei', '微軟正黑體', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif;
