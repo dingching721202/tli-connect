@@ -348,7 +348,7 @@ const Navigation: React.FC = () => {
                   />
                   <div className="hidden xl:block text-xs">
                     <div className="font-medium text-gray-900 truncate max-w-20">{user?.name}</div>
-                    <div className="text-gray-500 capitalize text-[10px]">{user?.role}</div>
+                    <div className="text-gray-500 capitalize text-[10px]">{user?.primary_role}</div>
                   </div>
                 </motion.div>
                 <motion.button
@@ -579,7 +579,7 @@ const Navigation: React.FC = () => {
                       />
                       <div>
                         <div className="font-medium text-gray-900">{user?.name}</div>
-                        <div className="text-sm text-gray-500 capitalize">{user?.role}</div>
+                        <div className="text-sm text-gray-500 capitalize">{user?.primary_role}</div>
                       </div>
                     </motion.div>
                     <motion.button

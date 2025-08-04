@@ -114,7 +114,7 @@ export const authService = {
     const jwt = jwtUtils.generateToken({
       userId: user.id,
       email: user.email,
-      role: user.role
+      role: user.primary_role
     });
     
     return {

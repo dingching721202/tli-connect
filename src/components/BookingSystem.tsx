@@ -330,7 +330,7 @@ const BookingSystem: React.FC = () => {
     }
 
     // Check if user has membership for booking (US06.2)
-    if (user.role === 'STUDENT' && !hasActiveMembership()) {
+    if (user.primary_role === 'STUDENT' && !hasActiveMembership()) {
       alert('您需要有效的會員資格才能預約課程！\n\n即將跳轉到會員方案頁面...');
       window.location.href = '/membership';
       return;
@@ -495,7 +495,7 @@ const BookingSystem: React.FC = () => {
         </motion.p>
 
         {/* Membership Status */}
-        {user?.role === 'STUDENT' && (
+        {user?.primary_role === 'STUDENT' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -717,7 +717,7 @@ const BookingSystem: React.FC = () => {
       )}
 
       {/* Student without membership notice */}
-      {user?.role === 'STUDENT' && !hasActiveMembership() && (
+      {user?.primary_role === 'STUDENT' && !hasActiveMembership() && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

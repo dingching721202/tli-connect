@@ -12,7 +12,7 @@ export default function BookingPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== 'STUDENT')) {
+    if (!loading && (!user || user?.primary_role !== 'STUDENT')) {
       // 如果用戶未登入或不是學生，重定向到登入頁面
       router.push('/login');
     }
@@ -31,7 +31,7 @@ export default function BookingPage() {
   }
 
   // 如果用戶未登入或不是學生，不渲染內容
-  if (!user || user.role !== 'STUDENT') {
+  if (!user || user?.primary_role !== 'STUDENT') {
     return null;
   }
 
