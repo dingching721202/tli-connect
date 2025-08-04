@@ -217,7 +217,7 @@ const ConsultationManagementPage: React.FC = () => {
 
   // 權限檢查
   useEffect(() => {
-    if (!user || !['OPS', 'ADMIN'].includes(user.primary_role)) {
+    if (!user || !user.roles.some(role => ['OPS', 'ADMIN'].includes(role))) {
       router.push('/dashboard');
       return;
     }
@@ -242,8 +242,8 @@ const ConsultationManagementPage: React.FC = () => {
   // 初次載入
   useEffect(() => {
     if (user) {
-      console.log('當前用戶角色:', user.primary_role);
-      if (['OPS', 'ADMIN'].includes(user.primary_role)) {
+      console.log('當前用戶角色:', user.roles[0]);
+      if (user.roles.some(role => ['OPS', 'ADMIN'].includes(role))) {
         loadConsultations();
       } else {
         console.log('用戶角色不符合要求，需要 OPS 或 ADMIN 角色');
@@ -541,7 +541,7 @@ const ConsultationManagementPage: React.FC = () => {
     lost: consultations.filter(c => c.status === ConsultationStatus.CLOSED_LOST).length
   };
 
-  if (!user || !['OPS', 'ADMIN'].includes(user.primary_role)) {
+  if (!user || !user.roles.some(role => ['OPS', 'ADMIN'].includes(role))) {
     return null;
   }
 
@@ -797,12 +797,12 @@ const ConsultationManagementPage: React.FC = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
                 <p className="text-gray-600">載入中...</p>
               </div>
-            ) : !user || !['OPS', 'ADMIN'].includes(user.primary_role) ? (
+            ) : !user || !user.roles.some(role => ['OPS', 'ADMIN'].includes(role)) ? (
               <div className="p-8 text-center">
                 <SafeIcon icon={FiX} className="mx-auto h-12 w-12 text-red-400 mb-4" />
                 <p className="text-gray-600 mb-2">權限不足</p>
                 <p className="text-sm text-gray-500">
-                  當前角色: {user?.primary_role || '未登入'}<br />
+                  當前角色: {user?.roles[0] || '未登入'}<br />
                   需要角色: OPS 或 ADMIN
                 </p>
               </div>

@@ -69,10 +69,10 @@ export const authService = {
       email,
       phone,
       password: `$2b$10$${password}`, // 模擬密碼雜湊
-      role: 'STUDENT',
-      primary_role: 'STUDENT',
+      roles: ['STUDENT'],
       membership_status: 'NON_MEMBER',
       account_status: 'ACTIVE',
+      campus: '羅斯福校',
       created_at: new Date().toISOString()
     };
     
@@ -114,7 +114,7 @@ export const authService = {
     const jwt = jwtUtils.generateToken({
       userId: user.id,
       email: user.email,
-      role: user.primary_role
+      role: user.roles[0] || 'STUDENT'
     });
     
     return {
@@ -143,27 +143,25 @@ export const authService = {
     }
   },
 
-  async updateUserRoles(userId: number, roles: string[], adminId: number, primaryRole?: string) {
+  async updateUserRoles(userId: number, roles: string[], adminId: number) {
     await delay(500);
     
     try {
       const timestamp = new Date().toISOString();
       
-      // 更新主要角色（如果提供）
-      if (primaryRole) {
-        const userIndex = users.findIndex(u => u.id === userId);
-        if (userIndex !== -1) {
-          users[userIndex].primary_role = primaryRole as any;
-          users[userIndex].updated_at = timestamp;
-          
-          // 同步到 localStorage
-          const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-          const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
-          if (localUserIndex !== -1) {
-            localUsers[localUserIndex].primary_role = primaryRole;
-            localUsers[localUserIndex].updated_at = timestamp;
-            localStorage.setItem('users', JSON.stringify(localUsers));
-          }
+      // 更新用戶角色
+      const userIndex = users.findIndex(u => u.id === userId);
+      if (userIndex !== -1) {
+        users[userIndex].roles = roles as any;
+        users[userIndex].updated_at = timestamp;
+        
+        // 同步到 localStorage
+        const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+        const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+        if (localUserIndex !== -1) {
+          localUsers[localUserIndex].roles = roles;
+          localUsers[localUserIndex].updated_at = timestamp;
+          localStorage.setItem('users', JSON.stringify(localUsers));
         }
       }
       
@@ -190,8 +188,8 @@ export const authService = {
       
       localStorage.setItem('userRoles', JSON.stringify(userRoles));
       
-      console.log('✅ 用戶角色已更新:', { userId, primaryRole, roles, adminId });
-      return { success: true, data: { primaryRole, roles } };
+      console.log('✅ 用戶角色已更新:', { userId, roles, adminId });
+      return { success: true, data: { roles } };
     } catch (error) {
       console.error('更新用戶角色失敗:', error);
       return { success: false, error: 'Failed to update user roles' };
@@ -272,8 +270,10 @@ export const authService = {
         email: userData.email,
         phone: userData.phone,
         password: userData.password, // 實際環境中應該要 hash
-        primary_role: userData.primary_role,
+        roles: userData.roles,
         membership_status: userData.membership_status,
+        campus: userData.campus,
+        account_status: 'ACTIVE',
         created_at: timestamp,
         updated_at: timestamp
       };
@@ -315,8 +315,9 @@ export const authService = {
         name: userData.name,
         email: userData.email,
         phone: userData.phone,
-        primary_role: userData.primary_role,
+        roles: userData.roles,
         membership_status: userData.membership_status,
+        campus: userData.campus,
         updated_at: timestamp
       };
       
@@ -384,7 +385,7 @@ export const authService = {
       let newStatus: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER' | 'USER' = 'NON_MEMBER';
 
       // 檢查用戶角色
-      if (user.primary_role !== 'STUDENT') {
+      if (!user.roles.includes('STUDENT')) {
         // 非學生角色自動變成使用者
         newStatus = 'USER';
       } else {

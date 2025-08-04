@@ -88,7 +88,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
   };
 
   const isUserEligible = () => {
-    return user && (user.primary_role !== 'STUDENT' || hasActiveMembership());
+    return user && (!user.roles.includes('STUDENT') || hasActiveMembership());
   };
 
   return (
@@ -240,7 +240,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
           )}
 
           {/* Membership Benefits Notice */}
-          {user?.primary_role === 'STUDENT' && hasActiveMembership() && (
+          {user?.roles.includes('STUDENT') && hasActiveMembership() && (
             <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
               <div className="flex items-center text-green-800">
                 <SafeIcon icon={FiCheck} size={16} className="mr-2" />

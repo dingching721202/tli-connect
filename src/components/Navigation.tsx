@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
@@ -13,7 +13,26 @@ const Navigation: React.FC = () => {
   const [isVideoCoursesOpen, setIsVideoCoursesOpen] = useState(false);
   const [isOnlineGroupClassesOpen, setIsOnlineGroupClassesOpen] = useState(false);
   const [isEventsOpen, setIsEventsOpen] = useState(false);
-  const { user, logout, isAuthenticated } = useAuth();
+  const [isRoleSelectorOpen, setIsRoleSelectorOpen] = useState(false);
+  const roleSelectorRef = useRef<HTMLDivElement>(null);
+  const { user, logout, isAuthenticated, currentRole, switchRole, availableRoles } = useAuth();
+
+  // 點擊外部關閉角色選擇器
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (roleSelectorRef.current && !roleSelectorRef.current.contains(event.target as Node)) {
+        setIsRoleSelectorOpen(false);
+      }
+    };
+
+    if (isRoleSelectorOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isRoleSelectorOpen]);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -75,10 +94,10 @@ const Navigation: React.FC = () => {
     if (roles.includes('all')) return true;
     if (!user) return roles.includes('guest');
     
-    // 檢查主要角色
-    if (roles.includes(user.primary_role)) return true;
+    // 檢查當前角色
+    if (currentRole && roles.includes(currentRole)) return true;
     
-    // 檢查附加角色
+    // 檢查所有角色
     if (user.roles && user.roles.some(role => roles.includes(role))) return true;
     
     return false;
@@ -86,8 +105,8 @@ const Navigation: React.FC = () => {
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-14 xl:h-16">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6">
+        <div className="flex items-center h-12 xl:h-14">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -95,7 +114,7 @@ const Navigation: React.FC = () => {
             className="flex-shrink-0 cursor-pointer"
             onClick={() => handleNavigation('/')}
           >
-            <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+            <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
               TLI Connect
             </h1>
           </motion.div>
@@ -111,7 +130,7 @@ const Navigation: React.FC = () => {
                 >
                   <motion.button
                     className={`
-                      flex items-center space-x-1 px-2 py-1.5 rounded-md text-xs xl:text-sm font-medium transition-colors whitespace-nowrap
+                      flex items-center space-x-1 px-1.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap
                       ${pathname.startsWith('/video-courses')
                         ? 'text-blue-600 bg-blue-50'
                         : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
@@ -121,10 +140,10 @@ const Navigation: React.FC = () => {
                     whileTap={{ scale: 0.98 }}
                     title="影音課程"
                   >
-                    <SafeIcon icon={FiPlay} size={14} />
-                    <span className="hidden xl:inline">影音課程</span>
+                    <SafeIcon icon={FiPlay} size={12} />
+                    <span className="hidden xl:inline text-xs">影音課程</span>
                     <span className="xl:hidden text-[10px]">影音</span>
-                    <SafeIcon icon={FiChevronDown} size={12} className={`transition-transform duration-200 ${isVideoCoursesOpen ? 'rotate-180' : ''}`} />
+                    <SafeIcon icon={FiChevronDown} size={10} className={`transition-transform duration-200 ${isVideoCoursesOpen ? 'rotate-180' : ''}`} />
                   </motion.button>
 
                   {/* Dropdown Menu */}
@@ -173,7 +192,7 @@ const Navigation: React.FC = () => {
                 >
                   <motion.button
                     className={`
-                      flex items-center space-x-1 px-2 py-1.5 rounded-md text-xs xl:text-sm font-medium transition-colors whitespace-nowrap
+                      flex items-center space-x-1 px-1.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap
                       ${pathname.startsWith('/online-group-classes')
                         ? 'text-green-600 bg-green-50'
                         : 'text-gray-700 hover:text-green-600 hover:bg-gray-50'
@@ -183,10 +202,10 @@ const Navigation: React.FC = () => {
                     whileTap={{ scale: 0.98 }}
                     title="線上團課"
                   >
-                    <SafeIcon icon={FiVideo} size={14} />
-                    <span className="hidden xl:inline">線上團課</span>
+                    <SafeIcon icon={FiVideo} size={12} />
+                    <span className="hidden xl:inline text-xs">線上團課</span>
                     <span className="xl:hidden text-[10px]">團課</span>
-                    <SafeIcon icon={FiChevronDown} size={12} className={`transition-transform duration-200 ${isOnlineGroupClassesOpen ? 'rotate-180' : ''}`} />
+                    <SafeIcon icon={FiChevronDown} size={10} className={`transition-transform duration-200 ${isOnlineGroupClassesOpen ? 'rotate-180' : ''}`} />
                   </motion.button>
 
                   {/* Dropdown Menu */}
@@ -235,7 +254,7 @@ const Navigation: React.FC = () => {
                 >
                   <motion.button
                     className={`
-                      flex items-center space-x-1 px-2 py-1.5 rounded-md text-xs xl:text-sm font-medium transition-colors whitespace-nowrap
+                      flex items-center space-x-1 px-1.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap
                       ${pathname.startsWith('/events')
                         ? 'text-orange-600 bg-orange-50'
                         : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50'
@@ -245,10 +264,10 @@ const Navigation: React.FC = () => {
                     whileTap={{ scale: 0.98 }}
                     title="活動"
                   >
-                    <SafeIcon icon={FiActivity} size={14} />
-                    <span className="hidden xl:inline">活動</span>
+                    <SafeIcon icon={FiActivity} size={12} />
+                    <span className="hidden xl:inline text-xs">活動</span>
                     <span className="xl:hidden text-[10px]">活動</span>
-                    <SafeIcon icon={FiChevronDown} size={12} className={`transition-transform duration-200 ${isEventsOpen ? 'rotate-180' : ''}`} />
+                    <SafeIcon icon={FiChevronDown} size={10} className={`transition-transform duration-200 ${isEventsOpen ? 'rotate-180' : ''}`} />
                   </motion.button>
 
                   {/* Dropdown Menu */}
@@ -294,7 +313,7 @@ const Navigation: React.FC = () => {
                   key={item.name}
                   onClick={() => handleNavigation(item.href)}
                   className={`
-                    flex items-center space-x-1 px-2 py-1.5 rounded-md text-xs xl:text-sm font-medium transition-colors whitespace-nowrap
+                    flex items-center space-x-1 px-1.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap
                     ${isActive(item.href)
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
@@ -304,8 +323,8 @@ const Navigation: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   title={item.name}
                 >
-                  <SafeIcon icon={item.icon} size={14} />
-                  <span className="hidden xl:inline">{item.name}</span>
+                  <SafeIcon icon={item.icon} size={12} />
+                  <span className="hidden xl:inline text-xs">{item.name}</span>
                   <span className="xl:hidden text-[10px]">{item.name.slice(0, 2)}</span>
                 </motion.button>
               ))}
@@ -315,11 +334,11 @@ const Navigation: React.FC = () => {
           {/* User Menu */}
           <div className="hidden lg:block">
             {isAuthenticated ? (
-              <div className="flex items-center space-x-2">
-                {/* Referral System Button */}
+              <div className="flex items-center space-x-1">
+                {/* 推薦系統按鈕 - 小巧設計 */}
                 <motion.button
                   onClick={() => handleNavigation('/referral')}
-                  className={`flex items-center space-x-1 px-2 py-1.5 text-xs xl:text-sm font-medium rounded-md transition-colors ${
+                  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 xl:w-auto xl:h-auto xl:px-1.5 xl:py-1 xl:space-x-1 text-xs font-medium rounded transition-colors ${
                     isActive('/referral')
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
@@ -328,62 +347,128 @@ const Navigation: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   title="推薦系統"
                 >
-                  <SafeIcon icon={FiShare2} size={14} />
-                  <span className="hidden xl:inline">推薦</span>
+                  <SafeIcon icon={FiShare2} size={12} />
+                  <span className="hidden xl:inline text-xs">推薦</span>
                 </motion.button>
                 
+                {/* 用戶頭像和信息 - 小巧設計 */}
                 <motion.div 
-                  className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 rounded-lg p-1.5 transition-colors"
+                  className="flex-shrink-0 flex items-center cursor-pointer hover:bg-gray-50 rounded p-0.5 xl:p-1 transition-colors"
                   onClick={() => handleNavigation('/profile')}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   title="查看個人資料"
                 >
                   <Image
-                    className="h-7 w-7 xl:h-8 xl:w-8 rounded-full object-cover"
-                    src={user?.avatar || 'https://www.gravatar.com/avatar/?d=mp&s=32'}
+                    className="h-6 w-6 xl:h-7 xl:w-7 rounded-full object-cover flex-shrink-0"
+                    src={user?.avatar || 'https://www.gravatar.com/avatar/?d=mp&s=28'}
                     alt={user?.name || 'User'}
-                    width={32}
-                    height={32}
+                    width={28}
+                    height={28}
                   />
-                  <div className="hidden xl:block text-xs">
-                    <div className="font-medium text-gray-900 truncate max-w-20">{user?.name}</div>
-                    <div className="text-gray-500 capitalize text-[10px]">{user?.primary_role}</div>
+                  <div className="hidden xl:block text-xs ml-1.5 min-w-0">
+                    <div className="font-medium text-gray-900 truncate w-14 text-[11px]">{user?.name}</div>
+                    <div className="text-gray-500 capitalize text-[9px] w-14 truncate">{currentRole}</div>
                   </div>
                 </motion.div>
+                
+                {/* 角色選擇器 - 小巧設計 */}
+                <div className="relative flex-shrink-0" ref={roleSelectorRef}>
+                  <motion.button
+                    onClick={() => {
+                      if (availableRoles.length > 1) {
+                        setIsRoleSelectorOpen(!isRoleSelectorOpen);
+                      }
+                    }}
+                    className={`flex items-center justify-center w-6 h-6 xl:w-7 xl:h-7 text-xs font-medium transition-colors rounded ${
+                      availableRoles.length > 1 
+                        ? 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 cursor-pointer' 
+                        : 'text-gray-300 cursor-default'
+                    }`}
+                    whileHover={availableRoles.length > 1 ? { scale: 1.1 } : {}}
+                    whileTap={availableRoles.length > 1 ? { scale: 0.95 } : {}}
+                    title={availableRoles.length > 1 ? "切換角色" : "當前角色"}
+                  >
+                    <SafeIcon 
+                      icon={FiChevronDown} 
+                      size={10} 
+                      className={`transition-transform duration-200 ${isRoleSelectorOpen ? 'rotate-180' : ''} ${
+                        availableRoles.length > 1 ? '' : 'opacity-30'
+                      }`}
+                    />
+                  </motion.button>
+                  
+                  <AnimatePresence>
+                    {isRoleSelectorOpen && availableRoles.length > 1 && (
+                      <motion.div
+                        initial={{ opacity: 0, scaleY: 0.8, y: -5 }}
+                        animate={{ opacity: 1, scaleY: 1, y: 0 }}
+                        exit={{ opacity: 0, scaleY: 0.8, y: -5 }}
+                        transition={{ duration: 0.15, ease: "easeOut" }}
+                        className="absolute right-0 top-full mt-1 w-24 xl:w-28 bg-white rounded-md shadow-md ring-1 ring-black ring-opacity-5 z-50 origin-top"
+                      >
+                        <div className="py-1">
+                          {availableRoles.map((role) => (
+                            <motion.button
+                              key={role}
+                              onClick={() => {
+                                switchRole(role);
+                                setIsRoleSelectorOpen(false);
+                              }}
+                              className={`block w-full text-left px-2 py-1.5 text-xs hover:bg-gray-50 transition-colors truncate ${
+                                currentRole === role 
+                                  ? 'bg-blue-50 text-blue-600 font-medium' 
+                                  : 'text-gray-700'
+                              }`}
+                              whileHover={{ backgroundColor: "rgb(249 250 251)" }}
+                              whileTap={{ scale: 0.98 }}
+                            >
+                              <span className="truncate">{role}</span>
+                              {currentRole === role && (
+                                <span className="ml-1 text-blue-500 text-[10px]">●</span>
+                              )}
+                            </motion.button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                
+                {/* 登出按鈕 - 小巧設計 */}
                 <motion.button
                   onClick={handleLogout}
-                  className="flex items-center space-x-1 px-2 py-1.5 text-xs xl:text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                  className="flex-shrink-0 flex items-center justify-center w-7 h-7 xl:w-auto xl:h-auto xl:px-1.5 xl:py-1 xl:space-x-1 text-xs font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   title="登出"
                 >
-                  <SafeIcon icon={FiLogOut} size={14} />
-                  <span className="hidden xl:inline">登出</span>
+                  <SafeIcon icon={FiLogOut} size={12} />
+                  <span className="hidden xl:inline text-xs">登出</span>
                 </motion.button>
               </div>
             ) : (
               <motion.button
                 onClick={() => handleNavigation('/login')}
-                className="bg-blue-600 text-white px-3 py-1.5 xl:px-4 xl:py-2 rounded-lg hover:bg-blue-700 transition-colors text-xs xl:text-sm font-medium flex items-center space-x-1"
+                className="bg-blue-600 text-white px-2.5 py-1 xl:px-3 xl:py-1.5 rounded hover:bg-blue-700 transition-colors text-xs font-medium flex items-center space-x-1"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <SafeIcon icon={FiUser} size={14} />
-                <span className="hidden xl:inline">登入</span>
+                <SafeIcon icon={FiUser} size={12} />
+                <span className="hidden xl:inline text-xs">登入</span>
               </motion.button>
             )}
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile menu button - 小巧設計 */}
           <div className="lg:hidden">
             <motion.button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-2 rounded-md text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors"
+              className="p-1.5 rounded text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
             >
-              <SafeIcon icon={isMenuOpen ? FiX : FiMenu} size={24} />
+              <SafeIcon icon={isMenuOpen ? FiX : FiMenu} size={20} />
             </motion.button>
           </div>
         </div>
@@ -571,17 +656,52 @@ const Navigation: React.FC = () => {
                       title="查看個人資料"
                     >
                       <Image
-                        className="h-10 w-10 rounded-full object-cover"
+                        className="h-10 w-10 rounded-full object-cover flex-shrink-0"
                         src={user?.avatar || 'https://www.gravatar.com/avatar/?d=mp&s=40'}
                         alt={user?.name || 'User'}
                         width={40}
                         height={40}
                       />
-                      <div>
-                        <div className="font-medium text-gray-900">{user?.name}</div>
-                        <div className="text-sm text-gray-500 capitalize">{user?.primary_role}</div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-gray-900 truncate">{user?.name}</div>
+                        <div className="text-sm text-gray-500 capitalize truncate w-20">{currentRole}</div>
                       </div>
                     </motion.div>
+                    
+                    {/* 手機版角色選擇器 - 固定佈局 */}
+                    <div className="space-y-2 px-3">
+                      <div className="text-sm font-medium text-gray-700 h-5 flex items-center">
+                        {availableRoles.length > 1 ? '切換視角：' : '當前角色：'}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 min-h-[2.5rem]">
+                        {availableRoles.map((role) => (
+                          <motion.button
+                            key={role}
+                            onClick={() => {
+                              if (availableRoles.length > 1) {
+                                switchRole(role);
+                              }
+                            }}
+                            className={`px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-center h-10 ${
+                              currentRole === role 
+                                ? 'bg-blue-600 text-white font-medium' 
+                                : availableRoles.length > 1
+                                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'
+                                  : 'bg-gray-100 text-gray-400 cursor-default'
+                            }`}
+                            whileHover={availableRoles.length > 1 ? { scale: 1.02 } : {}}
+                            whileTap={availableRoles.length > 1 ? { scale: 0.98 } : {}}
+                          >
+                            <span className="truncate">{role}</span>
+                          </motion.button>
+                        ))}
+                        {/* 如果只有一個角色，填充第二個位置以保持佈局 */}
+                        {availableRoles.length === 1 && (
+                          <div className="bg-gray-50 rounded-md h-10 opacity-30"></div>
+                        )}
+                      </div>
+                    </div>
+                    
                     <motion.button
                       onClick={handleLogout}
                       className="w-full flex items-center space-x-3 px-3 py-2 text-base font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"

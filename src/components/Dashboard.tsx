@@ -148,10 +148,10 @@ const Dashboard = () => {
       try {
         setLoading(true);
         
-        if (user.primary_role === 'STUDENT') {
+        if (user.roles.includes('STUDENT')) {
           const data = await dashboardService.getDashboardData(user.id);
           setDashboardData(data as { membership: Membership | null; upcomingClasses: BookedCourse[] });
-        } else if (user.primary_role === 'TEACHER') {
+        } else if (user.roles.includes('TEACHER')) {
           // 🔧 教師也使用 getDashboardData，與我的預約頁面保持一致
           const data = await dashboardService.getDashboardData(user.id, 'TEACHER');
           setDashboardData(data as { membership: Membership | null; upcomingClasses: BookedCourse[] });
@@ -170,11 +170,11 @@ const Dashboard = () => {
   useEffect(() => {
     const handleFocus = () => {
       // 當用戶從課程預約頁面返回時重新載入資料
-      if (user?.primary_role === 'STUDENT') {
+      if (user?.roles.includes('STUDENT')) {
         dashboardService.getDashboardData(user.id).then(data => {
           setDashboardData(data as any);
         });
-      } else if (user?.primary_role === 'TEACHER') {
+      } else if (user?.roles.includes('TEACHER')) {
         // 🔧 教師也使用相同的數據載入方式
         dashboardService.getDashboardData(user.id, 'TEACHER').then(data => {
           setDashboardData(data as any);
@@ -299,7 +299,7 @@ const Dashboard = () => {
 
 
   const getQuickStats = () => {
-    if (user?.primary_role === 'STUDENT') {
+    if (user?.roles.includes('STUDENT')) {
       if (!dashboardData || loading) {
         return [
           { label: '已預約課程', value: '-', icon: FiBook },
@@ -331,7 +331,7 @@ const Dashboard = () => {
       ];
     }
 
-    if (user?.primary_role === 'TEACHER') {
+    if (user?.roles.includes('TEACHER')) {
       // 🔧 使用教師管理系統的真實數據
       const teacherInSystem = teacherDataService.getTeacherByEmail(user.email);
       
@@ -365,14 +365,14 @@ const Dashboard = () => {
     }
 
 
-    if (user?.primary_role === 'OPS' || user?.primary_role === 'ADMIN') {
+    if (user?.roles.includes('OPS') || user?.roles.includes('ADMIN')) {
       return [
         { label: '總用戶數', value: '1,234', icon: FiUsers },
         { label: '總課程數', value: '156', icon: FiBook },
         { label: '本月預約', value: '89', icon: FiCalendar },
         { label: '系統使用率', value: '92%', icon: FiBarChart }
       ];
-    } else if (user?.primary_role === 'CORPORATE_CONTACT') {
+    } else if (user?.roles.includes('CORPORATE_CONTACT')) {
       return [
         { label: '企業員工數', value: '45', icon: FiUsers },
         { label: '已用名額', value: '32/50', icon: FiUserCheck },
@@ -395,7 +395,7 @@ const Dashboard = () => {
   };
 
   const getRoleDescription = () => {
-    switch (user?.primary_role) {
+    switch (user?.roles[0]) {
       case 'STUDENT': return '歡迎使用 TLI Connect 課程預約系統，開始您的學習之旅！';
       case 'TEACHER': return '歡迎回到教師管理面板，管理您的課程與學生。';
       case 'OPS': return '歡迎使用營運面板，管理系統設定與用戶。';
@@ -983,7 +983,7 @@ const Dashboard = () => {
     switch (status) {
       case 'upcoming': 
         // 🔧 教師看到：根據學生數量顯示不同顏色
-        if (user?.primary_role === 'TEACHER' && course) {
+        if (user?.roles.includes('TEACHER') && course) {
           return course.studentCount > 0 
             ? 'text-green-700 bg-green-50 border-green-200'  // 已開課 - 淺綠色
             : 'text-red-700 bg-red-50 border-red-200';       // 待開課 - 淺紅色
@@ -1008,7 +1008,7 @@ const Dashboard = () => {
     switch (status) {
       case 'upcoming': 
         // 🔧 教師看到：根據學生數量顯示"待開課"或"已開課"
-        if (user?.primary_role === 'TEACHER' && course) {
+        if (user?.roles.includes('TEACHER') && course) {
           return course.studentCount > 0 ? '已開課' : '待開課';
         }
         return '預約中';
@@ -1020,13 +1020,13 @@ const Dashboard = () => {
 
 
   const quickStats = getQuickStats();
-  const allBookedCourses = user?.primary_role === 'STUDENT' ? getBookedCourses() : [];
-  const allTeacherCourses = user?.primary_role === 'TEACHER' ? getTeacherCourses() : [];
-  const allMemberBookings = (user?.primary_role === 'OPS' || user?.primary_role === 'ADMIN') ? getAllMemberBookings() : [];
-  const allCorporateCourses = user?.primary_role === 'CORPORATE_CONTACT' ? getCorporateCourses() : [];
+  const allBookedCourses = user?.roles.includes('STUDENT') ? getBookedCourses() : [];
+  const allTeacherCourses = user?.roles.includes('TEACHER') ? getTeacherCourses() : [];
+  const allMemberBookings = (user?.roles.includes('OPS') || user?.roles.includes('ADMIN')) ? getAllMemberBookings() : [];
+  const allCorporateCourses = user?.roles.includes('CORPORATE_CONTACT') ? getCorporateCourses() : [];
 
   // Filter courses based on selected tab
-  const filteredCourses = user?.primary_role === 'STUDENT'
+  const filteredCourses = user?.roles.includes('STUDENT')
     ? allBookedCourses.filter(course => {
         if (courseTab === 'upcoming') {
           return course.status === 'upcoming';
@@ -1034,7 +1034,7 @@ const Dashboard = () => {
           return course.status === 'completed';
         }
       })
-    : user?.primary_role === 'TEACHER'
+    : user?.roles.includes('TEACHER')
     ? allTeacherCourses.filter(course => {
         if (courseTab === 'upcoming') {
           return course.status === 'upcoming';
@@ -1042,7 +1042,7 @@ const Dashboard = () => {
           return course.status === 'completed';
         }
       })
-    : user?.primary_role === 'CORPORATE_CONTACT'
+    : user?.roles.includes('CORPORATE_CONTACT')
       ? allCorporateCourses.filter(course => {
           if (courseTab === 'upcoming') {
             return course.status === 'upcoming';
@@ -1058,23 +1058,23 @@ const Dashboard = () => {
           }
         });
 
-  const upcomingCount = user?.primary_role === 'STUDENT'
+  const upcomingCount = user?.roles.includes('STUDENT')
     ? allBookedCourses.filter(c => c.status === 'upcoming').length
-    : user?.primary_role === 'TEACHER'
+    : user?.roles.includes('TEACHER')
     ? allTeacherCourses.filter(c => c.status === 'upcoming' && (c as any).leaveStatus !== 'approved').length
-    : user?.primary_role === 'CORPORATE_CONTACT'
+    : user?.roles.includes('CORPORATE_CONTACT')
     ? allCorporateCourses.filter(c => c.status === 'upcoming').length
-    : (user?.primary_role === 'OPS' || user?.primary_role === 'ADMIN')
+    : (user?.roles.includes('OPS') || user?.roles.includes('ADMIN'))
     ? allMemberBookings.filter(b => b.status === 'upcoming').length
     : 0;
 
-  const completedCount = user?.primary_role === 'STUDENT'
+  const completedCount = user?.roles.includes('STUDENT')
     ? allBookedCourses.filter(c => c.status === 'completed').length
-    : user?.primary_role === 'TEACHER'
+    : user?.roles.includes('TEACHER')
     ? allTeacherCourses.filter(c => c.status === 'completed').length
-    : user?.primary_role === 'CORPORATE_CONTACT'
+    : user?.roles.includes('CORPORATE_CONTACT')
     ? allCorporateCourses.filter(c => c.status === 'completed').length
-    : (user?.primary_role === 'OPS' || user?.primary_role === 'ADMIN')
+    : (user?.roles.includes('OPS') || user?.roles.includes('ADMIN'))
     ? allMemberBookings.filter(b => b.status === 'completed').length
     : 0;
 
@@ -1097,7 +1097,7 @@ const Dashboard = () => {
           </div>
 
           {/* Membership Status for Students - 手機優化 (US09) */}
-          {user?.primary_role === 'STUDENT' && dashboardData?.membership && (
+          {user?.roles.includes('STUDENT') && dashboardData?.membership && (
             <div className="w-full sm:w-auto text-left sm:text-right bg-green-50 border border-green-200 rounded-lg p-3 sm:p-0 sm:bg-transparent sm:border-none">
               <div className="text-sm text-gray-600">會員到期日</div>
               <div className="text-base sm:text-lg font-bold text-green-600">
@@ -1112,7 +1112,7 @@ const Dashboard = () => {
       </motion.div>
 
       {/* Corporate Management for Corporate Contact */}
-      {user?.primary_role === 'CORPORATE_CONTACT' && (
+      {user?.roles.includes('CORPORATE_CONTACT') && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1159,7 +1159,7 @@ const Dashboard = () => {
       )}
 
       {/* Membership Card Management for Students (US04) */}
-      {user?.primary_role === 'STUDENT' && (
+      {user?.roles.includes('STUDENT') && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1204,7 +1204,7 @@ const Dashboard = () => {
 
       {/* Course Bookings Dashboard - 手機優化 */}
       {/* 學生和教師共用的預約區塊 */}
-      {(user?.primary_role === 'STUDENT' || user?.primary_role === 'TEACHER') && (
+      {(user?.roles.includes('STUDENT') || user?.roles.includes('TEACHER')) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1273,9 +1273,9 @@ const Dashboard = () => {
                               <span>{formatDate(course.date)} {course.time}</span>
                             </div>
                             <div className="flex items-center space-x-1">
-                              <SafeIcon icon={user?.primary_role === 'STUDENT' ? FiUser : FiUsers} className="text-xs" />
+                              <SafeIcon icon={user?.roles.includes('STUDENT') ? FiUser : FiUsers} className="text-xs" />
                               <span>
-                                {user?.primary_role === 'TEACHER' 
+                                {user?.roles.includes('TEACHER') 
                                   ? course.students || '待安排學生' 
                                   : course.teacher
                                 }
@@ -1295,7 +1295,7 @@ const Dashboard = () => {
                           whileTap={{ scale: 0.95 }}
                           onClick={() => {
                             setSelectedBooking(course);
-                            if (user?.primary_role === 'TEACHER') {
+                            if (user?.roles.includes('TEACHER')) {
                               setStudentList(getStudentListForBooking(course));
                             }
                             setShowDetailModal(true);
@@ -1351,7 +1351,7 @@ const Dashboard = () => {
                               );
                             })()}
 
-                            {user?.primary_role === 'TEACHER' && (() => {
+                            {user?.roles.includes('TEACHER') && (() => {
                               // 根據請假狀態顯示不同的按鈕
                               if ((course as any).leaveStatus === 'pending') {
                                 // 待審核狀態：顯示取消請假按鈕
@@ -1484,7 +1484,7 @@ const Dashboard = () => {
                               }
                             })()}
                             
-                            {course.canCancel && course.appointmentId && user?.primary_role === 'STUDENT' && (
+                            {course.canCancel && course.appointmentId && user?.roles.includes('STUDENT') && (
                               <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -1522,22 +1522,22 @@ const Dashboard = () => {
                 </h3>
                 <p className="text-gray-600 mb-4 text-sm sm:text-base px-4">
                   {courseTab === 'upcoming' ? (
-                    user?.primary_role === 'STUDENT'
+                    user?.roles.includes('STUDENT')
                       ? '立即前往課程預約頁面，開始您的學習之旅'
-                      : user?.primary_role === 'TEACHER'
+                      : user?.roles.includes('TEACHER')
                       ? '您的即將開始課程會顯示在這裡'
                       : '全體會員的即將開始課程會顯示在這裡'
                   ) : (
                     '完成更多課程後，這裡會顯示' + (
-                      user?.primary_role === 'STUDENT'
+                      user?.roles.includes('STUDENT')
                         ? '您的學習紀錄'
-                        : user?.primary_role === 'TEACHER'
+                        : user?.roles.includes('TEACHER')
                         ? '您的教學紀錄'
                         : '全體會員的課程紀錄'
                     )
                   )}
                 </p>
-                {courseTab === 'upcoming' && user?.primary_role === 'STUDENT' && (
+                {courseTab === 'upcoming' && user?.roles.includes('STUDENT') && (
                   <Link href="/booking">
                     <motion.button
                       whileHover={{ scale: 1.02 }}
@@ -1881,7 +1881,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* 學生清單 (for teachers viewing bookings) */}
-                {user?.primary_role === 'TEACHER' && studentList.length > 0 && (
+                {user?.roles.includes('TEACHER') && studentList.length > 0 && (
                   <div className="p-4 bg-green-50 rounded-lg">
                     <div className="flex justify-between items-center mb-3">
                       <h4 className="font-medium text-green-900">學生名單</h4>

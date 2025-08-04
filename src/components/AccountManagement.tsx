@@ -13,11 +13,8 @@ const {
   FiShield, FiCheck, FiX, FiToggleLeft, FiToggleRight
 } = FiIcons;
 
-interface ExtendedUser extends Omit<User, 'membership_status'> {
-  roles: string[];
+interface ExtendedUser extends User {
   account_status: 'ACTIVE' | 'SUSPENDED';
-  membership_status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER';
-  campus: '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
 }
 
 const AccountManagement = () => {
@@ -28,7 +25,6 @@ const AccountManagement = () => {
   const [roleFilter, setRoleFilter] = useState<string | 'ALL'>('ALL');
   const [userTypeFilter, setUserTypeFilter] = useState<'ALL' | 'STUDENT' | 'STAFF'>('STUDENT'); // 新增：用戶類型篩選
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [selectedPrimaryRole, setSelectedPrimaryRole] = useState<string>('');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -37,7 +33,7 @@ const AccountManagement = () => {
     email: '',
     phone: '',
     password: '',
-    primary_role: 'STUDENT' as const,
+    roles: ['STUDENT'] as ('STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[],
     membership_status: 'NON_MEMBER' as const,
     account_status: 'ACTIVE' as const,
     campus: '羅斯福校' as const
@@ -99,9 +95,9 @@ const AccountManagement = () => {
   // 過濾用戶 - 根據用戶類型篩選
   const filteredUsers = usersWithRoles.filter(user => {
     // 根據用戶類型進行篩選
-    const isStudent = user.primary_role === 'STUDENT' || user.roles.includes('STUDENT');
+    const isStudent = user.roles.includes('STUDENT');
     const staffRoles = ['TEACHER', 'OPS', 'ADMIN', 'AGENT', 'CORPORATE_CONTACT'];
-    const isStaff = staffRoles.includes(user.primary_role) || user.roles.some(role => staffRoles.includes(role));
+    const isStaff = user.roles.some(role => staffRoles.includes(role));
     
     let matchesUserType = true;
     if (userTypeFilter === 'STUDENT') {
@@ -118,7 +114,7 @@ const AccountManagement = () => {
                          user.name.toLowerCase().includes(lowerCaseSearchTerm) ||
                          user.email.toLowerCase().includes(lowerCaseSearchTerm);
     
-    const matchesRole = roleFilter === 'ALL' || user.primary_role === roleFilter || user.roles.includes(roleFilter);
+    const matchesRole = roleFilter === 'ALL' || user.roles.includes(roleFilter);
     const matchesStatus = statusFilter === 'ALL' || user.membership_status === statusFilter;
 
     return matchesSearch && matchesRole && matchesStatus;
@@ -126,7 +122,6 @@ const AccountManagement = () => {
 
   // 可分配的角色
   const availableRoles = ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'OPS', 'ADMIN'];
-  const availablePrimaryRoles = ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'OPS', 'ADMIN'];
   const availableStatuses = ['NON_MEMBER', 'MEMBER', 'EXPIRED_MEMBER', 'TEST_USER'];
   const availableCampuses = ['羅斯福校', '士林校', '台中校', '高雄校', '總部'];
 
@@ -152,7 +147,7 @@ const AccountManagement = () => {
           email: '',
           phone: '',
           password: '',
-          primary_role: 'STUDENT',
+          roles: ['STUDENT'],
           membership_status: 'NON_MEMBER',
           account_status: 'ACTIVE',
           campus: '羅斯福校'
@@ -181,8 +176,7 @@ const AccountManagement = () => {
         const roleResponse = await authService.updateUserRoles(
           selectedUser.id, 
           selectedRoles, 
-          currentUser.id,
-          selectedPrimaryRole
+          currentUser.id
         );
         
         if (roleResponse.success) {
@@ -194,7 +188,7 @@ const AccountManagement = () => {
           setUsersWithRoles(prev => 
             prev.map(user => 
               user.id === selectedUser.id 
-                ? { ...selectedUser, primary_role: selectedPrimaryRole as any, roles: [...selectedRoles], updated_at: now }
+                ? { ...selectedUser, roles: [...selectedRoles], updated_at: now }
                 : user
             )
           );
@@ -202,7 +196,6 @@ const AccountManagement = () => {
           setShowEditModal(false);
           setSelectedUser(null);
           setSelectedRoles([]);
-          setSelectedPrimaryRole('');
           alert('用戶資訊和角色更新成功！');
         } else {
           alert('角色更新失敗：' + roleResponse.error);
@@ -261,7 +254,6 @@ const AccountManagement = () => {
 
   const handleOpenEditModal = (user: ExtendedUser) => {
     setSelectedUser({ ...user });
-    setSelectedPrimaryRole(user.primary_role);
     setSelectedRoles([...user.roles]);
     setShowEditModal(true);
   };
@@ -378,7 +370,7 @@ const AccountManagement = () => {
                 <p className="text-2xl font-semibold text-gray-900">
                   {usersWithRoles.filter(u => {
                     const staffRoles = ['TEACHER', 'OPS', 'ADMIN', 'AGENT', 'CORPORATE_CONTACT'];
-                    return staffRoles.includes(u.primary_role) || u.roles.some(role => staffRoles.includes(role));
+                    return u.roles.some(role => staffRoles.includes(role));
                   }).length}
                 </p>
               </div>
@@ -391,7 +383,7 @@ const AccountManagement = () => {
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">學生</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {usersWithRoles.filter(u => u.primary_role === 'STUDENT' || u.roles.includes('STUDENT')).length}
+                  {usersWithRoles.filter(u => u.roles.includes('STUDENT')).length}
                 </p>
               </div>
             </div>
@@ -402,7 +394,7 @@ const AccountManagement = () => {
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">會員</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {usersWithRoles.filter(u => (u.primary_role === 'STUDENT' || u.roles.includes('STUDENT')) && u.membership_status === 'MEMBER').length}
+                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && u.membership_status === 'MEMBER').length}
                 </p>
               </div>
             </div>
@@ -413,7 +405,7 @@ const AccountManagement = () => {
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">會員過期</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {usersWithRoles.filter(u => (u.primary_role === 'STUDENT' || u.roles.includes('STUDENT')) && u.membership_status === 'EXPIRED_MEMBER').length}
+                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && u.membership_status === 'EXPIRED_MEMBER').length}
                 </p>
               </div>
             </div>
@@ -424,7 +416,7 @@ const AccountManagement = () => {
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">非會員</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {usersWithRoles.filter(u => (u.primary_role === 'STUDENT' || u.roles.includes('STUDENT')) && u.membership_status === 'NON_MEMBER').length}
+                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && u.membership_status === 'NON_MEMBER').length}
                 </p>
               </div>
             </div>
@@ -436,7 +428,7 @@ const AccountManagement = () => {
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-500">{role}</p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    {usersWithRoles.filter(u => u.primary_role === role || u.roles.includes(role)).length}
+                    {usersWithRoles.filter(u => u.roles.includes(role)).length}
                   </p>
                 </div>
               </div>
@@ -504,13 +496,9 @@ const AccountManagement = () => {
                     </td>
                     <td className="w-56 px-4 py-4">
                       <div className="flex flex-wrap gap-1">
-                        {/* 主要角色 */}
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full border-2 ${getRoleColor(user.primary_role)} border-current`}>
-                          {user.primary_role}
-                        </span>
-                        {/* 附加角色 - 排除主要角色 */}
-                        {user.roles.filter(role => role !== user.primary_role).map((role) => (
-                          <span key={role} className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(role)}`}>
+                        {/* 所有角色 */}
+                        {user.roles.map((role, index) => (
+                          <span key={role} className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${index === 0 ? `border-2 ${getRoleColor(role)} border-current` : getRoleColor(role)}`}>
                             {role}
                           </span>
                         ))}
@@ -633,18 +621,26 @@ const AccountManagement = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">主要角色</label>
-                  <select
-                    value={newUser.primary_role}
-                    onChange={(e) => setNewUser({ ...newUser, primary_role: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    {availablePrimaryRoles.map((role) => (
-                      <option key={role} value={role}>
-                        {role}
-                      </option>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">角色</label>
+                  <div className="space-y-2">
+                    {availableRoles.map((role) => (
+                      <label key={role} className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={newUser.roles.includes(role as any)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setNewUser({ ...newUser, roles: [...newUser.roles, role as any] });
+                            } else {
+                              setNewUser({ ...newUser, roles: newUser.roles.filter(r => r !== role) });
+                            }
+                          }}
+                          className="mr-2"
+                        />
+                        <span className="text-sm">{role}</span>
+                      </label>
                     ))}
-                  </select>
+                  </div>
                 </div>
                 
                 <div>
@@ -828,73 +824,33 @@ const AccountManagement = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">主要角色</label>
-                    <select
-                      value={selectedPrimaryRole}
-                      onChange={(e) => {
-                        const newPrimaryRole = e.target.value;
-                        setSelectedPrimaryRole(newPrimaryRole);
-                        setSelectedUser({ ...selectedUser, primary_role: newPrimaryRole as any });
-                        // 移除附加角色中與新主要角色相同的
-                        setSelectedRoles(selectedRoles.filter(role => role !== newPrimaryRole));
-                      }}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
+                    <label className="block text-sm font-medium text-gray-700 mb-2">用戶角色</label>
+                    <div className="space-y-2">
                       {availableRoles.map((role) => (
-                        <option key={role} value={role}>
-                          {role}
-                        </option>
+                        <label key={role} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedRoles.includes(role)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedRoles([...selectedRoles, role]);
+                              } else {
+                                setSelectedRoles(selectedRoles.filter(r => r !== role));
+                              }
+                            }}
+                            className="mr-2"
+                          />
+                          <span className="text-sm">{role}</span>
+                        </label>
                       ))}
-                    </select>
-                    <div className="mt-3">
-                      <span className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full border-2 ${getRoleColor(selectedPrimaryRole)} border-current`}>
-                        主要角色: {selectedPrimaryRole}
-                      </span>
                     </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">附加角色</label>
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <div className="space-y-3 max-h-48 overflow-y-auto">
-                        {availableRoles.filter(role => role !== selectedPrimaryRole).map((role) => (
-                          <label key={role} className="flex items-center p-3 hover:bg-white rounded-lg border border-transparent hover:border-gray-200 transition-all">
-                            <input
-                              type="checkbox"
-                              checked={selectedRoles.includes(role)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedRoles([...selectedRoles, role]);
-                                } else {
-                                  setSelectedRoles(selectedRoles.filter(r => r !== role));
-                                }
-                              }}
-                              className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 h-4 w-4"
-                            />
-                            <span className={`ml-3 text-sm px-3 py-1 rounded-full ${getRoleColor(role)}`}>
-                              {role}
-                            </span>
-                          </label>
-                        ))}
-                        {availableRoles.filter(role => role !== selectedPrimaryRole).length === 0 && (
-                          <p className="text-sm text-gray-500 italic p-3">已選擇所有可用角色作為主要角色</p>
-                        )}
-                      </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {selectedRoles.map((role, index) => (
+                        <span key={role} className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${index === 0 ? `border-2 ${getRoleColor(role)} border-current` : getRoleColor(role)}`}>
+                          {role}
+                        </span>
+                      ))}
                     </div>
-                    
-                    {/* 選中的附加角色顯示 */}
-                    {selectedRoles.length > 0 && (
-                      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                        <div className="text-sm text-gray-600 mb-2 font-medium">已選擇的附加角色：</div>
-                        <div className="flex flex-wrap gap-2">
-                          {selectedRoles.map((role) => (
-                            <span key={role} className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getRoleColor(role)}`}>
-                              {role}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>

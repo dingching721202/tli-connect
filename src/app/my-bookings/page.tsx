@@ -208,7 +208,7 @@ export default function MyBookingsPage() {
 
   // 載入用戶預約資料的通用函數
   const loadUserBookings = useCallback(async (showLoading = true) => {
-    if (!user || !['STUDENT', 'TEACHER'].includes(user?.primary_role)) {
+    if (!user || !user?.roles.some(role => ['STUDENT', 'TEACHER'].includes(role))) {
       if (showLoading) setLoading(false);
       return;
     }
@@ -216,9 +216,9 @@ export default function MyBookingsPage() {
     try {
       if (showLoading) setLoading(true);
       
-      console.log('📥 開始載入用戶預約資料 - 用戶ID:', user.id, '角色:', user?.primary_role);
+      console.log('📥 開始載入用戶預約資料 - 用戶ID:', user.id, '角色:', user?.roles[0]);
       
-      if (user?.primary_role === 'TEACHER') {
+      if (user?.roles.includes('TEACHER')) {
         // 教師：載入學生預約其課程的資料
         const dashboardData = await dashboardService.getDashboardData(user.id, 'TEACHER');
         console.log('👨‍🏫 教師 Dashboard 原始資料:', dashboardData);
@@ -372,7 +372,7 @@ export default function MyBookingsPage() {
   }, [loadUserBookings]);
 
   // Check if user is student or instructor
-  if (!user || !['STUDENT', 'TEACHER'].includes(user?.primary_role)) {
+  if (!user || !user?.roles.some(role => ['STUDENT', 'TEACHER'].includes(role))) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />

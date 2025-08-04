@@ -589,13 +589,13 @@ const MemberManagement: React.FC = () => {
   };
 
   const getUserIcon = (user: User) => {
-    if (user.primary_role === 'CORPORATE_CONTACT') return FiBriefcase;
+    if (user.roles?.includes('CORPORATE_CONTACT')) return FiBriefcase;
     if (user.membershipType === 'corporate') return FiBriefcase;
     return FiUser;
   };
 
   const getUserIconColor = (user: User): string => {
-    if (user.primary_role === 'CORPORATE_CONTACT') return 'bg-purple-500';
+    if (user.roles?.includes('CORPORATE_CONTACT')) return 'bg-purple-500';
     if (user.membershipType === 'corporate') return 'bg-indigo-500';
     return 'bg-blue-500';
   };
@@ -615,8 +615,8 @@ const MemberManagement: React.FC = () => {
       }
 
       switch (filterOption) {
-        case 'students': return user.primary_role === 'STUDENT';
-        case 'corporate_contacts': return user.primary_role === 'CORPORATE_CONTACT';
+        case 'students': return user.roles?.includes('STUDENT') || false;
+        case 'corporate_contacts': return user.roles?.includes('CORPORATE_CONTACT') || false;
         case 'active_memberships': return user.membershipStatus === 'active';
         case 'expired_memberships': return user.membershipStatus === 'expired';
         case 'expiring_soon': return user.membershipStatus === 'expiring_soon';
@@ -819,7 +819,7 @@ const MemberManagement: React.FC = () => {
         id: user.id.toString(),
         name: user.name,
         email: user.email,
-        role: user.primary_role,
+        role: user.roles[0],
         phone: user.phone || '',
         
         // 學生特有欄位
@@ -1353,7 +1353,7 @@ const MemberManagement: React.FC = () => {
     const csvData = filteredUsers.map(user => [
       user.name,
       user.email,
-      getRoleName(user.primary_role),
+      getRoleName(user.roles[0]),
       user.membershipType ? getMembershipTypeName(user.membershipType) : '非會員',
       user.companyName || '-',
       user.membership?.planName || '-',
@@ -2148,8 +2148,8 @@ const MemberManagement: React.FC = () => {
                     )}
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.primary_role)}`}>
-                      {getRoleName(user.primary_role)}
+                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(user.roles[0])}`}>
+                      {getRoleName(user.roles[0])}
                     </span>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap">

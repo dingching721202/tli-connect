@@ -98,9 +98,9 @@ const Login: React.FC = () => {
       
       if (result.success && result.user) {
         // 根據用戶角色決定跳轉頁面
-        if (result.user.primary_role === 'OPS') {
+        if (result.user.roles.includes('OPS')) {
           router.push('/dashboard');
-        } else if (result.user.primary_role === 'TEACHER') {
+        } else if (result.user.roles.includes('TEACHER')) {
           router.push('/dashboard');
         } else {
           router.push('/dashboard'); // 學生跳轉到 dashboard

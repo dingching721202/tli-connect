@@ -220,7 +220,7 @@ export default function CorporateManagementPage() {
       return;
     }
 
-    if (user?.primary_role !== 'CORPORATE_CONTACT') {
+    if (!user?.roles.includes('CORPORATE_CONTACT')) {
       router.push('/dashboard');
       return;
     }
@@ -1083,7 +1083,7 @@ export default function CorporateManagementPage() {
     );
   };
 
-  if (!user || user?.primary_role !== 'CORPORATE_CONTACT') {
+  if (!user || !user?.roles.includes('CORPORATE_CONTACT')) {
     return null;
   }
 

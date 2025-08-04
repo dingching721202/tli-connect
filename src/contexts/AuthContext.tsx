@@ -11,9 +11,9 @@ interface User {
   email: string;
   name: string;
   phone: string;
-  primary_role: 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'OPS' | 'ADMIN';
+  roles: ('STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'OPS' | 'ADMIN')[]; // 多重角色
   membership_status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER';
-  roles: string[]; // 多重角色
+  campus: '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
   membership?: Membership | null;
   avatar?: string;
   agentData?: Agent | null; // 代理專用資料
@@ -21,6 +21,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
+  currentRole: string | null;
   register: (email: string, password: string, name: string, phone: string) => Promise<{ success: boolean; user?: User; error?: string }>;
   login: (email: string, password: string) => Promise<{ success: boolean; user?: User; error?: string }>;
   logout: () => void;
@@ -39,6 +40,8 @@ interface AuthContextType {
   hasAnyRole: (roles: string[]) => boolean;
   hasAllRoles: (roles: string[]) => boolean;
   refreshMembership: () => Promise<void>;
+  switchRole: (role: string) => void;
+  availableRoles: string[];
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -53,6 +56,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [currentRole, setCurrentRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   // 從 localStorage 載入用戶會話
@@ -67,6 +71,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (userData) {
             const userWithMembership = await loadUserWithMembership(userData);
             setUser(userWithMembership);
+            
+            // 設置當前角色：從 localStorage 讀取或使用第一個角色
+            const savedCurrentRole = localStorage.getItem('currentRole');
+            if (savedCurrentRole && userWithMembership.roles.includes(savedCurrentRole as any)) {
+              setCurrentRole(savedCurrentRole);
+            } else if (userWithMembership.roles.length > 0) {
+              setCurrentRole(userWithMembership.roles[0]);
+              localStorage.setItem('currentRole', userWithMembership.roles[0]);
+            }
           }
         }
       } catch (error) {
@@ -89,13 +102,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       membership = await memberCardService.getUserPurchasedMembership(userData.id);
     }
     
-    // 載入用戶的所有角色
-    const activeRoles = userRoles.filter(ur => ur.user_id === userData.id && ur.is_active);
-    const roles = activeRoles.map(ur => ur.role);
+    // 使用新的角色系統：直接從 userData.roles 獲取角色
+    const roles = userData.roles || [];
     
     // 如果是 AGENT 角色，載入代理資料
     let agentData = null;
-    if (userData.primary_role === 'AGENT' || roles.includes('AGENT')) {
+    if (roles.includes('AGENT')) {
       agentData = await agentService.getAgentByUserId(userData.id);
     }
     
@@ -104,9 +116,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email: userData.email,
       name: userData.name,
       phone: userData.phone,
-      primary_role: userData.primary_role,
-      membership_status: userData.membership_status,
       roles,
+      membership_status: userData.membership_status,
+      campus: userData.campus,
       membership,
       agentData,
       avatar: `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face`
@@ -149,6 +161,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.log('AuthContext: 用戶會員資料', userWithMembership);
           
           setUser(userWithMembership);
+          
+          // 設置當前角色（使用第一個角色）
+          if (userWithMembership.roles.length > 0) {
+            setCurrentRole(userWithMembership.roles[0]);
+            localStorage.setItem('currentRole', userWithMembership.roles[0]);
+          }
           
           // 保存會話
           localStorage.setItem('userId', data.user_id.toString());
@@ -199,6 +217,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const userWithMembership = await loadUserWithMembership(userData);
           setUser(userWithMembership);
           
+          // 設置當前角色（使用第一個角色）
+          if (userWithMembership.roles.length > 0) {
+            setCurrentRole(userWithMembership.roles[0]);
+            localStorage.setItem('currentRole', userWithMembership.roles[0]);
+          }
+          
           // 保存會話
           localStorage.setItem('userId', data.user_id.toString());
           localStorage.setItem('jwt', data.jwt);
@@ -224,8 +248,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = () => {
     setUser(null);
+    setCurrentRole(null);
     localStorage.removeItem('userId');
     localStorage.removeItem('jwt');
+    localStorage.removeItem('currentRole');
   };
 
   const updateProfile = (updates: Partial<User>) => {
@@ -238,19 +264,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) return false;
     
     // 管理員和營運人員總是有權限
-    if (user.primary_role === 'ADMIN' || user.primary_role === 'OPS' || 
-        user.roles.includes('ADMIN') || user.roles.includes('OPS')) {
+    if (user.roles.includes('ADMIN') || user.roles.includes('OPS')) {
       return true;
     }
     
     // 教師和企業窗口有基本權限
-    if (user.primary_role === 'TEACHER' || user.primary_role === 'CORPORATE_CONTACT' ||
-        user.roles.includes('TEACHER') || user.roles.includes('CORPORATE_CONTACT')) {
+    if (user.roles.includes('TEACHER') || user.roles.includes('CORPORATE_CONTACT')) {
       return true;
     }
     
     // AGENT 角色檢查代理狀態
-    if (user.primary_role === 'AGENT' || user.roles.includes('AGENT')) {
+    if (user.roles.includes('AGENT')) {
       return user.agentData?.status === 'ACTIVE';
     }
     
@@ -265,19 +289,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // 檢查是否有特定角色
   const hasRole = (role: string) => {
     if (!user) return false;
-    return user.primary_role === role || user.roles.includes(role);
+    return user.roles.includes(role as any);
   };
 
   // 檢查是否有任一角色
   const hasAnyRole = (roles: string[]) => {
     if (!user) return false;
-    return roles.some(role => user.primary_role === role || user.roles.includes(role));
+    return roles.some(role => user.roles.includes(role as any));
   };
 
   // 檢查是否有全部角色
   const hasAllRoles = (roles: string[]) => {
     if (!user) return false;
-    return roles.every(role => user.primary_role === role || user.roles.includes(role));
+    return roles.every(role => user.roles.includes(role as any));
+  };
+
+  // 切換當前活動角色
+  const switchRole = (role: string) => {
+    if (!user || !user.roles.includes(role as any)) return;
+    setCurrentRole(role);
+    localStorage.setItem('currentRole', role);
   };
 
   // 刷新會員資料
@@ -298,6 +329,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const value: AuthContextType = {
     user,
+    currentRole,
     register,
     login,
     logout,
@@ -305,17 +337,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     hasActiveMembership,
     loading,
     isAuthenticated: !!user,
-    isStudent: user?.primary_role === 'STUDENT' || user?.roles.includes('STUDENT') || false,
-    isTeacher: user?.primary_role === 'TEACHER' || user?.roles.includes('TEACHER') || false,
-    isOps: user?.primary_role === 'OPS' || user?.roles.includes('OPS') || false,
-    isAdmin: user?.primary_role === 'ADMIN' || user?.roles.includes('ADMIN') || false,
-    isAgent: user?.primary_role === 'AGENT' || user?.roles.includes('AGENT') || false,
+    isStudent: user?.roles.includes('STUDENT') || false,
+    isTeacher: user?.roles.includes('TEACHER') || false,
+    isOps: user?.roles.includes('OPS') || false,
+    isAdmin: user?.roles.includes('ADMIN') || false,
+    isAgent: user?.roles.includes('AGENT') || false,
     isMember: user?.membership_status === 'MEMBER' || user?.roles.includes('STUDENT') || false,
-    isCorporateContact: user?.primary_role === 'CORPORATE_CONTACT' || user?.roles.includes('CORPORATE_CONTACT') || false,
+    isCorporateContact: user?.roles.includes('CORPORATE_CONTACT') || false,
     hasRole,
     hasAnyRole,
     hasAllRoles,
-    refreshMembership
+    refreshMembership,
+    switchRole,
+    availableRoles: user?.roles || []
   };
 
   return (

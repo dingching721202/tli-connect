@@ -9,7 +9,7 @@ export default function CourseManagementPage() {
   const { user } = useAuth();
 
   // 權限檢查：只有管理員和運營可以訪問
-  if (!user || !['OPS', 'ADMIN'].includes(user.primary_role)) {
+  if (!user || !user.roles.some(role => ['OPS', 'ADMIN'].includes(role))) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />

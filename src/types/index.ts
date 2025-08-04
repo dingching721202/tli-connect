@@ -5,10 +5,10 @@ export interface User {
   email: string;
   phone: string;
   password: string;
-  role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
-  primary_role: 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
+  roles: ('STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
   membership_status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER' | 'USER';
   account_status: 'ACTIVE' | 'SUSPENDED';
+  campus: '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
   created_at: string;
   updated_at?: string;
 }
