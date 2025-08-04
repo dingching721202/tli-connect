@@ -236,8 +236,8 @@ const UserProfile = () => {
               <div>
                 <h2 className="text-xl sm:text-2xl font-bold">{user?.name}</h2>
                 <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mt-1">
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(user?.role || '')}`}>
-                    {getRoleName(user?.role || '')}
+                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(user?.roles?.[0] || '')}`}>
+                    {getRoleName(user?.roles?.[0] || '')}
                   </span>
                   {displayMembership && (
                     <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
@@ -262,7 +262,7 @@ const UserProfile = () => {
 
         <div className="p-4 sm:p-6 space-y-6 sm:space-y-8">
           {/* Membership Status - Only for students - 手機優化 */}
-          {user?.role === 'STUDENT' && (
+          {user?.roles?.[0] === 'STUDENT' && (
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <SafeIcon icon={FiAward} className="mr-2 text-blue-600" />
@@ -447,7 +447,7 @@ const UserProfile = () => {
           </div>
 
           {/* Role Specific Information - 手機優化 */}
-          {user?.role === 'STUDENT' && (
+          {user?.roles?.[0] === 'STUDENT' && (
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <SafeIcon icon={FiAward} className="mr-2 text-blue-600" />
@@ -477,7 +477,7 @@ const UserProfile = () => {
             </div>
           )}
 
-          {user?.role === 'TEACHER' && (
+          {user?.roles?.[0] === 'TEACHER' && (
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <SafeIcon icon={FiAward} className="mr-2 text-blue-600" />

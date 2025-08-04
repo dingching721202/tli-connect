@@ -26,9 +26,9 @@ const AccountManagement = () => {
   const [selectedUser, setSelectedUser] = useState<ExtendedUser | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER'>('ALL');
-  const [roleFilter, setRoleFilter] = useState<string | 'ALL'>('ALL');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT'>('ALL');
   const [userTypeFilter, setUserTypeFilter] = useState<'ALL' | 'STUDENT' | 'STAFF'>('STUDENT'); // 新增：用戶類型篩選
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<('STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -38,9 +38,9 @@ const AccountManagement = () => {
     phone: '',
     password: '',
     roles: ['STUDENT'] as RoleType[],
-    membership_status: 'NON_MEMBER' as const,
+    membership_status: 'NON_MEMBER' as MembershipStatusType,
     account_status: 'ACTIVE' as const,
-    campus: '羅斯福校' as const
+    campus: '羅斯福校' as CampusType
   });
 
   // 載入用戶資料和角色
@@ -118,14 +118,14 @@ const AccountManagement = () => {
                          user.name.toLowerCase().includes(lowerCaseSearchTerm) ||
                          user.email.toLowerCase().includes(lowerCaseSearchTerm);
     
-    const matchesRole = roleFilter === 'ALL' || user.roles.includes(roleFilter);
+    const matchesRole = roleFilter === 'ALL' || user.roles.includes(roleFilter as 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT');
     const matchesStatus = statusFilter === 'ALL' || user.membership_status === statusFilter;
 
     return matchesSearch && matchesRole && matchesStatus;
   });
 
   // 可分配的角色
-  const availableRoles = ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'OPS', 'ADMIN'];
+  const availableRoles: ('STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'OPS' | 'ADMIN')[] = ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'OPS', 'ADMIN'];
   const availableStatuses = ['NON_MEMBER', 'MEMBER', 'EXPIRED_MEMBER', 'TEST_USER'];
   const availableCampuses = ['羅斯福校', '士林校', '台中校', '高雄校', '總部'];
 

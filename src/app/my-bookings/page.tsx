@@ -74,7 +74,7 @@ export default function MyBookingsPage() {
   });
 
   // 轉換預約資料為 UI 格式的通用函數
-  const convertBookingData = useCallback((dashboardData: { upcomingClasses: Array<{ appointment?: { id: number; status: string; class_timeslot_id: number; created_at: string }; session: { id: string; date: string; startTime: string; endTime: string; courseTitle: string; sessionTitle: string; teacherName: string; classroom?: string; materials?: string } }> }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
+  const convertBookingData = useCallback((dashboardData: { upcomingClasses: Array<{ appointment?: { id: number; status: string; class_timeslot_id: number; created_at: string } | null; session: { id: string; date: string; startTime: string; endTime: string; courseTitle: string; sessionTitle: string; teacherName: string; classroom?: string; materials?: string } }> }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
     console.log('🔍 轉換預約資料，總數:', dashboardData.upcomingClasses.length);
     
     const convertedData = dashboardData.upcomingClasses.map((item, index) => {
@@ -390,7 +390,7 @@ export default function MyBookingsPage() {
 
   const filteredBookings = bookings.filter(booking => {
     // First filter by main tab (for teachers)
-    if (user?.role === 'TEACHER') {
+    if (user?.roles?.includes('TEACHER')) {
       if (selectedMainTab === 'bookings') {
         // 預約分頁：顯示所有預約記錄（包括有請假狀態的）
         // 但排除純請假記錄（那些沒有對應預約的請假申請）
@@ -453,7 +453,7 @@ export default function MyBookingsPage() {
     switch (status) {
       case 'upcoming': 
         // 🔧 教師看到：根據學生數量顯示不同顏色
-        if (user?.role === 'TEACHER' && booking) {
+        if (user?.roles?.includes('TEACHER') && booking) {
           return booking.studentCount > 0 
             ? 'text-green-700 bg-green-50 border-green-200'  // 已開課 - 淺綠色
             : 'text-red-700 bg-red-50 border-red-200';       // 待開課 - 淺紅色
@@ -493,7 +493,7 @@ export default function MyBookingsPage() {
     switch (status) {
       case 'upcoming': 
         // 🔧 教師看到：根據學生數量顯示"待開課"或"已開課"
-        if (user?.role === 'TEACHER' && booking) {
+        if (user?.roles?.includes('TEACHER') && booking) {
           return booking.studentCount > 0 ? '已開課' : '待開課';
         }
         return '即將開始';
@@ -790,7 +790,7 @@ export default function MyBookingsPage() {
                   )}
                 </div>
               </div>
-            ) : user?.role === 'STUDENT' && (
+            ) : user?.roles?.includes('STUDENT') && (
               <div className="p-4 bg-blue-50 rounded-lg">
                 <h4 className="font-medium mb-3 text-blue-900">教師資訊</h4>
                 <div className="space-y-2 text-sm">
@@ -815,7 +815,7 @@ export default function MyBookingsPage() {
             )}
 
             {/* 學生清單 (for teachers viewing bookings) */}
-            {user?.role === 'TEACHER' && !selectedBooking.leaveReason && studentList.length > 0 && (
+            {user?.roles?.includes('TEACHER') && !selectedBooking.leaveReason && studentList.length > 0 && (
               <div className="p-4 bg-green-50 rounded-lg">
                 <div className="flex justify-between items-center mb-3">
                   <h4 className="font-medium text-green-900">學生名單</h4>
@@ -962,9 +962,9 @@ export default function MyBookingsPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">{user?.role === 'TEACHER' ? '我的預約' : '我的預約與請假'}</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{user?.roles?.includes('TEACHER') ? '我的預約' : '我的預約與請假'}</h1>
           <p className="text-gray-600">
-            {user?.role === 'STUDENT' 
+            {user?.roles?.includes('STUDENT') 
               ? '查看您預約的課程和上課詳情' 
               : '查看學生預約您的課程情況與您的請假記錄'}
           </p>
@@ -979,7 +979,7 @@ export default function MyBookingsPage() {
           {[
             { 
               label: '即將開始', 
-              count: user?.role === 'STUDENT' 
+              count: user?.roles?.includes('STUDENT') 
                 ? bookings.filter(b => b.status === 'upcoming').length
                 : bookings.filter(b => b.status === 'upcoming').length,
               color: 'text-blue-600 bg-blue-50 border-blue-200',
@@ -987,7 +987,7 @@ export default function MyBookingsPage() {
             },
             { 
               label: '已完成', 
-              count: user?.role === 'STUDENT' 
+              count: user?.roles?.includes('STUDENT') 
                 ? bookings.filter(b => b.status === 'completed').length
                 : bookings.filter(b => b.status === 'completed' && !b.leaveReason).length,
               color: 'text-green-600 bg-green-50 border-green-200',
@@ -1012,7 +1012,7 @@ export default function MyBookingsPage() {
 
 
         {/* Main Tab Navigation for Teachers */}
-        {user?.role === 'TEACHER' && (
+        {user?.roles?.includes('TEACHER') && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1060,7 +1060,7 @@ export default function MyBookingsPage() {
           className="mb-6"
         >
           <div className="flex bg-white rounded-lg shadow-sm border border-gray-200 p-1">
-            {user?.role === 'STUDENT' ? (
+            {user?.roles?.includes('STUDENT') ? (
               [
                 { key: 'upcoming', label: '即將開始', count: bookings.filter(b => b.status === 'upcoming').length },
                 { key: 'completed', label: '已完成', count: bookings.filter(b => b.status === 'completed').length },
@@ -1172,15 +1172,15 @@ export default function MyBookingsPage() {
                             <span>{formatDate(booking.courseDate)} {booking.courseTime}</span>
                           </div>
                           <div className="flex items-center space-x-1">
-                            <SafeIcon icon={user?.role === 'STUDENT' ? FiUser : (booking.leaveReason ? FiUserCheck : FiUsers)} className="text-xs" />
+                            <SafeIcon icon={user?.roles?.includes('STUDENT') ? FiUser : (booking.leaveReason ? FiUserCheck : FiUsers)} className="text-xs" />
                             <span>
-                              {user?.role === 'STUDENT' 
+                              {user?.roles?.includes('STUDENT') 
                                 ? booking.instructorName 
                                 : `${booking.studentCount} 位學生`}
                             </span>
                           </div>
                           {/* 移除會員類型顯示 */}
-                          {user?.role === 'TEACHER' && booking.leaveReason && (
+                          {user?.roles?.includes('TEACHER') && booking.leaveReason && (
                             <div className="flex items-center space-x-1">
                               <SafeIcon icon={FiMessageSquare} className="text-xs" />
                               <span>{booking.leaveReason}</span>
@@ -1194,7 +1194,7 @@ export default function MyBookingsPage() {
                     </div>
 
                     {/* Company Info for Corporate Members */}
-                    {user?.role === 'TEACHER' && !booking.leaveReason && booking.companyName && (
+                    {user?.roles?.includes('TEACHER') && !booking.leaveReason && booking.companyName && (
                       <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-3">
                         <div className="flex items-center space-x-2 text-purple-800">
                           <SafeIcon icon={FiBriefcase} className="text-sm" />
@@ -1204,7 +1204,7 @@ export default function MyBookingsPage() {
                     )}
 
                     {/* Substitute Teacher Info */}
-                    {user?.role === 'TEACHER' && booking.leaveReason && booking.substituteTeacher && (
+                    {user?.roles?.includes('TEACHER') && booking.leaveReason && booking.substituteTeacher && (
                       <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
                         <div className="flex items-center space-x-2 text-green-800">
                           <SafeIcon icon={FiUserCheck} className="text-sm" />
@@ -1214,13 +1214,13 @@ export default function MyBookingsPage() {
                     )}
 
                     <div className="flex flex-wrap gap-2">
-                      {user?.role === 'TEACHER' && (
+                      {user?.roles?.includes('TEACHER') && (
                         <motion.button
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           onClick={() => {
                             setSelectedBooking(booking);
-                            if (user?.role === 'TEACHER' && !booking.leaveReason) {
+                            if (user?.roles?.includes('TEACHER') && !booking.leaveReason) {
                               setStudentList(getStudentListForBooking(booking.id));
                             }
                             setShowDetailModal(true);
@@ -1275,7 +1275,7 @@ export default function MyBookingsPage() {
                         );
                       })()}
                           
-                      {user?.role === 'STUDENT' && (() => {
+                      {user?.roles?.includes('STUDENT') && (() => {
                         const bookingWithExtras = booking as Booking & { canCancel: boolean };
                         return bookingWithExtras.canCancel && (
                           <motion.button
@@ -1290,7 +1290,7 @@ export default function MyBookingsPage() {
                         );
                       })()}
                           
-                      {user?.role === 'TEACHER' && (() => {
+                      {user?.roles?.includes('TEACHER') && (() => {
                         // 根據請假狀態顯示不同的按鈕
                         // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         if ((booking as any).leaveStatus === 'pending') {
@@ -1436,7 +1436,7 @@ export default function MyBookingsPage() {
                  selectedTab === 'rejected' ? '暫無已拒絕申請' : '暫無記錄'}
               </h3>
               <p className="text-gray-600">
-                {user?.role === 'STUDENT' 
+                {user?.roles?.includes('STUDENT') 
                   ? '您的課程預約記錄會顯示在這裡' 
                   : '學生的課程預約記錄與您的請假記錄會顯示在這裡'}
               </p>

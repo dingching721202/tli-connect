@@ -6,7 +6,7 @@ export interface User {
   phone: string;
   password: string;
   roles: ('STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
-  membership_status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER' | 'USER';
+  membership_status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER';
   account_status: 'ACTIVE' | 'SUSPENDED';
   campus: '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
   created_at: string;

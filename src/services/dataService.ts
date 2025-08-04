@@ -85,7 +85,7 @@ export const authService = {
     const jwt = jwtUtils.generateToken({
       userId: newUser.id,
       email: newUser.email,
-      role: newUser.role
+      role: newUser.roles[0]
     });
     
     // 自動登入
@@ -155,14 +155,14 @@ export const authService = {
       // 更新用戶角色
       const userIndex = users.findIndex(u => u.id === userId);
       if (userIndex !== -1) {
-        users[userIndex].roles = roles as RoleType[];
+        users[userIndex].roles = roles as ('STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
         users[userIndex].updated_at = timestamp;
         
         // 同步到 localStorage
         const localUsers = JSON.parse(localStorage.getItem('users') || '[]') as User[] as User[];
         const localUserIndex = localUsers.findIndex((u: User) => u.id === userId);
         if (localUserIndex !== -1) {
-          localUsers[localUserIndex].roles = roles;
+          localUsers[localUserIndex].roles = roles as ('STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
           localUsers[localUserIndex].updated_at = timestamp;
           localStorage.setItem('users', JSON.stringify(localUsers));
         }
@@ -199,7 +199,7 @@ export const authService = {
     }
   },
 
-  async updateUserStatus(userId: number, status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER' | 'USER', adminId: number) {
+  async updateUserStatus(userId: number, status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER', _adminId: number) {
     await delay(300);
     
     try {
@@ -221,7 +221,7 @@ export const authService = {
         localStorage.setItem('users', JSON.stringify(localUsers));
       }
       
-      console.log('✅ 用戶狀態已更新:', { userId, status, adminId });
+      console.log('✅ 用戶狀態已更新:', { userId, status, _adminId });
       return { success: true, data: users[userIndex] };
     } catch (error) {
       console.error('更新用戶狀態失敗:', error);
@@ -254,8 +254,10 @@ export const authService = {
   },
 
   // 創建新用戶
-  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, adminId: number) {
+  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, _adminId: number) {
     await delay(500);
+    
+    // _adminId reserved for future authorization checks
     
     try {
       const timestamp = new Date().toISOString();
@@ -276,7 +278,7 @@ export const authService = {
         roles: userData.roles,
         membership_status: userData.membership_status,
         campus: userData.campus,
-        account_status: 'ACTIVE',
+        account_status: 'ACTIVE' as 'ACTIVE' | 'SUSPENDED',
         created_at: timestamp,
         updated_at: timestamp
       };
@@ -297,8 +299,10 @@ export const authService = {
   },
 
   // 更新用戶基本資訊
-  async updateUser(userData: User, adminId: number) {
+  async updateUser(userData: User, _adminId: number) {
     await delay(300);
+    
+    // _adminId reserved for future authorization checks
     
     try {
       const userIndex = users.findIndex(u => u.id === userData.id);
@@ -385,12 +389,12 @@ export const authService = {
       const user = users.find(u => u.id === userId);
       if (!user) return { success: false, error: 'User not found' };
 
-      let newStatus: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER' | 'USER' = 'NON_MEMBER';
+      let newStatus: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER' = 'NON_MEMBER';
 
       // 檢查用戶角色
       if (!user.roles.includes('STUDENT')) {
         // 非學生角色自動變成使用者
-        newStatus = 'USER';
+        newStatus = 'NON_MEMBER';
       } else {
         // 學生角色需要檢查會員卡狀態
         const activeMembership = await memberCardService.getUserMembership(userId);
@@ -1138,7 +1142,7 @@ export const dashboardService = {
       
       // 如果通過ID找不到，嘗試通過用戶資料匹配
       if (!teacher) {
-        const user = users.find(u => u.id === teacherId && u.role === 'TEACHER');
+        const user = users.find(u => u.id === teacherId && u.roles.includes('TEACHER'));
         if (user) {
           // 通過email匹配教師管理系統中的教師
           const allTeachers = teacherDataService.getAllTeachers();
@@ -1316,7 +1320,7 @@ export const dashboardService = {
       const currentUser = users.find(u => u.id === teacherId);
       
       let actualTeacherId = teacherId;
-      if (currentUser && currentUser.role === 'TEACHER') {
+      if (currentUser && currentUser.roles.includes('TEACHER')) {
         // 根據姓名和email在教師系統中找到對應的教師
         const teacherInSystem = teacherDataService.getTeacherByEmail(currentUser.email);
         if (teacherInSystem) {
