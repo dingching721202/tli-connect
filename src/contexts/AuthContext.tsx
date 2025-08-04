@@ -4,14 +4,15 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService, memberCardService, agentService } from '@/services/dataService';
 import { User as DataUser, Membership } from '@/types';
 import { Agent } from '@/data/agents';
-import { userRoles } from '@/data/user_roles';
+
+type RoleType = 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'OPS' | 'ADMIN';
 
 interface User {
   id: number;
   email: string;
   name: string;
   phone: string;
-  roles: ('STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'OPS' | 'ADMIN')[]; // 多重角色
+  roles: RoleType[]; // 多重角色
   membership_status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER';
   campus: '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
   membership?: Membership | null;
@@ -74,7 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             
             // 設置當前角色：從 localStorage 讀取或使用第一個角色
             const savedCurrentRole = localStorage.getItem('currentRole');
-            if (savedCurrentRole && userWithMembership.roles.includes(savedCurrentRole as any)) {
+            if (savedCurrentRole && userWithMembership.roles.includes(savedCurrentRole as RoleType)) {
               setCurrentRole(savedCurrentRole);
             } else if (userWithMembership.roles.length > 0) {
               setCurrentRole(userWithMembership.roles[0]);
@@ -289,24 +290,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // 檢查是否有特定角色
   const hasRole = (role: string) => {
     if (!user) return false;
-    return user.roles.includes(role as any);
+    return user.roles.includes(role as RoleType);
   };
 
   // 檢查是否有任一角色
   const hasAnyRole = (roles: string[]) => {
     if (!user) return false;
-    return roles.some(role => user.roles.includes(role as any));
+    return roles.some(role => user.roles.includes(role as RoleType));
   };
 
   // 檢查是否有全部角色
   const hasAllRoles = (roles: string[]) => {
     if (!user) return false;
-    return roles.every(role => user.roles.includes(role as any));
+    return roles.every(role => user.roles.includes(role as RoleType));
   };
 
   // 切換當前活動角色
   const switchRole = (role: string) => {
-    if (!user || !user.roles.includes(role as any)) return;
+    if (!user || !user.roles.includes(role as RoleType)) return;
     setCurrentRole(role);
     localStorage.setItem('currentRole', role);
   };

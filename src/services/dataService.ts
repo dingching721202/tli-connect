@@ -7,6 +7,9 @@ import { SalesRecord } from '@/types/sales';
 import { generateBookingSessions } from '@/data/courseBookingIntegration';
 import { teacherDataService } from '@/data/teachers';
 import { hashString } from '@/utils/enrollmentUtils';
+import { UserRole } from '@/data/user_roles';
+
+type RoleType = 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
 
 interface LeaveRequest {
   id: string;
@@ -135,7 +138,7 @@ export const authService = {
     
     try {
       const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
-      const activeRoles = userRoles.filter((ur: any) => ur.user_id === userId && ur.is_active);
+      const activeRoles = userRoles.filter((ur: UserRole) => ur.user_id === userId && ur.is_active);
       return { success: true, data: activeRoles };
     } catch (error) {
       console.error('獲取用戶角色失敗:', error);
@@ -152,12 +155,12 @@ export const authService = {
       // 更新用戶角色
       const userIndex = users.findIndex(u => u.id === userId);
       if (userIndex !== -1) {
-        users[userIndex].roles = roles as any;
+        users[userIndex].roles = roles as RoleType[];
         users[userIndex].updated_at = timestamp;
         
         // 同步到 localStorage
-        const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-        const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+        const localUsers = JSON.parse(localStorage.getItem('users') || '[]') as User[] as User[];
+        const localUserIndex = localUsers.findIndex((u: User) => u.id === userId);
         if (localUserIndex !== -1) {
           localUsers[localUserIndex].roles = roles;
           localUsers[localUserIndex].updated_at = timestamp;
@@ -169,14 +172,14 @@ export const authService = {
       let userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
       
       // 停用該用戶的所有角色
-      userRoles = userRoles.map((ur: any) => 
+      userRoles = userRoles.map((ur: UserRole) => 
         ur.user_id === userId ? { ...ur, is_active: false } : ur
       );
       
       // 添加新角色
       roles.forEach(role => {
         const newRole = {
-          id: Math.max(0, ...userRoles.map((r: any) => r.id)) + 1,
+          id: Math.max(0, ...userRoles.map((r: UserRole) => r.id)) + 1,
           user_id: userId,
           role: role,
           granted_by: adminId,
@@ -210,8 +213,8 @@ export const authService = {
       users[userIndex].updated_at = now;
       
       // 同步到 localStorage 以保持一致性
-      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]') as User[];
+      const localUserIndex = localUsers.findIndex((u: User) => u.id === userId);
       if (localUserIndex !== -1) {
         localUsers[localUserIndex].membership_status = status;
         localUsers[localUserIndex].updated_at = now;
@@ -234,8 +237,8 @@ export const authService = {
       
       const usersWithRoles = users.map(user => {
         const activeRoles = userRoles
-          .filter((ur: any) => ur.user_id === user.id && ur.is_active)
-          .map((ur: any) => ur.role);
+          .filter((ur: UserRole) => ur.user_id === user.id && ur.is_active)
+          .map((ur: UserRole) => ur.role);
         
         return {
           ...user,
@@ -251,7 +254,7 @@ export const authService = {
   },
 
   // 創建新用戶
-  async createUser(userData: any, adminId: number) {
+  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, adminId: number) {
     await delay(500);
     
     try {
@@ -278,10 +281,10 @@ export const authService = {
         updated_at: timestamp
       };
       
-      users.push(newUser as any);
+      users.push(newUser);
       
       // 同步到 localStorage
-      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]') as User[];
       localUsers.push(newUser);
       localStorage.setItem('users', JSON.stringify(localUsers));
       
@@ -294,7 +297,7 @@ export const authService = {
   },
 
   // 更新用戶基本資訊
-  async updateUser(userData: any, adminId: number) {
+  async updateUser(userData: User, adminId: number) {
     await delay(300);
     
     try {
@@ -322,8 +325,8 @@ export const authService = {
       };
       
       // 同步到 localStorage
-      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      const localUserIndex = localUsers.findIndex((u: any) => u.id === userData.id);
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]') as User[];
+      const localUserIndex = localUsers.findIndex((u: User) => u.id === userData.id);
       if (localUserIndex !== -1) {
         localUsers[localUserIndex] = users[userIndex];
         localStorage.setItem('users', JSON.stringify(localUsers));
@@ -356,8 +359,8 @@ export const authService = {
       users.splice(userIndex, 1);
       
       // 同步到 localStorage
-      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]') as User[];
+      const localUserIndex = localUsers.findIndex((u: User) => u.id === userId);
       if (localUserIndex !== -1) {
         localUsers.splice(localUserIndex, 1);
         localStorage.setItem('users', JSON.stringify(localUsers));
@@ -365,7 +368,7 @@ export const authService = {
       
       // 同時刪除相關的角色記錄
       let userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
-      userRoles = userRoles.filter((ur: any) => ur.user_id !== userId);
+      userRoles = userRoles.filter((ur: UserRole) => ur.user_id !== userId);
       localStorage.setItem('userRoles', JSON.stringify(userRoles));
       
       console.log('✅ 用戶已刪除:', deletedUser);
@@ -421,8 +424,8 @@ export const authService = {
           users[userIndex].updated_at = new Date().toISOString();
 
           // 同步到 localStorage
-          const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-          const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+          const localUsers = JSON.parse(localStorage.getItem('users') || '[]') as User[];
+          const localUserIndex = localUsers.findIndex((u: User) => u.id === userId);
           if (localUserIndex !== -1) {
             localUsers[localUserIndex].membership_status = newStatus;
             localUsers[localUserIndex].updated_at = new Date().toISOString();
@@ -452,8 +455,8 @@ export const authService = {
       users[userIndex].updated_at = now;
       
       // 同步到 localStorage 以保持一致性
-      const localUsers = JSON.parse(localStorage.getItem('users') || '[]');
-      const localUserIndex = localUsers.findIndex((u: any) => u.id === userId);
+      const localUsers = JSON.parse(localStorage.getItem('users') || '[]') as User[];
+      const localUserIndex = localUsers.findIndex((u: User) => u.id === userId);
       if (localUserIndex !== -1) {
         localUsers[localUserIndex].account_status = status;
         localUsers[localUserIndex].updated_at = now;
@@ -1168,8 +1171,7 @@ export const dashboardService = {
         const sessionHashId = hashString(session.id);
         
         // 找出預約了此時段的學生
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const sessionAppointments = allAppointments.filter((appointment: any) => 
+        const sessionAppointments = allAppointments.filter((appointment: ClassAppointment) => 
           appointment.class_timeslot_id === sessionHashId && 
           appointment.status === 'CONFIRMED'
         );

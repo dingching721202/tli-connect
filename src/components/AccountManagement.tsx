@@ -8,6 +8,10 @@ import { users, User } from '@/data/users';
 import { userRoles } from '@/data/user_roles';
 import { authService, memberCardService } from '@/services/dataService';
 
+type RoleType = 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
+type MembershipStatusType = 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER';
+type CampusType = '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
+
 const {
   FiUsers, FiUser, FiEdit2, FiTrash2, FiSearch, FiPlus,
   FiShield, FiCheck, FiX, FiToggleLeft, FiToggleRight
@@ -33,7 +37,7 @@ const AccountManagement = () => {
     email: '',
     phone: '',
     password: '',
-    roles: ['STUDENT'] as ('STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[],
+    roles: ['STUDENT'] as RoleType[],
     membership_status: 'NON_MEMBER' as const,
     account_status: 'ACTIVE' as const,
     campus: '羅斯福校' as const
@@ -627,10 +631,10 @@ const AccountManagement = () => {
                       <label key={role} className="flex items-center">
                         <input
                           type="checkbox"
-                          checked={newUser.roles.includes(role as any)}
+                          checked={newUser.roles.includes(role as RoleType)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setNewUser({ ...newUser, roles: [...newUser.roles, role as any] });
+                              setNewUser({ ...newUser, roles: [...newUser.roles, role as RoleType] });
                             } else {
                               setNewUser({ ...newUser, roles: newUser.roles.filter(r => r !== role) });
                             }
@@ -647,7 +651,7 @@ const AccountManagement = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">會員狀態</label>
                   <select
                     value={newUser.membership_status}
-                    onChange={(e) => setNewUser({ ...newUser, membership_status: e.target.value as any })}
+                    onChange={(e) => setNewUser({ ...newUser, membership_status: e.target.value as MembershipStatusType })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {availableStatuses.map((status) => (
@@ -666,7 +670,7 @@ const AccountManagement = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">校區</label>
                   <select
                     value={newUser.campus}
-                    onChange={(e) => setNewUser({ ...newUser, campus: e.target.value as any })}
+                    onChange={(e) => setNewUser({ ...newUser, campus: e.target.value as CampusType })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     {availableCampuses.map((campus) => (
@@ -763,7 +767,7 @@ const AccountManagement = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">會員狀態</label>
                     <select
                       value={selectedUser.membership_status}
-                      onChange={(e) => setSelectedUser({ ...selectedUser, membership_status: e.target.value as any })}
+                      onChange={(e) => setSelectedUser({ ...selectedUser, membership_status: e.target.value as MembershipStatusType })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       {availableStatuses.map((status) => (
@@ -782,7 +786,7 @@ const AccountManagement = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">校區</label>
                     <select
                       value={selectedUser.campus}
-                      onChange={(e) => setSelectedUser({ ...selectedUser, campus: e.target.value as any })}
+                      onChange={(e) => setSelectedUser({ ...selectedUser, campus: e.target.value as CampusType })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     >
                       {availableCampuses.map((campus) => (
@@ -868,7 +872,6 @@ const AccountManagement = () => {
                     setShowEditModal(false);
                     setSelectedUser(null);
                     setSelectedRoles([]);
-                    setSelectedPrimaryRole('');
                   }}
                   className="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 font-medium transition-colors"
                 >
