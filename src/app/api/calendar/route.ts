@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { classTimeslots } from '@/data/class_timeslots';
 import { classes } from '@/data/classes';
 import { courses } from '@/data/courses';
-import { memberships } from '@/data/memberships';
+import { memberCardStore } from '@/lib/memberCardStore';
 import { memberCards } from '@/data/member_cards';
 
 interface CalendarTimeslot {
@@ -40,14 +40,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 檢查學員的會員資格
-    const userMemberships = memberships.filter(
-      membership => membership.user_id === parseInt(userId) && 
-      membership.status === 'ACTIVE' && 
-      membership.activated
+    // 檢查學員的會員資格（使用統一的 memberCardStore）
+    const allMemberships = await memberCardStore.getUserMembershipsByUserId(parseInt(userId));
+    const activeMemberships = allMemberships.filter(
+      membership => membership.status === 'activated'
     );
 
-    if (userMemberships.length === 0) {
+    if (activeMemberships.length === 0) {
       return NextResponse.json({
         success: true,
         data: [],
@@ -58,7 +57,7 @@ export async function GET(request: NextRequest) {
     // 獲取學員有權益的課程ID
     const availableCourseIds = new Set<number>();
     
-    for (const membership of userMemberships) {
+    for (const membership of activeMemberships) {
       const memberCard = memberCards.find(card => card.id === membership.member_card_id);
       if (memberCard) {
         memberCard.available_course_ids.forEach(courseId => {

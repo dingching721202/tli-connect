@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { orderStore } from '@/lib/orderStore';
-import { memberCardService } from '@/services/dataService';
+import { memberCardStore } from '@/lib/memberCardStore';
 
 // PUT - 更新訂單狀態 (金流回調用)
 export async function PUT(
@@ -53,41 +53,46 @@ export async function PUT(
 
     console.log(`✅ 訂單 ${orderId} 狀態已更新為: ${status}`);
 
-    // 如果付款成功且有用戶ID，創建會員卡
-    if (status === 'COMPLETED' && updatedOrder.user_id) {
+    // 如果付款成功，創建用戶會員卡記錄
+    if (status === 'COMPLETED') {
       try {
-        console.log(`🎫 為用戶 ${updatedOrder.user_id} 創建會員卡...`);
+        console.log(`🎫 為訂單 ${orderId} 創建用戶會員卡記錄...`);
         
-        const memberCard = memberCardService.createCard({
+        // 確保必要的用戶資訊
+        const userName = updatedOrder.user_name || '未知用戶';
+        const userEmail = updatedOrder.user_email || `user${updatedOrder.user_id}@example.com`;
+        const userId = updatedOrder.user_id || Math.abs(userEmail.split('').reduce((a, b) => {
+          a = ((a << 5) - a) + b.charCodeAt(0);
+          return a & a;
+        }, 0));
+
+        const userMemberCard = await memberCardStore.createUserMembership({
+          user_id: userId,
+          user_name: userName,
+          user_email: userEmail,
           plan_id: updatedOrder.plan_id,
-          user_email: updatedOrder.user_email || '',
-          user_name: updatedOrder.user_name || '',
-          user_id: updatedOrder.user_id,
           order_id: updatedOrder.id,
-          start_date: new Date().toISOString(),
-          end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30天有效期
-          status: 'PURCHASED'
+          amount_paid: updatedOrder.amount,
+          auto_renewal: false
         });
 
-        console.log(`✅ 會員卡已為訂單 ${orderId} 創建:`, memberCard.id);
+        console.log(`✅ 用戶會員卡記錄已為訂單 ${orderId} 創建:`, userMemberCard.id);
       } catch (error) {
-        console.error(`❌ 為訂單 ${orderId} 創建會員卡失敗:`, error);
+        console.error(`❌ 為訂單 ${orderId} 創建用戶會員卡記錄失敗:`, error);
         
-        // 如果會員卡創建失敗，回滾訂單狀態
+        // 如果會員卡記錄創建失敗，回滾訂單狀態
         orderStore.updateOrderStatus(orderId, 'CANCELED');
         
         return NextResponse.json(
           { 
             success: false, 
-            error: 'Payment successful but failed to create membership card. Order has been canceled.' 
+            error: 'Payment successful but failed to create user membership card record. Order has been canceled.' 
           },
           { status: 500 }
         );
       }
-    } else if (status === 'COMPLETED' && !updatedOrder.user_id) {
-      console.log(`⚠️ 訂單 ${orderId} 付款成功但無用戶ID，無法創建會員卡`);
     } else if (status === 'CANCELED') {
-      console.log(`❌ 訂單 ${orderId} 已取消，不會創建會員卡`);
+      console.log(`❌ 訂單 ${orderId} 已取消，不會創建會員卡記錄`);
     }
 
     return NextResponse.json({

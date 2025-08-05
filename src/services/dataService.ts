@@ -30,14 +30,13 @@ interface LeaveRequest {
 
 // TypeScript 資料匯入
 import { users as usersData } from '@/data/users';
-import { memberships as membershipsData } from '@/data/memberships';
+import { memberCardStore } from '@/lib/memberCardStore';
 import { classTimeslots as classTimeslotsData } from '@/data/class_timeslots';
 import { classAppointments as classAppointmentsData } from '@/data/class_appointments';
 import { agents as agentsData } from '@/data/agents';
 
 // 模擬資料庫
 const users: User[] = [...usersData] as User[];
-const memberships: Membership[] = [...membershipsData] as Membership[];
 const classTimeslots: ClassTimeslot[] = [...classTimeslotsData] as ClassTimeslot[];
 const classAppointments: ClassAppointment[] = [...classAppointmentsData] as ClassAppointment[];
 const agents: Agent[] = [...agentsData] as Agent[];
@@ -396,7 +395,7 @@ export const authService = {
         newStatus = 'NON_MEMBER';
       } else {
         // 學生角色需要檢查會員卡狀態
-        const activeMembership = await memberCardService.getUserMembership(userId);
+        const activeMembership = await memberCardService.getMembership(userId);
         if (activeMembership) {
           if (activeMembership.status === 'ACTIVE') {
             // 檢查是否過期
@@ -483,14 +482,51 @@ export const orderService = {
 };
 
 // 會員卡服務 (US04)
+// 統一的格式轉換函數
+const convertMembershipToLegacyFormat = (um: {
+  id: number;
+  created_at: string;
+  member_card_id: number;
+  duration_days?: number;
+  activation_date?: string;
+  expiry_date?: string;
+  status: string;
+  activation_deadline?: string;
+  user_id: number;
+  plan_id: number;
+  user_email: string;
+  user_name: string;
+  order_id?: number;
+}) => ({
+  id: um.id,
+  created_at: um.created_at,
+  member_card_id: um.member_card_id,
+  duration_in_days: um.duration_days || 365,
+  start_time: um.activation_date || null,
+  expire_time: um.expiry_date || null,
+  activated: um.status === 'activated',
+  activate_expire_time: um.activation_deadline || '',
+  user_id: um.user_id,
+  status: um.status === 'purchased' ? 'PURCHASED' as const : 
+          um.status === 'activated' ? 'ACTIVE' as const : 
+          'EXPIRED' as const,
+  // 向後相容性屬性
+  plan_id: um.plan_id,
+  user_email: um.user_email,
+  user_name: um.user_name,
+  order_id: um.order_id
+});
+
 export const memberCardService = {
-  // 取得所有會員卡
-  getAllCards() {
-    return memberships;
+  // 取得所有會員卡（統一使用 memberCardStore）
+  async getAllCards() {
+    const userMemberships = await memberCardStore.getAllUserMemberships();
+    
+    return userMemberships.map(convertMembershipToLegacyFormat);
   },
   
-  // 創建會員卡
-  createCard(cardData: {
+  // 創建會員卡（統一使用 memberCardStore）
+  async createCard(cardData: {
     plan_id: number;
     user_email: string;
     user_name: string;
@@ -500,110 +536,125 @@ export const memberCardService = {
     end_date: string;
     status: 'PURCHASED' | 'ACTIVE' | 'EXPIRED';
   }) {
-    const newCard = {
-      id: generateId(memberships),
-      member_card_id: cardData.plan_id,
-      user_id: cardData.user_id,
-      duration_in_days: Math.ceil((new Date(cardData.end_date).getTime() - new Date(cardData.start_date).getTime()) / (1000 * 60 * 60 * 24)),
-      start_time: cardData.start_date,
-      expire_time: cardData.end_date,
-      status: cardData.status,
-      activated: cardData.status === 'ACTIVE',
-      activate_expire_time: cardData.end_date,
-      created_at: new Date().toISOString(),
-      plan_id: cardData.plan_id,
-      user_email: cardData.user_email,
-      user_name: cardData.user_name,
-      order_id: cardData.order_id,
-      start_date: cardData.start_date,
-      end_date: cardData.end_date
-    };
+    await delay(500);
     
-    memberships.push(newCard);
-    return newCard;
+    const userMembership = await memberCardStore.createMembership({
+      user_id: cardData.user_id,
+      user_name: cardData.user_name,
+      user_email: cardData.user_email,
+      plan_id: cardData.plan_id,
+      order_id: cardData.order_id,
+      amount_paid: 0, // 需要從其他地方獲取
+      auto_renewal: false
+    });
+
+    // 如果狀態是 ACTIVE，立即開啟會員卡
+    if (cardData.status === 'ACTIVE') {
+      await memberCardStore.activateMemberCard(userMembership.id);
+    }
+
+    return convertMembershipToLegacyFormat(userMembership);
   },
-  // 啟用會員卡
+
+  // 啟用會員卡（統一使用 memberCardStore）
   async activateMemberCard(userId: number, membershipId: number): Promise<ApiResponse<Membership>> {
     await delay(500);
     
     console.log(`🔍 查找會員卡 - 用戶ID: ${userId}, 會員卡ID: ${membershipId}`);
-    console.log('📋 所有會員資格:', memberships);
     
-    const membership = memberships.find(m => m.id === membershipId && m.user_id === userId);
-    console.log('🎯 找到的會員資格:', membership);
-    
-    if (!membership) {
-      console.log('❌ 找不到會員資格記錄');
-      return { success: false, error: 'Membership not found or not purchased' };
+    try {
+      // 檢查會員卡是否存在且屬於該用戶
+      const userMembership = await memberCardStore.getUserMembershipById(membershipId);
+      
+      if (!userMembership || userMembership.user_id !== userId) {
+        console.log('❌ 找不到會員資格記錄');
+        return { success: false, error: 'Membership not found or not purchased' };
+      }
+
+      if (userMembership.status !== 'purchased') {
+        console.log(`❌ 會員卡狀態不正確: ${userMembership.status} (需要 purchased)`);
+        return { success: false, error: 'Membership not found or not purchased' };
+      }
+
+      // 檢查是否已有啟用的會員卡
+      const userMemberships = await memberCardStore.getUserMembershipsByUserId(userId);
+      const activeMembership = userMemberships.find(m => m.status === 'activated');
+      if (activeMembership) {
+        return { success: false, error: 'ACTIVE_CARD_EXISTS' };
+      }
+
+      // 啟用會員卡
+      const activatedMembership = await memberCardStore.activateMemberCard(membershipId);
+      
+      if (!activatedMembership) {
+        return { success: false, error: 'Failed to activate membership' };
+      }
+
+      console.log('✅ 會員卡啟用成功:', activatedMembership);
+
+      const membership = convertMembershipToLegacyFormat(activatedMembership);
+      return { success: true, data: membership };
+    } catch (error) {
+      console.error('啟用會員卡失敗:', error);
+      return { success: false, error: (error as Error).message };
     }
-    
-    if (membership.status !== 'PURCHASED') {
-      console.log(`❌ 會員卡狀態不正確: ${membership.status} (需要 PURCHASED)`);
-      return { success: false, error: 'Membership not found or not purchased' };
-    }
-    
-    // 檢查是否已有啟用的會員卡
-    const activeMembership = memberships.find(m => 
-      m.user_id === userId && m.status === 'ACTIVE'
-    );
-    if (activeMembership) {
-      return { success: false, error: 'ACTIVE_CARD_EXISTS' };
-    }
-    
-    // 啟用會員卡
-    const now = new Date();
-    membership.status = 'ACTIVE';
-    membership.activated = true;
-    membership.start_time = now.toISOString();
-    membership.expire_time = new Date(now.getTime() + membership.duration_in_days * 24 * 60 * 60 * 1000).toISOString();
-    
-    console.log('✅ 會員卡啟用成功:', membership);
-    
-    return { success: true, data: membership };
   },
   
   // 獲取用戶會員資格 (只返回 ACTIVE 狀態)
-  async getUserMembership(userId: number): Promise<Membership | null> {
-    const activeMembership = memberships.find(m => m.user_id === userId && m.status === 'ACTIVE');
-    console.log(`🔍 getUserMembership - 用戶ID: ${userId}, 找到的 ACTIVE 會員卡:`, activeMembership);
-    return activeMembership || null;
+  async getMembership(userId: number): Promise<Membership | null> {
+    const userMemberships = await memberCardStore.getUserMembershipsByUserId(userId);
+    const activeMembership = userMemberships.find(m => m.status === 'activated');
+    
+    console.log(`🔍 getMembership - 用戶ID: ${userId}, 找到的 ACTIVE 會員卡:`, activeMembership);
+    
+    if (!activeMembership) {
+      return null;
+    }
+
+    return convertMembershipToLegacyFormat(activeMembership);
   },
 
   // 獲取用戶的待啟用會員卡 (PURCHASED 狀態)
   async getUserPurchasedMembership(userId: number): Promise<Membership | null> {
-    const purchasedMembership = memberships.find(m => m.user_id === userId && m.status === 'PURCHASED');
+    const userMemberships = await memberCardStore.getUserMembershipsByUserId(userId);
+    const purchasedMembership = userMemberships.find(m => m.status === 'purchased');
+    
     console.log(`🔍 getUserPurchasedMembership - 用戶ID: ${userId}, 找到的 PURCHASED 會員卡:`, purchasedMembership);
-    return purchasedMembership || null;
+    
+    if (!purchasedMembership) {
+      return null;
+    }
+
+    return convertMembershipToLegacyFormat(purchasedMembership);
   },
   
   // 獲取用戶所有會員資格（包括未啟用的）
   async getAllUserMemberships(userId: number): Promise<Membership[]> {
-    return memberships.filter(m => m.user_id === userId);
+    const userMemberships = await memberCardStore.getUserMembershipsByUserId(userId);
+    
+    return userMemberships.map(convertMembershipToLegacyFormat);
   },
 
   // 檢查並更新過期的會員卡
   async checkAndUpdateExpiredMemberships(): Promise<{ updated: number; expired: Membership[] }> {
-    const now = new Date();
-    const expiredMemberships: Membership[] = [];
-    let updatedCount = 0;
+    await delay(500);
+    
+    // 使用統一的過期狀態更新
+    await memberCardStore.updateExpiredStatus();
+    
+    // 獲取所有過期的會員卡
+    const expiredUserMemberships = await memberCardStore.getUserMembershipsByStatus('expired');
+    
+    const expiredMemberships = expiredUserMemberships.map(convertMembershipToLegacyFormat);
 
-    for (const membership of memberships) {
-      if (membership.status === 'ACTIVE' && membership.expire_time) {
-        const expireTime = new Date(membership.expire_time);
-        if (expireTime <= now) {
-          // 會員卡已過期，更新狀態
-          membership.status = 'EXPIRED';
-          expiredMemberships.push(membership);
-          updatedCount++;
-
-          // 同時更新該用戶的會員狀態
-          await authService.autoUpdateMembershipStatus(membership.user_id);
-        }
-      }
+    // 更新用戶會員狀態
+    const uniqueUserIds = [...new Set(expiredMemberships.map(m => m.user_id))];
+    for (const userId of uniqueUserIds) {
+      await authService.autoUpdateMembershipStatus(userId);
     }
 
-    console.log(`🔍 檢查會員卡過期 - 更新了 ${updatedCount} 張過期會員卡`);
-    return { updated: updatedCount, expired: expiredMemberships };
+    console.log(`🔍 檢查會員卡過期 - 更新了 ${expiredMemberships.length} 張過期會員卡`);
+    return { updated: expiredMemberships.length, expired: expiredMemberships };
   },
 
   // 獲取即將過期的會員卡（7天內）
@@ -611,13 +662,17 @@ export const memberCardService = {
     const now = new Date();
     const checkDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 
-    return memberships.filter(m => {
-      if (m.status === 'ACTIVE' && m.expire_time) {
-        const expireTime = new Date(m.expire_time);
+    const allMemberships = await memberCardStore.getAllUserMemberships();
+    
+    const expiringMemberships = allMemberships.filter(um => {
+      if (um.status === 'activated' && um.expiry_date) {
+        const expireTime = new Date(um.expiry_date);
         return expireTime > now && expireTime <= checkDate;
       }
       return false;
     });
+
+    return expiringMemberships.map(convertMembershipToLegacyFormat);
   }
 };
 
@@ -689,7 +744,7 @@ export const bookingService = {
     const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     
     // 檢查會員資格 - 允許 ACTIVE 和 PURCHASED 狀態的會員預約
-    let membership = await memberCardService.getUserMembership(userId);
+    let membership = await memberCardService.getMembership(userId);
     if (!membership) {
       membership = await memberCardService.getUserPurchasedMembership(userId);
     }
@@ -1104,7 +1159,7 @@ export const dashboardService = {
     
     // 學生的原有邏輯
     // 優先獲取 ACTIVE 會員卡，如果沒有則獲取 PURCHASED 會員卡
-    let membership = await memberCardService.getUserMembership(userId);
+    let membership = await memberCardService.getMembership(userId);
     console.log('🎯 找到的 ACTIVE 會員卡:', membership);
     
     if (!membership) {

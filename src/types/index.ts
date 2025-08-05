@@ -1,29 +1,99 @@
-// 使用者相關類型
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  roles: ('STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
-  membership_status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER';
-  account_status: 'ACTIVE' | 'SUSPENDED';
-  campus: '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
-  created_at: string;
-  updated_at?: string;
+// 統一的類型定義匯出
+
+// 用戶相關類型
+export * from './user';
+export type { 
+  User, 
+  UserWithPassword, 
+  CreateUserRequest, 
+  UpdateUserRequest, 
+  UserRoleAssignment,
+  UserStats,
+  UserFilter,
+  UserRole,
+  MembershipStatus,
+  AccountStatus,
+  Campus
+} from './user';
+
+// 會員相關類型
+export * from './membership';
+export type {
+  Membership,
+  MemberCard,
+  MemberCardPlan,
+  CreateMembershipRequest,
+  UpdateMembershipRequest,
+  MembershipStats,
+  MembershipFilter,
+  CreateMemberCardPlanRequest,
+  UpdateMemberCardPlanRequest,
+  CreateMemberCardRequest,
+  MembershipWithDetails,
+  MemberCardStatus,
+  UserType,
+  DurationType,
+  MembershipStatus
+} from './membership';
+
+// 支付相關類型（向後相容）
+export interface PaymentRequest {
+  order_id: number | string;
+  amount: number;
+  payment_method?: PaymentMethod;
+  description?: string;
+  return_url?: string;
+  cancel_url?: string;
 }
 
-// 用戶角色管理
-export interface UserRole {
-  id: number;
-  user_id: number;
-  role: 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN';
-  granted_by: number;
-  granted_at: string;
-  is_active: boolean;
+export interface PaymentResponse {
+  payment_id: string;
+  payment_url?: string;
+  status: 'SUCCESS' | 'PENDING' | 'FAILED';
 }
 
-// 課程相關類型
+export interface PaymentResult {
+  success: boolean;
+  payment: PaymentResponse;
+  error?: string;
+}
+
+// 認證相關類型（向後相容）
+export interface LoginResponse {
+  success: boolean;
+  user?: User;
+  user_id?: number;
+  jwt?: string;
+  error?: string;
+}
+
+// 批量預約回應（向後相容）
+export interface BatchBookingResponse {
+  success: boolean;
+  bookings?: ClassAppointment[];
+  failed_bookings?: number[];
+  failed?: number[];
+  error?: string;
+}
+
+// 訂單相關類型
+export * from './order';
+export type {
+  Order,
+  CreateOrderRequest,
+  UpdateOrderRequest,
+  PaymentCallback,
+  OrderStats,
+  OrderFilter,
+  OrderWithDetails,
+  BatchOrderOperation,
+  RefundRequest,
+  RefundRecord,
+  OrderStatus,
+  PaymentMethod
+} from './order';
+
+// 課程相關類型（保留現有定義）
 export interface Course {
   id: number;
   title: string;
@@ -49,78 +119,16 @@ export interface Lesson {
   created_at: string;
 }
 
-export interface LessonAttachment {
-  id: number;
-  lesson_id: number;
-  video_duration_in_seconds: number;
-  video_url: string;
-  created_at: string;
-}
-
-export interface LessonAttachmentRecord {
-  id: number;
-  lesson_attachment_id: number;
-  progress: number;
-  user_id: number;
-  created_at: string;
-}
-
-// 會員制度相關類型
-export interface MemberCard {
-  id: number;
-  name: string;
-  available_course_ids: number[];
-  created_at: string;
-}
-
-export interface MemberCardPlan {
-  id: number;
-  member_card_id: number;
-  title?: string;
-  type: 'SEASON' | 'YEAR';
-  duration_days?: number;
-  price: number | string;
-  status?: 'DRAFT' | 'PUBLISHED';
-  created_at: string;
-}
-
-export interface Membership {
-  id: number;
-  member_card_id: number;
-  user_id: number;
-  duration_in_days: number;
-  start_time: string | null;
-  expire_time: string | null;
-  status: 'PURCHASED' | 'ACTIVE' | 'EXPIRED';
-  activated: boolean;
-  activate_expire_time: string;
-  created_at: string;
-  plan_id?: number;
-  user_email?: string;
-  user_name?: string;
-  order_id?: number;
-  start_date?: string;
-  end_date?: string;
-}
-
-export interface Order {
-  id: number;
-  member_card_plan_id: number;
-  user_id: number;
-  price: number | string;
-  status: 'CREATED' | 'COMPLETED' | 'CANCELED';
-  created_at: string;
-}
-
 // 排課系統相關類型
 export interface ClassTimeslot {
   id: number;
   class_id: number;
   start_time: string;
   end_time: string;
-  capacity?: number;
-  reserved_count?: number;
-  status: 'CREATED' | 'CANCELED' | 'AVAILABLE';
+  max_capacity: number;
+  current_bookings: number;
+  status: 'OPEN' | 'FULL' | 'CANCELED';
+  teacher_id?: number;
   created_at: string;
 }
 
@@ -128,76 +136,38 @@ export interface ClassAppointment {
   id: number;
   class_timeslot_id: number;
   user_id: number;
-  status: 'CONFIRMED' | 'CANCELED';
-  created_at: string;
+  status: 'BOOKED' | 'CONFIRMED' | 'CANCELED' | 'COMPLETED';
+  booking_time: string;
+  notes?: string;
 }
 
-export interface TeacherLeaveRecord {
-  id: number;
-  class_timeslot_id: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  created_at: string;
-}
-
-export interface Todo {
-  id: number;
-  name: string;
-  due_date: string;
-  is_completed: boolean;
-  created_at: string;
-}
-
-// 付款相關類型
-export interface PaymentRequest {
-  order_id: string;
-  amount: number;
-  description: string;
-  return_url: string;
-}
-
-export interface PaymentResponse {
-  payment_id: string;
-  status: 'successful' | 'failed';
-}
-
-export interface PaymentResult {
-  success: boolean;
-  data?: PaymentResponse;
-  error?: string;
-}
-
-// API 響應類型
-export interface ApiResponse<T> {
+// 通用響應類型
+export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
   message?: string;
 }
 
-export interface LoginResponse {
-  success: boolean;
-  user_id?: number;
-  jwt?: string;
-  error?: string;
+// 分頁相關類型
+export interface PaginationParams {
+  page: number;
+  limit: number;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
 }
 
-export interface BatchBookingResponse {
-  success: Array<{
-    timeslot_id: number;
-    booking_id: number;
-  }>;
-  failed: Array<{
-    timeslot_id: number;
-    reason: 'FULL' | 'WITHIN_24H' | 'MEMBERSHIP_EXPIRED';
-  }>;
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    total_pages: number;
+    has_next: boolean;
+    has_prev: boolean;
+  };
 }
 
-// 錯誤代碼類型
-export type ErrorCode = 
-  | 'EMAIL_ALREADY_EXISTS'
-  | 'INVALID_CREDENTIALS'
-  | 'ACTIVE_CARD_EXISTS'
-  | 'CANNOT_CANCEL_WITHIN_24H'
-  | 'MEMBERSHIP_EXPIRED'
-  | 'TIMESLOT_FULL'
-  | 'TIMESLOT_WITHIN_24H';
+// 預設匯出主要類型
+export { User as default } from './user';

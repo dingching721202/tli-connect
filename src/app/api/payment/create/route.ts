@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { paymentService } from '@/services/paymentService';
 import { orderStore } from '@/lib/orderStore';
 import { memberCardPlanStore } from '@/lib/memberCardPlanStore';
-import { memberships } from '@/data/memberships';
+import { memberCardStore } from '@/lib/memberCardStore';
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,12 +51,12 @@ export async function POST(request: NextRequest) {
       return_url
     });
 
-    if (paymentResult.success && paymentResult.data) {
+    if (paymentResult.success && paymentResult.payment) {
       // 模擬金流成功，更新訂單狀態
       const updatedOrder = orderStore.updateOrderStatus(
         order_id, 
         'COMPLETED', 
-        paymentResult.data.payment_id
+        paymentResult.payment.payment_id
       );
 
       // 付款成功後自動創建會員卡（PURCHASED 狀態，需要手動啟用）
@@ -66,28 +66,18 @@ export async function POST(request: NextRequest) {
           const plan = await memberCardPlanStore.getPlanById(updatedOrder.plan_id);
           
           if (plan) {
-            // 生成新的會員卡ID
-            const newMembershipId = Math.max(...memberships.map(m => m.id), 0) + 1;
-            
-            // 創建對應的會員資格記錄 - 狀態為 PURCHASED，需要手動啟用
-            const activateDeadlineDays = plan.activate_deadline_days || 30; // 使用方案設定的啟用期限，預設30天
-            const newMembership = {
-              id: newMembershipId,
-              created_at: new Date().toISOString(),
-              member_card_id: plan.member_card_id,
-              duration_in_days: plan.duration_days,
-              start_time: null,  // 等待用戶啟用
-              expire_time: null,
-              activated: false,
-              activate_expire_time: new Date(Date.now() + activateDeadlineDays * 24 * 60 * 60 * 1000).toISOString(),
+            // 使用統一的 memberCardStore 創建會員記錄
+            await memberCardStore.createUserMembership({
               user_id: updatedOrder.user_id || 999, // 暫時用戶ID，實際應用中需要真實用戶ID
-              status: 'PURCHASED' as const
-            };
+              user_name: updatedOrder.user_name || 'Unknown User',
+              user_email: updatedOrder.user_email || `user${updatedOrder.user_id}@example.com`,
+              plan_id: updatedOrder.plan_id,
+              order_id: updatedOrder.id,
+              amount_paid: updatedOrder.amount,
+              auto_renewal: false
+            });
             
-            // 保存會員資格記錄
-            memberships.push(newMembership);
-            
-            console.log('💳 會員卡創建成功 (PURCHASED 狀態):', newMembership);
+            console.log('💳 會員卡創建成功 (PURCHASED 狀態) - 已使用統一存儲系統');
           } else {
             console.error('❌ 找不到會員方案:', updatedOrder.plan_id);
           }
@@ -100,11 +90,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         data: {
-          payment_id: paymentResult.data.payment_id,
-          payment_url: `${return_url}?payment_id=${paymentResult.data.payment_id}&status=${paymentResult.data.status}&order_id=${order_id}`,
+          payment_id: paymentResult.payment.payment_id,
+          payment_url: `${return_url}?payment_id=${paymentResult.payment.payment_id}&status=${paymentResult.payment.status}&order_id=${order_id}`,
           order_id: order_id,
           amount: amount,
-          status: paymentResult.data.status
+          status: paymentResult.payment.status
         }
       });
     } else {
@@ -115,7 +105,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: paymentResult.error || 'Payment failed',
         data: {
-          payment_id: paymentResult.data?.payment_id,
+          payment_id: paymentResult.payment?.payment_id,
           order_id: order_id,
           status: 'failed'
         }

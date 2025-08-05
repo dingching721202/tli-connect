@@ -1,65 +1,117 @@
-export interface Membership {
+import { Membership } from '@/types/membership';
+
+export interface UserMemberCardOriginal {
   id: number;
-  created_at: string;
-  member_card_id: number;
-  duration_in_days: number;
-  start_time: string | null;
-  expire_time: string | null;
-  activated: boolean;
-  activate_expire_time: string;
   user_id: number;
-  status: 'PURCHASED' | 'ACTIVE' | 'EXPIRED';
+  user_name: string;
+  user_email: string;
+  plan_id: number; // 會員卡計劃ID
+  member_card_id: number; // 會員卡ID
+  order_id?: number; // 對應的訂單ID
+  status: 'purchased' | 'activated' | 'expired' | 'cancelled';
+  purchase_date: string; // 購買日期
+  activation_date?: string; // 開啟日期
+  expiry_date?: string; // 到期日期
+  activation_deadline?: string; // 開啟期限（購買後30天內需開啟）
+  amount_paid: number; // 支付金額
+  auto_renewal?: boolean; // 自動續費
+  created_at: string;
+  updated_at: string;
+  // 會員卡詳細資訊（從plan中獲取，便於顯示）
+  plan_title?: string;
+  plan_type?: 'individual' | 'corporate';
+  duration_type?: 'season' | 'annual';
+  duration_days?: number;
 }
 
+// 會員記錄（示例數據）
 export const memberships: Membership[] = [
   {
     id: 1,
-    created_at: "2025-07-14T12:00:00+00:00",
-    member_card_id: 1,
-    duration_in_days: 90,
-    start_time: "2025-07-14T12:00:00+00:00",
-    expire_time: "2025-10-12T12:00:00+00:00",
-    activated: true,
-    activate_expire_time: "2025-08-13T12:00:00+00:00",
     user_id: 1,
-    status: 'ACTIVE' as const
+    user_name: "張小明",
+    user_email: "ming.zhang@example.com",
+    plan_id: 1,
+    member_card_id: 1,
+    order_id: 1,
+    status: 'activated',
+    purchase_date: '2024-12-01T09:00:00Z',
+    activation_date: '2024-12-02T10:00:00Z',
+    expiry_date: '2025-03-02T23:59:59Z',
+    activation_deadline: '2024-12-31T23:59:59Z',
+    amount_paid: 3000,
+    auto_renewal: false,
+    created_at: '2024-12-01T09:00:00Z',
+    updated_at: '2024-12-02T10:00:00Z',
+    plan_title: '個人季度方案',
+    plan_type: 'individual',
+    duration_type: 'season',
+    duration_days: 90
   },
   {
     id: 2,
-    created_at: "2025-07-14T12:00:00+00:00",
-    member_card_id: 1,
-    duration_in_days: 90,
-    start_time: null,
-    expire_time: null,
-    activated: false,
-    activate_expire_time: "2025-08-13T12:00:00+00:00",
     user_id: 2,
-    status: 'PURCHASED' as const
+    user_name: "李美華",
+    user_email: "meihua.li@example.com",
+    plan_id: 2,
+    member_card_id: 2,
+    order_id: 2,
+    status: 'purchased',
+    purchase_date: '2024-12-15T14:30:00Z',
+    activation_deadline: '2025-01-14T23:59:59Z',
+    amount_paid: 30000,
+    auto_renewal: true,
+    created_at: '2024-12-15T14:30:00Z',
+    updated_at: '2024-12-15T14:30:00Z',
+    plan_title: '個人年度方案',
+    plan_type: 'individual',
+    duration_type: 'annual',
+    duration_days: 365
   },
   {
     id: 3,
-    created_at: "2025-07-14T12:00:00+00:00",
-    member_card_id: 1,
-    duration_in_days: 90,
-    start_time: "2025-07-11T12:00:00+00:00",
-    expire_time: "2025-10-09T12:00:00+00:00",
-    activated: true,
-    activate_expire_time: "2025-08-13T12:00:00+00:00",
     user_id: 3,
-    status: 'ACTIVE' as const
+    user_name: "王大強",
+    user_email: "daqiang.wang@company.com",
+    plan_id: 3,
+    member_card_id: 3,
+    order_id: 3,
+    status: 'expired',
+    purchase_date: '2024-01-15T10:00:00Z',
+    activation_date: '2024-01-16T09:00:00Z',
+    expiry_date: '2025-01-16T23:59:59Z',
+    activation_deadline: '2024-02-14T23:59:59Z',
+    amount_paid: 55000,
+    auto_renewal: false,
+    created_at: '2024-01-15T10:00:00Z',
+    updated_at: '2024-01-16T09:00:00Z',
+    plan_title: '企業年度方案',
+    plan_type: 'corporate',
+    duration_type: 'annual',
+    duration_days: 365
   },
   {
     id: 4,
-    created_at: "2025-07-25T12:00:00+00:00",
-    member_card_id: 2,
-    duration_in_days: 365,
-    start_time: null,
-    expire_time: null,
-    activated: false,
-    activate_expire_time: "2025-08-24T12:00:00+00:00", // 30天內需啟用
-    user_id: 1, // 用戶1有一張待啟用的年度會員卡
-    status: 'PURCHASED' as const
-  },
-  // 新增：完全沒有會員卡的用戶 (user_id: 4)
-  // 用於測試「尚未購買會員方案」的情況
+    user_id: 4,
+    user_name: "陳小芳",
+    user_email: "xiaofang.chen@example.com",
+    plan_id: 1,
+    member_card_id: 1,
+    order_id: 4,
+    status: 'activated',
+    purchase_date: '2024-11-20T16:45:00Z',
+    activation_date: '2024-11-21T08:00:00Z',
+    expiry_date: '2025-02-19T23:59:59Z',
+    activation_deadline: '2024-12-20T23:59:59Z',
+    amount_paid: 3000,
+    auto_renewal: true,
+    created_at: '2024-11-20T16:45:00Z',
+    updated_at: '2024-11-21T08:00:00Z',
+    plan_title: '個人季度方案',
+    plan_type: 'individual',
+    duration_type: 'season',
+    duration_days: 90
+  }
 ];
+
+export default memberships;
