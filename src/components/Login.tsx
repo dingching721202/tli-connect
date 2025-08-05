@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { FiUser, FiLock, FiEye, FiEyeOff, FiLoader } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
@@ -19,6 +19,10 @@ const Login: React.FC = () => {
   
   const { register, login } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // 取得重導向 URL
+  const redirectUrl = searchParams.get('redirect') || '/dashboard';
 
   // 會員卡測試帳號 - 不同會員狀態
   const membershipTestAccounts = [
@@ -97,14 +101,8 @@ const Login: React.FC = () => {
       }
       
       if (result.success && result.user) {
-        // 根據用戶角色決定跳轉頁面
-        if (result.user.roles.includes('OPS')) {
-          router.push('/dashboard');
-        } else if (result.user.roles.includes('TEACHER')) {
-          router.push('/dashboard');
-        } else {
-          router.push('/dashboard'); // 學生跳轉到 dashboard
-        }
+        // 登入成功後重導向到指定頁面
+        router.push(redirectUrl);
       } else {
         // 處理錯誤碼
         let errorMessage = result.error || (isRegisterMode ? '註冊失敗' : '登入失敗');

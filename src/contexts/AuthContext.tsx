@@ -5,7 +5,7 @@ import { authService, memberCardService, agentService } from '@/services/dataSer
 import { User as DataUser, Membership } from '@/types';
 import { Agent } from '@/data/agents';
 
-type RoleType = 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'OPS' | 'ADMIN';
+type RoleType = 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN';
 
 interface User {
   id: number;
@@ -32,7 +32,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isStudent: boolean;
   isTeacher: boolean;
-  isOps: boolean;
+  isStaff: boolean;
   isAdmin: boolean;
   isAgent: boolean;
   isMember: boolean;
@@ -43,6 +43,10 @@ interface AuthContextType {
   refreshMembership: () => Promise<void>;
   switchRole: (role: string) => void;
   availableRoles: string[];
+  // 新增角色鎖定功能
+  isRoleLocked: boolean;
+  lockedRole: string | null;
+  setRoleLock: (role: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -59,6 +63,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [currentRole, setCurrentRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  // 新增角色鎖定狀態
+  const [isRoleLocked, setIsRoleLocked] = useState(false);
+  const [lockedRole, setLockedRole] = useState<string | null>(null);
 
   // 從 localStorage 載入用戶會話
   useEffect(() => {
@@ -73,13 +80,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             const userWithMembership = await loadUserWithMembership(userData);
             setUser(userWithMembership);
             
-            // 設置當前角色：從 localStorage 讀取或使用第一個角色
-            const savedCurrentRole = localStorage.getItem('currentRole');
-            if (savedCurrentRole && userWithMembership.roles.includes(savedCurrentRole as RoleType)) {
-              setCurrentRole(savedCurrentRole);
-            } else if (userWithMembership.roles.length > 0) {
-              setCurrentRole(userWithMembership.roles[0]);
-              localStorage.setItem('currentRole', userWithMembership.roles[0]);
+            // 檢查是否有角色鎖定
+            const savedIsRoleLocked = localStorage.getItem('isRoleLocked') === 'true';
+            const savedLockedRole = localStorage.getItem('lockedRole');
+            
+            if (savedIsRoleLocked && savedLockedRole && userWithMembership.roles.includes(savedLockedRole as RoleType)) {
+              // 恢復角色鎖定狀態
+              setIsRoleLocked(true);
+              setLockedRole(savedLockedRole);
+              setCurrentRole(savedLockedRole);
+            } else {
+              // 設置當前角色：從 localStorage 讀取或使用第一個角色
+              const savedCurrentRole = localStorage.getItem('currentRole');
+              if (savedCurrentRole && userWithMembership.roles.includes(savedCurrentRole as RoleType)) {
+                setCurrentRole(savedCurrentRole);
+              } else if (userWithMembership.roles.length > 0) {
+                setCurrentRole(userWithMembership.roles[0]);
+                localStorage.setItem('currentRole', userWithMembership.roles[0]);
+              }
             }
           }
         }
@@ -250,9 +268,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const logout = () => {
     setUser(null);
     setCurrentRole(null);
+    setIsRoleLocked(false);
+    setLockedRole(null);
     localStorage.removeItem('userId');
     localStorage.removeItem('jwt');
     localStorage.removeItem('currentRole');
+    localStorage.removeItem('lockedRole');
+    localStorage.removeItem('isRoleLocked');
   };
 
   const updateProfile = (updates: Partial<User>) => {
@@ -265,7 +287,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) return false;
     
     // 管理員和營運人員總是有權限
-    if (user.roles.includes('ADMIN') || user.roles.includes('OPS')) {
+    if (user.roles.includes('ADMIN') || user.roles.includes('STAFF')) {
       return true;
     }
     
@@ -308,8 +330,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // 切換當前活動角色
   const switchRole = (role: string) => {
     if (!user || !user.roles.includes(role as RoleType)) return;
+    // 如果角色被鎖定，不允許切換
+    if (isRoleLocked) return;
     setCurrentRole(role);
     localStorage.setItem('currentRole', role);
+  };
+
+  // 設置角色鎖定
+  const setRoleLock = (role: string | null) => {
+    if (role) {
+      setIsRoleLocked(true);
+      setLockedRole(role);
+      setCurrentRole(role);
+      localStorage.setItem('lockedRole', role);
+      localStorage.setItem('isRoleLocked', 'true');
+    } else {
+      setIsRoleLocked(false);
+      setLockedRole(null);
+      localStorage.removeItem('lockedRole');
+      localStorage.removeItem('isRoleLocked');
+    }
   };
 
   // 刷新會員資料
@@ -340,7 +380,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isAuthenticated: !!user,
     isStudent: user?.roles.includes('STUDENT') || false,
     isTeacher: user?.roles.includes('TEACHER') || false,
-    isOps: user?.roles.includes('OPS') || false,
+    isStaff: user?.roles.includes('STAFF') || false,
     isAdmin: user?.roles.includes('ADMIN') || false,
     isAgent: user?.roles.includes('AGENT') || false,
     isMember: user?.membership_status === 'MEMBER' || user?.roles.includes('STUDENT') || false,
@@ -350,7 +390,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     hasAllRoles,
     refreshMembership,
     switchRole,
-    availableRoles: user?.roles || []
+    availableRoles: user?.roles || [],
+    // 新增角色鎖定功能
+    isRoleLocked,
+    lockedRole,
+    setRoleLock
   };
 
   return (

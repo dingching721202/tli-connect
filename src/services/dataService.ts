@@ -9,7 +9,7 @@ import { teacherDataService } from '@/data/teachers';
 import { hashString } from '@/utils/enrollmentUtils';
 import { UserRole } from '@/data/user_roles';
 
-type RoleType = 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
+type RoleType = 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
 
 interface LeaveRequest {
   id: string;
@@ -155,14 +155,14 @@ export const authService = {
       // 更新用戶角色
       const userIndex = users.findIndex(u => u.id === userId);
       if (userIndex !== -1) {
-        users[userIndex].roles = roles as ('STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
+        users[userIndex].roles = roles as ('STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
         users[userIndex].updated_at = timestamp;
         
         // 同步到 localStorage
         const localUsers = JSON.parse(localStorage.getItem('users') || '[]') as User[] as User[];
         const localUserIndex = localUsers.findIndex((u: User) => u.id === userId);
         if (localUserIndex !== -1) {
-          localUsers[localUserIndex].roles = roles as ('STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
+          localUsers[localUserIndex].roles = roles as ('STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
           localUsers[localUserIndex].updated_at = timestamp;
           localStorage.setItem('users', JSON.stringify(localUsers));
         }

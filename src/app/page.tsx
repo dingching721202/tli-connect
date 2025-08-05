@@ -401,11 +401,32 @@ export default function Home() {
                         fontSize: '16px',
                         fontWeight: '700',
                         cursor: 'pointer',
-                        boxShadow: '0 10px 24px rgba(242,193,78,.22)'
+                        boxShadow: '0 10px 24px rgba(242,193,78,.22)',
+                        marginBottom: '12px'
                       }}
                     >
                       Talk to Us
                     </button>
+                    <a
+                      href="/role-select"
+                      style={{
+                        display: 'block',
+                        height: '56px',
+                        border: '2px solid var(--blue-500)',
+                        borderRadius: '999px',
+                        background: 'transparent',
+                        color: 'var(--blue-500)',
+                        fontSize: '16px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        textDecoration: 'none',
+                        textAlign: 'center',
+                        lineHeight: '52px',
+                        marginBottom: '16px'
+                      }}
+                    >
+                      Choose Your Role to Login
+                    </a>
                     <div style={{fontSize: '12px', lineHeight: '18px', color: 'var(--ink-dim)'}}>
                       We&apos;ll get back to you within 1–2 business days. Your information is kept strictly confidential.
                     </div>

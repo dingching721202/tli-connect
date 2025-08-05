@@ -1,7 +1,7 @@
 export interface UserRole {
   id: number;
   user_id: number;
-  role: 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'OPS' | 'ADMIN';
+  role: 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN';
   granted_by: number; // admin user id who granted the role
   granted_at: string;
   is_active: boolean;
@@ -48,7 +48,7 @@ export const userRoles: UserRole[] = [
   {
     id: 5,
     user_id: 5,
-    role: 'OPS',
+    role: 'STAFF',
     granted_by: 6, // Admin User
     granted_at: '2025-07-14T12:00:00+00:00',
     is_active: true

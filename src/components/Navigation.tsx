@@ -15,7 +15,7 @@ const Navigation: React.FC = () => {
   const [isEventsOpen, setIsEventsOpen] = useState(false);
   const [isRoleSelectorOpen, setIsRoleSelectorOpen] = useState(false);
   const roleSelectorRef = useRef<HTMLDivElement>(null);
-  const { user, logout, isAuthenticated, currentRole, switchRole, availableRoles } = useAuth();
+  const { user, logout, isAuthenticated, currentRole, switchRole, availableRoles, isRoleLocked, lockedRole, setRoleLock } = useAuth();
 
   // 點擊外部關閉角色選擇器
   useEffect(() => {
@@ -61,23 +61,62 @@ const Navigation: React.FC = () => {
   ];
 
   const navigationItems = [
-    { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'OPS', 'ADMIN'] },
+    { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'STAFF', 'ADMIN'] },
     { name: '課程預約', href: '/booking', icon: FiBook, roles: ['STUDENT'] },
-    { name: '會員管理', href: '/member-management', icon: FiUsers, roles: ['OPS', 'ADMIN'] },
-    { name: '教師管理', href: '/teacher-management', icon: FiUserCheck, roles: ['OPS', 'ADMIN'] },
-    { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['OPS', 'ADMIN'] },
+    { name: '會員管理', href: '/member-management', icon: FiUsers, roles: ['STAFF', 'ADMIN'] },
+    { name: '教師管理', href: '/teacher-management', icon: FiUserCheck, roles: ['STAFF', 'ADMIN'] },
+    { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['STAFF', 'ADMIN'] },
     { name: '會員方案', href: '/membership', icon: FiShare2, roles: ['guest', 'STUDENT'] },
     { name: '我的預約', href: '/my-bookings', icon: FiCalendar, roles: ['STUDENT', 'TEACHER'] },
-    { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['OPS', 'ADMIN'] },
-    { name: '會員卡方案管理', href: '/member-card-plan-management', icon: FiSettings, roles: ['OPS', 'ADMIN'] },
-    { name: '諮詢管理', href: '/consultation-management', icon: FiBriefcase, roles: ['OPS', 'ADMIN'] },
-    { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['OPS', 'ADMIN'] },
+    { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['STAFF', 'ADMIN'] },
+    { name: '會員卡方案管理', href: '/member-card-plan-management', icon: FiSettings, roles: ['STAFF', 'ADMIN'] },
+    { name: '諮詢管理', href: '/consultation-management', icon: FiBriefcase, roles: ['STAFF', 'ADMIN'] },
+    { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['STAFF', 'ADMIN'] },
     { name: '帳號管理', href: '/account-management', icon: FiUsers, roles: ['ADMIN'] },
     { name: '企業管理', href: '/corporate-management', icon: FiBriefcase, roles: ['CORPORATE_CONTACT'] },
-    { name: '系統設定', href: '/system-settings', icon: FiSettings, roles: ['OPS', 'ADMIN'] },
+    { name: '系統設定', href: '/system-settings', icon: FiSettings, roles: ['STAFF', 'ADMIN'] },
   ];
 
   const handleNavigation = (href: string) => {
+    // 如果角色被鎖定，將功能頁面導向對應角色的子頁面
+    if (isRoleLocked && lockedRole) {
+      const rolePathMap = {
+        'STUDENT': 'student',
+        'TEACHER': 'teacher',
+        'STAFF': 'staff',
+        'ADMIN': 'admin',
+        'AGENT': 'agent',
+        'CORPORATE_CONTACT': 'corporate'
+      };
+      
+      const rolePath = rolePathMap[lockedRole as keyof typeof rolePathMap];
+      
+      if (rolePath) {
+        // 將功能頁面路徑轉換為角色子頁面路徑
+        const functionPages = [
+          '/dashboard', '/booking', '/my-bookings', '/membership', '/profile',
+          '/video-courses', '/online-group-classes', '/events', '/referral',
+          '/member-management', '/teacher-management', '/leave-management',
+          '/course-management', '/member-card-plan-management', '/consultation-management',
+          '/agent-management', '/account-management', '/system-settings',
+          '/corporate-management', '/payment-result'
+        ];
+        
+        // 檢查是否為功能頁面（包括子路由）
+        const isFunctionPage = functionPages.some(page => href.startsWith(page));
+        
+        if (isFunctionPage) {
+          // 移除開頭的 / 並加上角色前綴
+          const cleanPath = href.startsWith('/') ? href.substring(1) : href;
+          const roleSpecificPath = `/${rolePath}/${cleanPath}`;
+          router.push(roleSpecificPath);
+          setIsMenuOpen(false);
+          return;
+        }
+      }
+    }
+    
+    // 非角色鎖定模式或非功能頁面，使用原始路徑
     router.push(href);
     setIsMenuOpen(false);
   };
@@ -373,30 +412,30 @@ const Navigation: React.FC = () => {
                 <div className="relative flex-shrink-0" ref={roleSelectorRef}>
                   <motion.button
                     onClick={() => {
-                      if (availableRoles.length > 1) {
+                      if (availableRoles.length > 1 && !isRoleLocked) {
                         setIsRoleSelectorOpen(!isRoleSelectorOpen);
                       }
                     }}
                     className={`flex items-center justify-center w-6 h-6 xl:w-7 xl:h-7 text-xs font-medium transition-colors rounded ${
-                      availableRoles.length > 1 
+                      availableRoles.length > 1 && !isRoleLocked
                         ? 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 cursor-pointer' 
                         : 'text-gray-300 cursor-default'
                     }`}
-                    whileHover={availableRoles.length > 1 ? { scale: 1.1 } : {}}
-                    whileTap={availableRoles.length > 1 ? { scale: 0.95 } : {}}
-                    title={availableRoles.length > 1 ? "切換角色" : "當前角色"}
+                    whileHover={availableRoles.length > 1 && !isRoleLocked ? { scale: 1.1 } : {}}
+                    whileTap={availableRoles.length > 1 && !isRoleLocked ? { scale: 0.95 } : {}}
+                    title={isRoleLocked ? "角色已鎖定" : availableRoles.length > 1 ? "切換角色" : "當前角色"}
                   >
                     <SafeIcon 
                       icon={FiChevronDown} 
                       size={10} 
                       className={`transition-transform duration-200 ${isRoleSelectorOpen ? 'rotate-180' : ''} ${
-                        availableRoles.length > 1 ? '' : 'opacity-30'
+                        availableRoles.length > 1 && !isRoleLocked ? '' : 'opacity-30'
                       }`}
                     />
                   </motion.button>
                   
                   <AnimatePresence>
-                    {isRoleSelectorOpen && availableRoles.length > 1 && (
+                    {isRoleSelectorOpen && availableRoles.length > 1 && !isRoleLocked && (
                       <motion.div
                         initial={{ opacity: 0, scaleY: 0.8, y: -5 }}
                         animate={{ opacity: 1, scaleY: 1, y: 0 }}
@@ -668,26 +707,26 @@ const Navigation: React.FC = () => {
                     {/* 手機版角色選擇器 - 固定佈局 */}
                     <div className="space-y-2 px-3">
                       <div className="text-sm font-medium text-gray-700 h-5 flex items-center">
-                        {availableRoles.length > 1 ? '切換視角：' : '當前角色：'}
+                        {isRoleLocked ? '當前角色（已鎖定）：' : availableRoles.length > 1 ? '切換視角：' : '當前角色：'}
                       </div>
                       <div className="grid grid-cols-2 gap-2 min-h-[2.5rem]">
                         {availableRoles.map((role) => (
                           <motion.button
                             key={role}
                             onClick={() => {
-                              if (availableRoles.length > 1) {
+                              if (availableRoles.length > 1 && !isRoleLocked) {
                                 switchRole(role);
                               }
                             }}
                             className={`px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-center h-10 ${
                               currentRole === role 
                                 ? 'bg-blue-600 text-white font-medium' 
-                                : availableRoles.length > 1
+                                : availableRoles.length > 1 && !isRoleLocked
                                   ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'
                                   : 'bg-gray-100 text-gray-400 cursor-default'
                             }`}
-                            whileHover={availableRoles.length > 1 ? { scale: 1.02 } : {}}
-                            whileTap={availableRoles.length > 1 ? { scale: 0.98 } : {}}
+                            whileHover={availableRoles.length > 1 && !isRoleLocked ? { scale: 1.02 } : {}}
+                            whileTap={availableRoles.length > 1 && !isRoleLocked ? { scale: 0.98 } : {}}
                           >
                             <span className="truncate">{role}</span>
                           </motion.button>

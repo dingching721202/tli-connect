@@ -5,7 +5,7 @@ export interface User {
   email: string;
   phone: string;
   password: string;
-  roles: ('STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
+  roles: ('STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
   membership_status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER';
   account_status: 'ACTIVE' | 'SUSPENDED';
   campus: '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
@@ -17,7 +17,7 @@ export interface User {
 export interface UserRole {
   id: number;
   user_id: number;
-  role: 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'OPS' | 'ADMIN';
+  role: 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN';
   granted_by: number;
   granted_at: string;
   is_active: boolean;

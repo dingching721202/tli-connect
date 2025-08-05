@@ -4,7 +4,7 @@ export interface User {
   email: string;
   phone: string;
   password: string;
-  roles: ('STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
+  roles: ('STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[];
   membership_status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER';
   account_status: 'ACTIVE' | 'SUSPENDED';
   campus: '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
@@ -66,7 +66,7 @@ export const users: User[] = [
     email: "olivia@example.com",
     phone: "0900-999-000",
     password: "hashed_pw5",
-    roles: ["OPS"],
+    roles: ["STAFF"],
     membership_status: "NON_MEMBER",
     account_status: "ACTIVE",
     campus: "總部",
