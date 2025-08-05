@@ -78,7 +78,7 @@ export const users: User[] = [
     email: "admin@example.com",
     phone: "0900-888-999",
     password: "password",
-    roles: ["ADMIN"],
+    roles: ["ADMIN", "STUDENT"],
     membership_status: "NON_MEMBER",
     account_status: "ACTIVE",
     campus: "總部",

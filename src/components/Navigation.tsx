@@ -94,11 +94,8 @@ const Navigation: React.FC = () => {
     if (roles.includes('all')) return true;
     if (!user) return roles.includes('guest');
     
-    // 檢查當前角色
+    // 只檢查當前角色，不檢查所有角色
     if (currentRole && roles.includes(currentRole)) return true;
-    
-    // 檢查所有角色
-    if (user.roles && user.roles.some(role => roles.includes(role))) return true;
     
     return false;
   };

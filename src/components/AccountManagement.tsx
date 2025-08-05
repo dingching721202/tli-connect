@@ -501,8 +501,8 @@ const AccountManagement = () => {
                     <td className="w-56 px-4 py-4">
                       <div className="flex flex-wrap gap-1">
                         {/* 所有角色 */}
-                        {user.roles.map((role, index) => (
-                          <span key={role} className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${index === 0 ? `border-2 ${getRoleColor(role)} border-current` : getRoleColor(role)}`}>
+                        {user.roles.map((role) => (
+                          <span key={role} className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(role)}`}>
                             {role}
                           </span>
                         ))}
@@ -849,8 +849,8 @@ const AccountManagement = () => {
                       ))}
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
-                      {selectedRoles.map((role, index) => (
-                        <span key={role} className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${index === 0 ? `border-2 ${getRoleColor(role)} border-current` : getRoleColor(role)}`}>
+                      {selectedRoles.map((role) => (
+                        <span key={role} className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${getRoleColor(role)}`}>
                           {role}
                         </span>
                       ))}
