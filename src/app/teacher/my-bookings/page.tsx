@@ -6,13 +6,13 @@ import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
 import RoleEntry from '@/components/RoleEntry';
 import { useAuth } from '@/contexts/AuthContext';
-import { dashboardService } from '@/services/dataService';
+import { dashboardService, leaveService } from '@/services/dataService';
 import { } from '@/types';
 import { getCourseLinksFromBooking } from '@/utils/courseLinksUtils';
 
 const {
   FiCalendar, FiClock, FiUsers, FiExternalLink,
-  FiX, FiEye, FiCheckCircle, FiAlertCircle, FiBook
+  FiX, FiEye, FiCheckCircle, FiAlertCircle, FiBook, FiUserCheck, FiMessageSquare
 } = FiIcons;
 
 interface Booking {
@@ -55,19 +55,14 @@ export default function TeacherMyBookingsPage() {
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed' | 'cancelled' | 'all' | 'pending' | 'approved' | 'rejected'>('upcoming');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [showCancelModal] = useState(false);
-  const [cancelForm] = useState({
-    reason: '',
-    note: ''
-  });
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cancelling] = useState(false);
-  const [studentList, setStudentList] = useState<Array<{name: string; email: string; phone?: string}>>([]);
   
   // 請假相關狀態
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [isViewMode, setIsViewMode] = useState(false);
+  const [studentList, setStudentList] = useState<Array<{name: string; email: string; phone?: string}>>([]);
+  
   const [leaveForm, setLeaveForm] = useState({
     reason: ''
   });

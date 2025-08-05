@@ -12,7 +12,7 @@ import { getCourseLinksFromBooking } from '@/utils/courseLinksUtils';
 
 const {
   FiCalendar, FiClock, FiUser, FiExternalLink,
-  FiX, FiEye, FiCheckCircle, FiAlertCircle, FiBook
+  FiX, FiEye, FiCheckCircle, FiBook
 } = FiIcons;
 
 interface Booking {
@@ -51,7 +51,6 @@ interface Booking {
 
 export default function StudentMyBookingsPage() {
   const { user } = useAuth();
-  const [selectedMainTab] = useState<'bookings' | 'leave'>('bookings');
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed' | 'cancelled' | 'all' | 'pending' | 'approved' | 'rejected'>('upcoming');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -63,14 +62,7 @@ export default function StudentMyBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
-  const [studentList] = useState<Array<{name: string; email: string; phone?: string}>>([]);
   
-  // 請假相關狀態
-  const [showLeaveModal] = useState(false);
-  const [isViewMode] = useState(false);
-  const [leaveForm] = useState({
-    reason: ''
-  });
 
   // 轉換預約資料為 UI 格式的通用函數
   const convertBookingData = useCallback((dashboardData: { upcomingClasses: Array<{ appointment?: { id: number; status: string; class_timeslot_id: number; created_at: string } | null; session: { id: string; date: string; startTime: string; endTime: string; courseTitle: string; sessionTitle: string; teacherName: string; classroom?: string; materials?: string } }> }): (Booking & { canCancel: boolean; appointmentId: number; timeslotId: number })[] => {
@@ -222,7 +214,7 @@ export default function StudentMyBookingsPage() {
     });
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string, _booking?: Booking) => {
     switch (status) {
       case 'upcoming': return 'text-blue-700 bg-blue-50 border-blue-200';
       case 'completed': return 'text-green-700 bg-green-50 border-green-200';
@@ -234,7 +226,7 @@ export default function StudentMyBookingsPage() {
     }
   };
 
-  const getStatusText = (status: string) => {
+  const getStatusText = (status: string, _booking?: Booking) => {
     switch (status) {
       case 'upcoming': return '即將開始';
       case 'completed': return '已完成';
@@ -246,17 +238,6 @@ export default function StudentMyBookingsPage() {
     }
   };
 
-  // const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending': return FiClock;
-      case 'approved': return FiCheckCircle;
-      case 'rejected': return FiX;
-      case 'cancelled': return FiX;
-      case 'upcoming': return FiClock;
-      case 'completed': return FiCheckCircle;
-      default: return FiAlertCircle;
-    }
-  };
 
   const handleCancelBooking = (bookingId: string) => {
     const booking = bookings.find(b => b.id === bookingId);

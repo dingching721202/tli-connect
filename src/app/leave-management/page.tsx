@@ -51,7 +51,7 @@ interface StudentCancellation {
 }
 
 export default function LeaveManagementPage() {
-  const { user, isOps, isAdmin } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [selectedTab, setSelectedTab] = useState<'pending' | 'approved' | 'cancelled' | 'all'>('pending');
   const [selectedLeaveRequest, setSelectedLeaveRequest] = useState<LeaveRequest | null>(null);
   const [selectedTeacher, setSelectedTeacher] = useState<TeacherData | null>(null);
@@ -151,7 +151,7 @@ export default function LeaveManagementPage() {
 
 
   // Check if user has admin permission
-  if (!user || (!isOps && !isAdmin)) {
+  if (!user || !isAdmin) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navigation />

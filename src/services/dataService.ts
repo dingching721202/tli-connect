@@ -9,7 +9,6 @@ import { teacherDataService } from '@/data/teachers';
 import { hashString } from '@/utils/enrollmentUtils';
 import { UserRole } from '@/data/user_roles';
 
-// type RoleType = 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
 
 interface LeaveRequest {
   id: string;
@@ -254,7 +253,7 @@ export const authService = {
   },
 
   // 創建新用戶
-  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, adminId: number) {
+  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, _adminId: number) {
     await delay(500);
     
     // adminId reserved for future authorization checks
@@ -299,7 +298,7 @@ export const authService = {
   },
 
   // 更新用戶基本資訊
-  async updateUser(userData: User, adminId: number) {
+  async updateUser(userData: User, _adminId: number) {
     await delay(300);
     
     // adminId reserved for future authorization checks
