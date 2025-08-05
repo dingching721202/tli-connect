@@ -6,14 +6,13 @@ import * as FiIcons from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
 import RoleEntry from '@/components/RoleEntry';
 import { useAuth } from '@/contexts/AuthContext';
-import { bookingService, dashboardService, leaveService } from '@/services/dataService';
+import { bookingService, dashboardService } from '@/services/dataService';
 import { } from '@/types';
 import { getCourseLinksFromBooking } from '@/utils/courseLinksUtils';
 
 const {
-  FiCalendar, FiClock, FiUser, FiUsers, FiExternalLink,
-  FiX, FiEye, FiCheckCircle, FiAlertCircle, FiBook, FiBriefcase,
-  FiUserCheck, FiMessageSquare
+  FiCalendar, FiClock, FiUser, FiExternalLink,
+  FiX, FiEye, FiCheckCircle, FiAlertCircle, FiBook
 } = FiIcons;
 
 interface Booking {
@@ -52,7 +51,7 @@ interface Booking {
 
 export default function StudentMyBookingsPage() {
   const { user } = useAuth();
-  const [selectedMainTab, setSelectedMainTab] = useState<'bookings' | 'leave'>('bookings');
+  const [selectedMainTab] = useState<'bookings' | 'leave'>('bookings');
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed' | 'cancelled' | 'all' | 'pending' | 'approved' | 'rejected'>('upcoming');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
@@ -64,12 +63,12 @@ export default function StudentMyBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState(false);
-  const [studentList, setStudentList] = useState<Array<{name: string; email: string; phone?: string}>>([]);
+  const [studentList] = useState<Array<{name: string; email: string; phone?: string}>>([]);
   
   // 請假相關狀態
-  const [showLeaveModal, setShowLeaveModal] = useState(false);
-  const [isViewMode, setIsViewMode] = useState(false);
-  const [leaveForm, setLeaveForm] = useState({
+  const [showLeaveModal] = useState(false);
+  const [isViewMode] = useState(false);
+  const [leaveForm] = useState({
     reason: ''
   });
 
@@ -223,7 +222,7 @@ export default function StudentMyBookingsPage() {
     });
   };
 
-  const getStatusColor = (status: string, booking?: { studentCount: number; leaveReason?: string; leaveStatus?: string }) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'upcoming': return 'text-blue-700 bg-blue-50 border-blue-200';
       case 'completed': return 'text-green-700 bg-green-50 border-green-200';
@@ -235,7 +234,7 @@ export default function StudentMyBookingsPage() {
     }
   };
 
-  const getStatusText = (status: string, booking?: { studentCount: number; leaveReason?: string; leaveStatus?: string }) => {
+  const getStatusText = (status: string) => {
     switch (status) {
       case 'upcoming': return '即將開始';
       case 'completed': return '已完成';
@@ -247,7 +246,7 @@ export default function StudentMyBookingsPage() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
+  // const getStatusIcon = (status: string) => {
     switch (status) {
       case 'pending': return FiClock;
       case 'approved': return FiCheckCircle;

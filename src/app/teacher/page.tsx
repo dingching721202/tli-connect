@@ -2,7 +2,7 @@
 
 import React from 'react';
 import RoleEntry from '@/components/RoleEntry';
-import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
+import { FiCalendar, FiUser } from 'react-icons/fi';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 

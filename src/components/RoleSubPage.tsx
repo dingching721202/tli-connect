@@ -11,7 +11,7 @@ interface RoleSubPageProps {
   rolePath: string;
   pageTitle: string;
   pageDescription: string;
-  pageIcon: React.ComponentType<any>;
+  pageIcon: React.ComponentType<{ className?: string }>;
   colorTheme: string;
   children?: React.ReactNode;
 }

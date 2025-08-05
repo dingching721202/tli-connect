@@ -15,7 +15,7 @@ const Navigation: React.FC = () => {
   const [isEventsOpen, setIsEventsOpen] = useState(false);
   const [isRoleSelectorOpen, setIsRoleSelectorOpen] = useState(false);
   const roleSelectorRef = useRef<HTMLDivElement>(null);
-  const { user, logout, isAuthenticated, currentRole, switchRole, availableRoles, isRoleLocked, lockedRole, setRoleLock } = useAuth();
+  const { user, logout, isAuthenticated, currentRole, switchRole, availableRoles, isRoleLocked, lockedRole } = useAuth();
 
   // 點擊外部關閉角色選擇器
   useEffect(() => {

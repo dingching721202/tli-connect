@@ -9,7 +9,7 @@ import { teacherDataService } from '@/data/teachers';
 import { hashString } from '@/utils/enrollmentUtils';
 import { UserRole } from '@/data/user_roles';
 
-type RoleType = 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
+// type RoleType = 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
 
 interface LeaveRequest {
   id: string;
@@ -221,7 +221,7 @@ export const authService = {
         localStorage.setItem('users', JSON.stringify(localUsers));
       }
       
-      console.log('✅ 用戶狀態已更新:', { userId, status, _adminId });
+      console.log('✅ 用戶狀態已更新:', { userId, status, adminId: _adminId });
       return { success: true, data: users[userIndex] };
     } catch (error) {
       console.error('更新用戶狀態失敗:', error);
@@ -254,10 +254,10 @@ export const authService = {
   },
 
   // 創建新用戶
-  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, _adminId: number) {
+  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, adminId: number) {
     await delay(500);
     
-    // _adminId reserved for future authorization checks
+    // adminId reserved for future authorization checks
     
     try {
       const timestamp = new Date().toISOString();
@@ -299,10 +299,10 @@ export const authService = {
   },
 
   // 更新用戶基本資訊
-  async updateUser(userData: User, _adminId: number) {
+  async updateUser(userData: User, adminId: number) {
     await delay(300);
     
-    // _adminId reserved for future authorization checks
+    // adminId reserved for future authorization checks
     
     try {
       const userIndex = users.findIndex(u => u.id === userData.id);

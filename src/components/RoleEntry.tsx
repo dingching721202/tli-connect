@@ -11,7 +11,7 @@ interface RoleEntryProps {
 }
 
 const RoleEntry: React.FC<RoleEntryProps> = ({ requiredRole, children }) => {
-  const { user, isAuthenticated, loading, setRoleLock, hasRole } = useAuth();
+  const { isAuthenticated, loading, setRoleLock, hasRole } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
