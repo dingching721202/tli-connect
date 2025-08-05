@@ -8,7 +8,7 @@ import { users, User } from '@/data/users';
 import { userRoles } from '@/data/user_roles';
 import { authService, memberCardService } from '@/services/dataService';
 
-type RoleType = 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
+type RoleType = 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
 type MembershipStatusType = 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER';
 type CampusType = '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
 
@@ -26,9 +26,9 @@ const AccountManagement = () => {
   const [selectedUser, setSelectedUser] = useState<ExtendedUser | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER'>('ALL');
-  const [roleFilter, setRoleFilter] = useState<'ALL' | 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT'>('ALL');
+  const [roleFilter, setRoleFilter] = useState<'ALL' | 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT'>('ALL');
   const [userTypeFilter, setUserTypeFilter] = useState<'ALL' | 'STUDENT' | 'STAFF'>('STUDENT'); // 新增：用戶類型篩選
-  const [selectedRoles, setSelectedRoles] = useState<('STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<('STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -100,7 +100,7 @@ const AccountManagement = () => {
   const filteredUsers = usersWithRoles.filter(user => {
     // 根據用戶類型進行篩選
     const isStudent = user.roles.includes('STUDENT');
-    const staffRoles = ['TEACHER', 'OPS', 'ADMIN', 'AGENT', 'CORPORATE_CONTACT'];
+    const staffRoles = ['TEACHER', 'STAFF', 'ADMIN', 'AGENT', 'CORPORATE_CONTACT'];
     const isStaff = user.roles.some(role => staffRoles.includes(role));
     
     let matchesUserType = true;
@@ -118,14 +118,14 @@ const AccountManagement = () => {
                          user.name.toLowerCase().includes(lowerCaseSearchTerm) ||
                          user.email.toLowerCase().includes(lowerCaseSearchTerm);
     
-    const matchesRole = roleFilter === 'ALL' || user.roles.includes(roleFilter as 'STUDENT' | 'TEACHER' | 'OPS' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT');
+    const matchesRole = roleFilter === 'ALL' || user.roles.includes(roleFilter as 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT');
     const matchesStatus = statusFilter === 'ALL' || user.membership_status === statusFilter;
 
     return matchesSearch && matchesRole && matchesStatus;
   });
 
   // 可分配的角色
-  const availableRoles: ('STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'OPS' | 'ADMIN')[] = ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'OPS', 'ADMIN'];
+  const availableRoles: ('STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN')[] = ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'STAFF', 'ADMIN'];
   const availableStatuses = ['NON_MEMBER', 'MEMBER', 'EXPIRED_MEMBER', 'TEST_USER'];
   const availableCampuses = ['羅斯福校', '士林校', '台中校', '高雄校', '總部'];
 
@@ -270,7 +270,7 @@ const AccountManagement = () => {
   const getRoleColor = (role: string) => {
     const colors = {
       'ADMIN': 'bg-red-100 text-red-800',
-      'OPS': 'bg-purple-100 text-purple-800',
+      'STAFF': 'bg-purple-100 text-purple-800',
       'TEACHER': 'bg-blue-100 text-blue-800',
       'CORPORATE_CONTACT': 'bg-green-100 text-green-800',
       'AGENT': 'bg-yellow-100 text-yellow-800',
@@ -373,7 +373,7 @@ const AccountManagement = () => {
                 <p className="text-sm font-medium text-gray-500">後台人員</p>
                 <p className="text-2xl font-semibold text-gray-900">
                   {usersWithRoles.filter(u => {
-                    const staffRoles = ['TEACHER', 'OPS', 'ADMIN', 'AGENT', 'CORPORATE_CONTACT'];
+                    const staffRoles = ['TEACHER', 'STAFF', 'ADMIN', 'AGENT', 'CORPORATE_CONTACT'];
                     return u.roles.some(role => staffRoles.includes(role));
                   }).length}
                 </p>

@@ -15,14 +15,14 @@ const AgentDashboard = () => {
       title: '儀表板',
       description: '代理業務概況',
       icon: FiUser,
-      href: '/dashboard',
+      href: '/agent/dashboard',
       color: 'bg-blue-500'
     },
     {
       title: '推薦系統',
       description: '管理推薦業務',
       icon: FiShare2,
-      href: '/referral',
+      href: '/agent/referral',
       color: 'bg-green-500'
     }
   ];

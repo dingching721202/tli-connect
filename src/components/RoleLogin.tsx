@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
 
 interface RoleLoginProps {
-  requiredRole: 'STUDENT' | 'TEACHER' | 'OPS' | 'ADMIN' | 'AGENT' | 'CORPORATE_CONTACT';
+  requiredRole: 'STUDENT' | 'TEACHER' | 'STAFF' | 'ADMIN' | 'AGENT' | 'CORPORATE_CONTACT';
   roleDisplayName: string;
   roleColor: string;
   redirectPath: string;
@@ -81,7 +81,7 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
   const getTestAccounts = () => {
     const testAccounts = [
       { email: 'admin@example.com', name: 'Admin User', roles: ['ADMIN'] },
-      { email: 'ops@example.com', name: 'Ops User', roles: ['OPS'] }, 
+      { email: 'ops@example.com', name: 'Staff User', roles: ['STAFF'] }, 
       { email: 'teacher@example.com', name: 'Teacher User', roles: ['TEACHER'] },
       { email: 'alice@example.com', name: 'Alice Wang', roles: ['STUDENT'] },
       { email: 'agent@example.com', name: 'Agent User', roles: ['AGENT'] },

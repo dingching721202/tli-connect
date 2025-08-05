@@ -79,7 +79,7 @@ interface NewUser {
   // 管理員特有欄位
   position?: string; // 職位
   permissions?: string[]; // 權限
-  accessLevel?: 'super_admin' | 'OPS' | 'moderator';
+  accessLevel?: 'super_admin' | 'STAFF' | 'moderator';
   
   // 顧問特有欄位
   consultantArea?: string; // 諮詢領域
@@ -237,7 +237,7 @@ const MemberManagement: React.FC = () => {
     // 管理員特有欄位
     position: '',
     permissions: [],
-    accessLevel: 'OPS',
+    accessLevel: 'STAFF',
     
     // 顧問特有欄位
     consultantArea: '',
@@ -793,7 +793,7 @@ const MemberManagement: React.FC = () => {
       // 管理員特有欄位
       position: '',
       permissions: [],
-      accessLevel: 'OPS',
+      accessLevel: 'STAFF',
       
       // 顧問特有欄位
       consultantArea: '',
@@ -843,7 +843,7 @@ const MemberManagement: React.FC = () => {
         // 管理員特有欄位
         position: (user as User & { position?: string }).position || '',
         permissions: (user as User & { permissions?: string[] }).permissions || [],
-        accessLevel: (user as User & { accessLevel?: 'OPS' | 'super_admin' | 'moderator' }).accessLevel || 'OPS',
+        accessLevel: (user as User & { accessLevel?: 'STAFF' | 'super_admin' | 'moderator' }).accessLevel || 'STAFF',
         
         // 顧問特有欄位
         consultantArea: (user as User & { consultantArea?: string }).consultantArea || '',
@@ -2546,7 +2546,7 @@ const MemberManagement: React.FC = () => {
                         </label>
                         <select
                           value={newUser.accessLevel}
-                          onChange={(e) => setNewUser(prev => ({ ...prev, accessLevel: e.target.value as 'super_admin' | 'OPS' | 'moderator' }))}
+                          onChange={(e) => setNewUser(prev => ({ ...prev, accessLevel: e.target.value as 'super_admin' | 'STAFF' | 'moderator' }))}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
                           required
                         >

@@ -144,7 +144,7 @@ const TimeslotManagement: React.FC = () => {
 
   // 載入課程時段資料 - 直接使用預約API數據
   useEffect(() => {
-    if (!user || !user.roles.some(role => ['OPS', 'ADMIN'].includes(role))) {
+    if (!user || !user.roles.some(role => ['STAFF', 'ADMIN'].includes(role))) {
       setLoading(false);
       return;
     }
@@ -197,7 +197,7 @@ const TimeslotManagement: React.FC = () => {
   }, [user]);
 
   // 檢查用戶權限
-  if (!user || !user.roles.some(role => ['OPS', 'ADMIN'].includes(role))) {
+  if (!user || !user.roles.some(role => ['STAFF', 'ADMIN'].includes(role))) {
     return (
       <div className="text-center py-12">
         <SafeIcon icon={FiAlertTriangle} className="text-6xl text-red-400 mx-auto mb-4" />

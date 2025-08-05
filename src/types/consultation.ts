@@ -45,7 +45,7 @@ export interface Consultation {
   notes?: string;
   
   // 處理者資訊
-  assignedTo?: string; // 指派給哪個OPS處理
+  assignedTo?: string; // 指派給哪個職員處理
   assignedBy?: string; // 誰指派的
   assignedAt?: string; // 指派時間
   

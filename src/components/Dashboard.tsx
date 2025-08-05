@@ -365,7 +365,7 @@ const Dashboard = () => {
     }
 
 
-    if (user?.roles.includes('OPS') || user?.roles.includes('ADMIN')) {
+    if (user?.roles.includes('STAFF') || user?.roles.includes('ADMIN')) {
       return [
         { label: '總用戶數', value: '1,234', icon: FiUsers },
         { label: '總課程數', value: '156', icon: FiBook },
@@ -398,7 +398,7 @@ const Dashboard = () => {
     switch (user?.roles[0]) {
       case 'STUDENT': return '歡迎使用 TLI Connect 課程預約系統，開始您的學習之旅！';
       case 'TEACHER': return '歡迎回到教師管理面板，管理您的課程與學生。';
-      case 'OPS': return '歡迎使用營運面板，管理系統設定與用戶。';
+      case 'STAFF': return '歡迎使用職員面板，管理系統設定與用戶。';
       case 'ADMIN': return '歡迎使用管理員面板，您擁有系統最高權限。';
       case 'CORPORATE_CONTACT': return '歡迎使用企業窗口管理面板，管理您的企業會員與課程安排。';
       default: return '歡迎使用 TLI Connect 系統！';
@@ -1022,7 +1022,7 @@ const Dashboard = () => {
   const quickStats = getQuickStats();
   const allBookedCourses = user?.roles.includes('STUDENT') ? getBookedCourses() : [];
   const allTeacherCourses = user?.roles.includes('TEACHER') ? getTeacherCourses() : [];
-  const allMemberBookings = (user?.roles.includes('OPS') || user?.roles.includes('ADMIN')) ? getAllMemberBookings() : [];
+  const allMemberBookings = (user?.roles.includes('STAFF') || user?.roles.includes('ADMIN')) ? getAllMemberBookings() : [];
   const allCorporateCourses = user?.roles.includes('CORPORATE_CONTACT') ? getCorporateCourses() : [];
 
   // Filter courses based on selected tab
@@ -1064,7 +1064,7 @@ const Dashboard = () => {
     ? allTeacherCourses.filter(c => c.status === 'upcoming' && (c as any).leaveStatus !== 'approved').length
     : user?.roles.includes('CORPORATE_CONTACT')
     ? allCorporateCourses.filter(c => c.status === 'upcoming').length
-    : (user?.roles.includes('OPS') || user?.roles.includes('ADMIN'))
+    : (user?.roles.includes('STAFF') || user?.roles.includes('ADMIN'))
     ? allMemberBookings.filter(b => b.status === 'upcoming').length
     : 0;
 
@@ -1074,7 +1074,7 @@ const Dashboard = () => {
     ? allTeacherCourses.filter(c => c.status === 'completed').length
     : user?.roles.includes('CORPORATE_CONTACT')
     ? allCorporateCourses.filter(c => c.status === 'completed').length
-    : (user?.roles.includes('OPS') || user?.roles.includes('ADMIN'))
+    : (user?.roles.includes('STAFF') || user?.roles.includes('ADMIN'))
     ? allMemberBookings.filter(b => b.status === 'completed').length
     : 0;
 

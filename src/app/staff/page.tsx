@@ -15,63 +15,63 @@ const StaffDashboard = () => {
       title: '儀表板',
       description: '管理概況總覽',
       icon: FiUser,
-      href: '/dashboard',
+      href: '/staff/dashboard',
       color: 'bg-blue-500'
     },
     {
       title: '會員管理',
       description: '管理學員資料',
       icon: FiUsers,
-      href: '/member-management',
+      href: '/staff/member-management',
       color: 'bg-green-500'
     },
     {
       title: '教師管理',
       description: '管理教師資料',
       icon: FiUserCheck,
-      href: '/teacher-management',
+      href: '/staff/teacher-management',
       color: 'bg-purple-500'
     },
     {
       title: '請假管理',
       description: '處理請假申請',
       icon: FiClock,
-      href: '/leave-management',
+      href: '/staff/leave-management',
       color: 'bg-orange-500'
     },
     {
       title: '課程管理',
       description: '管理課程內容',
       icon: FiBookOpen,
-      href: '/course-management',
+      href: '/staff/course-management',
       color: 'bg-red-500'
     },
     {
       title: '會員卡方案管理',
       description: '管理會員方案',
       icon: FiSettings,
-      href: '/member-card-plan-management',
+      href: '/staff/member-card-plan-management',
       color: 'bg-indigo-500'
     },
     {
       title: '諮詢管理',
       description: '處理學員諮詢',
       icon: FiBriefcase,
-      href: '/consultation-management',
+      href: '/staff/consultation-management',
       color: 'bg-pink-500'
     },
     {
       title: '代理管理',
       description: '管理代理商',
       icon: FiUserPlus,
-      href: '/agent-management',
+      href: '/staff/agent-management',
       color: 'bg-cyan-500'
     },
     {
       title: '系統設定',
       description: '系統參數設定',
       icon: FiSettings,
-      href: '/system-settings',
+      href: '/staff/system-settings',
       color: 'bg-gray-500'
     }
   ];

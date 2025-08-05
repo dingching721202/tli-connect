@@ -60,7 +60,7 @@ const Login: React.FC = () => {
   const roleTestAccounts = [
     { email: 'teacher@example.com', name: '王老師', role: '教師 (TEACHER)' },
     { email: 'frank@taiwantech.com', name: 'Frank Liu', role: '企業窗口 (CORPORATE_CONTACT)' },
-    { email: 'olivia@example.com', name: 'Olivia Kao', role: '營運 (OPS)' },
+    { email: 'olivia@example.com', name: 'Olivia Kao', role: '職員 (STAFF)' },
     { email: 'admin@example.com', name: 'Admin User', role: '管理員 (ADMIN)' }
   ];
 

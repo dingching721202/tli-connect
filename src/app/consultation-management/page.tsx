@@ -42,7 +42,7 @@ const ConsultationManagementPage: React.FC = () => {
     setEditingConsultation(prev => prev ? { ...prev, [field]: value } : null);
   };
 
-  // 模擬OPS人員列表
+  // 模擬職員人員列表
   const opsPersonnel = [
     { id: 'ops_001', name: '張雅婷' },
     { id: 'ops_002', name: '李志明' },
@@ -217,7 +217,7 @@ const ConsultationManagementPage: React.FC = () => {
 
   // 權限檢查
   useEffect(() => {
-    if (!user || !user.roles.some(role => ['OPS', 'ADMIN'].includes(role))) {
+    if (!user || !user.roles.some(role => ['STAFF', 'ADMIN'].includes(role))) {
       router.push('/dashboard');
       return;
     }
@@ -243,10 +243,10 @@ const ConsultationManagementPage: React.FC = () => {
   useEffect(() => {
     if (user) {
       console.log('當前用戶角色:', user.roles[0]);
-      if (user.roles.some(role => ['OPS', 'ADMIN'].includes(role))) {
+      if (user.roles.some(role => ['STAFF', 'ADMIN'].includes(role))) {
         loadConsultations();
       } else {
-        console.log('用戶角色不符合要求，需要 OPS 或 ADMIN 角色');
+        console.log('用戶角色不符合要求，需要 STAFF 或 ADMIN 角色');
         // 臨時允許所有用戶查看，用於測試
         console.log('臨時允許查看諮詢數據進行測試...');
         loadConsultations();
@@ -541,7 +541,7 @@ const ConsultationManagementPage: React.FC = () => {
     lost: consultations.filter(c => c.status === ConsultationStatus.CLOSED_LOST).length
   };
 
-  if (!user || !user.roles.some(role => ['OPS', 'ADMIN'].includes(role))) {
+  if (!user || !user.roles.some(role => ['STAFF', 'ADMIN'].includes(role))) {
     return null;
   }
 
@@ -797,13 +797,13 @@ const ConsultationManagementPage: React.FC = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
                 <p className="text-gray-600">載入中...</p>
               </div>
-            ) : !user || !user.roles.some(role => ['OPS', 'ADMIN'].includes(role)) ? (
+            ) : !user || !user.roles.some(role => ['STAFF', 'ADMIN'].includes(role)) ? (
               <div className="p-8 text-center">
                 <SafeIcon icon={FiX} className="mx-auto h-12 w-12 text-red-400 mb-4" />
                 <p className="text-gray-600 mb-2">權限不足</p>
                 <p className="text-sm text-gray-500">
                   當前角色: {user?.roles[0] || '未登入'}<br />
-                  需要角色: OPS 或 ADMIN
+                  需要角色: STAFF 或 ADMIN
                 </p>
               </div>
             ) : filteredConsultations.length === 0 ? (

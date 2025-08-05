@@ -15,14 +15,14 @@ const CorporateDashboard = () => {
       title: '儀表板',
       description: '企業合作概況',
       icon: FiUser,
-      href: '/dashboard',
+      href: '/corporate/dashboard',
       color: 'bg-blue-500'
     },
     {
       title: '企業管理',
       description: '管理企業合作',
       icon: FiBriefcase,
-      href: '/corporate-management',
+      href: '/corporate/corporate-management',
       color: 'bg-green-500'
     }
   ];

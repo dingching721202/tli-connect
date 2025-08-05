@@ -26,12 +26,12 @@ const RoleSelectPage = () => {
       path: '/teacher/login'
     },
     {
-      id: 'OPS',
-      name: '營運人員',
-      description: '管理會員、教師、課程等營運事務',
+      id: 'STAFF',
+      name: '職員',
+      description: '管理會員、教師、課程等職員事務',
       icon: FiUsers,
       color: 'from-purple-600 to-violet-600',
-      path: '/ops/login'
+      path: '/staff/login'
     },
     {
       id: 'ADMIN',
