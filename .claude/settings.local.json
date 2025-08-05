@@ -34,7 +34,8 @@
       "Bash(cp:*)",
       "Bash(npx kill-port:*)",
       "Bash(npm run:*)",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
