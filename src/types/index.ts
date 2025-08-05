@@ -138,6 +138,7 @@ export interface ClassAppointment {
   user_id: number;
   status: 'BOOKED' | 'CONFIRMED' | 'CANCELED' | 'COMPLETED';
   booking_time: string;
+  created_at: string;
   notes?: string;
 }
 
