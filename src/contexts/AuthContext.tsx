@@ -116,7 +116,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // 載入用戶會員資料和角色
   const loadUserWithMembership = async (userData: DataUser): Promise<User> => {
     // 優先獲取 ACTIVE 會員卡，如果沒有則獲取 PURCHASED 會員卡
-    let membership = await memberCardService.getUserMembership(userData.id);
+    let membership = await memberCardService.getMembership(userData.id);
     if (!membership) {
       membership = await memberCardService.getUserPurchasedMembership(userData.id);
     }
@@ -358,7 +358,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     try {
       // 優先獲取 ACTIVE 會員卡，如果沒有則獲取 PURCHASED 會員卡
-      let membership = await memberCardService.getUserMembership(user.id);
+      let membership = await memberCardService.getMembership(user.id);
       if (!membership) {
         membership = await memberCardService.getUserPurchasedMembership(user.id);
       }

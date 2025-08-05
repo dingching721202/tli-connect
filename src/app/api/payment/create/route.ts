@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
           
           if (plan) {
             // 使用統一的 memberCardStore 創建會員記錄
-            await memberCardStore.createUserMembership({
+            await memberCardStore.createMembership({
               user_id: updatedOrder.user_id || 999, // 暫時用戶ID，實際應用中需要真實用戶ID
               user_name: updatedOrder.user_name || 'Unknown User',
               user_email: updatedOrder.user_email || `user${updatedOrder.user_id}@example.com`,

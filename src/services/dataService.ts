@@ -520,7 +520,7 @@ const convertMembershipToLegacyFormat = (um: {
 export const memberCardService = {
   // 取得所有會員卡（統一使用 memberCardStore）
   async getAllCards() {
-    const userMemberships = await memberCardStore.getAllUserMemberships();
+    const userMemberships = await memberCardStore.getAllMemberships();
     
     return userMemberships.map(convertMembershipToLegacyFormat);
   },
@@ -564,7 +564,7 @@ export const memberCardService = {
     
     try {
       // 檢查會員卡是否存在且屬於該用戶
-      const userMembership = await memberCardStore.getUserMembershipById(membershipId);
+      const userMembership = await memberCardStore.getMembershipById(membershipId);
       
       if (!userMembership || userMembership.user_id !== userId) {
         console.log('❌ 找不到會員資格記錄');
@@ -577,7 +577,7 @@ export const memberCardService = {
       }
 
       // 檢查是否已有啟用的會員卡
-      const userMemberships = await memberCardStore.getUserMembershipsByUserId(userId);
+      const userMemberships = await memberCardStore.getMembershipsByUserId(userId);
       const activeMembership = userMemberships.find(m => m.status === 'activated');
       if (activeMembership) {
         return { success: false, error: 'ACTIVE_CARD_EXISTS' };
@@ -602,7 +602,7 @@ export const memberCardService = {
   
   // 獲取用戶會員資格 (只返回 ACTIVE 狀態)
   async getMembership(userId: number): Promise<Membership | null> {
-    const userMemberships = await memberCardStore.getUserMembershipsByUserId(userId);
+    const userMemberships = await memberCardStore.getMembershipsByUserId(userId);
     const activeMembership = userMemberships.find(m => m.status === 'activated');
     
     console.log(`🔍 getMembership - 用戶ID: ${userId}, 找到的 ACTIVE 會員卡:`, activeMembership);
@@ -616,7 +616,7 @@ export const memberCardService = {
 
   // 獲取用戶的待啟用會員卡 (PURCHASED 狀態)
   async getUserPurchasedMembership(userId: number): Promise<Membership | null> {
-    const userMemberships = await memberCardStore.getUserMembershipsByUserId(userId);
+    const userMemberships = await memberCardStore.getMembershipsByUserId(userId);
     const purchasedMembership = userMemberships.find(m => m.status === 'purchased');
     
     console.log(`🔍 getUserPurchasedMembership - 用戶ID: ${userId}, 找到的 PURCHASED 會員卡:`, purchasedMembership);
@@ -629,8 +629,8 @@ export const memberCardService = {
   },
   
   // 獲取用戶所有會員資格（包括未啟用的）
-  async getAllUserMemberships(userId: number): Promise<Membership[]> {
-    const userMemberships = await memberCardStore.getUserMembershipsByUserId(userId);
+  async getAllMembershipsByUserId(userId: number): Promise<Membership[]> {
+    const userMemberships = await memberCardStore.getMembershipsByUserId(userId);
     
     return userMemberships.map(convertMembershipToLegacyFormat);
   },
@@ -643,7 +643,7 @@ export const memberCardService = {
     await memberCardStore.updateExpiredStatus();
     
     // 獲取所有過期的會員卡
-    const expiredUserMemberships = await memberCardStore.getUserMembershipsByStatus('expired');
+    const expiredUserMemberships = await memberCardStore.getMembershipsByStatus('expired');
     
     const expiredMemberships = expiredUserMemberships.map(convertMembershipToLegacyFormat);
 
@@ -662,7 +662,7 @@ export const memberCardService = {
     const now = new Date();
     const checkDate = new Date(now.getTime() + days * 24 * 60 * 60 * 1000);
 
-    const allMemberships = await memberCardStore.getAllUserMemberships();
+    const allMemberships = await memberCardStore.getAllMemberships();
     
     const expiringMemberships = allMemberships.filter(um => {
       if (um.status === 'activated' && um.expiry_date) {

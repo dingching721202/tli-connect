@@ -113,8 +113,8 @@ class MemberCardStore {
     }
   }
 
-  // 獲取所有用戶會員卡記錄
-  async getAllUserMemberships(): Promise<Membership[]> {
+  // 獲取所有會員卡記錄
+  async getAllMemberships(): Promise<Membership[]> {
     if (this.isServerSide) {
       await this.loadFromFile();
     }
@@ -122,7 +122,7 @@ class MemberCardStore {
   }
 
   // 根據用戶ID獲取會員卡記錄
-  async getUserMembershipsByUserId(userId: number): Promise<Membership[]> {
+  async getMembershipsByUserId(userId: number): Promise<Membership[]> {
     if (this.isServerSide) {
       await this.loadFromFile();
     }
@@ -130,7 +130,7 @@ class MemberCardStore {
   }
 
   // 根據狀態獲取會員卡記錄
-  async getUserMembershipsByStatus(status: Membership['status']): Promise<Membership[]> {
+  async getMembershipsByStatus(status: Membership['status']): Promise<Membership[]> {
     if (this.isServerSide) {
       await this.loadFromFile();
     }
@@ -138,15 +138,15 @@ class MemberCardStore {
   }
 
   // 根據ID獲取單個會員卡記錄
-  async getUserMembershipById(id: number): Promise<Membership | null> {
+  async getMembershipById(id: number): Promise<Membership | null> {
     if (this.isServerSide) {
       await this.loadFromFile();
     }
     return this.userMemberCards.find(card => card.id === id) || null;
   }
 
-  // 創建新的用戶會員卡記錄（通常在訂單完成後調用）
-  async createUserMembership(data: {
+  // 創建新的會員卡記錄（通常在訂單完成後調用）
+  async createMembership(data: {
     user_id: number;
     user_name: string;
     user_email: string;
@@ -288,7 +288,7 @@ class MemberCardStore {
       throw new Error(`找不到ID為 ${data.plan_id} 的會員卡計劃`);
     }
 
-    const memberCard = await this.createUserMembership({
+    const memberCard = await this.createMembership({
       user_id: userId,
       user_name: data.user_name,
       user_email: data.user_email,

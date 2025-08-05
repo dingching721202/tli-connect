@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 檢查學員的會員資格（使用統一的 memberCardStore）
-    const allMemberships = await memberCardStore.getUserMembershipsByUserId(parseInt(userId));
+    const allMemberships = await memberCardStore.getMembershipsByUserId(parseInt(userId));
     const activeMemberships = allMemberships.filter(
       membership => membership.status === 'activated'
     );

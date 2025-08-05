@@ -66,7 +66,7 @@ export async function PUT(
           return a & a;
         }, 0));
 
-        const userMemberCard = await memberCardStore.createUserMembership({
+        const userMemberCard = await memberCardStore.createMembership({
           user_id: userId,
           user_name: userName,
           user_email: userEmail,
