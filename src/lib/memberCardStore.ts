@@ -198,6 +198,7 @@ class MemberCardStore {
       user_id: data.user_id,
       user_name: data.user_name,
       user_email: data.user_email,
+      membership_type: 'individual', // 這是個人會員卡購買
       plan_id: data.plan_id,
       member_card_id: plan.member_card_id,
       order_id: data.order_id,

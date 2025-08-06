@@ -8,7 +8,8 @@ import { memberCardStore } from '@/lib/memberCardStore';
 import { Membership } from '@/types/membership';
 import { memberCardPlans } from '@/data/member_card_plans';
 import { users } from '@/data/users';
-import { User, MembershipStatus } from '@/types/user';
+import { MembershipStatus } from '@/types/user';
+import CorporateMemberManagement from './CorporateMemberManagement';
 
 const {
   FiUsers, FiUser, FiBriefcase, FiUserPlus, FiTrash2, FiSearch,
@@ -89,6 +90,7 @@ const MemberManagementReal = () => {
           user_id: user.id,
           user_name: user.name,
           user_email: user.email,
+          membership_type: 'individual' as const,
           member_card_id: 0,
           plan_id: 0,
           status: 'test' as const, // 沒有會員卡但有會員狀態
@@ -199,6 +201,21 @@ const MemberManagementReal = () => {
     });
   };
 
+  // 安全的日期轉換為輸入框格式 (避免時區問題)
+  const formatDateForInput = (dateString?: string): string => {
+    if (!dateString) return '';
+    try {
+      const date = new Date(dateString);
+      // 使用本地時間來避免時區轉換問題
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch {
+      return '';
+    }
+  };
+
   // 格式化金額
   const formatAmount = (amount: number): string => {
     return new Intl.NumberFormat('zh-TW', {
@@ -208,27 +225,6 @@ const MemberManagementReal = () => {
     }).format(amount);
   };
 
-  // 獲取會員狀態顏色
-  const getMembershipStatusColor = (status?: MembershipStatus) => {
-    switch (status) {
-      case 'MEMBER': return 'bg-green-100 text-green-800';
-      case 'EXPIRED_MEMBER': return 'bg-red-100 text-red-800';
-      case 'NON_MEMBER': return 'bg-gray-100 text-gray-800';
-      case 'TEST_USER': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // 獲取會員狀態名稱
-  const getMembershipStatusName = (status?: MembershipStatus) => {
-    switch (status) {
-      case 'MEMBER': return '會員';
-      case 'EXPIRED_MEMBER': return '會員過期';
-      case 'NON_MEMBER': return '非會員';
-      case 'TEST_USER': return '測試人員';
-      default: return '未知';
-    }
-  };
 
   // 獲取狀態顏色
   const getStatusColor = (status: Membership['status']): string => {
@@ -567,12 +563,17 @@ const MemberManagementReal = () => {
         </p>
       </motion.div>
 
-      {/* Statistics Dashboard */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6"
-      >
+      {/* 根據選中的分頁顯示不同內容 */}
+      {memberTypeTab === 'corporate' ? (
+        <CorporateMemberManagement />
+      ) : (
+        <>
+          {/* Statistics Dashboard */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6"
+          >
         {[
           { 
             label: '總會員數', 
@@ -732,14 +733,14 @@ const MemberManagementReal = () => {
                                     type="text"
                                     value={editingMember?.user_name || ''}
                                     onChange={(e) => setEditingMember(prev => prev ? {...prev, user_name: e.target.value} : null)}
-                                    className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 font-medium text-gray-900"
+                                    className="w-[140px] px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 font-medium text-gray-900"
                                     placeholder="姓名"
                                   />
                                   <input
                                     type="email"
                                     value={editingMember?.user_email || ''}
                                     onChange={(e) => setEditingMember(prev => prev ? {...prev, user_email: e.target.value} : null)}
-                                    className="w-full px-0 py-0 text-xs border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-4 text-gray-600"
+                                    className="w-[140px] px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 text-gray-600"
                                     placeholder="電子郵件"
                                   />
                                 </>
@@ -768,7 +769,7 @@ const MemberManagementReal = () => {
                             <select
                               value={editingMember?.plan_id || member.plan_id || 0}
                               onChange={(e) => handlePlanChange(parseInt(e.target.value))}
-                              className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 font-medium text-gray-900"
+                              className="w-[140px] px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 font-medium text-gray-900"
                             >
                               {member.id <= 0 && (
                                 <option value={0}>選擇會員卡方案</option>
@@ -800,7 +801,7 @@ const MemberManagementReal = () => {
                             <select
                               value={editingMember?.status || member.status}
                               onChange={(e) => setEditingMember(prev => prev ? {...prev, status: e.target.value as Membership['status']} : null)}
-                              className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 font-medium text-gray-900"
+                              className="w-[140px] px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 font-medium text-gray-900"
                             >
                               <option value="purchased" className="text-orange-700">已購買未開啟</option>
                               <option value="activated" className="text-green-700">已開啟</option>
@@ -832,9 +833,10 @@ const MemberManagementReal = () => {
                           {editingMemberId === member.id ? (
                             <input
                               type="date"
-                              value={editingMember?.purchase_date ? new Date(editingMember.purchase_date).toISOString().split('T')[0] : ''}
+                              value={formatDateForInput(editingMember?.purchase_date)}
                               onChange={(e) => setEditingMember(prev => prev ? {...prev, purchase_date: e.target.value} : null)}
-                              className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 text-gray-900"
+                              className="w-[130px] px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 text-gray-900 appearance-none cursor-pointer"
+                              style={{ colorScheme: 'light' }}
                             />
                           ) : (
                             <div className="text-sm text-gray-900 h-5 flex items-center">
@@ -850,9 +852,10 @@ const MemberManagementReal = () => {
                           {editingMemberId === member.id ? (
                             <input
                               type="date"
-                              value={editingMember?.activation_deadline ? new Date(editingMember.activation_deadline).toISOString().split('T')[0] : ''}
+                              value={formatDateForInput(editingMember?.activation_deadline)}
                               onChange={(e) => setEditingMember(prev => prev ? {...prev, activation_deadline: e.target.value} : null)}
-                              className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 text-gray-900"
+                              className="w-[130px] px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 text-gray-900 appearance-none cursor-pointer"
+                              style={{ colorScheme: 'light' }}
                             />
                           ) : (
                             <div className="text-sm">
@@ -879,9 +882,10 @@ const MemberManagementReal = () => {
                           {editingMemberId === member.id ? (
                             <input
                               type="date"
-                              value={editingMember?.activation_date ? new Date(editingMember.activation_date).toISOString().split('T')[0] : ''}
+                              value={formatDateForInput(editingMember?.activation_date)}
                               onChange={(e) => setEditingMember(prev => prev ? {...prev, activation_date: e.target.value} : null)}
-                              className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 text-gray-900"
+                              className="w-[130px] px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 text-gray-900 appearance-none cursor-pointer"
+                              style={{ colorScheme: 'light' }}
                             />
                           ) : (
                             <div className="text-sm text-gray-900 h-5 flex items-center">
@@ -897,9 +901,10 @@ const MemberManagementReal = () => {
                           {editingMemberId === member.id ? (
                             <input
                               type="date"
-                              value={editingMember?.expiry_date ? new Date(editingMember.expiry_date).toISOString().split('T')[0] : ''}
+                              value={formatDateForInput(editingMember?.expiry_date)}
                               onChange={(e) => setEditingMember(prev => prev ? {...prev, expiry_date: e.target.value} : null)}
-                              className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 text-gray-900"
+                              className="w-[130px] px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 text-gray-900 appearance-none cursor-pointer"
+                              style={{ colorScheme: 'light' }}
                             />
                           ) : (
                             <div className="text-sm">
@@ -929,7 +934,7 @@ const MemberManagementReal = () => {
                                 type="number"
                                 value={editingMember?.amount_paid || 0}
                                 onChange={(e) => setEditingMember(prev => prev ? {...prev, amount_paid: parseFloat(e.target.value) || 0} : null)}
-                                className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 font-medium text-gray-900"
+                                className="w-[140px] px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 font-medium text-gray-900"
                                 min="0"
                                 step="1"
                               />
@@ -940,7 +945,7 @@ const MemberManagementReal = () => {
                           ) : (
                             <div>
                               <div className="font-medium text-gray-900 h-5 flex items-center">
-                                {member.id > 0 ? formatAmount(member.amount_paid) : '-'}
+                                {member.id > 0 ? formatAmount(member.amount_paid || 0) : '-'}
                               </div>
                               {member.auto_renewal && member.id > 0 && (
                                 <div className="text-xs text-blue-600 h-4 flex items-center">自動續費</div>
@@ -1124,6 +1129,8 @@ const MemberManagementReal = () => {
             </div>
           </motion.div>
         </motion.div>
+      )}
+        </>
       )}
     </div>
   );

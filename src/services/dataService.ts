@@ -530,7 +530,13 @@ export const memberCardService = {
   async getAllCards() {
     const userMemberships = await memberCardStore.getAllMemberships();
     
-    return userMemberships.map(um => convertMembershipToLegacyFormat(um) as unknown as Membership);
+    return userMemberships
+      .filter(um => um.member_card_id !== undefined && um.plan_id !== undefined)
+      .map(um => convertMembershipToLegacyFormat({
+        ...um,
+        member_card_id: um.member_card_id!,
+        plan_id: um.plan_id!
+      }) as unknown as Membership);
   },
   
   // 創建會員卡（統一使用 memberCardStore）
@@ -561,7 +567,11 @@ export const memberCardService = {
       await memberCardStore.activateMemberCard(userMembership.id);
     }
 
-    return convertMembershipToLegacyFormat(userMembership) as unknown as Membership;
+    return convertMembershipToLegacyFormat({
+      ...userMembership,
+      member_card_id: userMembership.member_card_id!,
+      plan_id: userMembership.plan_id!
+    }) as unknown as Membership;
   },
 
   // 啟用會員卡（統一使用 memberCardStore）
@@ -600,7 +610,11 @@ export const memberCardService = {
 
       console.log('✅ 會員卡啟用成功:', activatedMembership);
 
-      const membership = convertMembershipToLegacyFormat(activatedMembership);
+      const membership = convertMembershipToLegacyFormat({
+        ...activatedMembership,
+        member_card_id: activatedMembership.member_card_id!,
+        plan_id: activatedMembership.plan_id!
+      });
       return { success: true, data: membership as unknown as Membership };
     } catch (error) {
       console.error('啟用會員卡失敗:', error);
@@ -619,7 +633,11 @@ export const memberCardService = {
       return null;
     }
 
-    return convertMembershipToLegacyFormat(activeMembership) as unknown as Membership;
+    return convertMembershipToLegacyFormat({
+      ...activeMembership,
+      member_card_id: activeMembership.member_card_id!,
+      plan_id: activeMembership.plan_id!
+    }) as unknown as Membership;
   },
 
   // 獲取用戶的待啟用會員卡 (PURCHASED 狀態)
@@ -633,14 +651,24 @@ export const memberCardService = {
       return null;
     }
 
-    return convertMembershipToLegacyFormat(purchasedMembership) as unknown as Membership;
+    return convertMembershipToLegacyFormat({
+      ...purchasedMembership,
+      member_card_id: purchasedMembership.member_card_id!,
+      plan_id: purchasedMembership.plan_id!
+    }) as unknown as Membership;
   },
   
   // 獲取用戶所有會員資格（包括未啟用的）
   async getAllMembershipsByUserId(userId: number): Promise<Membership[]> {
     const userMemberships = await memberCardStore.getMembershipsByUserId(userId);
     
-    return userMemberships.map(um => convertMembershipToLegacyFormat(um) as unknown as Membership);
+    return userMemberships
+      .filter(um => um.member_card_id !== undefined && um.plan_id !== undefined)
+      .map(um => convertMembershipToLegacyFormat({
+        ...um,
+        member_card_id: um.member_card_id!,
+        plan_id: um.plan_id!
+      }) as unknown as Membership);
   },
 
   // 檢查並更新過期的會員卡
@@ -653,7 +681,13 @@ export const memberCardService = {
     // 獲取所有過期的會員卡
     const expiredUserMemberships = await memberCardStore.getMembershipsByStatus('expired');
     
-    const expiredMemberships = expiredUserMemberships.map(um => convertMembershipToLegacyFormat(um) as unknown as Membership);
+    const expiredMemberships = expiredUserMemberships
+      .filter(um => um.member_card_id !== undefined && um.plan_id !== undefined)
+      .map(um => convertMembershipToLegacyFormat({
+        ...um,
+        member_card_id: um.member_card_id!,
+        plan_id: um.plan_id!
+      }) as unknown as Membership);
 
     // 更新用戶會員狀態
     const uniqueUserIds = [...new Set(expiredMemberships.map(m => m.user_id))];
@@ -680,7 +714,13 @@ export const memberCardService = {
       return false;
     });
 
-    return expiringMemberships.map(um => convertMembershipToLegacyFormat(um) as unknown as Membership);
+    return expiringMemberships
+      .filter(um => um.member_card_id !== undefined && um.plan_id !== undefined)
+      .map(um => convertMembershipToLegacyFormat({
+        ...um,
+        member_card_id: um.member_card_id!,
+        plan_id: um.plan_id!
+      }) as unknown as Membership);
   }
 };
 

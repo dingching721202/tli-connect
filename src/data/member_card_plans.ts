@@ -124,7 +124,7 @@ export const memberCardPlans: MemberCardPlan[] = [
       "專屬企業客戶經理",
       "優先技術支援"
     ],
-    status: "DRAFT",
+    status: "PUBLISHED",
     popular: false,
     description: "適合中小企業的短期培訓方案",
     hide_price: true,

@@ -205,7 +205,7 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
               <div>
                 <p className="text-xs text-yellow-600 mb-1">啟用期限</p>
                 <p className="text-sm font-medium text-yellow-800">
-                  {formatDate(membership.activation_deadline)}
+                  {formatDate(membership.activation_deadline || '')}
                 </p>
               </div>
             </div>

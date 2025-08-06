@@ -10,7 +10,7 @@ export type UserType = 'individual' | 'corporate';
 export type DurationType = 'season' | 'annual';
 
 // 會員狀態
-export type MembershipStatus = 'purchased' | 'activated' | 'expired' | 'cancelled' | 'test';
+export type MembershipStatus = 'purchased' | 'issued' | 'activated' | 'expired' | 'cancelled' | 'test';
 
 // 會員卡基本定義（會員卡種類）
 export interface MemberCard {
@@ -46,29 +46,43 @@ export interface MemberCardPlan {
   updated_at?: string;
 }
 
+// 會員類型
+export type MembershipType = 'individual' | 'corporate';
+
 // 會員資格（用戶實際擁有的會員實例）
 export interface Membership {
   id: number;
   user_id: number;
   user_name: string;
   user_email: string;
-  member_card_id: number;
-  plan_id: number;
+  
+  // 會員類型區分
+  membership_type: MembershipType;
+  
+  // 個人會員字段
+  member_card_id?: number;
+  plan_id?: number;
   order_id?: number;
+  
+  // 企業會員字段
+  company_id?: string | number;
+  corporate_subscription_id?: number;
+  assigned_date?: string;
+  
   status: MembershipStatus;
   
-  // 時間相關
-  purchase_date: string;
+  // 時間相關（主要用於個人會員）
+  purchase_date?: string;
   activation_date?: string;
   expiry_date?: string;
-  activation_deadline: string;
+  activation_deadline?: string;
   
-  // 金額相關
-  amount_paid: number;
+  // 金額相關（主要用於個人會員）
+  amount_paid?: number;
   original_amount?: number;
-  auto_renewal: boolean;
+  auto_renewal?: boolean;
   
-  // 企業相關（僅企業會員使用）
+  // 企業相關
   company_name?: string;
   
   // 系統時間戳
