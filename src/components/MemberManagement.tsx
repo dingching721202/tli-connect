@@ -34,7 +34,7 @@ const MemberManagementReal = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'purchased' | 'activated' | 'expired' | 'cancelled' | 'test'>('all');
-  const [planTypeFilter, setPlanTypeFilter] = useState<'all' | 'individual' | 'corporate'>('all');
+  const [memberTypeTab, setMemberTypeTab] = useState<'all' | 'individual' | 'corporate'>('all');
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [statistics, setStatistics] = useState({
     total: 0,
@@ -183,8 +183,8 @@ const MemberManagementReal = () => {
       // 狀態過濾
       if (statusFilter !== 'all' && card.status !== statusFilter) return false;
 
-      // 方案類型過濾
-      if (planTypeFilter !== 'all' && card.plan_type !== planTypeFilter) return false;
+      // 會員類型分頁過濾
+      if (memberTypeTab !== 'all' && card.plan_type !== memberTypeTab) return false;
 
       return true;
     });
@@ -533,11 +533,34 @@ const MemberManagementReal = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <div className="flex items-center mb-4">
-          <SafeIcon icon={FiUsers} className="mr-3 text-2xl text-gray-600" />
-          <h1 className="text-3xl font-bold text-gray-900">
-            會員管理
-          </h1>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            <SafeIcon icon={FiUsers} className="mr-3 text-2xl text-gray-600" />
+            <h1 className="text-3xl font-bold text-gray-900">
+              會員管理
+            </h1>
+          </div>
+          
+          {/* Member Type Tabs */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            {[
+              { id: 'all', label: '全部' },
+              { id: 'individual', label: '個人' },
+              { id: 'corporate', label: '企業' }
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setMemberTypeTab(tab.id as 'all' | 'individual' | 'corporate')}
+                className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  memberTypeTab === tab.id
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
         <p className="text-gray-600">
           管理基於會員卡購買記錄的真實會員資料
@@ -587,21 +610,46 @@ const MemberManagementReal = () => {
             color: 'text-blue-600 bg-blue-50 border-blue-200',
             icon: FiUser
           }
-        ].map((stat) => (
-          <motion.div
-            key={stat.label}
-            whileHover={{ scale: 1.02, y: -2 }}
-            className={`p-4 rounded-xl border ${stat.color}`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold">{stat.count}</div>
-                <div className="text-sm font-medium">{stat.label}</div>
+        ].map((stat) => {
+          const isActive = (stat.label === '總會員數' && statusFilter === 'all') ||
+                          (stat.label === '已開啟' && statusFilter === 'activated') ||
+                          (stat.label === '已購買未開啟' && statusFilter === 'purchased') ||
+                          (stat.label === '已過期' && statusFilter === 'expired') ||
+                          (stat.label === '已取消' && statusFilter === 'cancelled') ||
+                          (stat.label === '測試' && statusFilter === 'test');
+          
+          const getFilterValue = (label: string): 'all' | 'purchased' | 'activated' | 'expired' | 'cancelled' | 'test' => {
+            switch (label) {
+              case '已開啟': return 'activated';
+              case '已購買未開啟': return 'purchased';
+              case '已過期': return 'expired';
+              case '已取消': return 'cancelled';
+              case '測試': return 'test';
+              default: return 'all';
+            }
+          };
+          
+          return (
+            <motion.div
+              key={stat.label}
+              whileHover={{ scale: 1.02, y: -2 }}
+              className={`p-4 rounded-xl border cursor-pointer transition-all ${
+                isActive 
+                  ? `${stat.color} ring-2 ring-blue-500 ring-opacity-50` 
+                  : `${stat.color} hover:shadow-md`
+              }`}
+              onClick={() => setStatusFilter(getFilterValue(stat.label))}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-2xl font-bold">{stat.count}</div>
+                  <div className="text-sm font-medium">{stat.label}</div>
+                </div>
+                <SafeIcon icon={stat.icon} className="text-2xl" />
               </div>
-              <SafeIcon icon={stat.icon} className="text-2xl" />
-            </div>
-          </motion.div>
-        ))}
+            </motion.div>
+          );
+        })}
       </motion.div>
 
       {/* Controls */}
@@ -631,36 +679,6 @@ const MemberManagementReal = () => {
           </button>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-700">狀態：</label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'purchased' | 'activated' | 'expired' | 'cancelled' | 'test')}
-              className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">全部狀態</option>
-              <option value="purchased">已購買未開啟</option>
-              <option value="activated">已開啟</option>
-              <option value="expired">已過期</option>
-              <option value="cancelled">已取消</option>
-              <option value="test">測試</option>
-            </select>
-          </div>
-          <div className="flex items-center space-x-2">
-            <label className="text-sm font-medium text-gray-700">方案類型：</label>
-            <select
-              value={planTypeFilter}
-              onChange={(e) => setPlanTypeFilter(e.target.value as 'all' | 'individual' | 'corporate')}
-              className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">全部類型</option>
-              <option value="individual">個人方案</option>
-              <option value="corporate">企業方案</option>
-            </select>
-          </div>
-        </div>
       </motion.div>
 
 
@@ -991,12 +1009,12 @@ const MemberManagementReal = () => {
                   <td colSpan={9} className="py-12 px-4 text-center">
                     <SafeIcon icon={FiUsers} className="text-6xl text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      {searchTerm || statusFilter !== 'all' || planTypeFilter !== 'all' 
+                      {searchTerm || statusFilter !== 'all' || memberTypeTab !== 'all' 
                         ? '找不到符合條件的會員' 
                         : '暫無會員記錄'}
                     </h3>
                     <p className="text-gray-600">
-                      {searchTerm || statusFilter !== 'all' || planTypeFilter !== 'all'
+                      {searchTerm || statusFilter !== 'all' || memberTypeTab !== 'all'
                         ? '請嘗試調整搜尋條件或篩選設定'
                         : '會員購買會員卡後，記錄會顯示在這裡'}
                     </p>
