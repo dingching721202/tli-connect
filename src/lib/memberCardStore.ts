@@ -273,6 +273,130 @@ class MemberCardStore {
     return updatedCard;
   }
 
+  // 更新會員卡日期
+  async updateMemberCardDates(id: number, dates: {
+    purchase_date?: string;
+    activation_deadline?: string;
+    activation_date?: string;
+    expiry_date?: string;
+  }): Promise<Membership | null> {
+    const cardIndex = this.userMemberCards.findIndex(card => card.id === id);
+    
+    if (cardIndex === -1) {
+      throw new Error(`找不到ID為 ${id} 的會員卡`);
+    }
+
+    const updatedCard = {
+      ...this.userMemberCards[cardIndex],
+      ...Object.fromEntries(
+        Object.entries(dates).filter(([, value]) => value !== undefined && value !== '')
+      ),
+      updated_at: new Date().toISOString()
+    };
+
+    this.userMemberCards[cardIndex] = updatedCard;
+    await this.save();
+
+    console.log('✅ 會員卡日期更新成功:', {
+      id: updatedCard.id,
+      user_name: updatedCard.user_name,
+      updated_dates: dates
+    });
+    
+    return updatedCard;
+  }
+
+  // 更新會員資訊
+  async updateMemberInfo(id: number, info: {
+    user_name?: string;
+    user_email?: string;
+  }): Promise<Membership | null> {
+    const cardIndex = this.userMemberCards.findIndex(card => card.id === id);
+    
+    if (cardIndex === -1) {
+      throw new Error(`找不到ID為 ${id} 的會員卡`);
+    }
+
+    const updatedCard = {
+      ...this.userMemberCards[cardIndex],
+      ...Object.fromEntries(
+        Object.entries(info).filter(([, value]) => value !== undefined && value !== '')
+      ),
+      updated_at: new Date().toISOString()
+    };
+
+    this.userMemberCards[cardIndex] = updatedCard;
+    await this.save();
+
+    console.log('✅ 會員資訊更新成功:', {
+      id: updatedCard.id,
+      user_name: updatedCard.user_name,
+      user_email: updatedCard.user_email
+    });
+    
+    return updatedCard;
+  }
+
+  // 更新會員卡方案和金額
+  async updateMemberPlan(id: number, planId: number): Promise<Membership | null> {
+    const cardIndex = this.userMemberCards.findIndex(card => card.id === id);
+    
+    if (cardIndex === -1) {
+      throw new Error(`找不到ID為 ${id} 的會員卡`);
+    }
+
+    // 獲取新計劃詳細資訊
+    const plan = memberCardPlans.find(p => p.id === planId);
+    if (!plan) {
+      throw new Error(`找不到ID為 ${planId} 的會員卡計劃`);
+    }
+
+    const updatedCard = {
+      ...this.userMemberCards[cardIndex],
+      plan_id: planId,
+      member_card_id: plan.member_card_id,
+      amount_paid: parseFloat(plan.sale_price),
+      plan_title: plan.title,
+      plan_type: plan.user_type,
+      duration_type: plan.duration_type,
+      duration_days: plan.duration_days,
+      updated_at: new Date().toISOString()
+    };
+
+    this.userMemberCards[cardIndex] = updatedCard;
+    await this.save();
+
+    console.log('✅ 會員卡方案更新成功:', {
+      id: updatedCard.id,
+      user_name: updatedCard.user_name,
+      plan_title: updatedCard.plan_title,
+      amount_paid: updatedCard.amount_paid
+    });
+    
+    return updatedCard;
+  }
+
+  // 刪除會員記錄
+  async deleteMembership(id: number): Promise<boolean> {
+    const cardIndex = this.userMemberCards.findIndex(card => card.id === id);
+    
+    if (cardIndex === -1) {
+      throw new Error(`找不到ID為 ${id} 的會員卡`);
+    }
+
+    const deletedCard = this.userMemberCards[cardIndex];
+    this.userMemberCards.splice(cardIndex, 1);
+    await this.save();
+
+    console.log('✅ 會員記錄刪除成功:', {
+      id: deletedCard.id,
+      user_name: deletedCard.user_name,
+      plan_title: deletedCard.plan_title
+    });
+    
+    return true;
+  }
+
   // 手動添加會員記錄（管理員功能）
   async manuallyAddMember(data: {
     user_name: string;

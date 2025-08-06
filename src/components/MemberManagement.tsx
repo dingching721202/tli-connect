@@ -10,7 +10,7 @@ import { memberCardPlans } from '@/data/member_card_plans';
 
 const {
   FiUsers, FiUser, FiBriefcase, FiUserPlus, FiTrash2, FiSearch,
-  FiX, FiChevronDown, FiClock, FiCheckCircle
+  FiX, FiClock, FiCheckCircle, FiEdit2, FiSave
 } = FiIcons;
 
 interface MemberWithCard extends Membership {
@@ -39,6 +39,10 @@ const MemberManagementReal = () => {
     expired: 0,
     cancelled: 0
   });
+
+  // 編輯模式相關狀態
+  const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
+  const [editingMember, setEditingMember] = useState<Partial<Membership> | null>(null);
 
   // 新增會員表單狀態
   const [newMember, setNewMember] = useState<NewMember>({
@@ -140,6 +144,7 @@ const MemberManagementReal = () => {
     }
   };
 
+
   // 獲取狀態文字
   const getStatusText = (status: Membership['status']): string => {
     switch (status) {
@@ -224,18 +229,121 @@ const MemberManagementReal = () => {
     }
   };
 
-  // 更新會員卡狀態
-  const handleUpdateStatus = async (cardId: number, newStatus: Membership['status']) => {
+
+  // 處理方案變更，自動更新金額
+  const handlePlanChange = (planId: number) => {
+    const selectedPlan = memberCardPlans.find(plan => plan.id === planId);
+    if (selectedPlan && editingMember) {
+      setEditingMember(prev => prev ? {
+        ...prev,
+        plan_id: planId,
+        amount_paid: parseFloat(selectedPlan.sale_price)
+      } : null);
+    }
+  };
+
+  // 開始編輯會員
+  const handleEditMember = (member: MemberWithCard) => {
+    setEditingMemberId(member.id);
+    setEditingMember({
+      user_name: member.user_name,
+      user_email: member.user_email,
+      plan_id: member.plan_id,
+      amount_paid: member.amount_paid,
+      status: member.status,
+      purchase_date: member.purchase_date,
+      activation_deadline: member.activation_deadline || '',
+      activation_date: member.activation_date || '',
+      expiry_date: member.expiry_date || ''
+    });
+  };
+
+  // 取消編輯
+  const handleCancelEdit = () => {
+    setEditingMemberId(null);
+    setEditingMember(null);
+  };
+
+  // 保存編輯
+  const handleSaveEdit = async (memberId: number) => {
+    if (!editingMember) return;
+
     try {
-      const confirmMessage = `確定要將狀態更改為「${getStatusText(newStatus)}」嗎？`;
+      // 驗證必填欄位
+      if (!editingMember.user_name?.trim() || !editingMember.user_email?.trim()) {
+        alert('姓名和電子郵件不能為空');
+        return;
+      }
+
+      // 驗證電子郵件格式
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(editingMember.user_email)) {
+        alert('電子郵件格式不正確');
+        return;
+      }
+
+      // 驗證日期格式
+      const dateFields = ['purchase_date', 'activation_deadline', 'activation_date', 'expiry_date'];
+      for (const field of dateFields) {
+        const value = editingMember[field as keyof typeof editingMember];
+        if (value && typeof value === 'string') {
+          const date = new Date(value);
+          if (isNaN(date.getTime())) {
+            alert(`${field === 'purchase_date' ? '購買日期' : 
+                     field === 'activation_deadline' ? '兌換期限' :
+                     field === 'activation_date' ? '開始日期' : '到期日期'} 格式不正確`);
+            return;
+          }
+        }
+      }
+
+      // 更新會員資訊
+      await memberCardStore.updateMemberInfo(memberId, {
+        user_name: editingMember.user_name,
+        user_email: editingMember.user_email
+      });
+
+      // 更新會員卡方案（如果有變更）
+      const currentMember = memberCards.find(m => m.id === memberId);
+      if (currentMember && editingMember.plan_id !== currentMember.plan_id) {
+        await memberCardStore.updateMemberPlan(memberId, editingMember.plan_id!);
+      }
+
+      // 更新狀態（如果有變更）
+      if (currentMember && editingMember.status !== currentMember.status) {
+        await memberCardStore.updateMemberCardStatus(memberId, editingMember.status!);
+      }
+
+      // 更新日期
+      await memberCardStore.updateMemberCardDates(memberId, {
+        purchase_date: editingMember.purchase_date || '',
+        activation_deadline: editingMember.activation_deadline || '',
+        activation_date: editingMember.activation_date || '',
+        expiry_date: editingMember.expiry_date || ''
+      });
+
+      await loadMemberCards();
+      setEditingMemberId(null);
+      setEditingMember(null);
+      alert('✅ 會員資料已成功更新！');
+    } catch (error) {
+      console.error('更新會員失敗:', error);
+      alert('❌ 更新會員失敗：' + (error as Error).message);
+    }
+  };
+
+  // 刪除會員
+  const handleDeleteMember = async (memberId: number, memberName: string) => {
+    try {
+      const confirmMessage = `確定要刪除會員「${memberName}」嗎？此操作無法復原。`;
       if (!confirm(confirmMessage)) return;
 
-      await memberCardStore.updateMemberCardStatus(cardId, newStatus);
+      await memberCardStore.deleteMembership(memberId);
       await loadMemberCards();
-      alert('✅ 狀態已成功更新！');
+      alert('✅ 會員已成功刪除！');
     } catch (error) {
-      console.error('更新狀態失敗:', error);
-      alert('❌ 更新狀態失敗：' + (error as Error).message);
+      console.error('刪除會員失敗:', error);
+      alert('❌ 刪除會員失敗：' + (error as Error).message);
     }
   };
 
@@ -386,6 +494,7 @@ const MemberManagementReal = () => {
         </div>
       </motion.div>
 
+
       {/* Members Table */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -397,11 +506,13 @@ const MemberManagementReal = () => {
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">會員資訊</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">會員卡方案</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900 w-48">會員資訊</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900 w-40">會員卡方案</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-900">狀態</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">購買/開啟日期</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">到期資訊</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">購買日期</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">兌換期限</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">開始日期</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">到期日期</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-900">金額</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-900">操作</th>
               </tr>
@@ -418,40 +529,108 @@ const MemberManagementReal = () => {
                       className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
                     >
                       {/* 會員資訊 */}
-                      <td className="py-4 px-4">
-                        <div className="flex items-center space-x-3">
-                          <div className={`w-10 h-10 rounded-full ${member.plan_type === 'corporate' ? 'bg-purple-500' : 'bg-blue-500'} flex items-center justify-center`}>
+                      <td className="py-4 px-3 w-48">
+                        <div className="flex items-center space-x-2">
+                          <div className={`w-8 h-8 rounded-full ${member.plan_type === 'corporate' ? 'bg-purple-500' : 'bg-blue-500'} flex items-center justify-center flex-shrink-0`}>
                             <SafeIcon 
                               icon={member.plan_type === 'corporate' ? FiBriefcase : FiUser} 
-                              className="text-white text-sm" 
+                              className="text-white text-xs" 
                             />
                           </div>
-                          <div>
-                            <div className="font-medium text-gray-900">{member.user_name}</div>
-                            <div className="text-sm text-gray-600">{member.user_email}</div>
+                          <div className="min-w-0 flex-1">
+                            <div className="h-9 flex flex-col justify-center space-y-1">
+                              {editingMemberId === member.id ? (
+                                <>
+                                  <input
+                                    type="text"
+                                    value={editingMember?.user_name || ''}
+                                    onChange={(e) => setEditingMember(prev => prev ? {...prev, user_name: e.target.value} : null)}
+                                    className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 font-medium text-gray-900"
+                                    placeholder="姓名"
+                                  />
+                                  <input
+                                    type="email"
+                                    value={editingMember?.user_email || ''}
+                                    onChange={(e) => setEditingMember(prev => prev ? {...prev, user_email: e.target.value} : null)}
+                                    className="w-full px-0 py-0 text-xs border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-4 text-gray-600"
+                                    placeholder="電子郵件"
+                                  />
+                                </>
+                              ) : (
+                                <div onClick={() => handleEditMember(member)} className="cursor-pointer">
+                                  <div className={`font-medium text-sm truncate h-5 flex items-center ${member.plan_type === 'corporate' ? 'text-purple-600' : 'text-gray-900'}`}>
+                                    {member.user_name}
+                                    {member.plan_type === 'corporate' && (
+                                      <span className="ml-1 text-xs text-purple-500 bg-purple-50 px-1 py-0.5 rounded text-nowrap">
+                                        企業會員
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="text-xs text-gray-600 truncate h-4 flex items-center">{member.user_email}</div>
+                                </div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </td>
 
                       {/* 會員卡方案 */}
-                      <td className="py-4 px-4">
-                        <div>
-                          <div className="font-medium text-gray-900">{member.plan_title}</div>
-                          <div className="text-sm text-gray-600">
-                            {member.plan_type === 'individual' ? '個人' : '企業'} · {member.duration_type === 'season' ? '季度' : '年度'}
-                          </div>
+                      <td className="py-4 px-4 w-40">
+                        <div className="h-9 flex flex-col justify-center">
+                          {editingMemberId === member.id ? (
+                            <select
+                              value={editingMember?.plan_id || member.plan_id}
+                              onChange={(e) => handlePlanChange(parseInt(e.target.value))}
+                              className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 font-medium text-gray-900"
+                            >
+                              {memberCardPlans
+                                .filter(plan => plan.status === 'PUBLISHED')
+                                .map(plan => (
+                                  <option key={plan.id} value={plan.id}>
+                                    {plan.title}
+                                  </option>
+                                ))
+                              }
+                            </select>
+                          ) : (
+                            <div 
+                              className="cursor-pointer"
+                              onClick={() => handleEditMember(member)}
+                            >
+                              <div className="font-medium text-gray-900 text-sm h-5 flex items-center truncate">{member.plan_title}</div>
+                              <div className="text-xs text-gray-600 h-4 flex items-center">
+                                {member.plan_type === 'individual' ? '個人' : '企業'} · {member.duration_type === 'season' ? '季度' : '年度'}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </td>
 
                       {/* 狀態 */}
                       <td className="py-4 px-4">
-                        <div className="flex items-center space-x-2">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(member.status)}`}>
-                            <SafeIcon icon={StatusIcon} className="mr-1 text-xs" />
-                            {getStatusText(member.status)}
-                          </span>
+                        <div className="h-6 flex items-center space-x-2">
+                          {editingMemberId === member.id ? (
+                            <select
+                              value={editingMember?.status || member.status}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, status: e.target.value as Membership['status']} : null)}
+                              className="px-2 py-0 text-xs border border-gray-300 rounded-full focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white h-6"
+                            >
+                              <option value="purchased" className="text-orange-700">已購買未開啟</option>
+                              <option value="activated" className="text-green-700">已開啟</option>
+                              <option value="expired" className="text-red-700">已過期</option>
+                              <option value="cancelled" className="text-gray-700">已取消</option>
+                            </select>
+                          ) : (
+                            <span 
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border cursor-pointer h-6 ${getStatusColor(member.status)}`}
+                              onClick={() => handleEditMember(member)}
+                            >
+                              <SafeIcon icon={StatusIcon} className="mr-1 text-xs" />
+                              {getStatusText(member.status)}
+                            </span>
+                          )}
                           {member.isExpiringSoon && (
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 border border-yellow-200 h-6">
                               <SafeIcon icon={FiClock} className="mr-1 text-xs" />
                               即將到期
                             </span>
@@ -459,90 +638,194 @@ const MemberManagementReal = () => {
                         </div>
                       </td>
 
-                      {/* 購買/開啟日期 */}
+                      {/* 購買日期 */}
                       <td className="py-4 px-4">
-                        <div className="text-sm">
-                          <div className="text-gray-900">
-                            購買：{formatDate(member.purchase_date)}
-                          </div>
-                          {member.activation_date && (
-                            <div className="text-gray-600">
-                              開啟：{formatDate(member.activation_date)}
+                        <div className="h-5 flex items-center">
+                          {editingMemberId === member.id ? (
+                            <input
+                              type="date"
+                              value={editingMember?.purchase_date ? new Date(editingMember.purchase_date).toISOString().split('T')[0] : ''}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, purchase_date: e.target.value} : null)}
+                              className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 text-gray-900"
+                            />
+                          ) : (
+                            <div 
+                              className="text-sm text-gray-900 cursor-pointer h-5 flex items-center"
+                              onClick={() => handleEditMember(member)}
+                            >
+                              {member.purchase_date ? formatDate(member.purchase_date) : '-'}
                             </div>
                           )}
                         </div>
                       </td>
 
-                      {/* 到期資訊 */}
+                      {/* 兌換期限 */}
                       <td className="py-4 px-4">
-                        <div className="text-sm">
-                          {member.status === 'activated' && member.expiry_date ? (
-                            <>
-                              <div className="text-gray-900">
-                                {formatDate(member.expiry_date)}
-                              </div>
-                              {member.daysUntilExpiry !== undefined && (
-                                <div className={`${member.daysUntilExpiry <= 30 ? 'text-red-600' : 'text-gray-600'}`}>
-                                  {member.daysUntilExpiry > 0 ? `${member.daysUntilExpiry} 天後到期` : '已過期'}
-                                </div>
-                              )}
-                            </>
-                          ) : member.status === 'purchased' && member.activation_deadline ? (
-                            <>
-                              <div className="text-gray-900">
-                                開啟期限：{formatDate(member.activation_deadline)}
-                              </div>
-                              {member.daysUntilExpiry !== undefined && (
-                                <div className={`${member.daysUntilExpiry <= 7 ? 'text-red-600' : 'text-gray-600'}`}>
-                                  {member.daysUntilExpiry > 0 ? `${member.daysUntilExpiry} 天內需開啟` : '開啟期限已過'}
-                                </div>
-                              )}
-                            </>
+                        <div className="h-9 flex flex-col justify-center">
+                          {editingMemberId === member.id ? (
+                            <input
+                              type="date"
+                              value={editingMember?.activation_deadline ? new Date(editingMember.activation_deadline).toISOString().split('T')[0] : ''}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, activation_deadline: e.target.value} : null)}
+                              className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 text-gray-900"
+                            />
                           ) : (
-                            <span className="text-gray-400">無</span>
+                            <div 
+                              className="text-sm cursor-pointer"
+                              onClick={() => handleEditMember(member)}
+                            >
+                              {member.activation_deadline ? (
+                                <>
+                                  <div className="text-gray-900 h-5 flex items-center">{formatDate(member.activation_deadline)}</div>
+                                  {member.status === 'purchased' && member.daysUntilExpiry !== undefined && (
+                                    <div className={`text-xs h-4 flex items-center ${member.daysUntilExpiry <= 7 ? 'text-red-600' : 'text-gray-600'}`}>
+                                      {member.daysUntilExpiry > 0 ? `${member.daysUntilExpiry} 天內需開啟` : '期限已過'}
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-gray-400 h-5 flex items-center">-</span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* 開始日期 */}
+                      <td className="py-4 px-4">
+                        <div className="h-5 flex items-center">
+                          {editingMemberId === member.id ? (
+                            <input
+                              type="date"
+                              value={editingMember?.activation_date ? new Date(editingMember.activation_date).toISOString().split('T')[0] : ''}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, activation_date: e.target.value} : null)}
+                              className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 text-gray-900"
+                            />
+                          ) : (
+                            <div 
+                              className="text-sm text-gray-900 cursor-pointer h-5 flex items-center"
+                              onClick={() => handleEditMember(member)}
+                            >
+                              {member.activation_date ? formatDate(member.activation_date) : '-'}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* 到期日期 */}
+                      <td className="py-4 px-4">
+                        <div className="h-9 flex flex-col justify-center">
+                          {editingMemberId === member.id ? (
+                            <input
+                              type="date"
+                              value={editingMember?.expiry_date ? new Date(editingMember.expiry_date).toISOString().split('T')[0] : ''}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, expiry_date: e.target.value} : null)}
+                              className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 text-gray-900"
+                            />
+                          ) : (
+                            <div 
+                              className="text-sm cursor-pointer"
+                              onClick={() => handleEditMember(member)}
+                            >
+                              {member.expiry_date ? (
+                                <>
+                                  <div className="text-gray-900 h-5 flex items-center">{formatDate(member.expiry_date)}</div>
+                                  {member.status === 'activated' && member.daysUntilExpiry !== undefined && (
+                                    <div className={`text-xs h-4 flex items-center ${member.daysUntilExpiry <= 30 ? 'text-red-600' : 'text-gray-600'}`}>
+                                      {member.daysUntilExpiry > 0 ? `${member.daysUntilExpiry} 天後到期` : '已過期'}
+                                    </div>
+                                  )}
+                                </>
+                              ) : (
+                                <span className="text-gray-400 h-5 flex items-center">-</span>
+                              )}
+                            </div>
                           )}
                         </div>
                       </td>
 
                       {/* 金額 */}
                       <td className="py-4 px-4">
-                        <div className="font-medium text-gray-900">
-                          {formatAmount(member.amount_paid)}
+                        <div className="h-9 flex flex-col justify-center">
+                          {editingMemberId === member.id ? (
+                            <div className="space-y-1">
+                              <input
+                                type="number"
+                                value={editingMember?.amount_paid || 0}
+                                onChange={(e) => setEditingMember(prev => prev ? {...prev, amount_paid: parseFloat(e.target.value) || 0} : null)}
+                                className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 font-medium text-gray-900"
+                                min="0"
+                                step="1"
+                              />
+                              {member.auto_renewal && (
+                                <div className="text-xs text-blue-600 h-4 flex items-center">自動續費</div>
+                              )}
+                            </div>
+                          ) : (
+                            <div 
+                              className="cursor-pointer"
+                              onClick={() => handleEditMember(member)}
+                            >
+                              <div className="font-medium text-gray-900 h-5 flex items-center">
+                                {formatAmount(member.amount_paid)}
+                              </div>
+                              {member.auto_renewal && (
+                                <div className="text-xs text-blue-600 h-4 flex items-center">自動續費</div>
+                              )}
+                            </div>
+                          )}
                         </div>
-                        {member.auto_renewal && (
-                          <div className="text-xs text-blue-600">自動續費</div>
-                        )}
                       </td>
 
                       {/* 操作 */}
                       <td className="py-4 px-4">
-                        <div className="flex items-center space-x-2">
-                          {member.status === 'purchased' && (
-                            <button
-                              onClick={() => handleActivateMemberCard(member.id)}
-                              className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors text-xs"
-                            >
-                              <SafeIcon icon={FiCheckCircle} className="text-xs" />
-                              <span>開啟</span>
-                            </button>
+                        <div className="flex items-center space-x-1">
+                          {editingMemberId === member.id ? (
+                            // 編輯模式的按鈕
+                            <>
+                              <button
+                                onClick={() => handleSaveEdit(member.id)}
+                                className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors text-xs"
+                              >
+                                <SafeIcon icon={FiSave} className="text-xs" />
+                                <span>保存</span>
+                              </button>
+                              <button
+                                onClick={handleCancelEdit}
+                                className="flex items-center space-x-1 px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors text-xs"
+                              >
+                                <SafeIcon icon={FiX} className="text-xs" />
+                                <span>取消</span>
+                              </button>
+                            </>
+                          ) : (
+                            // 正常模式的按鈕
+                            <>
+                              <button
+                                onClick={() => handleEditMember(member)}
+                                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                title="編輯"
+                              >
+                                <SafeIcon icon={FiEdit2} className="text-sm" />
+                              </button>
+                              {member.status === 'purchased' && (
+                                <button
+                                  onClick={() => handleActivateMemberCard(member.id)}
+                                  className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors text-xs"
+                                >
+                                  <SafeIcon icon={FiCheckCircle} className="text-xs" />
+                                  <span>開啟</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDeleteMember(member.id, member.user_name)}
+                                className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                title="刪除"
+                              >
+                                <SafeIcon icon={FiTrash2} className="text-sm" />
+                              </button>
+                            </>
                           )}
-                          <div className="relative">
-                            <select
-                              value={member.status}
-                              onChange={(e) => {
-                                if (e.target.value !== member.status) {
-                                  handleUpdateStatus(member.id, e.target.value as Membership['status']);
-                                }
-                              }}
-                              className="appearance-none bg-gray-100 border border-gray-200 rounded px-2 py-1 text-xs focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            >
-                              <option value="purchased">已購買未開啟</option>
-                              <option value="activated">已開啟</option>
-                              <option value="expired">已過期</option>
-                              <option value="cancelled">已取消</option>
-                            </select>
-                            <SafeIcon icon={FiChevronDown} className="absolute right-1 top-1/2 transform -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
-                          </div>
                         </div>
                       </td>
                     </motion.tr>
@@ -550,7 +833,7 @@ const MemberManagementReal = () => {
                 })
               ) : (
                 <tr>
-                  <td colSpan={7} className="py-12 px-4 text-center">
+                  <td colSpan={9} className="py-12 px-4 text-center">
                     <SafeIcon icon={FiUsers} className="text-6xl text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
                       {searchTerm || statusFilter !== 'all' || planTypeFilter !== 'all' 
