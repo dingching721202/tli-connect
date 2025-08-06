@@ -68,6 +68,9 @@ export interface Membership {
   original_amount?: number;
   auto_renewal: boolean;
   
+  // 企業相關（僅企業會員使用）
+  company_name?: string;
+  
   // 系統時間戳
   created_at: string;
   updated_at: string;
@@ -89,6 +92,7 @@ export interface CreateMembershipRequest {
   order_id?: number;
   amount_paid: number;
   auto_renewal?: boolean;
+  company_name?: string;
 }
 
 // 會員資格更新請求

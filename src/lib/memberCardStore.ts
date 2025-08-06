@@ -40,11 +40,30 @@ class MemberCardStore {
         const parsedCards = JSON.parse(stored);
         this.userMemberCards = parsedCards;
         console.log('👥 從 localStorage 載入用戶會員卡數據:', this.userMemberCards.length, '條記錄');
+        
+        // 調試：檢查企業會員的 company_name
+        const corporateMembers = this.userMemberCards.filter(c => c.plan_type === 'corporate');
+        console.log('🏢 企業會員數據檢查:');
+        corporateMembers.forEach(member => {
+          console.log(`  - ${member.user_name}: company_name = "${member.company_name}"`);
+        });
       } else {
         // 首次使用，初始化數據
         this.userMemberCards = [...memberships];
         this.saveToStorage();
         console.log('🆕 初始化用戶會員卡數據到 localStorage:', this.userMemberCards.length, '條記錄');
+      }
+      
+      // 強制更新：如果現有數據缺少 company_name，則重新載入
+      const needsUpdate = this.userMemberCards.some(member => 
+        member.plan_type === 'corporate' && !member.company_name
+      );
+      
+      if (needsUpdate) {
+        console.log('🔄 檢測到企業會員缺少 company_name，強制更新數據...');
+        this.userMemberCards = [...memberships];
+        this.saveToStorage();
+        console.log('✅ 數據已更新');
       }
     } catch (error) {
       console.error('❌ 載入用戶會員卡數據失敗，使用預設數據:', error);
@@ -158,6 +177,7 @@ class MemberCardStore {
     order_id?: number;
     amount_paid: number;
     auto_renewal?: boolean;
+    company_name?: string;
   }): Promise<Membership> {
     const newId = Math.max(...this.userMemberCards.map(c => c.id), 0) + 1;
     const now = new Date().toISOString();
@@ -186,6 +206,7 @@ class MemberCardStore {
       activation_deadline: activationDeadline.toISOString(),
       amount_paid: data.amount_paid,
       auto_renewal: data.auto_renewal || false,
+      company_name: data.company_name,
       created_at: now,
       updated_at: now,
       plan_title: plan.title,

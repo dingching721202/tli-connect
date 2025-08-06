@@ -83,6 +83,7 @@ export const memberships: Membership[] = [
     activation_deadline: '2024-02-14T23:59:59Z',
     amount_paid: 55000,
     auto_renewal: false,
+    company_name: '台灣科技股份有限公司',
     created_at: '2024-01-15T10:00:00Z',
     updated_at: '2024-01-16T09:00:00Z',
     plan_title: '企業年度方案',
@@ -111,6 +112,29 @@ export const memberships: Membership[] = [
     plan_type: 'individual',
     duration_type: 'season',
     duration_days: 90
+  },
+  {
+    id: 5,
+    user_id: 5,
+    user_name: "林企業代表",
+    user_email: "representative@innovatetech.com",
+    plan_id: 4,
+    member_card_id: 4,
+    order_id: 5,
+    status: 'activated',
+    purchase_date: '2024-12-10T11:00:00Z',
+    activation_date: '2024-12-11T09:00:00Z',
+    expiry_date: '2025-12-11T23:59:59Z',
+    activation_deadline: '2025-01-09T23:59:59Z',
+    amount_paid: 80000,
+    auto_renewal: true,
+    company_name: '創新科技有限公司',
+    created_at: '2024-12-10T11:00:00Z',
+    updated_at: '2024-12-11T09:00:00Z',
+    plan_title: '企業年度方案',
+    plan_type: 'corporate',
+    duration_type: 'annual',
+    duration_days: 365
   }
 ];
 
