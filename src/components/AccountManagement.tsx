@@ -6,7 +6,6 @@ import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { users } from '@/data/users';
 import { User, UserRole } from '@/types';
-import { userRoles } from '@/data/user_roles';
 import { authService, memberCardService } from '@/services/dataService';
 
 type RoleType = 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
@@ -55,7 +54,7 @@ const AccountManagement = () => {
         
         // 初始化 localStorage 中的 userRoles（如果不存在）
         if (!localStorage.getItem('userRoles')) {
-          localStorage.setItem('userRoles', JSON.stringify(userRoles));
+          localStorage.setItem('userRoles', JSON.stringify([]));
         }
         
         const response = await authService.getAllUsersWithRoles();
@@ -63,34 +62,12 @@ const AccountManagement = () => {
           setUsersWithRoles(response.data);
         } else {
           // 如果 API 失敗，使用本地資料作為備選
-          const enhanced = users.map(user => {
-            const activeRoles = userRoles
-              .filter(ur => ur.user_id === user.id && ur.is_active)
-              .map(ur => ur.role);
-            
-            return {
-              ...user,
-              roles: activeRoles,
-              account_status: 'ACTIVE' as const // 預設為 ACTIVE
-            };
-          });
-          setUsersWithRoles(enhanced);
+          setUsersWithRoles(users);
         }
       } catch (error) {
         console.error('載入用戶資料失敗:', error);
         // 使用本地資料作為備選
-        const enhanced = users.map(user => {
-          const activeRoles = userRoles
-            .filter(ur => ur.user_id === user.id && ur.is_active)
-            .map(ur => ur.role);
-          
-          return {
-            ...user,
-            roles: activeRoles,
-            account_status: 'ACTIVE' as const // 預設為 ACTIVE
-          };
-        });
-        setUsersWithRoles(enhanced);
+        setUsersWithRoles(users);
       }
     };
 

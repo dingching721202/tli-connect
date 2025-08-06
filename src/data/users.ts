@@ -27,7 +27,7 @@ export const users: User[] = [
   },
   {
     name: "Bob Chen",
-    email: "user2@example.com", // 更新為測試用的 email
+    email: "user2@example.com",
     phone: "0900-333-444",
     password: "hashed_pw2",
     roles: ["STUDENT"],
@@ -109,7 +109,6 @@ export const users: User[] = [
     id: 8,
     created_at: "2025-07-14T12:00:00+00:00"
   },
-  // Agent users
   {
     name: "張代理",
     email: "agent1@example.com",

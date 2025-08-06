@@ -1,6 +1,6 @@
 import { 
   User, UserWithPassword, Membership, ClassAppointment,
-  ApiResponse, LoginResponse, BatchBookingResponse
+  ApiResponse, LoginResponse, BatchBookingResponse, UserRoleAssignment
 } from '@/types';
 import { ClassTimeslot } from '@/data/class_timeslots';
 import { Agent } from '@/data/agents';
@@ -8,7 +8,6 @@ import { SalesRecord } from '@/types/sales';
 import { generateBookingSessions } from '@/data/courseBookingIntegration';
 import { teacherDataService } from '@/data/teachers';
 import { hashString } from '@/utils/enrollmentUtils';
-import { UserRole } from '@/data/user_roles';
 
 
 interface LeaveRequest {
@@ -136,8 +135,19 @@ export const authService = {
     await delay(200);
     
     try {
-      const userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
-      const activeRoles = userRoles.filter((ur: UserRole) => ur.user_id === userId && ur.is_active);
+      const user = users.find(u => u.id === userId);
+      if (!user) {
+        return { success: false, error: 'User not found' };
+      }
+      // Return roles from the consolidated user object
+      const activeRoles = user.roles.map(role => ({
+        id: Date.now(), // Generate temporary ID
+        user_id: userId,
+        role: role,
+        granted_by: 6, // Admin user
+        granted_at: new Date().toISOString(),
+        is_active: true
+      }));
       return { success: true, data: activeRoles };
     } catch (error) {
       console.error('獲取用戶角色失敗:', error);
@@ -171,14 +181,14 @@ export const authService = {
       let userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
       
       // 停用該用戶的所有角色
-      userRoles = userRoles.map((ur: UserRole) => 
+      userRoles = userRoles.map((ur: UserRoleAssignment) => 
         ur.user_id === userId ? { ...ur, is_active: false } : ur
       );
       
       // 添加新角色
       roles.forEach(role => {
         const newRole = {
-          id: Math.max(0, ...userRoles.map((r: UserRole) => r.id)) + 1,
+          id: Math.max(0, ...userRoles.map((r: UserRoleAssignment) => r.id)) + 1,
           user_id: userId,
           role: role,
           granted_by: adminId,
@@ -236,8 +246,8 @@ export const authService = {
       
       const usersWithRoles = users.map(user => {
         const activeRoles = userRoles
-          .filter((ur: UserRole) => ur.user_id === user.id && ur.is_active)
-          .map((ur: UserRole) => ur.role);
+          .filter((ur: UserRoleAssignment) => ur.user_id === user.id && ur.is_active)
+          .map((ur: UserRoleAssignment) => ur.role);
         
         return {
           ...user,
@@ -373,7 +383,7 @@ export const authService = {
       
       // 同時刪除相關的角色記錄
       let userRoles = JSON.parse(localStorage.getItem('userRoles') || '[]');
-      userRoles = userRoles.filter((ur: UserRole) => ur.user_id !== userId);
+      userRoles = userRoles.filter((ur: UserRoleAssignment) => ur.user_id !== userId);
       localStorage.setItem('userRoles', JSON.stringify(userRoles));
       
       console.log('✅ 用戶已刪除:', deletedUser);
