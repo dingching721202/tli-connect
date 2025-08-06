@@ -33,7 +33,7 @@ const MemberManagementReal = () => {
   const [memberCards, setMemberCards] = useState<MemberWithCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'purchased' | 'activated' | 'expired' | 'cancelled'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'purchased' | 'activated' | 'expired' | 'cancelled' | 'test'>('all');
   const [planTypeFilter, setPlanTypeFilter] = useState<'all' | 'individual' | 'corporate'>('all');
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [statistics, setStatistics] = useState({
@@ -41,7 +41,8 @@ const MemberManagementReal = () => {
     active: 0,
     purchased: 0,
     expired: 0,
-    cancelled: 0
+    cancelled: 0,
+    test: 0
   });
 
   // 編輯模式相關狀態
@@ -70,8 +71,6 @@ const MemberManagementReal = () => {
         console.log(`企業會員 ${member.user_name}: company_name = ${member.company_name}`);
       });
       
-      const stats = await memberCardStore.getMembershipStatistics();
-      
       // 獲取所有有會員狀態的用戶（包括沒有會員卡的會員）
       const memberUsers = users.filter(user => 
         user.membership_status === 'MEMBER' || 
@@ -92,7 +91,7 @@ const MemberManagementReal = () => {
           user_email: user.email,
           member_card_id: 0,
           plan_id: 0,
-          status: 'cancelled' as const, // 沒有會員卡但有會員狀態
+          status: 'test' as const, // 沒有會員卡但有會員狀態
           purchase_date: user.created_at,
           activation_deadline: user.created_at,
           amount_paid: 0,
@@ -149,8 +148,18 @@ const MemberManagementReal = () => {
       // 合併實際會員卡和虛擬記錄
       const allMemberRecords = [...cardsWithExpiry, ...virtualMemberCards];
       
+      // 重新計算統計（包含虛擬記錄）
+      const newStats = {
+        total: allMemberRecords.length,
+        active: allMemberRecords.filter(c => c.status === 'activated').length,
+        purchased: allMemberRecords.filter(c => c.status === 'purchased').length,
+        expired: allMemberRecords.filter(c => c.status === 'expired').length,
+        cancelled: allMemberRecords.filter(c => c.status === 'cancelled').length,
+        test: allMemberRecords.filter(c => c.status === 'test').length
+      };
+      
       setMemberCards(allMemberRecords);
-      setStatistics(stats);
+      setStatistics(newStats);
     } catch (error) {
       console.error('載入會員卡資料失敗:', error);
     } finally {
@@ -228,6 +237,7 @@ const MemberManagementReal = () => {
       case 'activated': return 'text-green-700 bg-green-50 border-green-200';
       case 'expired': return 'text-red-700 bg-red-50 border-red-200';
       case 'cancelled': return 'text-gray-700 bg-gray-50 border-gray-200';
+      case 'test': return 'text-blue-700 bg-blue-50 border-blue-200';
       default: return 'text-gray-700 bg-gray-50 border-gray-200';
     }
   };
@@ -240,6 +250,7 @@ const MemberManagementReal = () => {
       case 'activated': return '已開啟';
       case 'expired': return '已過期';
       case 'cancelled': return '已取消';
+      case 'test': return '測試';
       default: return '未知';
     }
   };
@@ -251,6 +262,7 @@ const MemberManagementReal = () => {
       case 'activated': return FiCheckCircle;
       case 'expired': return FiX;
       case 'cancelled': return FiX;
+      case 'test': return FiUser;
       default: return FiUser;
     }
   };
@@ -320,13 +332,24 @@ const MemberManagementReal = () => {
 
   // 處理方案變更，自動更新金額
   const handlePlanChange = (planId: number) => {
-    const selectedPlan = memberCardPlans.find(plan => plan.id === planId);
-    if (selectedPlan && editingMember) {
-      setEditingMember(prev => prev ? {
-        ...prev,
-        plan_id: planId,
-        amount_paid: parseFloat(selectedPlan.sale_price)
-      } : null);
+    if (editingMember) {
+      if (planId === 0) {
+        // 清除方案選擇
+        setEditingMember(prev => prev ? {
+          ...prev,
+          plan_id: 0,
+          amount_paid: 0
+        } : null);
+      } else {
+        const selectedPlan = memberCardPlans.find(plan => plan.id === planId);
+        if (selectedPlan) {
+          setEditingMember(prev => prev ? {
+            ...prev,
+            plan_id: planId,
+            amount_paid: parseFloat(selectedPlan.sale_price)
+          } : null);
+        }
+      }
     }
   };
 
@@ -385,32 +408,83 @@ const MemberManagementReal = () => {
         }
       }
 
-      // 更新會員資訊
-      await memberCardStore.updateMemberInfo(memberId, {
-        user_name: editingMember.user_name,
-        user_email: editingMember.user_email
-      });
-
-      // 更新會員卡方案（如果有變更）
       const currentMember = memberCards.find(m => m.id === memberId);
-      if (currentMember && editingMember.plan_id !== currentMember.plan_id) {
-        await memberCardStore.updateMemberPlan(memberId, editingMember.plan_id!);
+      
+      // 區分真實會員卡和虛擬記錄
+      if (memberId > 0) {
+        // 真實會員卡記錄，調用 store 方法
+        await memberCardStore.updateMemberInfo(memberId, {
+          user_name: editingMember.user_name,
+          user_email: editingMember.user_email
+        });
+
+        // 更新會員卡方案（如果有變更）
+        if (currentMember && editingMember.plan_id !== currentMember.plan_id) {
+          await memberCardStore.updateMemberPlan(memberId, editingMember.plan_id!);
+        }
+
+        // 更新狀態（如果有變更）
+        if (currentMember && editingMember.status !== currentMember.status) {
+          await memberCardStore.updateMemberCardStatus(memberId, editingMember.status!);
+        }
+
+        // 更新日期
+        await memberCardStore.updateMemberCardDates(memberId, {
+          purchase_date: editingMember.purchase_date || '',
+          activation_deadline: editingMember.activation_deadline || '',
+          activation_date: editingMember.activation_date || '',
+          expiry_date: editingMember.expiry_date || ''
+        });
+      } else {
+        // 虛擬記錄（無會員卡），只更新本地狀態
+        if (currentMember) {
+          // 如果選擇了會員卡方案，獲取方案信息
+          let planInfo = {};
+          if (editingMember.plan_id && editingMember.plan_id > 0) {
+            const plan = memberCardPlans.find(p => p.id === editingMember.plan_id);
+            if (plan) {
+              planInfo = {
+                plan_id: editingMember.plan_id,
+                plan_title: plan.title,
+                plan_type: plan.user_type,
+                duration_type: plan.duration_type,
+                duration_days: plan.duration_days,
+                amount_paid: parseFloat(plan.sale_price),
+                member_card_id: plan.member_card_id
+              };
+            }
+          }
+          
+          const updatedMember = {
+            ...currentMember,
+            user_name: editingMember.user_name,
+            user_email: editingMember.user_email,
+            status: editingMember.status || currentMember.status,
+            ...planInfo,
+            updated_at: new Date().toISOString()
+          };
+          
+          // 更新本地記錄和統計
+          const updatedMembers = memberCards.map(m => m.id === memberId ? updatedMember : m);
+          setMemberCards(updatedMembers);
+          
+          // 重新計算統計
+          const newStats = {
+            total: updatedMembers.length,
+            active: updatedMembers.filter(c => c.status === 'activated').length,
+            purchased: updatedMembers.filter(c => c.status === 'purchased').length,
+            expired: updatedMembers.filter(c => c.status === 'expired').length,
+            cancelled: updatedMembers.filter(c => c.status === 'cancelled').length,
+            test: updatedMembers.filter(c => c.status === 'test').length
+          };
+          setStatistics(newStats);
+        }
       }
 
-      // 更新狀態（如果有變更）
-      if (currentMember && editingMember.status !== currentMember.status) {
-        await memberCardStore.updateMemberCardStatus(memberId, editingMember.status!);
+      // 只有真實會員卡才重新載入資料
+      if (memberId > 0) {
+        await loadMemberCards();
       }
-
-      // 更新日期
-      await memberCardStore.updateMemberCardDates(memberId, {
-        purchase_date: editingMember.purchase_date || '',
-        activation_deadline: editingMember.activation_deadline || '',
-        activation_date: editingMember.activation_date || '',
-        expiry_date: editingMember.expiry_date || ''
-      });
-
-      await loadMemberCards();
       setEditingMemberId(null);
       setEditingMember(null);
       alert('✅ 會員資料已成功更新！');
@@ -474,7 +548,7 @@ const MemberManagementReal = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6"
       >
         {[
           { 
@@ -506,6 +580,12 @@ const MemberManagementReal = () => {
             count: statistics.cancelled,
             color: 'text-gray-600 bg-gray-50 border-gray-200',
             icon: FiTrash2
+          },
+          { 
+            label: '測試', 
+            count: statistics.test,
+            color: 'text-blue-600 bg-blue-50 border-blue-200',
+            icon: FiUser
           }
         ].map((stat) => (
           <motion.div
@@ -557,7 +637,7 @@ const MemberManagementReal = () => {
             <label className="text-sm font-medium text-gray-700">狀態：</label>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'purchased' | 'activated' | 'expired' | 'cancelled')}
+              onChange={(e) => setStatusFilter(e.target.value as 'all' | 'purchased' | 'activated' | 'expired' | 'cancelled' | 'test')}
               className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="all">全部狀態</option>
@@ -565,6 +645,7 @@ const MemberManagementReal = () => {
               <option value="activated">已開啟</option>
               <option value="expired">已過期</option>
               <option value="cancelled">已取消</option>
+              <option value="test">測試</option>
             </select>
           </div>
           <div className="flex items-center space-x-2">
@@ -665,12 +746,15 @@ const MemberManagementReal = () => {
                       {/* 會員卡方案 */}
                       <td className="py-4 px-4 w-40">
                         <div className="h-9 flex flex-col justify-center">
-                          {editingMemberId === member.id && member.id > 0 ? (
+                          {editingMemberId === member.id ? (
                             <select
-                              value={editingMember?.plan_id || member.plan_id}
+                              value={editingMember?.plan_id || member.plan_id || 0}
                               onChange={(e) => handlePlanChange(parseInt(e.target.value))}
                               className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 font-medium text-gray-900"
                             >
+                              {member.id <= 0 && (
+                                <option value={0}>選擇會員卡方案</option>
+                              )}
                               {memberCardPlans
                                 .filter(plan => plan.status === 'PUBLISHED')
                                 .map(plan => (
@@ -695,37 +779,30 @@ const MemberManagementReal = () => {
                       <td className="py-4 px-4">
                         <div className="h-9 flex items-center">
                           {editingMemberId === member.id ? (
-                            member.id > 0 ? (
-                              <select
-                                value={editingMember?.status || member.status}
-                                onChange={(e) => setEditingMember(prev => prev ? {...prev, status: e.target.value as Membership['status']} : null)}
-                                className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 font-medium text-gray-900"
-                              >
-                                <option value="purchased" className="text-orange-700">已購買未開啟</option>
-                                <option value="activated" className="text-green-700">已開啟</option>
-                                <option value="expired" className="text-red-700">已過期</option>
-                                <option value="cancelled" className="text-gray-700">已取消</option>
-                              </select>
-                            ) : (
-                              <span className="text-sm text-gray-500">無會員卡</span>
-                            )
+                            <select
+                              value={editingMember?.status || member.status}
+                              onChange={(e) => setEditingMember(prev => prev ? {...prev, status: e.target.value as Membership['status']} : null)}
+                              className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 font-medium text-gray-900"
+                            >
+                              <option value="purchased" className="text-orange-700">已購買未開啟</option>
+                              <option value="activated" className="text-green-700">已開啟</option>
+                              <option value="expired" className="text-red-700">已過期</option>
+                              <option value="cancelled" className="text-gray-700">已取消</option>
+                              <option value="test" className="text-blue-700">測試</option>
+                            </select>
                           ) : (
                             <div className="flex items-center space-x-2">
-                              {member.id > 0 ? (
-                                <>
-                                  <SafeIcon icon={StatusIcon} className={`text-sm ${getStatusColor(member.status)}`} />
-                                  <span className={`text-sm font-medium ${getStatusColor(member.status)}`}>
-                                    {getStatusText(member.status)}
+                              <>
+                                <SafeIcon icon={StatusIcon} className={`text-sm ${getStatusColor(member.status)}`} />
+                                <span className={`text-sm font-medium ${getStatusColor(member.status)}`}>
+                                  {getStatusText(member.status)}
+                                </span>
+                                {member.id > 0 && member.isExpiringSoon && (
+                                  <span className="text-xs text-orange-600 bg-orange-50 px-1 py-0.5 rounded">
+                                    即將到期
                                   </span>
-                                  {member.isExpiringSoon && (
-                                    <span className="text-xs text-orange-600 bg-orange-50 px-1 py-0.5 rounded">
-                                      即將到期
-                                    </span>
-                                  )}
-                                </>
-                              ) : (
-                                <span className="text-sm text-gray-500">無會員卡</span>
-                              )}
+                                )}
+                              </>
                             </div>
                           )}
                         </div>
@@ -742,10 +819,7 @@ const MemberManagementReal = () => {
                               className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 text-gray-900"
                             />
                           ) : (
-                            <div 
-                              className="text-sm text-gray-900 cursor-pointer h-5 flex items-center"
-                              onClick={() => handleEditMember(member)}
-                            >
+                            <div className="text-sm text-gray-900 h-5 flex items-center">
                               {member.purchase_date ? formatDate(member.purchase_date) : '-'}
                             </div>
                           )}
@@ -763,10 +837,7 @@ const MemberManagementReal = () => {
                               className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 text-gray-900"
                             />
                           ) : (
-                            <div 
-                              className="text-sm cursor-pointer"
-                              onClick={() => handleEditMember(member)}
-                            >
+                            <div className="text-sm">
                               {member.activation_deadline ? (
                                 <>
                                   <div className="text-gray-900 h-5 flex items-center">{formatDate(member.activation_deadline)}</div>
@@ -795,10 +866,7 @@ const MemberManagementReal = () => {
                               className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 text-gray-900"
                             />
                           ) : (
-                            <div 
-                              className="text-sm text-gray-900 cursor-pointer h-5 flex items-center"
-                              onClick={() => handleEditMember(member)}
-                            >
+                            <div className="text-sm text-gray-900 h-5 flex items-center">
                               {member.activation_date ? formatDate(member.activation_date) : '-'}
                             </div>
                           )}
@@ -816,10 +884,7 @@ const MemberManagementReal = () => {
                               className="w-full px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-5 text-gray-900"
                             />
                           ) : (
-                            <div 
-                              className="text-sm cursor-pointer"
-                              onClick={() => handleEditMember(member)}
-                            >
+                            <div className="text-sm">
                               {member.expiry_date ? (
                                 <>
                                   <div className="text-gray-900 h-5 flex items-center">{formatDate(member.expiry_date)}</div>
