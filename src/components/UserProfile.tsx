@@ -186,9 +186,9 @@ const UserProfile = () => {
   const getMembershipDisplayData = (mem: typeof membership) => {
     if (!mem) return null;
 
-    const daysRemaining = mem.expire_time ? Math.ceil((new Date(mem.expire_time).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
+    const daysRemaining = mem.expiry_date ? Math.ceil((new Date(mem.expiry_date).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : 0;
     const isExpiringSoon = daysRemaining <= 14 && daysRemaining > 0;
-    const statusText = mem.status === 'ACTIVE' ? 'active' : 'expired';
+    const statusText = mem.status === 'activated' ? 'active' : 'expired';
 
     // 這裡需要從其他地方獲取 planName 和 type，或者進行模擬
     // 為了編譯通過，這裡先進行簡單模擬
@@ -201,8 +201,8 @@ const UserProfile = () => {
       plan: 'yearly', // 模擬
       planName: planName,
       status: statusText as 'active' | 'expired' | 'expiring_soon',
-      startDate: mem.start_time || '',
-      endDate: mem.expire_time || '',
+      startDate: mem.activation_date || '',
+      endDate: mem.expiry_date || '',
       price: 36000, // 模擬價格
       daysRemaining: daysRemaining,
       autoRenewal: true, // 模擬自動續約

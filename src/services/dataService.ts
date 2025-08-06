@@ -1,7 +1,8 @@
 import { 
-  User, Membership, ClassTimeslot, ClassAppointment,
+  User, UserWithPassword, Membership, ClassAppointment,
   ApiResponse, LoginResponse, BatchBookingResponse
 } from '@/types';
+import { ClassTimeslot } from '@/data/class_timeslots';
 import { Agent } from '@/data/agents';
 import { SalesRecord } from '@/types/sales';
 import { generateBookingSessions } from '@/data/courseBookingIntegration';
@@ -36,7 +37,7 @@ import { classAppointments as classAppointmentsData } from '@/data/class_appoint
 import { agents as agentsData } from '@/data/agents';
 
 // 模擬資料庫
-const users: User[] = [...usersData] as User[];
+const users: UserWithPassword[] = [...usersData] as UserWithPassword[];
 const classTimeslots: ClassTimeslot[] = [...classTimeslotsData] as ClassTimeslot[];
 const classAppointments: ClassAppointment[] = [...classAppointmentsData] as ClassAppointment[];
 const agents: Agent[] = [...agentsData] as Agent[];
@@ -64,7 +65,7 @@ export const authService = {
     }
     
     // 創建新用戶
-    const newUser: User = {
+    const newUser: UserWithPassword = {
       id: generateId(users),
       name,
       email,
@@ -252,7 +253,8 @@ export const authService = {
   },
 
   // 創建新用戶
-  async createUser(userData: Omit<User, 'id' | 'created_at' | 'updated_at'>, _adminId: number) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async createUser(userData: Omit<UserWithPassword, 'id' | 'created_at' | 'updated_at'>, _adminId: number) {
     await delay(500);
     
     // adminId reserved for future authorization checks
@@ -267,7 +269,7 @@ export const authService = {
         return { success: false, error: 'Email already exists' };
       }
       
-      const newUser = {
+      const newUser: UserWithPassword = {
         id: newId,
         name: userData.name,
         email: userData.email,
@@ -275,8 +277,8 @@ export const authService = {
         password: userData.password, // 實際環境中應該要 hash
         roles: userData.roles,
         membership_status: userData.membership_status,
+        account_status: 'ACTIVE',
         campus: userData.campus,
-        account_status: 'ACTIVE' as 'ACTIVE' | 'SUSPENDED',
         created_at: timestamp,
         updated_at: timestamp
       };
@@ -297,6 +299,7 @@ export const authService = {
   },
 
   // 更新用戶基本資訊
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async updateUser(userData: User, _adminId: number) {
     await delay(300);
     
@@ -397,21 +400,16 @@ export const authService = {
         // 學生角色需要檢查會員卡狀態
         const activeMembership = await memberCardService.getMembership(userId);
         if (activeMembership) {
-          if (activeMembership.status === 'ACTIVE') {
+          if (activeMembership.status === 'activated') {
             // 檢查是否過期
             const now = new Date();
-            const expireTime = new Date(activeMembership.expire_time || '');
+            const expireTime = new Date(activeMembership.expiry_date || '');
             if (expireTime > now) {
               newStatus = 'MEMBER';
             } else {
               newStatus = 'EXPIRED_MEMBER';
-              // 同時更新會員卡狀態為過期
-              const membershipIndex = memberships.findIndex(m => m.id === activeMembership.id);
-              if (membershipIndex !== -1) {
-                memberships[membershipIndex].status = 'EXPIRED';
-              }
             }
-          } else if (activeMembership.status === 'EXPIRED') {
+          } else if (activeMembership.status === 'expired') {
             newStatus = 'EXPIRED_MEMBER';
           }
         }
@@ -522,7 +520,7 @@ export const memberCardService = {
   async getAllCards() {
     const userMemberships = await memberCardStore.getAllMemberships();
     
-    return userMemberships.map(convertMembershipToLegacyFormat);
+    return userMemberships.map(um => convertMembershipToLegacyFormat(um) as unknown as Membership);
   },
   
   // 創建會員卡（統一使用 memberCardStore）
@@ -553,7 +551,7 @@ export const memberCardService = {
       await memberCardStore.activateMemberCard(userMembership.id);
     }
 
-    return convertMembershipToLegacyFormat(userMembership);
+    return convertMembershipToLegacyFormat(userMembership) as unknown as Membership;
   },
 
   // 啟用會員卡（統一使用 memberCardStore）
@@ -593,7 +591,7 @@ export const memberCardService = {
       console.log('✅ 會員卡啟用成功:', activatedMembership);
 
       const membership = convertMembershipToLegacyFormat(activatedMembership);
-      return { success: true, data: membership };
+      return { success: true, data: membership as unknown as Membership };
     } catch (error) {
       console.error('啟用會員卡失敗:', error);
       return { success: false, error: (error as Error).message };
@@ -611,7 +609,7 @@ export const memberCardService = {
       return null;
     }
 
-    return convertMembershipToLegacyFormat(activeMembership);
+    return convertMembershipToLegacyFormat(activeMembership) as unknown as Membership;
   },
 
   // 獲取用戶的待啟用會員卡 (PURCHASED 狀態)
@@ -625,14 +623,14 @@ export const memberCardService = {
       return null;
     }
 
-    return convertMembershipToLegacyFormat(purchasedMembership);
+    return convertMembershipToLegacyFormat(purchasedMembership) as unknown as Membership;
   },
   
   // 獲取用戶所有會員資格（包括未啟用的）
   async getAllMembershipsByUserId(userId: number): Promise<Membership[]> {
     const userMemberships = await memberCardStore.getMembershipsByUserId(userId);
     
-    return userMemberships.map(convertMembershipToLegacyFormat);
+    return userMemberships.map(um => convertMembershipToLegacyFormat(um) as unknown as Membership);
   },
 
   // 檢查並更新過期的會員卡
@@ -645,7 +643,7 @@ export const memberCardService = {
     // 獲取所有過期的會員卡
     const expiredUserMemberships = await memberCardStore.getMembershipsByStatus('expired');
     
-    const expiredMemberships = expiredUserMemberships.map(convertMembershipToLegacyFormat);
+    const expiredMemberships = expiredUserMemberships.map(um => convertMembershipToLegacyFormat(um) as unknown as Membership);
 
     // 更新用戶會員狀態
     const uniqueUserIds = [...new Set(expiredMemberships.map(m => m.user_id))];
@@ -672,7 +670,7 @@ export const memberCardService = {
       return false;
     });
 
-    return expiringMemberships.map(convertMembershipToLegacyFormat);
+    return expiringMemberships.map(um => convertMembershipToLegacyFormat(um) as unknown as Membership);
   }
 };
 
@@ -812,6 +810,7 @@ export const bookingService = {
         class_timeslot_id: timeslotId,
         user_id: userId,
         status: 'CONFIRMED',
+        booking_time: new Date().toISOString(),
         created_at: new Date().toISOString()
       };
       

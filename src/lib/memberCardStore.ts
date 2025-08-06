@@ -57,8 +57,10 @@ class MemberCardStore {
     if (typeof window !== 'undefined') return; // 客戶端不執行
     
     try {
-      const fs = (await import('fs')).promises;
-      const path = await import('path');
+      // 使用 eval 避免 webpack 靜態分析
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fs = await eval('import("fs")').then((m: { promises: any }) => m.promises);
+      const path = await eval('import("path")');
       const filePath = path.join(process.cwd(), 'data', this.FILE_NAME);
       
       await fs.access(filePath);
@@ -77,8 +79,10 @@ class MemberCardStore {
     if (typeof window !== 'undefined') return; // 客戶端不執行
     
     try {
-      const fs = (await import('fs')).promises;
-      const path = await import('path');
+      // 使用 eval 避免 webpack 靜態分析
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const fs = await eval('import("fs")').then((m: { promises: any }) => m.promises);
+      const path = await eval('import("path")');
       const filePath = path.join(process.cwd(), 'data', this.FILE_NAME);
       
       // 確保目錄存在

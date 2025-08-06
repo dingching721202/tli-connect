@@ -11,10 +11,26 @@ export type {
   UserStats,
   UserFilter,
   UserRole,
-  MembershipStatus,
   AccountStatus,
   Campus
 } from './user';
+
+// 訂單相關類型（moved up to fix PaymentMethod dependency）
+export * from './order';
+export type {
+  Order,
+  CreateOrderRequest,
+  UpdateOrderRequest,
+  PaymentCallback,
+  OrderStats,
+  OrderFilter,
+  OrderWithDetails,
+  BatchOrderOperation,
+  RefundRequest,
+  RefundRecord,
+  OrderStatus,
+  PaymentMethod
+} from './order';
 
 // 會員相關類型
 export * from './membership';
@@ -40,7 +56,7 @@ export type {
 export interface PaymentRequest {
   order_id: number | string;
   amount: number;
-  payment_method?: PaymentMethod;
+  payment_method?: string; // Simplified to string for backward compatibility
   description?: string;
   return_url?: string;
   cancel_url?: string;
@@ -54,14 +70,14 @@ export interface PaymentResponse {
 
 export interface PaymentResult {
   success: boolean;
-  payment: PaymentResponse;
+  payment?: PaymentResponse;
   error?: string;
 }
 
 // 認證相關類型（向後相容）
 export interface LoginResponse {
   success: boolean;
-  user?: User;
+  user?: unknown; // Use unknown to avoid circular dependency
   user_id?: number;
   jwt?: string;
   error?: string;
@@ -69,29 +85,13 @@ export interface LoginResponse {
 
 // 批量預約回應（向後相容）
 export interface BatchBookingResponse {
-  success: boolean;
+  success: Array<{ timeslot_id: number; booking_id: number }>;
+  failed: Array<{ timeslot_id: number; reason: string }>;
   bookings?: ClassAppointment[];
   failed_bookings?: number[];
-  failed?: number[];
   error?: string;
 }
 
-// 訂單相關類型
-export * from './order';
-export type {
-  Order,
-  CreateOrderRequest,
-  UpdateOrderRequest,
-  PaymentCallback,
-  OrderStats,
-  OrderFilter,
-  OrderWithDetails,
-  BatchOrderOperation,
-  RefundRequest,
-  RefundRecord,
-  OrderStatus,
-  PaymentMethod
-} from './order';
 
 // 課程相關類型（保留現有定義）
 export interface Course {
@@ -170,5 +170,3 @@ export interface PaginatedResponse<T> {
   };
 }
 
-// 預設匯出主要類型
-export { User as default } from './user';

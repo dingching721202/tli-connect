@@ -303,7 +303,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     
     // 會員狀態或有 STUDENT 角色
     if (user.membership_status === 'MEMBER' || user.roles.includes('STUDENT')) {
-      return user.membership?.status === 'ACTIVE' || user.membership?.status === 'PURCHASED';
+      return user.membership?.status === 'activated' || user.membership?.status === 'purchased';
     }
     
     return false;

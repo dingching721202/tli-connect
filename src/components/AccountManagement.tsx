@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
-import { users, User } from '@/data/users';
+import { users } from '@/data/users';
+import { User, UserRole } from '@/types';
 import { userRoles } from '@/data/user_roles';
 import { authService, memberCardService } from '@/services/dataService';
 
@@ -18,7 +19,7 @@ const {
 } = FiIcons;
 
 interface ExtendedUser extends User {
-  account_status: 'ACTIVE' | 'SUSPENDED';
+  roles: UserRole[]; // Allow roles structure from the API
 }
 
 const AccountManagement = () => {

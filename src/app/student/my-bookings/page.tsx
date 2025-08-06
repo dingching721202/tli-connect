@@ -214,7 +214,7 @@ export default function StudentMyBookingsPage() {
     });
   };
 
-  const getStatusColor = (status: string, _booking?: Booking) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case 'upcoming': return 'text-blue-700 bg-blue-50 border-blue-200';
       case 'completed': return 'text-green-700 bg-green-50 border-green-200';
@@ -226,7 +226,7 @@ export default function StudentMyBookingsPage() {
     }
   };
 
-  const getStatusText = (status: string, _booking?: Booking) => {
+  const getStatusText = (status: string) => {
     switch (status) {
       case 'upcoming': return '即將開始';
       case 'completed': return '已完成';
@@ -563,8 +563,8 @@ export default function StudentMyBookingsPage() {
                           </div>
                         </div>
                       </div>
-                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(booking.status, { ...booking, studentCount: booking.studentCount || 0 })}`}>
-                        {getStatusText(booking.status, { ...booking, studentCount: booking.studentCount || 0 })}
+                      <span className={`inline-flex px-3 py-1 text-xs font-medium rounded-full border ${getStatusColor(booking.status)}`}>
+                        {getStatusText(booking.status)}
                       </span>
                     </div>
 

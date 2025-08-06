@@ -246,10 +246,10 @@ const Dashboard = () => {
         if (dashboardData?.membership) {
           const updatedMembership = {
             ...dashboardData.membership,
-            status: 'ACTIVE' as const,
+            status: 'activated' as const,
             activated: true,
-            start_time: new Date().toISOString(),
-            expire_time: new Date(Date.now() + dashboardData.membership.duration_in_days * 24 * 60 * 60 * 1000).toISOString()
+            activation_date: new Date().toISOString(),
+            expiry_date: new Date(Date.now() + (dashboardData.membership.duration_days || 365) * 24 * 60 * 60 * 1000).toISOString()
           };
           
           setDashboardData({
@@ -270,7 +270,7 @@ const Dashboard = () => {
               console.log('🔄 後端重新載入的資料:', data);
               
               // 只有當後端資料確實是 ACTIVE 狀態時才更新
-              if (data.membership && data.membership.status === 'ACTIVE') {
+              if (data.membership && data.membership.status === 'activated') {
                 setDashboardData(data as any);
                 console.log('✅ Dashboard 資料已從後端重新載入 (ACTIVE):', data);
               } else {
@@ -1101,10 +1101,10 @@ const Dashboard = () => {
             <div className="w-full sm:w-auto text-left sm:text-right bg-green-50 border border-green-200 rounded-lg p-3 sm:p-0 sm:bg-transparent sm:border-none">
               <div className="text-sm text-gray-600">會員到期日</div>
               <div className="text-base sm:text-lg font-bold text-green-600">
-                {dashboardData.membership.expire_time ? new Date(dashboardData.membership.expire_time).toLocaleDateString('zh-TW') : 'N/A'}
+                {dashboardData.membership.expiry_date ? new Date(dashboardData.membership.expiry_date).toLocaleDateString('zh-TW') : 'N/A'}
               </div>
               <div className="text-xs sm:text-sm text-gray-600">
-                狀態：{dashboardData.membership.status === 'ACTIVE' ? '已啟用' : '未啟用'}
+                狀態：{dashboardData.membership.status === 'activated' ? '已啟用' : '未啟用'}
               </div>
             </div>
           )}

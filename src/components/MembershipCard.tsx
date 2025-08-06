@@ -76,9 +76,9 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
   }
 
   const membership = dashboardData.membership;
-  const isActive = membership.status === 'ACTIVE';
-  const isPurchased = membership.status === 'PURCHASED';
-  const isExpired = membership.status === 'EXPIRED';
+  const isActive = membership.status === 'activated';
+  const isPurchased = membership.status === 'purchased';
+  const isExpired = membership.status === 'expired';
 
   // 根據 member_card_id 獲取會員卡名稱
   const memberCard = memberCards.find(card => card.id === membership.member_card_id);
@@ -115,9 +115,9 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
   };
 
   const getDaysRemaining = () => {
-    if (!membership.expire_time) return null;
+    if (!membership.expiry_date) return null;
     const now = new Date();
-    const expireDate = new Date(membership.expire_time);
+    const expireDate = new Date(membership.expiry_date);
     const diffTime = expireDate.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
@@ -161,7 +161,7 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
               <SafeIcon icon={FiCalendar} className="w-5 h-5 text-gray-400" />
               <div>
                 <p className="text-sm text-gray-500">啟用日期</p>
-                <p className="font-medium">{formatDate(membership.start_time)}</p>
+                <p className="font-medium">{membership.activation_date ? formatDate(membership.activation_date) : 'N/A'}</p>
               </div>
             </div>
 
@@ -170,7 +170,7 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
               <SafeIcon icon={FiClock} className="w-5 h-5 text-gray-400" />
               <div>
                 <p className="text-sm text-gray-500">到期日期</p>
-                <p className="font-medium">{formatDate(membership.expire_time)}</p>
+                <p className="font-medium">{membership.expiry_date ? formatDate(membership.expiry_date) : 'N/A'}</p>
               </div>
             </div>
           </div>
@@ -205,7 +205,7 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
               <div>
                 <p className="text-xs text-yellow-600 mb-1">啟用期限</p>
                 <p className="text-sm font-medium text-yellow-800">
-                  {formatDate(membership.activate_expire_time)}
+                  {formatDate(membership.activation_deadline)}
                 </p>
               </div>
             </div>

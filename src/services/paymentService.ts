@@ -84,7 +84,7 @@ export const paymentService = {
 
       const paymentResponse: PaymentResponse = {
         payment_id: generatePaymentId(),
-        status: isSuccess ? 'successful' : 'failed'
+        status: isSuccess ? 'SUCCESS' : 'FAILED'
       };
 
       console.log(`Mock Payment API Response (${isSuccess ? 'Success' : 'Failed'}):`, {
@@ -95,12 +95,12 @@ export const paymentService = {
       if (isSuccess) {
         return {
           success: true,
-          data: paymentResponse
+          payment: paymentResponse
         };
       } else {
         return {
           success: false,
-          data: paymentResponse,
+          payment: paymentResponse,
           error: '付款處理失敗，請稍後再試'
         };
       }
@@ -123,7 +123,7 @@ export const paymentService = {
       console.log('Mock Payment Status Query:', { paymentId });
 
       // 模擬查詢結果
-      const statuses: Array<'successful' | 'failed'> = ['successful', 'failed'];
+      const statuses: Array<'SUCCESS' | 'FAILED'> = ['SUCCESS', 'FAILED'];
       const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
 
       const paymentResponse: PaymentResponse = {
@@ -133,7 +133,7 @@ export const paymentService = {
 
       return {
         success: true,
-        data: paymentResponse
+        payment: paymentResponse
       };
     } catch (error) {
       console.error('Payment Status Query Error:', error);
