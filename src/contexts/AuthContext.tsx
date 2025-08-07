@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService, memberCardService, agentService } from '@/services/dataService';
-import { User as DataUser, Membership } from '@/types';
+import { User as DataUser, Membership, MembershipStatus } from '@/types';
 import { Agent } from '@/data/agents';
 
 type RoleType = 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN';
@@ -13,7 +13,7 @@ interface User {
   name: string;
   phone: string;
   roles: RoleType[]; // 多重角色
-  membership_status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER';
+  membership_status: MembershipStatus;
   campus: '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
   membership?: Membership | null;
   avatar?: string;
@@ -118,7 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // 優先獲取 ACTIVE 會員卡，如果沒有則獲取 PURCHASED 會員卡
     let membership = await memberCardService.getMembership(userData.id);
     if (!membership) {
-      membership = await memberCardService.getUserPurchasedMembership(userData.id);
+      membership = await memberCardService.getUserInactiveMembership(userData.id);
     }
     
     // 使用新的角色系統：直接從 userData.roles 獲取角色
@@ -302,7 +302,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
     
     // 會員狀態或有 STUDENT 角色
-    if (user.membership_status === 'MEMBER' || user.roles.includes('STUDENT')) {
+    if (user.membership_status === 'activated' || user.roles.includes('STUDENT')) {
       return user.membership?.status === 'activated' || user.membership?.status === 'inactive';
     }
     
@@ -360,7 +360,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       // 優先獲取 ACTIVE 會員卡，如果沒有則獲取 PURCHASED 會員卡
       let membership = await memberCardService.getMembership(user.id);
       if (!membership) {
-        membership = await memberCardService.getUserPurchasedMembership(user.id);
+        membership = await memberCardService.getUserInactiveMembership(user.id);
       }
       setUser(prev => prev ? { ...prev, membership } : null);
     } catch (error) {
@@ -383,7 +383,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isStaff: user?.roles.includes('STAFF') || false,
     isAdmin: user?.roles.includes('ADMIN') || false,
     isAgent: user?.roles.includes('AGENT') || false,
-    isMember: user?.membership_status === 'MEMBER' || user?.roles.includes('STUDENT') || false,
+    isMember: user?.membership_status === 'activated' || user?.roles.includes('STUDENT') || false,
     isCorporateContact: user?.roles.includes('CORPORATE_CONTACT') || false,
     hasRole,
     hasAnyRole,

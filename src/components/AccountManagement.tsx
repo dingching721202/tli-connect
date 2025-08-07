@@ -264,6 +264,18 @@ const AccountManagement = () => {
     setShowDeleteModal(true);
   };
 
+  const getRoleName = (role: string) => {
+    const names = {
+      'ADMIN': '管理員',
+      'STAFF': '職員', 
+      'TEACHER': '教師',
+      'CORPORATE_CONTACT': '企業窗口',
+      'AGENT': '代理',
+      'STUDENT': '學員'
+    };
+    return names[role as keyof typeof names] || role;
+  };
+
   const getRoleColor = (role: string) => {
     const colors = {
       'ADMIN': 'bg-red-100 text-red-800',
@@ -274,6 +286,23 @@ const AccountManagement = () => {
       'STUDENT': 'bg-gray-100 text-gray-800'
     };
     return colors[role as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getStatusName = (status: string) => {
+    const names = {
+      'non_member': '非會員',
+      'NON_MEMBER': '非會員',
+      'inactive': '未啟用',
+      'activated': '已啟用',
+      'MEMBER': '已啟用',
+      'expired': '已過期',
+      'EXPIRED_MEMBER': '已過期',
+      'suspended': '已暫停',
+      'cancelled': '已取消',
+      'test': '測試帳號',
+      'TEST_USER': '測試帳號'
+    };
+    return names[status as keyof typeof names] || status;
   };
 
   const getStatusColor = (status: string) => {
@@ -543,20 +572,14 @@ const AccountManagement = () => {
                         {/* 所有角色 */}
                         {user.roles.map((role) => (
                           <span key={role} className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(role)}`}>
-                            {role}
+                            {getRoleName(role)}
                           </span>
                         ))}
                       </div>
                     </td>
                     <td className="w-32 px-4 py-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.membership_status)}`}>
-                        {user.membership_status === 'non_member' ? '非會員' : 
-                         user.membership_status === 'inactive' ? '未啟用' :
-                         user.membership_status === 'activated' ? '啟用' :
-                         user.membership_status === 'expired' ? '過期' :
-                         user.membership_status === 'suspended' ? '暫停' :
-                         user.membership_status === 'test' ? '測試' : 
-                         '未知'}
+                        {getStatusName(user.membership_status)}
                       </span>
                     </td>
                     <td className="w-20 px-4 py-4">
@@ -683,7 +706,7 @@ const AccountManagement = () => {
                           }}
                           className="mr-2"
                         />
-                        <span className="text-sm">{role}</span>
+                        <span className="text-sm">{getRoleName(role)}</span>
                       </label>
                     ))}
                   </div>
@@ -890,14 +913,14 @@ const AccountManagement = () => {
                             }}
                             className="mr-2"
                           />
-                          <span className="text-sm">{role}</span>
+                          <span className="text-sm">{getRoleName(role)}</span>
                         </label>
                       ))}
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {selectedRoles.map((role) => (
                         <span key={role} className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${getRoleColor(role)}`}>
-                          {role}
+                          {getRoleName(role)}
                         </span>
                       ))}
                     </div>

@@ -3,11 +3,14 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { FiUser, FiLock, FiEye, FiEyeOff, FiLoader } from 'react-icons/fi';
+import { FiUser, FiLock, FiEye, FiEyeOff, FiLoader, FiBookOpen, FiUsers, FiBriefcase, FiTrendingUp, FiSettings, FiShield } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
 
+type LoginMode = 'selection' | 'student' | 'teacher' | 'corporate' | 'agent' | 'staff' | 'admin' | 'general';
+
 const Login: React.FC = () => {
+  const [loginMode, setLoginMode] = useState<LoginMode>('selection');
   const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,6 +26,87 @@ const Login: React.FC = () => {
   
   // 取得重導向 URL
   const redirectUrl = searchParams.get('redirect') || '/dashboard';
+
+  // 角色配置
+  const roleConfigs = [
+    {
+      id: 'student',
+      title: '學員入口',
+      subtitle: '學員登入',
+      description: '查看課程、預約上課、管理會員卡',
+      icon: FiBookOpen,
+      gradient: 'from-blue-500 to-indigo-600',
+      bgGradient: 'from-blue-50 to-indigo-50',
+      accounts: [
+        { email: 'alice@example.com', name: 'Alice Wang', status: '✅ 已啟用會員卡' },
+        { email: 'user2@example.com', name: 'Bob Chen', status: '⏳ 待啟用會員卡' },
+        { email: 'charlie@example.com', name: 'Charlie Lin', status: '✅ 已啟用會員卡' },
+        { email: 'david@example.com', name: 'David Wilson', status: '🚫 無會員卡' }
+      ]
+    },
+    {
+      id: 'teacher',
+      title: '教師入口',
+      subtitle: '教師登入',
+      description: '管理課程、查看學生預約、請假申請',
+      icon: FiUsers,
+      gradient: 'from-green-500 to-emerald-600',
+      bgGradient: 'from-green-50 to-emerald-50',
+      accounts: [
+        { email: 'teacher@example.com', name: '王老師', status: '👨‍🏫 教師' }
+      ]
+    },
+    {
+      id: 'corporate',
+      title: '企業窗口',
+      subtitle: '企業聯絡人',
+      description: '管理企業會員、查看企業訂閱',
+      icon: FiBriefcase,
+      gradient: 'from-orange-500 to-red-600',
+      bgGradient: 'from-orange-50 to-red-50',
+      accounts: [
+        { email: 'frank@taiwantech.com', name: 'Frank Liu', status: '🏢 企業窗口' }
+      ]
+    },
+    {
+      id: 'agent',
+      title: '代理入口',
+      subtitle: '代理商登入',
+      description: '查看銷售業績、管理推廣客戶',
+      icon: FiTrendingUp,
+      gradient: 'from-amber-500 to-orange-600',
+      bgGradient: 'from-amber-50 to-orange-50',
+      accounts: [
+        { email: 'agent1@example.com', name: '張代理', status: '🎯 一般代理' },
+        { email: 'consultant1@example.com', name: '王顧問', status: '💼 顧問代理' },
+        { email: 'contact@innovation.com', name: '創新科技', status: '🏢 企業代理' }
+      ]
+    },
+    {
+      id: 'staff',
+      title: '職員入口',
+      subtitle: '職員登入',
+      description: '課務管理、學員服務、系統維護',
+      icon: FiSettings,
+      gradient: 'from-purple-500 to-violet-600',
+      bgGradient: 'from-purple-50 to-violet-50',
+      accounts: [
+        { email: 'olivia@example.com', name: 'Olivia Kao', status: '👩‍💼 職員' }
+      ]
+    },
+    {
+      id: 'admin',
+      title: '管理員',
+      subtitle: '系統管理',
+      description: '用戶管理、系統設定、數據分析',
+      icon: FiShield,
+      gradient: 'from-red-500 to-pink-600',
+      bgGradient: 'from-red-50 to-pink-50',
+      accounts: [
+        { email: 'admin@example.com', name: 'Admin User', status: '🔑 管理員' }
+      ]
+    }
+  ];
 
   // 會員卡測試帳號 - 不同會員狀態
   const membershipTestAccounts = [
@@ -131,30 +215,164 @@ const Login: React.FC = () => {
     setPhone('');
   };
 
-  return (
+  const resetForm = () => {
+    setEmail('');
+    setPassword('');
+    setName('');
+    setPhone('');
+    setError('');
+    setIsRegisterMode(false);
+  };
+
+  const getCurrentRoleConfig = () => {
+    return roleConfigs.find(config => config.id === loginMode);
+  };
+
+  // 角色選擇界面
+  const renderRoleSelection = () => (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-6xl"
+      >
+        {/* 標題 */}
+        <div className="text-center mb-12">
+          <motion.h1 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl font-bold text-gray-900 mb-4"
+          >
+            TLI Connect 登入系統
+          </motion.h1>
+          <motion.p 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-lg text-gray-600"
+          >
+            請選擇您的身份進行登入
+          </motion.p>
+        </div>
+
+        {/* 角色選擇卡片 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {roleConfigs.map((role, index) => (
+            <motion.div
+              key={role.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 * index }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setLoginMode(role.id as LoginMode);
+                resetForm();
+              }}
+              className={`
+                relative overflow-hidden rounded-2xl shadow-lg cursor-pointer
+                bg-gradient-to-br ${role.bgGradient} border border-gray-200
+                hover:shadow-xl transition-all duration-300
+              `}
+            >
+              <div className="p-8">
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-r ${role.gradient} flex items-center justify-center mb-6 shadow-lg`}>
+                  <SafeIcon icon={role.icon} size={28} className="text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{role.title}</h3>
+                <p className="text-gray-600 text-sm mb-4">{role.description}</p>
+                <div className="text-sm text-gray-500">
+                  點擊進入 {role.subtitle}
+                </div>
+              </div>
+              <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${role.gradient}`} />
+            </motion.div>
+          ))}
+        </div>
+
+        {/* 通用入口 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          className="text-center"
+        >
+          <button
+            onClick={() => {
+              setLoginMode('general');
+              resetForm();
+            }}
+            className="inline-flex items-center px-6 py-3 bg-white border border-gray-300 rounded-xl text-gray-700 hover:bg-gray-50 transition-colors shadow-sm hover:shadow-md"
+          >
+            <SafeIcon icon={FiUser} size={20} className="mr-2" />
+            通用登入入口
+          </button>
+        </motion.div>
+
+        {/* 返回首頁 */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="mt-8 text-center"
+        >
+          <button
+            onClick={() => router.push('/')}
+            className="text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+          >
+            ← 返回首頁
+          </button>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+
+  // 登入表單界面
+  const renderLoginForm = () => {
+    const currentRole = getCurrentRoleConfig();
+    const isGeneral = loginMode === 'general';
+    
+    return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
       >
+        {/* 返回按鈕 */}
+        <div className="mb-6">
+          <button
+            onClick={() => setLoginMode('selection')}
+            className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium transition-colors"
+          >
+            ← 返回角色選擇
+          </button>
+        </div>
+
         {/* 登入卡片 */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* 標題區域 */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-8 text-center">
+          <div className={`px-6 py-8 text-center bg-gradient-to-r ${currentRole?.gradient || 'from-blue-600 to-indigo-600'}`}>
             <motion.div
               initial={{ scale: 0.8 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2 }}
             >
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <SafeIcon icon={FiUser} size={32} className="text-white" />
+                <SafeIcon 
+                  icon={currentRole?.icon || FiUser} 
+                  size={32} 
+                  className="text-white" 
+                />
               </div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                {isRegisterMode ? '建立新帳戶' : '歡迎回來'}
+                {isRegisterMode ? '建立新帳戶' : (isGeneral ? '通用登入' : currentRole?.title || '登入')}
               </h1>
               <p className="text-blue-100 text-sm sm:text-base">
-                {isRegisterMode ? '註冊您的 TLI Connect 帳戶' : '登入您的 TLI Connect 帳戶'}
+                {isRegisterMode 
+                  ? '註冊您的 TLI Connect 帳戶' 
+                  : (isGeneral ? 'TLI Connect 通用登入入口' : currentRole?.description || '登入您的帳戶')
+                }
               </p>
             </motion.div>
           </div>
@@ -315,7 +533,7 @@ const Login: React.FC = () => {
           </div>
         </div>
 
-        {/* 會員卡測試帳號 - 只在登入模式顯示 */}
+        {/* 測試帳號 - 只在登入模式顯示 */}
         {!isRegisterMode && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -324,118 +542,122 @@ const Login: React.FC = () => {
             className="mt-8 bg-white rounded-2xl shadow-lg p-6"
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-2 text-center">
-              🎯 會員卡測試帳號
+              {isGeneral ? '🎯 測試帳號' : `${currentRole?.icon ? '' : '🎯'} ${currentRole?.title || '角色'} 測試帳號`}
             </h3>
             <p className="text-sm text-gray-600 text-center mb-4">
               點擊下方帳號即可快速填入登入資訊 (密碼：password)
             </p>
             
-            {/* 會員卡狀態測試帳號 */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">會員卡狀態測試</h4>
-              <div className="grid gap-2">
-                {membershipTestAccounts.map((account, index) => (
-                  <motion.button
-                    key={account.email}
-                    onClick={() => fillDemoAccount(account.email)}
-                    className="flex items-center justify-between p-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors text-left border border-gray-200 hover:border-blue-300"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="font-medium text-gray-900">{account.name}</span>
-                        <span className="text-sm font-medium">{account.status}</span>
-                      </div>
-                      <div className="text-xs text-gray-500">{account.email}</div>
-                      <div className="text-xs text-gray-400 mt-1">{account.description}</div>
+            {/* 角色專屬測試帳號 */}
+            <div className="space-y-2">
+              {(isGeneral ? membershipTestAccounts : (currentRole?.accounts || [])).map((account, index) => (
+                <motion.button
+                  key={account.email}
+                  onClick={() => fillDemoAccount(account.email)}
+                  className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors text-left border border-gray-200 hover:border-blue-300"
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="font-medium text-gray-900">{account.name}</span>
+                      <span className="text-sm font-medium">{account.status}</span>
                     </div>
-                  </motion.button>
-                ))}
-              </div>
+                    <div className="text-xs text-gray-500">{account.email}</div>
+                    {'description' in account && (account as any).description && (
+                      <div className="text-xs text-gray-400 mt-1">{(account as any).description}</div>
+                    )}
+                  </div>
+                </motion.button>
+              ))}
             </div>
 
-            {/* AGENT 角色測試帳號 */}
-            <div className="mb-6">
-              <h4 className="text-sm font-medium text-gray-700 mb-3">🎯 AGENT 代理測試帳號</h4>
-              <div className="grid gap-2">
-                {agentTestAccounts.map((account, index) => (
-                  <motion.button
-                    key={account.email}
-                    onClick={() => fillDemoAccount(account.email)}
-                    className="flex items-center justify-between p-3 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 rounded-lg transition-colors text-left border border-amber-200 hover:border-orange-300"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * (index + membershipTestAccounts.length) }}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <span className="font-medium text-gray-900">{account.name}</span>
+            {/* 通用模式下顯示所有角色測試帳號 */}
+            {isGeneral && (
+              <>
+                {/* AGENT 角色測試帳號 */}
+                <div className="mt-6">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">🎯 AGENT 代理測試帳號</h4>
+                  <div className="grid gap-2">
+                    {agentTestAccounts.map((account, index) => (
+                      <motion.button
+                        key={account.email}
+                        onClick={() => fillDemoAccount(account.email)}
+                        className="flex items-center justify-between p-3 bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 rounded-lg transition-colors text-left border border-amber-200 hover:border-orange-300"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 * (index + membershipTestAccounts.length) }}
+                      >
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-1">
+                            <span className="font-medium text-gray-900">{account.name}</span>
+                            <span className={`
+                              px-2 py-1 rounded-full text-xs font-medium
+                              ${account.type === 'AGENT' 
+                                ? 'bg-amber-100 text-amber-800' 
+                                : account.type === 'CONSULTANT'
+                                ? 'bg-blue-100 text-blue-800'
+                                : account.type === 'COMPANY'
+                                ? 'bg-purple-100 text-purple-800'
+                                : account.type === 'TEACHER_AGENT'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-pink-100 text-pink-800'
+                              }
+                            `}>
+                              {account.type}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-500">{account.email}</div>
+                          <div className="text-xs text-gray-400 mt-1">{account.description}</div>
+                        </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 其他角色測試帳號 */}
+                <div className="mt-6">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">其他角色測試</h4>
+                  <div className="grid gap-2">
+                    {roleTestAccounts.map((account, index) => (
+                      <motion.button
+                        key={account.email}
+                        onClick={() => fillDemoAccount(account.email)}
+                        className="flex items-center justify-between p-2 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors text-left border border-gray-200 hover:border-blue-300"
+                        whileHover={{ scale: 1.01 }}
+                        whileTap={{ scale: 0.99 }}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.1 * (index + membershipTestAccounts.length + agentTestAccounts.length) }}
+                      >
+                        <div>
+                          <div className="font-medium text-gray-900 text-sm">{account.name}</div>
+                          <div className="text-xs text-gray-500">{account.email}</div>
+                        </div>
                         <span className={`
                           px-2 py-1 rounded-full text-xs font-medium
-                          ${account.type === 'AGENT' 
-                            ? 'bg-amber-100 text-amber-800' 
-                            : account.type === 'CONSULTANT'
-                            ? 'bg-blue-100 text-blue-800'
-                            : account.type === 'COMPANY'
+                          ${account.role.includes('TEACHER') 
+                            ? 'bg-green-100 text-green-800' 
+                            : account.role.includes('CORPORATE')
+                            ? 'bg-orange-100 text-orange-800'
+                            : account.role.includes('ADMIN')
                             ? 'bg-purple-100 text-purple-800'
-                            : account.type === 'TEACHER_AGENT'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-pink-100 text-pink-800'
+                            : 'bg-blue-100 text-blue-800'
                           }
                         `}>
-                          {account.type}
+                          {account.role.split(' ')[0]}
                         </span>
-                      </div>
-                      <div className="text-xs text-gray-500">{account.email}</div>
-                      <div className="text-xs text-gray-400 mt-1">{account.description}</div>
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-
-            {/* 其他角色測試帳號 */}
-            <div>
-              <h4 className="text-sm font-medium text-gray-700 mb-3">其他角色測試</h4>
-              <div className="grid gap-2">
-                {roleTestAccounts.map((account, index) => (
-                  <motion.button
-                    key={account.email}
-                    onClick={() => fillDemoAccount(account.email)}
-                    className="flex items-center justify-between p-2 bg-gray-50 hover:bg-blue-50 rounded-lg transition-colors text-left border border-gray-200 hover:border-blue-300"
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.1 * (index + membershipTestAccounts.length + agentTestAccounts.length) }}
-                  >
-                    <div>
-                      <div className="font-medium text-gray-900 text-sm">{account.name}</div>
-                      <div className="text-xs text-gray-500">{account.email}</div>
-                    </div>
-                    <span className={`
-                      px-2 py-1 rounded-full text-xs font-medium
-                      ${account.role.includes('TEACHER') 
-                        ? 'bg-green-100 text-green-800' 
-                        : account.role.includes('CORPORATE')
-                        ? 'bg-orange-100 text-orange-800'
-                        : account.role.includes('ADMIN')
-                        ? 'bg-purple-100 text-purple-800'
-                        : 'bg-blue-100 text-blue-800'
-                      }
-                    `}>
-                      {account.role.split(' ')[0]}
-                    </span>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </motion.div>
         )}
 
@@ -455,7 +677,15 @@ const Login: React.FC = () => {
         </motion.div>
       </motion.div>
     </div>
-  );
+    );
+  };
+
+  // 主要渲染邏輯
+  if (loginMode === 'selection') {
+    return renderRoleSelection();
+  }
+
+  return renderLoginForm();
 };
 
 export default Login;
