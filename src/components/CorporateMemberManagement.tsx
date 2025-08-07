@@ -6,13 +6,15 @@ import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
 import { corporateSubscriptionStore } from '@/lib/corporateSubscriptionStore';
 import { corporateMemberStore } from '@/lib/corporateMemberStore';
+import { companyStore } from '@/lib/companyStore';
 import { CorporateSubscription, CorporateMember, LearningRecord, ReservationRecord } from '@/types/corporateSubscription';
-import { getCompanies, Company } from '@/data/corporateData';
+import { Company } from '@/data/corporateData';
+import { memberCardPlans } from '@/data/member_card_plans';
 
 const {
-  FiUsers, FiUserCheck, FiUserPlus, FiSearch,
+  FiUsers, FiUserCheck, FiUserPlus, FiSearch, FiPlus,
   FiX, FiClock, FiCheckCircle, FiChevronDown, FiChevronRight,
-  FiEye, FiBook, FiCalendar, FiEdit2, FiTrash2, FiPlay, FiPause
+  FiEye, FiBook, FiCalendar, FiEdit2, FiTrash2, FiPlay, FiPause, FiSave
 } = FiIcons;
 
 interface CorporateData extends Company {
@@ -41,10 +43,46 @@ const CorporateMemberManagement = () => {
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
   const [editingMember, setEditingMember] = useState<CorporateMember | null>(null);
   
+  // 企業編輯功能
+  const [editingCompanyId, setEditingCompanyId] = useState<string | number | null>(null);
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const [showAddCompanyModal, setShowAddCompanyModal] = useState(false);
+  const [showCompanyDetailModal, setShowCompanyDetailModal] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
+  
+  // 企業訂閱編輯功能
+  const [editingSubscriptionId, setEditingSubscriptionId] = useState<number | null>(null);
+  const [editingSubscription, setEditingSubscription] = useState<CorporateSubscription | null>(null);
+  const [showAddSubscriptionModal, setShowAddSubscriptionModal] = useState(false);
+  const [showSubscriptionDetailModal, setShowSubscriptionDetailModal] = useState(false);
+  const [selectedSubscription, setSelectedSubscription] = useState<CorporateSubscription | null>(null);
+  const [selectedCompanyForSubscription, setSelectedCompanyForSubscription] = useState<Company | null>(null);
+  
   // 新增會員表單
   const [newMember, setNewMember] = useState({
     user_name: '',
     user_email: ''
+  });
+  
+  // 新增企業表單
+  const [newCompany, setNewCompany] = useState<Omit<Company, 'id' | 'createdAt'>>({
+    name: '',
+    contactName: '',
+    contactEmail: '',
+    contactPhone: '',
+    address: '',
+    industry: '',
+    employeeCount: '',
+    status: 'active'
+  });
+  
+  // 新增訂閱表單
+  const [newSubscription, setNewSubscription] = useState({
+    company_id: '',
+    plan_id: 0,
+    seats_total: 10,
+    amount_paid: 0,
+    auto_renewal: false
   });
   
   // 統計數據
@@ -61,7 +99,7 @@ const CorporateMemberManagement = () => {
   const loadCorporateData = async () => {
     try {
       setLoading(true);
-      const companies = getCompanies();
+      const companies = await companyStore.getAllCompanies();
       const subscriptions = await corporateSubscriptionStore.getAllSubscriptions();
       const members = await corporateMemberStore.getAllMembers();
       const memberStats = await corporateMemberStore.getMemberStatistics();
@@ -308,6 +346,233 @@ const CorporateMemberManagement = () => {
     setEditingMember(null);
   };
 
+  // ===== 企業 CRUD 功能 =====
+  
+  // 新增企業
+  const handleCreateCompany = async () => {
+    try {
+      // 驗證必填欄位
+      if (!newCompany.name.trim() || !newCompany.contactName.trim() || !newCompany.contactEmail.trim()) {
+        alert('企業名稱、聯絡人姓名和電子郵件不能為空');
+        return;
+      }
+
+      // 驗證電子郵件格式
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(newCompany.contactEmail)) {
+        alert('電子郵件格式不正確');
+        return;
+      }
+
+      await companyStore.createCompany(newCompany);
+      
+      // 重新載入數據
+      await loadCorporateData();
+      
+      // 重置表單
+      setNewCompany({
+        name: '',
+        contactName: '',
+        contactEmail: '',
+        contactPhone: '',
+        address: '',
+        industry: '',
+        employeeCount: '',
+        status: 'active'
+      });
+      
+      setShowAddCompanyModal(false);
+      alert('✅ 企業新增成功！');
+    } catch (error) {
+      console.error('新增企業失敗:', error);
+      alert('❌ 新增企業失敗：' + (error as Error).message);
+    }
+  };
+
+  // 編輯企業
+  const handleEditCompany = (company: Company) => {
+    setEditingCompanyId(company.id);
+    setEditingCompany({ ...company });
+  };
+
+  // 保存企業編輯
+  const handleSaveCompany = async () => {
+    if (!editingCompany) return;
+
+    try {
+      // 驗證必填欄位
+      if (!editingCompany.name.trim() || !editingCompany.contactName.trim() || !editingCompany.contactEmail.trim()) {
+        alert('企業名稱、聯絡人姓名和電子郵件不能為空');
+        return;
+      }
+
+      // 驗證電子郵件格式
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(editingCompany.contactEmail)) {
+        alert('電子郵件格式不正確');
+        return;
+      }
+
+      await companyStore.updateCompany(editingCompany.id, editingCompany);
+      setEditingCompanyId(null);
+      setEditingCompany(null);
+      
+      // 重新載入數據
+      await loadCorporateData();
+      alert('✅ 企業資料更新成功！');
+    } catch (error) {
+      console.error('更新企業失敗:', error);
+      alert('❌ 更新企業失敗：' + (error as Error).message);
+    }
+  };
+
+  // 取消企業編輯
+  const handleCancelCompanyEdit = () => {
+    setEditingCompanyId(null);
+    setEditingCompany(null);
+  };
+
+  // 刪除企業
+  const handleDeleteCompany = async (companyId: string | number, companyName: string) => {
+    if (!confirm(`確定要刪除企業「${companyName}」嗎？這將會同時刪除該企業的所有訂閱和會員資料。`)) {
+      return;
+    }
+
+    try {
+      await companyStore.deleteCompany(companyId);
+      
+      // 重新載入數據
+      await loadCorporateData();
+      alert('✅ 企業刪除成功！');
+    } catch (error) {
+      console.error('刪除企業失敗:', error);
+      alert('❌ 刪除企業失敗：' + (error as Error).message);
+    }
+  };
+
+  // 查看企業詳情
+  const handleViewCompanyDetail = (company: Company) => {
+    setSelectedCompany(company);
+    setShowCompanyDetailModal(true);
+  };
+
+  // ===== 企業訂閱 CRUD 功能 =====
+  
+  // 新增企業訂閱
+  const handleCreateSubscription = async () => {
+    try {
+      // 驗證必填欄位
+      if (!newSubscription.company_id || !newSubscription.plan_id || newSubscription.seats_total <= 0) {
+        alert('請選擇企業、方案並設定席次數');
+        return;
+      }
+
+      if (newSubscription.amount_paid <= 0) {
+        alert('金額必須大於 0');
+        return;
+      }
+
+      await corporateSubscriptionStore.createSubscription({
+        company_id: newSubscription.company_id,
+        plan_id: newSubscription.plan_id,
+        seats_total: newSubscription.seats_total,
+        amount_paid: newSubscription.amount_paid,
+        auto_renewal: newSubscription.auto_renewal
+      });
+      
+      // 重新載入數據
+      await loadCorporateData();
+      
+      // 重置表單
+      setNewSubscription({
+        company_id: '',
+        plan_id: 0,
+        seats_total: 10,
+        amount_paid: 0,
+        auto_renewal: false
+      });
+      
+      setShowAddSubscriptionModal(false);
+      alert('✅ 企業訂閱新增成功！');
+    } catch (error) {
+      console.error('新增企業訂閱失敗:', error);
+      alert('❌ 新增企業訂閱失敗：' + (error as Error).message);
+    }
+  };
+
+  // 編輯企業訂閱
+  const handleEditSubscription = (subscription: CorporateSubscription) => {
+    setEditingSubscriptionId(subscription.id);
+    setEditingSubscription({ ...subscription });
+  };
+
+  // 保存企業訂閱編輯
+  const handleSaveSubscription = async () => {
+    if (!editingSubscription) return;
+
+    try {
+      // 只允許更新席次使用情況（保持現有 API 的簡單性）
+      await corporateSubscriptionStore.updateSubscription(editingSubscription.id, {
+        seats_used: editingSubscription.seats_used,
+        seats_available: editingSubscription.seats_total - editingSubscription.seats_used
+      });
+      
+      setEditingSubscriptionId(null);
+      setEditingSubscription(null);
+      
+      // 重新載入數據
+      await loadCorporateData();
+      alert('✅ 企業訂閱更新成功！');
+    } catch (error) {
+      console.error('更新企業訂閱失敗:', error);
+      alert('❌ 更新企業訂閱失敗：' + (error as Error).message);
+    }
+  };
+
+  // 取消企業訂閱編輯
+  const handleCancelSubscriptionEdit = () => {
+    setEditingSubscriptionId(null);
+    setEditingSubscription(null);
+  };
+
+  // 刪除企業訂閱
+  const handleDeleteSubscription = async (subscriptionId: number, planTitle: string) => {
+    if (!confirm(`確定要刪除訂閱「${planTitle}」嗎？這將會同時刪除該訂閱下的所有會員資料。`)) {
+      return;
+    }
+
+    try {
+      // 需要先在 corporateSubscriptionStore 中添加 deleteSubscription 方法
+      // 這裡先做基本的刪除操作，待後續完善
+      alert('刪除功能尚未完成，請稍後再試');
+      
+      console.log('將刪除訂閱:', subscriptionId);
+      // TODO: 實作刪除功能
+    } catch (error) {
+      console.error('刪除企業訂閱失敗:', error);
+      alert('❌ 刪除企業訂閱失敗：' + (error as Error).message);
+    }
+  };
+
+  // 查看企業訂閱詳情
+  const handleViewSubscriptionDetail = (subscription: CorporateSubscription) => {
+    setSelectedSubscription(subscription);
+    setShowSubscriptionDetailModal(true);
+  };
+
+  // 為企業新增訂閱
+  const handleAddSubscriptionForCompany = (company: Company) => {
+    setSelectedCompanyForSubscription(company);
+    setNewSubscription({
+      company_id: company.id,
+      plan_id: 0,
+      seats_total: 10,
+      amount_paid: 0,
+      auto_renewal: false
+    });
+    setShowAddSubscriptionModal(true);
+  };
+
   // 啟用/停用會員功能
   const handleToggleMemberStatus = async (member: CorporateMember) => {
     try {
@@ -447,15 +712,24 @@ const CorporateMemberManagement = () => {
         className="mb-6"
       >
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="relative flex-1 max-w-md">
-            <SafeIcon icon={FiSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="搜尋企業、會員名稱或信箱..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-md">
+              <SafeIcon icon={FiSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="搜尋企業、會員名稱或信箱..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              onClick={() => setShowAddCompanyModal(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              <SafeIcon icon={FiPlus} className="text-sm" />
+              <span>新增企業</span>
+            </button>
           </div>
           
           {/* 視圖模式切換 */}
@@ -503,30 +777,133 @@ const CorporateMemberManagement = () => {
               className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
             >
               {/* 企業標題行 */}
-              <div 
-                className="p-4 hover:bg-gray-50 cursor-pointer border-b border-gray-100"
-                onClick={() => toggleCompanyExpansion(company.id)}
-              >
+              <div className="p-4 border-b border-gray-100">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <SafeIcon 
                       icon={expandedCompanies.has(company.id) ? FiChevronDown : FiChevronRight}
-                      className="text-gray-400"
+                      className="text-gray-400 cursor-pointer"
+                      onClick={() => toggleCompanyExpansion(company.id)}
                     />
                     <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
                       <SafeIcon icon={FiUsers} className="text-white" />
                     </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">{company.name}</h3>
-                      <p className="text-sm text-gray-600">
-                        {company.contactName} • {company.contactEmail} • {company.industry}
-                      </p>
+                    <div className="flex-1">
+                      {editingCompanyId === company.id ? (
+                        <div className="space-y-2">
+                          <input
+                            type="text"
+                            value={editingCompany?.name || ''}
+                            onChange={(e) => setEditingCompany(prev => prev ? {...prev, name: e.target.value} : null)}
+                            className="w-[200px] px-2 py-1 border border-gray-300 rounded text-lg font-semibold bg-white"
+                            placeholder="企業名稱"
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={editingCompany?.contactName || ''}
+                              onChange={(e) => setEditingCompany(prev => prev ? {...prev, contactName: e.target.value} : null)}
+                              className="px-2 py-1 border border-gray-300 rounded text-sm bg-white"
+                              placeholder="聯絡人姓名"
+                            />
+                            <input
+                              type="email"
+                              value={editingCompany?.contactEmail || ''}
+                              onChange={(e) => setEditingCompany(prev => prev ? {...prev, contactEmail: e.target.value} : null)}
+                              className="px-2 py-1 border border-gray-300 rounded text-sm bg-white"
+                              placeholder="聯絡人信箱"
+                            />
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              value={editingCompany?.contactPhone || ''}
+                              onChange={(e) => setEditingCompany(prev => prev ? {...prev, contactPhone: e.target.value} : null)}
+                              className="px-2 py-1 border border-gray-300 rounded text-sm bg-white"
+                              placeholder="聯絡電話"
+                            />
+                            <select
+                              value={editingCompany?.industry || ''}
+                              onChange={(e) => setEditingCompany(prev => prev ? {...prev, industry: e.target.value} : null)}
+                              className="px-2 py-1 border border-gray-300 rounded text-sm bg-white"
+                            >
+                              <option value="科技業">科技業</option>
+                              <option value="金融服務">金融服務</option>
+                              <option value="製造業">製造業</option>
+                              <option value="零售業">零售業</option>
+                              <option value="教育業">教育業</option>
+                              <option value="醫療業">醫療業</option>
+                              <option value="其他">其他</option>
+                            </select>
+                          </div>
+                        </div>
+                      ) : (
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900">{company.name}</h3>
+                          <p className="text-sm text-gray-600">
+                            {company.contactName} • {company.contactEmail} • {company.industry}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-sm text-gray-500">
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right text-sm text-gray-500">
                       訂閱: {company.subscriptions.length} | 會員: {company.members.length}
                     </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddSubscriptionForCompany(company);
+                      }}
+                      className="flex items-center space-x-1 px-2 py-1 bg-indigo-100 text-indigo-700 rounded hover:bg-indigo-200 transition-colors text-xs"
+                      title="為此企業新增訂閱"
+                    >
+                      <SafeIcon icon={FiPlus} className="text-xs" />
+                      <span>新增訂閱</span>
+                    </button>
+                    {editingCompanyId === company.id ? (
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={handleSaveCompany}
+                          className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors text-xs"
+                        >
+                          <SafeIcon icon={FiSave} className="text-xs" />
+                          <span>保存</span>
+                        </button>
+                        <button
+                          onClick={handleCancelCompanyEdit}
+                          className="flex items-center space-x-1 px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors text-xs"
+                        >
+                          <SafeIcon icon={FiX} className="text-xs" />
+                          <span>取消</span>
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex space-x-1">
+                        <button
+                          onClick={() => handleViewCompanyDetail(company)}
+                          title="查看企業詳情"
+                          className="p-1 text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded"
+                        >
+                          <SafeIcon icon={FiEye} className="text-sm" />
+                        </button>
+                        <button
+                          onClick={() => handleEditCompany(company)}
+                          title="編輯企業資料"
+                          className="p-1 text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 rounded"
+                        >
+                          <SafeIcon icon={FiEdit2} className="text-sm" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteCompany(company.id, company.name)}
+                          title="刪除企業"
+                          className="p-1 text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 rounded"
+                        >
+                          <SafeIcon icon={FiTrash2} className="text-sm" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -563,19 +940,79 @@ const CorporateMemberManagement = () => {
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <span className="text-sm text-gray-600">
-                                    席次: {subscription.seats_used}/{subscription.seats_total}
+                                    席次: {editingSubscriptionId === subscription.id && editingSubscription ? 
+                                      `${editingSubscription.seats_used}/${editingSubscription.seats_total}` : 
+                                      `${subscription.seats_used}/${subscription.seats_total}`}
                                   </span>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      setSelectedSubscriptionId(subscription.id);
-                                      setShowAddMemberModal(true);
-                                    }}
-                                    className="flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-xs"
-                                  >
-                                    <SafeIcon icon={FiUserPlus} className="text-xs" />
-                                    <span>新增會員</span>
-                                  </button>
+                                  {editingSubscriptionId === subscription.id ? (
+                                    <div className="flex space-x-1">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleSaveSubscription();
+                                        }}
+                                        className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors text-xs"
+                                      >
+                                        <SafeIcon icon={FiSave} className="text-xs" />
+                                        <span>保存</span>
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleCancelSubscriptionEdit();
+                                        }}
+                                        className="flex items-center space-x-1 px-2 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors text-xs"
+                                      >
+                                        <SafeIcon icon={FiX} className="text-xs" />
+                                        <span>取消</span>
+                                      </button>
+                                    </div>
+                                  ) : (
+                                    <div className="flex space-x-1">
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleViewSubscriptionDetail(subscription);
+                                        }}
+                                        title="查看訂閱詳情"
+                                        className="p-1 text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 rounded"
+                                      >
+                                        <SafeIcon icon={FiEye} className="text-xs" />
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleEditSubscription(subscription);
+                                        }}
+                                        title="編輯訂閱"
+                                        className="p-1 text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 rounded"
+                                      >
+                                        <SafeIcon icon={FiEdit2} className="text-xs" />
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleDeleteSubscription(subscription.id, subscription.plan_title || '未知方案');
+                                        }}
+                                        title="刪除訂閱"
+                                        className="p-1 text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 rounded"
+                                      >
+                                        <SafeIcon icon={FiTrash2} className="text-xs" />
+                                      </button>
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setSelectedSubscriptionId(subscription.id);
+                                          setShowAddMemberModal(true);
+                                        }}
+                                        className="flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-xs"
+                                        title="為此訂閱新增會員"
+                                      >
+                                        <SafeIcon icon={FiUserPlus} className="text-xs" />
+                                        <span>新增會員</span>
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                               
@@ -584,6 +1021,33 @@ const CorporateMemberManagement = () => {
                                 <div>兌換期限: {formatDate(subscription.activation_deadline)}</div>
                                 <div>金額: {formatAmount(subscription.amount_paid)}</div>
                               </div>
+                              
+                              {/* 編輯席次使用情況 */}
+                              {editingSubscriptionId === subscription.id && editingSubscription && (
+                                <div className="mt-3 p-3 bg-blue-50 rounded-lg border">
+                                  <div className="flex items-center space-x-4">
+                                    <div className="flex items-center space-x-2">
+                                      <label className="text-sm font-medium text-gray-700">已使用席次:</label>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max={editingSubscription.seats_total}
+                                        value={editingSubscription.seats_used}
+                                        onChange={(e) => setEditingSubscription(prev => prev ? {
+                                          ...prev, 
+                                          seats_used: Math.min(parseInt(e.target.value) || 0, prev.seats_total),
+                                          seats_available: prev.seats_total - (parseInt(e.target.value) || 0)
+                                        } : null)}
+                                        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
+                                      />
+                                      <span className="text-sm text-gray-500">/ {editingSubscription.seats_total}</span>
+                                    </div>
+                                    <div className="text-sm text-gray-600">
+                                      可用席次: {editingSubscription.seats_total - editingSubscription.seats_used}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
 
                             {/* 會員列表（展開時顯示） */}
@@ -1102,6 +1566,452 @@ const CorporateMemberManagement = () => {
         </motion.div>
       )}
 
+      {/* 新增企業模態框 */}
+      <AnimatePresence>
+        {showAddCompanyModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setShowAddCompanyModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-xl p-6 m-4 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold">新增企業</h3>
+                <button
+                  onClick={() => setShowAddCompanyModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <SafeIcon icon={FiX} className="text-xl" />
+                </button>
+              </div>
+              
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateCompany(); }} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">企業名稱 *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newCompany.name}
+                    onChange={(e) => setNewCompany({...newCompany, name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="輸入企業名稱"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">聯絡人姓名 *</label>
+                    <input
+                      type="text"
+                      required
+                      value={newCompany.contactName}
+                      onChange={(e) => setNewCompany({...newCompany, contactName: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="輸入聯絡人姓名"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">聯絡電話</label>
+                    <input
+                      type="tel"
+                      value={newCompany.contactPhone}
+                      onChange={(e) => setNewCompany({...newCompany, contactPhone: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      placeholder="輸入聯絡電話"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">聯絡信箱 *</label>
+                  <input
+                    type="email"
+                    required
+                    value={newCompany.contactEmail}
+                    onChange={(e) => setNewCompany({...newCompany, contactEmail: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="輸入聯絡信箱"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">地址</label>
+                  <input
+                    type="text"
+                    value={newCompany.address}
+                    onChange={(e) => setNewCompany({...newCompany, address: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="輸入企業地址"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">行業類別</label>
+                    <select
+                      value={newCompany.industry}
+                      onChange={(e) => setNewCompany({...newCompany, industry: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value="">選擇行業類別</option>
+                      <option value="科技業">科技業</option>
+                      <option value="金融服務">金融服務</option>
+                      <option value="製造業">製造業</option>
+                      <option value="零售業">零售業</option>
+                      <option value="教育業">教育業</option>
+                      <option value="醫療業">醫療業</option>
+                      <option value="其他">其他</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">員工人數</label>
+                    <select
+                      value={newCompany.employeeCount}
+                      onChange={(e) => setNewCompany({...newCompany, employeeCount: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    >
+                      <option value="">選擇員工人數</option>
+                      <option value="1-10人">1-10人</option>
+                      <option value="11-50人">11-50人</option>
+                      <option value="51-100人">51-100人</option>
+                      <option value="101-500人">101-500人</option>
+                      <option value="501-1000人">501-1000人</option>
+                      <option value="1000人以上">1000人以上</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddCompanyModal(false)}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                  >
+                    新增企業
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+        
+        {/* 企業詳情模態框 */}
+        {showCompanyDetailModal && selectedCompany && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setShowCompanyDetailModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-xl p-6 m-4 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold">企業詳情</h3>
+                <button
+                  onClick={() => setShowCompanyDetailModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <SafeIcon icon={FiX} className="text-xl" />
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                {/* 企業基本資料 */}
+                <div>
+                  <h4 className="text-lg font-semibold mb-3 text-gray-800">基本資料</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+                    <div>
+                      <span className="text-sm text-gray-600">企業名稱</span>
+                      <p className="font-medium">{selectedCompany.name}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">行業類別</span>
+                      <p className="font-medium">{selectedCompany.industry}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">聯絡人</span>
+                      <p className="font-medium">{selectedCompany.contactName}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">聯絡信箱</span>
+                      <p className="font-medium">{selectedCompany.contactEmail}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">聯絡電話</span>
+                      <p className="font-medium">{selectedCompany.contactPhone || '未提供'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">員工人數</span>
+                      <p className="font-medium">{selectedCompany.employeeCount}</p>
+                    </div>
+                    <div className="md:col-span-2">
+                      <span className="text-sm text-gray-600">地址</span>
+                      <p className="font-medium">{selectedCompany.address || '未提供'}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 狀態資訊 */}
+                <div>
+                  <h4 className="text-lg font-semibold mb-3 text-gray-800">狀態資訊</h4>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm text-gray-600">企業狀態</span>
+                        <p className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                          selectedCompany.status === 'active' ? 'bg-green-100 text-green-800' :
+                          selectedCompany.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
+                          'bg-red-100 text-red-800'
+                        }`}>
+                          {selectedCompany.status === 'active' ? '正常營運' :
+                           selectedCompany.status === 'inactive' ? '靜止' : '過期'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">創建日期</span>
+                        <p className="font-medium">{new Date(selectedCompany.createdAt).toLocaleDateString('zh-TW')}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+        
+        {/* 新增企業訂閱模態框 */}
+        {showAddSubscriptionModal && selectedCompanyForSubscription && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setShowAddSubscriptionModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-xl p-6 m-4 max-w-md w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold">為 {selectedCompanyForSubscription.name} 新增訂閱</h3>
+                <button
+                  onClick={() => setShowAddSubscriptionModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <SafeIcon icon={FiX} className="text-xl" />
+                </button>
+              </div>
+              
+              <form onSubmit={(e) => { e.preventDefault(); handleCreateSubscription(); }} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">方案選擇 *</label>
+                  <select
+                    required
+                    value={newSubscription.plan_id}
+                    onChange={(e) => {
+                      const planId = parseInt(e.target.value);
+                      const plan = memberCardPlans.find(p => p.id === planId && p.user_type === 'corporate');
+                      setNewSubscription({
+                        ...newSubscription, 
+                        plan_id: planId,
+                        amount_paid: plan ? parseFloat(plan.sale_price) : 0
+                      });
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  >
+                    <option value={0}>選擇企業方案</option>
+                    {memberCardPlans
+                      .filter(plan => plan.user_type === 'corporate' && plan.status === 'PUBLISHED')
+                      .map(plan => (
+                        <option key={plan.id} value={plan.id}>
+                          {plan.title} - NT$ {parseFloat(plan.sale_price).toLocaleString()}
+                        </option>
+                      ))
+                    }
+                  </select>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">總席次數 *</label>
+                    <input
+                      type="number"
+                      min="1"
+                      required
+                      value={newSubscription.seats_total}
+                      onChange={(e) => setNewSubscription({...newSubscription, seats_total: parseInt(e.target.value) || 1})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="請輸入席次數"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">金額 *</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      required
+                      value={newSubscription.amount_paid}
+                      onChange={(e) => setNewSubscription({...newSubscription, amount_paid: parseFloat(e.target.value) || 0})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      placeholder="請輸入金額"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="auto_renewal"
+                    checked={newSubscription.auto_renewal}
+                    onChange={(e) => setNewSubscription({...newSubscription, auto_renewal: e.target.checked})}
+                    className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="auto_renewal" className="ml-2 block text-sm text-gray-700">
+                    自動續約
+                  </label>
+                </div>
+                
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddSubscriptionModal(false)}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    取消
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    新增訂閱
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+        
+        {/* 企業訂閱詳情模態框 */}
+        {showSubscriptionDetailModal && selectedSubscription && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={() => setShowSubscriptionDetailModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-xl p-6 m-4 max-w-2xl w-full max-h-[80vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold">訂閱詳情</h3>
+                <button
+                  onClick={() => setShowSubscriptionDetailModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <SafeIcon icon={FiX} className="text-xl" />
+                </button>
+              </div>
+              
+              <div className="space-y-6">
+                {/* 訂閱基本資料 */}
+                <div>
+                  <h4 className="text-lg font-semibold mb-3 text-gray-800">基本資料</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+                    <div>
+                      <span className="text-sm text-gray-600">方案名稱</span>
+                      <p className="font-medium">{selectedSubscription.plan_title}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">方案類型</span>
+                      <p className="font-medium">{selectedSubscription.duration_type === 'annual' ? '年度方案' : '季度方案'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">總席次數</span>
+                      <p className="font-medium">{selectedSubscription.seats_total}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">已使用席次</span>
+                      <p className="font-medium">{selectedSubscription.seats_used}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">可用席次</span>
+                      <p className="font-medium">{selectedSubscription.seats_available}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-600">付款金額</span>
+                      <p className="font-medium">NT$ {selectedSubscription.amount_paid.toLocaleString()}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* 時間資訊 */}
+                <div>
+                  <h4 className="text-lg font-semibold mb-3 text-gray-800">時間資訊</h4>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <span className="text-sm text-gray-600">購買日期</span>
+                        <p className="font-medium">{formatDate(selectedSubscription.purchase_date)}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">兌換期限</span>
+                        <p className="font-medium">{formatDate(selectedSubscription.activation_deadline)}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">訂閱狀態</span>
+                        <p className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                          selectedSubscription.status === 'activated' ? 'bg-green-100 text-green-800' :
+                          selectedSubscription.status === 'purchased' ? 'bg-blue-100 text-blue-800' :
+                          selectedSubscription.status === 'expired' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {selectedSubscription.status === 'activated' ? '已啟用' :
+                           selectedSubscription.status === 'purchased' ? '已購買' :
+                           selectedSubscription.status === 'expired' ? '已過期' : '已取消'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">自動續約</span>
+                        <p className="font-medium">{selectedSubscription.auto_renewal ? '是' : '否'}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       {/* 新增會員 Modal */}
       <AnimatePresence>
         {showAddMemberModal && (
