@@ -6,7 +6,7 @@ import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
 import { corporateSubscriptionStore } from '@/lib/corporateSubscriptionStore';
 import { corporateMemberStore } from '@/lib/corporateMemberStore';
-import { companyStore } from '@/lib/companyStore';
+import { corporateStore } from '@/lib/corporateStore';
 import { CorporateSubscription, CorporateMember, LearningRecord, ReservationRecord } from '@/types/corporateSubscription';
 import { Company } from '@/data/corporateData';
 import { memberCardPlans } from '@/data/member_card_plans';
@@ -91,7 +91,7 @@ const CorporateMemberManagement = () => {
     totalSubscriptions: 0,
     totalMembers: 0,
     activatedMembers: 0,
-    purchasedMembers: 0,
+    inactiveMembers: 0,
     expiredMembers: 0
   });
 
@@ -99,7 +99,7 @@ const CorporateMemberManagement = () => {
   const loadCorporateData = async () => {
     try {
       setLoading(true);
-      const companies = await companyStore.getAllCompanies();
+      const companies = await corporateStore.getAllCompanies();
       const subscriptions = await corporateSubscriptionStore.getAllSubscriptions();
       const members = await corporateMemberStore.getAllMembers();
       const memberStats = await corporateMemberStore.getMemberStatistics();
@@ -125,7 +125,7 @@ const CorporateMemberManagement = () => {
         totalSubscriptions: subscriptions.length,
         totalMembers: memberStats.totalMembers,
         activatedMembers: memberStats.activatedMembers,
-        purchasedMembers: memberStats.purchasedMembers,
+        inactiveMembers: memberStats.inactiveMembers,
         expiredMembers: memberStats.expiredMembers
       });
       
@@ -219,12 +219,13 @@ const CorporateMemberManagement = () => {
   // 獲取會員卡狀態顏色
   const getMemberStatusColor = (status: CorporateMember['card_status']): string => {
     switch (status) {
-      case 'purchased': return 'text-blue-700 bg-blue-50 border-blue-200';
-      case 'issued': return 'text-orange-700 bg-orange-50 border-orange-200';
+      case 'inactive': return 'text-blue-700 bg-blue-50 border-blue-200';
       case 'activated': return 'text-green-700 bg-green-50 border-green-200';
       case 'expired': return 'text-red-700 bg-red-50 border-red-200';
+      case 'suspended': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
       case 'cancelled': return 'text-gray-700 bg-gray-50 border-gray-200';
       case 'test': return 'text-purple-700 bg-purple-50 border-purple-200';
+      case 'non_member': return 'text-gray-700 bg-gray-50 border-gray-200';
       default: return 'text-gray-700 bg-gray-50 border-gray-200';
     }
   };
@@ -233,10 +234,11 @@ const CorporateMemberManagement = () => {
   const getMemberStatusText = (status: CorporateMember['card_status']): string => {
     switch (status) {
       case 'non_member': return '非會員';
-      case 'purchased': return '未啟用';
+      case 'inactive': return '未啟用';
       case 'activated': return '啟用';
       case 'suspended': return '暫停';
       case 'expired': return '過期';
+      case 'cancelled': return '取消';
       case 'test': return '測試';
       default: return '未知';
     }
@@ -374,7 +376,7 @@ const CorporateMemberManagement = () => {
         return;
       }
 
-      await companyStore.createCompany(newCompany);
+      await corporateStore.createCompany(newCompany);
       
       // 重新載入數據
       await loadCorporateData();
@@ -388,7 +390,7 @@ const CorporateMemberManagement = () => {
         address: '',
         industry: '',
         employeeCount: '',
-        status: 'active'
+        status: 'activated'
       });
       
       setShowAddCompanyModal(false);
@@ -423,7 +425,7 @@ const CorporateMemberManagement = () => {
         return;
       }
 
-      await companyStore.updateCompany(editingCompany.id, editingCompany);
+      await corporateStore.updateCompany(editingCompany.id, editingCompany);
       setEditingCompanyId(null);
       setEditingCompany(null);
       
@@ -449,7 +451,7 @@ const CorporateMemberManagement = () => {
     }
 
     try {
-      await companyStore.deleteCompany(companyId);
+      await corporateStore.deleteCompany(companyId);
       
       // 重新載入數據
       await loadCorporateData();
@@ -582,7 +584,7 @@ const CorporateMemberManagement = () => {
   const handleAddSubscriptionForCompany = (company: Company) => {
     setSelectedCompanyForSubscription(company);
     setNewSubscription({
-      company_id: company.id,
+      company_id: String(company.id),
       plan_id: 0,
       seats_total: 10,
       amount_paid: 0,
@@ -623,11 +625,13 @@ const CorporateMemberManagement = () => {
   // 獲取狀態顏色和圖標
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'non_member': return 'text-gray-700 bg-gray-50 border-gray-200';
+      case 'inactive': return 'text-blue-700 bg-blue-50 border-blue-200';
+      case 'suspended': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
       case 'activated': return 'text-green-700 bg-green-50 border-green-200';
-      case 'suspended': return 'text-orange-700 bg-orange-50 border-orange-200';
       case 'expired': return 'text-red-700 bg-red-50 border-red-200';
+      case 'cancelled': return 'text-gray-700 bg-gray-50 border-gray-200';
       case 'test': return 'text-purple-700 bg-purple-50 border-purple-200';
+      case 'non_member': return 'text-gray-700 bg-gray-50 border-gray-200';
       default: return 'text-gray-700 bg-gray-50 border-gray-200';
     }
   };
@@ -646,11 +650,13 @@ const CorporateMemberManagement = () => {
   // 企業狀態顏色和圖標
   const getCompanyStatusColor = (status: string) => {
     switch (status) {
-      case 'non_member': return 'text-gray-700 bg-gray-50 border-gray-200';
+      case 'inactive': return 'text-blue-700 bg-blue-50 border-blue-200';
+      case 'suspended': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
       case 'activated': return 'text-green-700 bg-green-50 border-green-200';
-      case 'suspended': return 'text-orange-700 bg-orange-50 border-orange-200';
       case 'expired': return 'text-red-700 bg-red-50 border-red-200';
+      case 'cancelled': return 'text-gray-700 bg-gray-50 border-gray-200';
       case 'test': return 'text-purple-700 bg-purple-50 border-purple-200';
+      case 'non_member': return 'text-gray-700 bg-gray-50 border-gray-200';
       default: return 'text-gray-700 bg-gray-50 border-gray-200';
     }
   };
@@ -663,6 +669,20 @@ const CorporateMemberManagement = () => {
       case 'expired': return '過期';
       case 'test': return '測試';
       default: return status;
+    }
+  };
+
+  // 企業訂閱狀態顏色
+  const getSubscriptionStatusColor = (status: string) => {
+    switch (status) {
+      case 'inactive': return 'bg-blue-100 text-blue-700';
+      case 'suspended': return 'bg-yellow-100 text-yellow-700';
+      case 'activated': return 'bg-green-100 text-green-700';
+      case 'expired': return 'bg-red-100 text-red-700';
+      case 'cancelled': return 'bg-gray-100 text-gray-700';
+      case 'test': return 'bg-purple-100 text-purple-700';
+      case 'non_member': return 'bg-gray-100 text-gray-700';
+      default: return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -721,7 +741,7 @@ const CorporateMemberManagement = () => {
           },
           { 
             label: '未啟用', 
-            count: statistics.purchasedMembers,
+            count: statistics.inactiveMembers,
             color: 'text-orange-600 bg-orange-50 border-orange-200',
             icon: FiClock
           },
@@ -886,7 +906,7 @@ const CorporateMemberManagement = () => {
                               className="px-2 py-1 border border-gray-300 rounded text-sm bg-white"
                             >
                               <option value="non_member">非會員</option>
-                              <option value="purchased">未啟用</option>
+                              <option value="inactive">未啟用</option>
                               <option value="activated">啟用</option>
                               <option value="suspended">暫停</option>
                               <option value="expired">過期</option>
@@ -1182,12 +1202,12 @@ const CorporateMemberManagement = () => {
                                         value={editingSubscription.status}
                                         onChange={(e) => setEditingSubscription(prev => prev ? {
                                           ...prev, 
-                                          status: e.target.value as 'purchased' | 'activated' | 'expired' | 'cancelled'
+                                          status: e.target.value as 'inactive' | 'activated' | 'expired' | 'cancelled'
                                         } : null)}
                                         className="w-full px-2 py-1 border border-gray-300 rounded text-sm mt-1"
                                       >
                                         <option value="non_member">非會員</option>
-                                        <option value="purchased">未啟用</option>
+                                        <option value="inactive">未啟用</option>
                                         <option value="activated">啟用</option>
                                         <option value="suspended">暫停</option>
                                         <option value="expired">過期</option>
@@ -1309,7 +1329,7 @@ const CorporateMemberManagement = () => {
                                                     className="px-2 py-0.5 border border-gray-300 rounded text-sm w-[120px] h-6"
                                                   >
                                                     <option value="non_member">非會員</option>
-                                                    <option value="purchased">未啟用</option>
+                                                    <option value="inactive">未啟用</option>
                                                     <option value="activated">啟用</option>
                                                     <option value="suspended">暫停</option>
                                                     <option value="expired">過期</option>
@@ -1583,7 +1603,7 @@ const CorporateMemberManagement = () => {
                               className="w-[120px] px-2 py-0.5 border border-gray-300 rounded text-sm h-6"
                             >
                               <option value="non_member">非會員</option>
-                              <option value="purchased">未啟用</option>
+                              <option value="inactive">未啟用</option>
                               <option value="activated">啟用</option>
                               <option value="suspended">暫停</option>
                               <option value="expired">過期</option>
@@ -1871,7 +1891,7 @@ const CorporateMemberManagement = () => {
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
                     <option value="non_member">非會員</option>
-                    <option value="purchased">未啟用</option>
+                    <option value="inactive">未啟用</option>
                     <option value="activated">啟用</option>
                     <option value="suspended">暫停</option>
                     <option value="expired">過期</option>
@@ -1969,12 +1989,12 @@ const CorporateMemberManagement = () => {
                       <div>
                         <span className="text-sm text-gray-600">企業狀態</span>
                         <p className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
-                          selectedCompany.status === 'active' ? 'bg-green-100 text-green-800' :
-                          selectedCompany.status === 'inactive' ? 'bg-gray-100 text-gray-800' :
+                          selectedCompany.status === 'activated' ? 'bg-green-100 text-green-800' :
+                          selectedCompany.status === 'suspended' ? 'bg-gray-100 text-gray-800' :
                           'bg-red-100 text-red-800'
                         }`}>
-                          {selectedCompany.status === 'active' ? '正常營運' :
-                           selectedCompany.status === 'inactive' ? '靜止' : '過期'}
+                          {selectedCompany.status === 'activated' ? '正常營運' :
+                           selectedCompany.status === 'suspended' ? '暫停' : '過期'}
                         </p>
                       </div>
                       <div>
@@ -2179,13 +2199,10 @@ const CorporateMemberManagement = () => {
                       <div>
                         <span className="text-sm text-gray-600">訂閱狀態</span>
                         <p className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
-                          selectedSubscription.status === 'activated' ? 'bg-green-100 text-green-800' :
-                          selectedSubscription.status === 'purchased' ? 'bg-blue-100 text-blue-800' :
-                          selectedSubscription.status === 'expired' ? 'bg-red-100 text-red-800' :
-                          'bg-gray-100 text-gray-800'
+                          getSubscriptionStatusColor(selectedSubscription.status)
                         }`}>
                           {selectedSubscription.status === 'activated' ? '已啟用' :
-                           selectedSubscription.status === 'purchased' ? '已購買' :
+                           selectedSubscription.status === 'inactive' ? '已購買' :
                            selectedSubscription.status === 'expired' ? '已過期' : '已取消'}
                         </p>
                       </div>
@@ -2297,12 +2314,13 @@ const MemberDetailModal = ({ member, onClose }: { member: CorporateMember, onClo
   // 獲取會員卡狀態顏色
   const getMemberStatusColor = (status: CorporateMember['card_status']): string => {
     switch (status) {
-      case 'purchased': return 'bg-blue-100 text-blue-700';
-      case 'issued': return 'bg-orange-100 text-orange-700';
+      case 'inactive': return 'bg-blue-100 text-blue-700';
+      case 'suspended': return 'bg-yellow-100 text-yellow-700';
       case 'activated': return 'bg-green-100 text-green-700';
       case 'expired': return 'bg-red-100 text-red-700';
       case 'cancelled': return 'bg-gray-100 text-gray-700';
       case 'test': return 'bg-purple-100 text-purple-700';
+      case 'non_member': return 'bg-gray-100 text-gray-700';
       default: return 'bg-gray-100 text-gray-700';
     }
   };
@@ -2311,10 +2329,11 @@ const MemberDetailModal = ({ member, onClose }: { member: CorporateMember, onClo
   const getMemberStatusText = (status: CorporateMember['card_status']): string => {
     switch (status) {
       case 'non_member': return '非會員';
-      case 'purchased': return '未啟用';
+      case 'inactive': return '未啟用';
       case 'activated': return '啟用';
       case 'suspended': return '暫停';
       case 'expired': return '過期';
+      case 'cancelled': return '取消';
       case 'test': return '測試';
       default: return '未知';
     }

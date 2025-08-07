@@ -6,10 +6,11 @@ import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { users } from '@/data/users';
 import { User, UserRole } from '@/types';
+import { MembershipStatus } from '@/types/membership';
 import { authService, memberCardService } from '@/services/dataService';
 
 type RoleType = 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
-type MembershipStatusType = 'non_member' | 'purchased' | 'activated' | 'expired' | 'suspended' | 'test';
+type MembershipStatusType = 'non_member' | 'inactive' | 'activated' | 'expired' | 'suspended' | 'test';
 type CampusType = '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
 
 const {
@@ -25,7 +26,7 @@ const AccountManagement = () => {
   const { user: currentUser, isAdmin } = useAuth();
   const [selectedUser, setSelectedUser] = useState<ExtendedUser | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'non_member' | 'purchased' | 'activated' | 'expired' | 'suspended' | 'test'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'non_member' | 'inactive' | 'activated' | 'expired' | 'suspended' | 'cancelled' | 'test'>('ALL');
   const [roleFilter, setRoleFilter] = useState<'ALL' | 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT'>('ALL');
   const [userTypeFilter, setUserTypeFilter] = useState<'ALL' | 'STUDENT' | 'STAFF'>('ALL'); // 新增：用戶類型篩選
   const [selectedRoles, setSelectedRoles] = useState<('STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT')[]>([]);
@@ -46,6 +47,23 @@ const AccountManagement = () => {
   // 載入用戶資料和角色
   const [usersWithRoles, setUsersWithRoles] = useState<ExtendedUser[]>([]);
 
+  // 轉換舊用戶狀態格式到新的統一格式
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const convertUserToExtendedUser = (user: any): ExtendedUser => {
+    const oldStatus = user.membership_status as string;
+    const convertedStatus: MembershipStatus = 
+      oldStatus === 'NON_MEMBER' ? 'non_member' :
+      oldStatus === 'MEMBER' ? 'activated' :
+      oldStatus === 'EXPIRED_MEMBER' ? 'expired' :
+      oldStatus === 'TEST_USER' ? 'test' : 'non_member';
+    
+    return {
+      ...user,
+      membership_status: convertedStatus,
+      roles: user.roles as UserRole[] // Keep the original roles format for compatibility
+    };
+  };
+
   useEffect(() => {
     const loadUsersWithRoles = async () => {
       try {
@@ -62,12 +80,12 @@ const AccountManagement = () => {
           setUsersWithRoles(response.data);
         } else {
           // 如果 API 失敗，使用本地資料作為備選
-          setUsersWithRoles(users);
+          setUsersWithRoles(users.map(convertUserToExtendedUser));
         }
       } catch (error) {
         console.error('載入用戶資料失敗:', error);
         // 使用本地資料作為備選
-        setUsersWithRoles(users);
+        setUsersWithRoles(users.map(convertUserToExtendedUser));
       }
     };
 
@@ -98,18 +116,14 @@ const AccountManagement = () => {
     
     const matchesRole = roleFilter === 'ALL' || user.roles.includes(roleFilter as 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT');
     const matchesStatus = statusFilter === 'ALL' || 
-                         user.membership_status === statusFilter ||
-                         (statusFilter === 'activated' && user.membership_status === 'MEMBER') ||
-                         (statusFilter === 'expired' && user.membership_status === 'EXPIRED_MEMBER') ||
-                         (statusFilter === 'test' && user.membership_status === 'TEST_USER') ||
-                         (statusFilter === 'non_member' && user.membership_status === 'NON_MEMBER');
+                         user.membership_status === statusFilter;
 
     return matchesSearch && matchesRole && matchesStatus;
   });
 
   // 可分配的角色
   const availableRoles: ('STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN')[] = ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'STAFF', 'ADMIN'];
-  const availableStatuses = ['non_member', 'purchased', 'activated', 'expired', 'suspended', 'test'];
+  const availableStatuses = ['non_member', 'inactive', 'activated', 'expired', 'suspended', 'test'];
   const availableCampuses = ['羅斯福校', '士林校', '台中校', '高雄校', '總部'];
 
 
@@ -266,12 +280,13 @@ const AccountManagement = () => {
     const colors = {
       'non_member': 'bg-gray-100 text-gray-800',
       'NON_MEMBER': 'bg-gray-100 text-gray-800',
-      'purchased': 'bg-orange-100 text-orange-800',
+      'inactive': 'bg-orange-100 text-orange-800',
       'activated': 'bg-green-100 text-green-800',
       'MEMBER': 'bg-green-100 text-green-800',
       'expired': 'bg-red-100 text-red-800',
       'EXPIRED_MEMBER': 'bg-red-100 text-red-800',
       'suspended': 'bg-yellow-100 text-yellow-800',
+      'cancelled': 'bg-gray-100 text-gray-800',
       'test': 'bg-blue-100 text-blue-800',
       'TEST_USER': 'bg-blue-100 text-blue-800',
     };
@@ -330,13 +345,13 @@ const AccountManagement = () => {
             className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             value={statusFilter}
             onChange={(e) => {
-              setStatusFilter(e.target.value as 'ALL' | 'non_member' | 'purchased' | 'activated' | 'expired' | 'suspended' | 'test');
+              setStatusFilter(e.target.value as 'ALL' | 'non_member' | 'inactive' | 'activated' | 'expired' | 'suspended' | 'test');
               setRoleFilter('ALL');
             }}
           >
             <option value="ALL">所有狀態</option>
             <option value="non_member">非會員</option>
-            <option value="purchased">未啟用</option>
+            <option value="inactive">未啟用</option>
             <option value="activated">啟用</option>
             <option value="expired">過期</option>
             <option value="suspended">暫停</option>
@@ -389,18 +404,18 @@ const AccountManagement = () => {
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">啟用</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && (u.membership_status === 'activated' || u.membership_status === 'MEMBER')).length}
+                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && u.membership_status === 'activated').length}
                 </p>
               </div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('STUDENT'); setStatusFilter('purchased'); setRoleFilter('ALL'); setSearchTerm(''); }}>
+          <div className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('STUDENT'); setStatusFilter('inactive'); setRoleFilter('ALL'); setSearchTerm(''); }}>
             <div className="flex items-center">
               <SafeIcon icon={FiUser} className="h-8 w-8 text-orange-600" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">未啟用</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && u.membership_status === 'purchased').length}
+                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && u.membership_status === 'inactive').length}
                 </p>
               </div>
             </div>
@@ -411,7 +426,7 @@ const AccountManagement = () => {
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">過期</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && (u.membership_status === 'expired' || u.membership_status === 'EXPIRED_MEMBER')).length}
+                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && u.membership_status === 'expired').length}
                 </p>
               </div>
             </div>
@@ -433,7 +448,7 @@ const AccountManagement = () => {
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">測試</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {usersWithRoles.filter(u => u.membership_status === 'test' || u.membership_status === 'TEST_USER').length}
+                  {usersWithRoles.filter(u => u.membership_status === 'test').length}
                 </p>
               </div>
             </div>
@@ -444,7 +459,7 @@ const AccountManagement = () => {
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">非會員</p>
                 <p className="text-2xl font-semibold text-gray-900">
-                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && (u.membership_status === 'non_member' || u.membership_status === 'NON_MEMBER')).length}
+                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && u.membership_status === 'non_member').length}
                 </p>
               </div>
             </div>
@@ -535,12 +550,12 @@ const AccountManagement = () => {
                     </td>
                     <td className="w-32 px-4 py-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.membership_status)}`}>
-                        {user.membership_status === 'non_member' || user.membership_status === 'NON_MEMBER' ? '非會員' : 
-                         user.membership_status === 'purchased' ? '未啟用' :
-                         user.membership_status === 'activated' || user.membership_status === 'MEMBER' ? '啟用' :
-                         user.membership_status === 'expired' || user.membership_status === 'EXPIRED_MEMBER' ? '過期' :
+                        {user.membership_status === 'non_member' ? '非會員' : 
+                         user.membership_status === 'inactive' ? '未啟用' :
+                         user.membership_status === 'activated' ? '啟用' :
+                         user.membership_status === 'expired' ? '過期' :
                          user.membership_status === 'suspended' ? '暫停' :
-                         user.membership_status === 'test' || user.membership_status === 'TEST_USER' ? '測試' : 
+                         user.membership_status === 'test' ? '測試' : 
                          '未知'}
                       </span>
                     </td>
@@ -683,12 +698,12 @@ const AccountManagement = () => {
                   >
                     {availableStatuses.map((status) => (
                       <option key={status} value={status}>
-                        {status === 'non_member' || status === 'NON_MEMBER' ? '非會員' : 
-                         status === 'purchased' ? '未啟用' :
-                         status === 'activated' || status === 'MEMBER' ? '啟用' :
-                         status === 'expired' || status === 'EXPIRED_MEMBER' ? '過期' :
+                        {status === 'non_member' ? '非會員' : 
+                         status === 'inactive' ? '未啟用' :
+                         status === 'activated' ? '啟用' :
+                         status === 'expired' ? '過期' :
                          status === 'suspended' ? '暫停' :
-                         status === 'test' || status === 'TEST_USER' ? '測試' : 
+                         status === 'test' ? '測試' : 
                          '未知'}
                       </option>
                     ))}
@@ -802,11 +817,11 @@ const AccountManagement = () => {
                       {availableStatuses.map((status) => (
                         <option key={status} value={status}>
                           {status === 'non_member' || status === 'NON_MEMBER' ? '非會員' : 
-                           status === 'purchased' ? '未啟用' :
+                           status === 'inactive' ? '未啟用' :
                            status === 'activated' || status === 'MEMBER' ? '啟用' :
                            status === 'expired' || status === 'EXPIRED_MEMBER' ? '過期' :
                            status === 'suspended' ? '暫停' :
-                           status === 'test' || status === 'TEST_USER' ? '測試' : 
+                           status === 'test' ? '測試' : 
                            '未知'}
                         </option>
                       ))}

@@ -77,7 +77,7 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
 
   const membership = dashboardData.membership;
   const isActive = membership.status === 'activated';
-  const isPurchased = membership.status === 'purchased';
+  const isInactive = membership.status === 'inactive';
   const isExpired = membership.status === 'expired';
 
   // 根據 member_card_id 獲取會員卡名稱
@@ -86,21 +86,21 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
 
   const getStatusColor = () => {
     if (isActive) return 'text-green-600 bg-green-50';
-    if (isPurchased) return 'text-yellow-600 bg-yellow-50';
+    if (isInactive) return 'text-yellow-600 bg-yellow-50';
     if (isExpired) return 'text-red-600 bg-red-50';
     return 'text-gray-600 bg-gray-50';
   };
 
   const getStatusText = () => {
     if (isActive) return '已啟用';
-    if (isPurchased) return '待啟用';
+    if (isInactive) return '待啟用';
     if (isExpired) return '已過期';
     return '未知狀態';
   };
 
   const getStatusIcon = () => {
     if (isActive) return FiCheckCircle;
-    if (isPurchased) return FiClock;
+    if (isInactive) return FiClock;
     if (isExpired) return FiAlertCircle;
     return FiAlertCircle;
   };
@@ -192,7 +192,7 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
         )}
 
         {/* 啟用按鈕與購買資訊 */}
-        {isPurchased && (
+        {isInactive && (
           <div className="bg-yellow-50 rounded-lg p-4">
             {/* 購買資訊 */}
             <div className="grid grid-cols-2 gap-4 mb-4">

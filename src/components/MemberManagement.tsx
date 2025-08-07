@@ -34,21 +34,38 @@ const MemberManagementReal = () => {
   const [memberCards, setMemberCards] = useState<MemberWithCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'non_member' | 'purchased' | 'activated' | 'expired' | 'suspended' | 'test'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'non_member' | 'inactive' | 'activated' | 'expired' | 'suspended' | 'cancelled' | 'test'>('all');
   const [memberTypeTab, setMemberTypeTab] = useState<'all' | 'individual' | 'corporate'>('all');
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [statistics, setStatistics] = useState({
     total: 0,
     active: 0,
-    purchased: 0,
+    inactive: 0,
     nonMember: 0,
     expired: 0,
     suspended: 0,
+    cancelled: 0,
     test: 0
   });
 
   // 編輯模式相關狀態
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
+
+  // 轉換舊用戶狀態格式到新的統一格式
+  const convertUserStatusToMembershipStatus = (userStatus: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER' | string): MembershipStatus => {
+    switch (userStatus) {
+      case 'NON_MEMBER':
+        return 'non_member';
+      case 'MEMBER':
+        return 'activated';
+      case 'EXPIRED_MEMBER':
+        return 'expired';
+      case 'TEST_USER':
+        return 'test';
+      default:
+        return 'non_member';
+    }
+  };
   const [editingMember, setEditingMember] = useState<Partial<Membership> | null>(null);
 
   // 新增會員表單狀態
@@ -105,7 +122,7 @@ const MemberManagementReal = () => {
           plan_type: 'individual' as const,
           duration_type: 'season' as const,
           duration_days: 0,
-          user_membership_status: user.membership_status,
+          user_membership_status: convertUserStatusToMembershipStatus(user.membership_status),
           user_account_status: user.account_status,
           daysUntilExpiry: undefined,
           isExpiringSoon: false
@@ -121,7 +138,7 @@ const MemberManagementReal = () => {
           const today = new Date();
           daysUntilExpiry = Math.ceil((expiryDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
           isExpiringSoon = daysUntilExpiry <= 30 && daysUntilExpiry > 0;
-        } else if (card.status === 'purchased' && card.activation_deadline) {
+        } else if (card.status === 'inactive' && card.activation_deadline) {
           const deadline = new Date(card.activation_deadline);
           const today = new Date();
           daysUntilExpiry = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
@@ -132,11 +149,19 @@ const MemberManagementReal = () => {
         const userData = users.find(u => u.id === card.user_id);
         
         // 根據會員卡狀態自動更新用戶會員狀態
-        let userMembershipStatus = userData?.membership_status;
+        let userMembershipStatus: MembershipStatus = 'non_member';
         if (card.status === 'activated') {
-          userMembershipStatus = 'MEMBER';
+          userMembershipStatus = 'activated';
         } else if (card.status === 'expired') {
-          userMembershipStatus = 'EXPIRED_MEMBER';
+          userMembershipStatus = 'expired';
+        } else if (card.status === 'inactive') {
+          userMembershipStatus = 'inactive';
+        } else if (card.status === 'suspended') {
+          userMembershipStatus = 'suspended';
+        } else if (card.status === 'test') {
+          userMembershipStatus = 'test';
+        } else if (userData?.membership_status) {
+          userMembershipStatus = convertUserStatusToMembershipStatus(userData.membership_status);
         }
 
         return {
@@ -155,10 +180,11 @@ const MemberManagementReal = () => {
       const newStats = {
         total: allMemberRecords.length,
         active: allMemberRecords.filter(c => c.status === 'activated').length,
-        purchased: allMemberRecords.filter(c => c.status === 'purchased').length,
+        inactive: allMemberRecords.filter(c => c.status === 'inactive').length,
         nonMember: allMemberRecords.filter(c => c.status === 'non_member').length,
         expired: allMemberRecords.filter(c => c.status === 'expired').length,
         suspended: allMemberRecords.filter(c => c.status === 'suspended').length,
+        cancelled: allMemberRecords.filter(c => c.status === 'cancelled').length,
         test: allMemberRecords.filter(c => c.status === 'test').length
       };
       
@@ -232,7 +258,7 @@ const MemberManagementReal = () => {
   const getStatusColor = (status: Membership['status']): string => {
     switch (status) {
       case 'non_member': return 'text-gray-700 bg-gray-50 border-gray-200';
-      case 'purchased': return 'text-orange-700 bg-orange-50 border-orange-200';
+      case 'inactive': return 'text-orange-700 bg-orange-50 border-orange-200';
       case 'activated': return 'text-green-700 bg-green-50 border-green-200';
       case 'suspended': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
       case 'expired': return 'text-red-700 bg-red-50 border-red-200';
@@ -246,7 +272,7 @@ const MemberManagementReal = () => {
   const getStatusText = (status: Membership['status']): string => {
     switch (status) {
       case 'non_member': return '非會員';
-      case 'purchased': return '未啟用';
+      case 'inactive': return '未啟用';
       case 'activated': return '啟用';
       case 'suspended': return '暫停';
       case 'expired': return '過期';
@@ -259,7 +285,7 @@ const MemberManagementReal = () => {
   const getStatusIcon = (status: Membership['status']) => {
     switch (status) {
       case 'non_member': return FiUser;
-      case 'purchased': return FiClock;
+      case 'inactive': return FiClock;
       case 'activated': return FiCheckCircle;
       case 'suspended': return FiClock;
       case 'expired': return FiX;
@@ -473,7 +499,7 @@ const MemberManagementReal = () => {
           const newStats = {
             total: updatedMembers.length,
             active: updatedMembers.filter(c => c.status === 'activated').length,
-            purchased: updatedMembers.filter(c => c.status === 'purchased').length,
+            inactive: updatedMembers.filter(c => c.status === 'inactive').length,
             nonMember: updatedMembers.filter(c => c.status === 'non_member').length,
             expired: updatedMembers.filter(c => c.status === 'expired').length,
             suspended: updatedMembers.filter(c => c.status === 'suspended').length,
@@ -595,7 +621,7 @@ const MemberManagementReal = () => {
           },
           { 
             label: '會員未啟用', 
-            count: statistics.purchased,
+            count: statistics.inactive,
             color: 'text-orange-600 bg-orange-50 border-orange-200',
             icon: FiClock
           },
@@ -626,16 +652,16 @@ const MemberManagementReal = () => {
         ].map((stat) => {
           const isActive = (stat.label === '總會員數' && statusFilter === 'all') ||
                           (stat.label === '會員啟用' && statusFilter === 'activated') ||
-                          (stat.label === '會員未啟用' && statusFilter === 'purchased') ||
+                          (stat.label === '會員未啟用' && statusFilter === 'inactive') ||
                           (stat.label === '會員非會員' && statusFilter === 'non_member') ||
                           (stat.label === '會員過期' && statusFilter === 'expired') ||
                           (stat.label === '會員暫停' && statusFilter === 'suspended') ||
                           (stat.label === '會員測試' && statusFilter === 'test');
           
-          const getFilterValue = (label: string): 'all' | 'non_member' | 'purchased' | 'activated' | 'expired' | 'suspended' | 'test' => {
+          const getFilterValue = (label: string): 'all' | 'non_member' | 'inactive' | 'activated' | 'expired' | 'suspended' | 'test' => {
             switch (label) {
               case '會員啟用': return 'activated';
-              case '會員未啟用': return 'purchased';
+              case '會員未啟用': return 'inactive';
               case '會員非會員': return 'non_member';
               case '會員過期': return 'expired';
               case '會員暫停': return 'suspended';
@@ -818,7 +844,7 @@ const MemberManagementReal = () => {
                               className="w-[140px] px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 font-medium text-gray-900"
                             >
                               <option value="non_member" className="text-gray-700">非會員</option>
-                              <option value="purchased" className="text-orange-700">未啟用</option>
+                              <option value="inactive" className="text-orange-700">未啟用</option>
                               <option value="activated" className="text-green-700">啟用</option>
                               <option value="suspended" className="text-yellow-700">暫停</option>
                               <option value="expired" className="text-red-700">過期</option>
@@ -877,7 +903,7 @@ const MemberManagementReal = () => {
                               {member.activation_deadline ? (
                                 <>
                                   <div className="text-gray-900 h-5 flex items-center">{formatDate(member.activation_deadline)}</div>
-                                  {member.status === 'purchased' && member.daysUntilExpiry !== undefined && (
+                                  {member.status === 'inactive' && member.daysUntilExpiry !== undefined && (
                                     <div className={`text-xs h-4 flex items-center ${member.daysUntilExpiry <= 7 ? 'text-red-600' : 'text-gray-600'}`}>
                                       {member.daysUntilExpiry > 0 ? `${member.daysUntilExpiry} 天內需開啟` : '期限已過'}
                                     </div>
@@ -1008,7 +1034,7 @@ const MemberManagementReal = () => {
                               >
                                 <SafeIcon icon={FiTrash2} className="text-sm" />
                               </button>
-                              {member.status === 'purchased' && member.id > 0 && (
+                              {member.status === 'inactive' && member.id > 0 && (
                                 <button
                                   onClick={() => handleActivateMemberCard(member.id)}
                                   className="flex items-center space-x-1 px-2 py-1 bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors text-xs"

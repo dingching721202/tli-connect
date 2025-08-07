@@ -1,6 +1,6 @@
 // 企業訂閱相關類型定義
 
-export type CorporateSubscriptionStatus = 'purchased' | 'activated' | 'expired' | 'cancelled';
+export type CorporateSubscriptionStatus = 'inactive' | 'activated' | 'expired' | 'cancelled';
 
 export interface CorporateSubscription {
   id: number;
@@ -49,7 +49,7 @@ export interface CorporateMember {
   redemption_deadline: string;    // 兌換期限 (跟隨企業訂閱)
   
   // 會員卡狀態
-  card_status: 'non_member' | 'inactive' | 'activated' | 'suspended' | 'expired' | 'test'; // 統一狀態：非會員、未啟用、啟用中、暫停、已過期、測試
+  card_status: 'non_member' | 'inactive' | 'activated' | 'suspended' | 'expired' | 'cancelled' | 'test'; // 統一狀態：非會員、未啟用、啟用中、暫停、已過期、取消、測試
   activation_date?: string;       // 啟用日期 (會員自己啟用會員卡的日期)
   start_date?: string;           // 開始日期 (啟用後的開始日期)
   end_date?: string;             // 結束日期 (基於方案duration計算)

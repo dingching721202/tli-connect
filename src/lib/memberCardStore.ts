@@ -202,7 +202,7 @@ class MemberCardStore {
       plan_id: data.plan_id,
       member_card_id: plan.member_card_id,
       order_id: data.order_id,
-      status: 'purchased',
+      status: 'inactive',
       purchase_date: now,
       activation_deadline: activationDeadline.toISOString(),
       amount_paid: data.amount_paid,
@@ -240,7 +240,7 @@ class MemberCardStore {
     const card = this.userMemberCards[cardIndex];
     
     // 檢查是否可以開啟
-    if (card.status !== 'purchased') {
+    if (card.status !== 'inactive') {
       throw new Error(`會員卡狀態為 ${card.status}，無法開啟`);
     }
 
@@ -474,7 +474,7 @@ class MemberCardStore {
       }
       
       // 檢查未開啟的會員卡是否超過開啟期限
-      if (card.status === 'purchased' && card.activation_deadline && new Date(card.activation_deadline) < now) {
+      if (card.status === 'inactive' && card.activation_deadline && new Date(card.activation_deadline) < now) {
         this.userMemberCards[i] = {
           ...card,
           status: 'expired',
@@ -494,7 +494,7 @@ class MemberCardStore {
   async getMembershipStatistics(): Promise<{
     total: number;
     active: number;
-    purchased: number;
+    inactive: number;
     expired: number;
     cancelled: number;
   }> {
@@ -508,7 +508,7 @@ class MemberCardStore {
     const stats = {
       total: this.userMemberCards.length,
       active: this.userMemberCards.filter(c => c.status === 'activated').length,
-      purchased: this.userMemberCards.filter(c => c.status === 'purchased').length,
+      inactive: this.userMemberCards.filter(c => c.status === 'inactive').length,
       expired: this.userMemberCards.filter(c => c.status === 'expired').length,
       cancelled: this.userMemberCards.filter(c => c.status === 'cancelled').length
     };

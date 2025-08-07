@@ -72,7 +72,7 @@ class CorporateSubscriptionStore {
     const stats = {
       total: this.subscriptions.length,
       active: this.subscriptions.filter(s => s.status === 'activated').length,
-      purchased: this.subscriptions.filter(s => s.status === 'purchased').length,
+      inactive: this.subscriptions.filter(s => s.status === 'inactive').length,
       expired: this.subscriptions.filter(s => s.status === 'expired').length,
       cancelled: this.subscriptions.filter(s => s.status === 'cancelled').length,
       totalSeats: this.subscriptions.reduce((sum, s) => sum + s.seats_total, 0),
@@ -115,7 +115,7 @@ class CorporateSubscriptionStore {
       seats_available: data.seats_total,
       purchase_date: now,
       activation_deadline: activationDeadline.toISOString(),
-      status: 'purchased',
+      status: 'inactive',
       amount_paid: data.amount_paid,
       auto_renewal: data.auto_renewal || false,
       created_at: now,
@@ -142,7 +142,7 @@ class CorporateSubscriptionStore {
     seats_total?: number,
     amount_paid?: number,
     auto_renewal?: boolean,
-    status?: 'purchased' | 'activated' | 'expired' | 'cancelled',
+    status?: 'inactive' | 'activated' | 'expired' | 'cancelled',
     plan_id?: number,
     plan_title?: string,
     duration_type?: 'season' | 'annual',
@@ -171,7 +171,7 @@ class CorporateSubscriptionStore {
     }
 
     const subscription = this.subscriptions[subscriptionIndex];
-    if (subscription.status !== 'purchased') {
+    if (subscription.status !== 'inactive') {
       throw new Error(`企業訂閱狀態為 ${subscription.status}，無法激活`);
     }
 

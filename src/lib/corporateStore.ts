@@ -1,7 +1,7 @@
 import { Company } from '@/data/corporateData';
 
-class CompanyStore {
-  private static instance: CompanyStore;
+class CorporateStore {
+  private static instance: CorporateStore;
   private companies: Company[] = [];
   private readonly STORAGE_KEY = 'companies';
   private isServerSide = typeof window === 'undefined';
@@ -10,11 +10,11 @@ class CompanyStore {
     this.loadFromStorage();
   }
 
-  static getInstance(): CompanyStore {
-    if (!CompanyStore.instance) {
-      CompanyStore.instance = new CompanyStore();
+  static getInstance(): CorporateStore {
+    if (!CorporateStore.instance) {
+      CorporateStore.instance = new CorporateStore();
     }
-    return CompanyStore.instance;
+    return CorporateStore.instance;
   }
 
   private loadFromStorage(): void {
@@ -208,4 +208,4 @@ class CompanyStore {
   }
 }
 
-export const companyStore = CompanyStore.getInstance();
+export const corporateStore = CorporateStore.getInstance();

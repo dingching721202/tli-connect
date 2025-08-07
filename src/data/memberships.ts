@@ -8,7 +8,7 @@ export interface UserMemberCardOriginal {
   plan_id: number; // 會員卡計劃ID
   member_card_id: number; // 會員卡ID
   order_id?: number; // 對應的訂單ID
-  status: 'purchased' | 'activated' | 'expired' | 'cancelled';
+  status: 'inactive' | 'activated' | 'expired' | 'cancelled';
   purchase_date: string; // 購買日期
   activation_date?: string; // 開啟日期
   expiry_date?: string; // 到期日期
@@ -58,7 +58,7 @@ export const memberships: Membership[] = [
     plan_id: 2,
     member_card_id: 2,
     order_id: 2,
-    status: 'purchased',
+    status: 'inactive',
     purchase_date: '2024-12-15T14:30:00Z',
     activation_deadline: '2025-01-14T23:59:59Z',
     amount_paid: 30000,

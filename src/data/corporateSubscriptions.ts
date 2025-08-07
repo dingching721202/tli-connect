@@ -53,7 +53,7 @@ export const corporateSubscriptions: CorporateSubscription[] = [
     seats_available: 100,
     purchase_date: '2024-07-01T00:00:00Z',
     activation_deadline: '2024-08-01T00:00:00Z',
-    status: 'purchased',
+    status: 'inactive',
     amount_paid: 300000,
     auto_renewal: true,
     created_at: '2024-07-01T00:00:00Z',

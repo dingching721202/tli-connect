@@ -10,7 +10,7 @@ export type UserType = 'individual' | 'corporate';
 export type DurationType = 'season' | 'annual';
 
 // 會員狀態 - 統一狀態定義
-export type MembershipStatus = 'non_member' | 'inactive' | 'activated' | 'suspended' | 'expired' | 'test';
+export type MembershipStatus = 'non_member' | 'inactive' | 'activated' | 'suspended' | 'expired' | 'cancelled' | 'test';
 
 // 會員卡基本定義（會員卡種類）
 export interface MemberCard {

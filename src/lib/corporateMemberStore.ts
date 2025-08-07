@@ -215,7 +215,7 @@ class CorporateMemberStore {
     }
 
     // 對於未啟用的會員卡，檢查啟用期限
-    if (member.card_status === 'purchased' && new Date() > new Date(member.activation_deadline)) {
+    if (member.card_status === 'inactive' && new Date() > new Date(member.activation_deadline)) {
       throw new Error('會員卡啟用期限已過');
     }
 
@@ -332,7 +332,7 @@ class CorporateMemberStore {
   async getMemberStatistics() {
     const totalMembers = this.members.length;
     const activatedMembers = this.members.filter(m => m.card_status === 'activated').length;
-    const purchasedMembers = this.members.filter(m => m.card_status === 'purchased').length;
+    const inactiveMembers = this.members.filter(m => m.card_status === 'inactive').length;
     const expiredMembers = this.members.filter(m => m.card_status === 'expired').length;
     
     const totalLearningHours = this.learningRecords.reduce((sum, record) => 
@@ -344,7 +344,7 @@ class CorporateMemberStore {
     return {
       totalMembers,
       activatedMembers,
-      purchasedMembers,
+      inactiveMembers,
       expiredMembers,
       totalLearningHours: Math.round(totalLearningHours * 10) / 10,
       totalReservations,
@@ -372,7 +372,7 @@ class CorporateMemberStore {
       }
       
       // 檢查未啟用的會員卡是否超過啟用期限
-      if (member.card_status === 'purchased' && new Date(member.activation_deadline) < now) {
+      if (member.card_status === 'inactive' && new Date(member.activation_deadline) < now) {
         const autoExpire = this.getSystemSetting('auto_expire_inactive_members', true) as boolean;
         if (autoExpire) {
           this.members[i] = {

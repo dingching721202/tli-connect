@@ -515,7 +515,7 @@ const convertMembershipToLegacyFormat = (um: {
   activated: um.status === 'activated',
   activate_expire_time: um.activation_deadline || '',
   user_id: um.user_id,
-  status: um.status === 'purchased' ? 'PURCHASED' as const : 
+  status: um.status === 'inactive' ? 'INACTIVE' as const : 
           um.status === 'activated' ? 'ACTIVE' as const : 
           'EXPIRED' as const,
   // 向後相容性屬性
@@ -586,12 +586,12 @@ export const memberCardService = {
       
       if (!userMembership || userMembership.user_id !== userId) {
         console.log('❌ 找不到會員資格記錄');
-        return { success: false, error: 'Membership not found or not purchased' };
+        return { success: false, error: 'Membership not found or not inactive' };
       }
 
-      if (userMembership.status !== 'purchased') {
-        console.log(`❌ 會員卡狀態不正確: ${userMembership.status} (需要 purchased)`);
-        return { success: false, error: 'Membership not found or not purchased' };
+      if (userMembership.status !== 'inactive') {
+        console.log(`❌ 會員卡狀態不正確: ${userMembership.status} (需要 inactive)`);
+        return { success: false, error: 'Membership not found or not inactive' };
       }
 
       // 檢查是否已有啟用的會員卡
@@ -640,21 +640,21 @@ export const memberCardService = {
     }) as unknown as Membership;
   },
 
-  // 獲取用戶的待啟用會員卡 (PURCHASED 狀態)
-  async getUserPurchasedMembership(userId: number): Promise<Membership | null> {
+  // 獲取用戶的待啟用會員卡 (INACTIVE 狀態)
+  async getUserInactiveMembership(userId: number): Promise<Membership | null> {
     const userMemberships = await memberCardStore.getMembershipsByUserId(userId);
-    const purchasedMembership = userMemberships.find(m => m.status === 'purchased');
+    const inactiveMembership = userMemberships.find(m => m.status === 'inactive');
     
-    console.log(`🔍 getUserPurchasedMembership - 用戶ID: ${userId}, 找到的 PURCHASED 會員卡:`, purchasedMembership);
+    console.log(`🔍 getUserInactiveMembership - 用戶ID: ${userId}, 找到的 INACTIVE 會員卡:`, inactiveMembership);
     
-    if (!purchasedMembership) {
+    if (!inactiveMembership) {
       return null;
     }
 
     return convertMembershipToLegacyFormat({
-      ...purchasedMembership,
-      member_card_id: purchasedMembership.member_card_id!,
-      plan_id: purchasedMembership.plan_id!
+      ...inactiveMembership,
+      member_card_id: inactiveMembership.member_card_id!,
+      plan_id: inactiveMembership.plan_id!
     }) as unknown as Membership;
   },
   
@@ -794,7 +794,7 @@ export const bookingService = {
     // 檢查會員資格 - 允許 ACTIVE 和 PURCHASED 狀態的會員預約
     let membership = await memberCardService.getMembership(userId);
     if (!membership) {
-      membership = await memberCardService.getUserPurchasedMembership(userId);
+      membership = await memberCardService.getUserInactiveMembership(userId);
     }
     
     console.log(`🔍 batchBooking - 用戶ID: ${userId}, 會員資格:`, membership);
@@ -1212,7 +1212,7 @@ export const dashboardService = {
     console.log('🎯 找到的 ACTIVE 會員卡:', membership);
     
     if (!membership) {
-      membership = await memberCardService.getUserPurchasedMembership(userId);
+      membership = await memberCardService.getUserInactiveMembership(userId);
       console.log('🎯 找到的 PURCHASED 會員卡:', membership);
     }
     
