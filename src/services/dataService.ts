@@ -71,7 +71,7 @@ export const authService = {
       phone,
       password: `$2b$10$${password}`, // 模擬密碼雜湊
       roles: ['STUDENT'],
-      membership_status: 'NON_MEMBER',
+      membership_status: 'non_member',
       account_status: 'ACTIVE',
       campus: '羅斯福校',
       created_at: new Date().toISOString()
@@ -208,7 +208,7 @@ export const authService = {
     }
   },
 
-  async updateUserStatus(userId: number, status: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER', _adminId: number) {
+  async updateUserStatus(userId: number, status: 'non_member' | 'activated' | 'expired' | 'test', _adminId: number) {
     await delay(300);
     
     try {
@@ -400,12 +400,12 @@ export const authService = {
       const user = users.find(u => u.id === userId);
       if (!user) return { success: false, error: 'User not found' };
 
-      let newStatus: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER' = 'NON_MEMBER';
+      let newStatus: 'non_member' | 'activated' | 'expired' | 'test' = 'non_member';
 
       // 檢查用戶角色
       if (!user.roles.includes('STUDENT')) {
         // 非學生角色自動變成使用者
-        newStatus = 'NON_MEMBER';
+        newStatus = 'non_member';
       } else {
         // 學生角色需要檢查會員卡狀態
         const activeMembership = await memberCardService.getMembership(userId);
@@ -415,15 +415,15 @@ export const authService = {
             const now = new Date();
             const expireTime = new Date(activeMembership.expiry_date || '');
             if (expireTime > now) {
-              newStatus = 'MEMBER';
+              newStatus = 'activated';
             } else {
-              newStatus = 'EXPIRED_MEMBER';
+              newStatus = 'expired';
             }
           } else if (activeMembership.status === 'expired') {
-            newStatus = 'EXPIRED_MEMBER';
+            newStatus = 'expired';
           }
         }
-        // 如果沒有會員卡，保持為 NON_MEMBER
+        // 如果沒有會員卡，保持為 non_member
       }
 
       // 更新用戶狀態
@@ -444,7 +444,7 @@ export const authService = {
         }
       }
 
-      return { success: true, data: { userId, oldStatus: user.membership_status, newStatus } };
+      return { success: true, data: { userId, newStatus } };
     } catch (error) {
       console.error('自動更新會員狀態失敗:', error);
       return { success: false, error: 'Failed to auto update membership status' };

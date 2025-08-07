@@ -222,7 +222,6 @@ const CorporateMemberManagement = () => {
       case 'inactive': return 'text-blue-700 bg-blue-50 border-blue-200';
       case 'activated': return 'text-green-700 bg-green-50 border-green-200';
       case 'expired': return 'text-red-700 bg-red-50 border-red-200';
-      case 'suspended': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
       case 'cancelled': return 'text-gray-700 bg-gray-50 border-gray-200';
       case 'test': return 'text-purple-700 bg-purple-50 border-purple-200';
       case 'non_member': return 'text-gray-700 bg-gray-50 border-gray-200';
@@ -236,7 +235,6 @@ const CorporateMemberManagement = () => {
       case 'non_member': return '非會員';
       case 'inactive': return '未啟用';
       case 'activated': return '啟用';
-      case 'suspended': return '暫停';
       case 'expired': return '過期';
       case 'cancelled': return '取消';
       case 'test': return '測試';
@@ -603,13 +601,9 @@ const CorporateMemberManagement = () => {
       } else if (member.card_status === 'activated') {
         // 停用會員卡（設為暫停）
         await corporateMemberStore.updateMember(member.id, {
-          card_status: 'suspended'
+          card_status: 'expired'
         });
         alert('✅ 會員卡已暫停！');
-      } else if (member.card_status === 'suspended') {
-        // 重新啟用暫停的會員卡
-        await corporateMemberStore.activateMemberCard(member.id);
-        alert('✅ 會員卡已重新啟用！');
       } else if (member.card_status === 'expired') {
         // 重新啟用已過期的會員卡
         await corporateMemberStore.activateMemberCard(member.id);
@@ -626,7 +620,6 @@ const CorporateMemberManagement = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'inactive': return 'text-blue-700 bg-blue-50 border-blue-200';
-      case 'suspended': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
       case 'activated': return 'text-green-700 bg-green-50 border-green-200';
       case 'expired': return 'text-red-700 bg-red-50 border-red-200';
       case 'cancelled': return 'text-gray-700 bg-gray-50 border-gray-200';
@@ -639,9 +632,10 @@ const CorporateMemberManagement = () => {
   const getStatusText = (status: string) => {
     switch (status) {
       case 'non_member': return '非會員';
+      case 'inactive': return '未啟用';
       case 'activated': return '啟用';
-      case 'suspended': return '暫停';
       case 'expired': return '過期';
+      case 'cancelled': return '取消';
       case 'test': return '測試';
       default: return status;
     }
@@ -651,7 +645,6 @@ const CorporateMemberManagement = () => {
   const getCompanyStatusColor = (status: string) => {
     switch (status) {
       case 'inactive': return 'text-blue-700 bg-blue-50 border-blue-200';
-      case 'suspended': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
       case 'activated': return 'text-green-700 bg-green-50 border-green-200';
       case 'expired': return 'text-red-700 bg-red-50 border-red-200';
       case 'cancelled': return 'text-gray-700 bg-gray-50 border-gray-200';
@@ -664,9 +657,10 @@ const CorporateMemberManagement = () => {
   const getCompanyStatusText = (status: string) => {
     switch (status) {
       case 'non_member': return '非會員';
+      case 'inactive': return '未啟用';
       case 'activated': return '啟用';
-      case 'suspended': return '暫停';
       case 'expired': return '過期';
+      case 'cancelled': return '取消';
       case 'test': return '測試';
       default: return status;
     }
@@ -676,7 +670,6 @@ const CorporateMemberManagement = () => {
   const getSubscriptionStatusColor = (status: string) => {
     switch (status) {
       case 'inactive': return 'bg-blue-100 text-blue-700';
-      case 'suspended': return 'bg-yellow-100 text-yellow-700';
       case 'activated': return 'bg-green-100 text-green-700';
       case 'expired': return 'bg-red-100 text-red-700';
       case 'cancelled': return 'bg-gray-100 text-gray-700';
@@ -902,13 +895,12 @@ const CorporateMemberManagement = () => {
                           <div className="grid grid-cols-1 gap-2">
                             <select
                               value={editingCompany?.status || ''}
-                              onChange={(e) => setEditingCompany(prev => prev ? {...prev, status: e.target.value as 'non_member' | 'activated' | 'suspended' | 'expired' | 'test'} : null)}
+                              onChange={(e) => setEditingCompany(prev => prev ? {...prev, status: e.target.value as 'non_member' | 'activated' | 'expired' | 'test'} : null)}
                               className="px-2 py-1 border border-gray-300 rounded text-sm bg-white"
                             >
                               <option value="non_member">非會員</option>
                               <option value="inactive">未啟用</option>
                               <option value="activated">啟用</option>
-                              <option value="suspended">暫停</option>
                               <option value="expired">過期</option>
                               <option value="test">測試</option>
                             </select>
@@ -1209,8 +1201,7 @@ const CorporateMemberManagement = () => {
                                         <option value="non_member">非會員</option>
                                         <option value="inactive">未啟用</option>
                                         <option value="activated">啟用</option>
-                                        <option value="suspended">暫停</option>
-                                        <option value="expired">過期</option>
+                                                  <option value="expired">過期</option>
                                         <option value="test">測試</option>
                                       </select>
                                     </div>
@@ -1331,8 +1322,7 @@ const CorporateMemberManagement = () => {
                                                     <option value="non_member">非會員</option>
                                                     <option value="inactive">未啟用</option>
                                                     <option value="activated">啟用</option>
-                                                    <option value="suspended">暫停</option>
-                                                    <option value="expired">過期</option>
+                                                                          <option value="expired">過期</option>
                                                     <option value="test">測試</option>
                                                   </select>
                                                 ) : (
@@ -1605,7 +1595,6 @@ const CorporateMemberManagement = () => {
                               <option value="non_member">非會員</option>
                               <option value="inactive">未啟用</option>
                               <option value="activated">啟用</option>
-                              <option value="suspended">暫停</option>
                               <option value="expired">過期</option>
                               <option value="test">測試</option>
                             </select>
@@ -1887,13 +1876,12 @@ const CorporateMemberManagement = () => {
                   <label className="block text-sm font-medium text-gray-700 mb-1">企業狀態</label>
                   <select
                     value={newCompany.status}
-                    onChange={(e) => setNewCompany({...newCompany, status: e.target.value as 'non_member' | 'activated' | 'suspended' | 'expired' | 'test'})}
+                    onChange={(e) => setNewCompany({...newCompany, status: e.target.value as 'non_member' | 'activated' | 'expired' | 'test'})}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   >
                     <option value="non_member">非會員</option>
                     <option value="inactive">未啟用</option>
                     <option value="activated">啟用</option>
-                    <option value="suspended">暫停</option>
                     <option value="expired">過期</option>
                     <option value="test">測試</option>
                   </select>
@@ -1990,11 +1978,10 @@ const CorporateMemberManagement = () => {
                         <span className="text-sm text-gray-600">企業狀態</span>
                         <p className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
                           selectedCompany.status === 'activated' ? 'bg-green-100 text-green-800' :
-                          selectedCompany.status === 'suspended' ? 'bg-gray-100 text-gray-800' :
                           'bg-red-100 text-red-800'
                         }`}>
                           {selectedCompany.status === 'activated' ? '正常營運' :
-                           selectedCompany.status === 'suspended' ? '暫停' : '過期'}
+                           '過期'}
                         </p>
                       </div>
                       <div>
@@ -2315,7 +2302,6 @@ const MemberDetailModal = ({ member, onClose }: { member: CorporateMember, onClo
   const getMemberStatusColor = (status: CorporateMember['card_status']): string => {
     switch (status) {
       case 'inactive': return 'bg-blue-100 text-blue-700';
-      case 'suspended': return 'bg-yellow-100 text-yellow-700';
       case 'activated': return 'bg-green-100 text-green-700';
       case 'expired': return 'bg-red-100 text-red-700';
       case 'cancelled': return 'bg-gray-100 text-gray-700';
@@ -2331,7 +2317,6 @@ const MemberDetailModal = ({ member, onClose }: { member: CorporateMember, onClo
       case 'non_member': return '非會員';
       case 'inactive': return '未啟用';
       case 'activated': return '啟用';
-      case 'suspended': return '暫停';
       case 'expired': return '過期';
       case 'cancelled': return '取消';
       case 'test': return '測試';

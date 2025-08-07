@@ -34,7 +34,7 @@ const MemberManagementReal = () => {
   const [memberCards, setMemberCards] = useState<MemberWithCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'non_member' | 'inactive' | 'activated' | 'expired' | 'suspended' | 'cancelled' | 'test'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'non_member' | 'inactive' | 'activated' | 'expired' | 'cancelled' | 'test'>('all');
   const [memberTypeTab, setMemberTypeTab] = useState<'all' | 'individual' | 'corporate'>('all');
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [statistics, setStatistics] = useState({
@@ -43,7 +43,6 @@ const MemberManagementReal = () => {
     inactive: 0,
     nonMember: 0,
     expired: 0,
-    suspended: 0,
     cancelled: 0,
     test: 0
   });
@@ -51,21 +50,6 @@ const MemberManagementReal = () => {
   // 編輯模式相關狀態
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
 
-  // 轉換舊用戶狀態格式到新的統一格式
-  const convertUserStatusToMembershipStatus = (userStatus: 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER' | string): MembershipStatus => {
-    switch (userStatus) {
-      case 'NON_MEMBER':
-        return 'non_member';
-      case 'MEMBER':
-        return 'activated';
-      case 'EXPIRED_MEMBER':
-        return 'expired';
-      case 'TEST_USER':
-        return 'test';
-      default:
-        return 'non_member';
-    }
-  };
   const [editingMember, setEditingMember] = useState<Partial<Membership> | null>(null);
 
   // 新增會員表單狀態
@@ -92,9 +76,9 @@ const MemberManagementReal = () => {
       
       // 獲取所有有會員狀態的用戶（包括沒有會員卡的會員）
       const memberUsers = users.filter(user => 
-        user.membership_status === 'MEMBER' || 
-        user.membership_status === 'EXPIRED_MEMBER' || 
-        user.membership_status === 'TEST_USER'
+        user.membership_status === 'activated' || 
+        user.membership_status === 'expired' || 
+        user.membership_status === 'test'
       );
       
       // 創建會員卡用戶ID集合
@@ -122,7 +106,7 @@ const MemberManagementReal = () => {
           plan_type: 'individual' as const,
           duration_type: 'season' as const,
           duration_days: 0,
-          user_membership_status: convertUserStatusToMembershipStatus(user.membership_status),
+          user_membership_status: user.membership_status as MembershipStatus,
           user_account_status: user.account_status,
           daysUntilExpiry: undefined,
           isExpiringSoon: false
@@ -156,12 +140,10 @@ const MemberManagementReal = () => {
           userMembershipStatus = 'expired';
         } else if (card.status === 'inactive') {
           userMembershipStatus = 'inactive';
-        } else if (card.status === 'suspended') {
-          userMembershipStatus = 'suspended';
         } else if (card.status === 'test') {
           userMembershipStatus = 'test';
         } else if (userData?.membership_status) {
-          userMembershipStatus = convertUserStatusToMembershipStatus(userData.membership_status);
+          userMembershipStatus = userData.membership_status as MembershipStatus;
         }
 
         return {
@@ -183,7 +165,6 @@ const MemberManagementReal = () => {
         inactive: allMemberRecords.filter(c => c.status === 'inactive').length,
         nonMember: allMemberRecords.filter(c => c.status === 'non_member').length,
         expired: allMemberRecords.filter(c => c.status === 'expired').length,
-        suspended: allMemberRecords.filter(c => c.status === 'suspended').length,
         cancelled: allMemberRecords.filter(c => c.status === 'cancelled').length,
         test: allMemberRecords.filter(c => c.status === 'test').length
       };
@@ -260,8 +241,8 @@ const MemberManagementReal = () => {
       case 'non_member': return 'text-gray-700 bg-gray-50 border-gray-200';
       case 'inactive': return 'text-orange-700 bg-orange-50 border-orange-200';
       case 'activated': return 'text-green-700 bg-green-50 border-green-200';
-      case 'suspended': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
       case 'expired': return 'text-red-700 bg-red-50 border-red-200';
+      case 'cancelled': return 'text-gray-700 bg-gray-50 border-gray-200';
       case 'test': return 'text-blue-700 bg-blue-50 border-blue-200';
       default: return 'text-gray-700 bg-gray-50 border-gray-200';
     }
@@ -274,8 +255,8 @@ const MemberManagementReal = () => {
       case 'non_member': return '非會員';
       case 'inactive': return '未啟用';
       case 'activated': return '啟用';
-      case 'suspended': return '暫停';
       case 'expired': return '過期';
+      case 'cancelled': return '取消';
       case 'test': return '測試';
       default: return '未知';
     }
@@ -287,8 +268,8 @@ const MemberManagementReal = () => {
       case 'non_member': return FiUser;
       case 'inactive': return FiClock;
       case 'activated': return FiCheckCircle;
-      case 'suspended': return FiClock;
       case 'expired': return FiX;
+      case 'cancelled': return FiX;
       case 'test': return FiUser;
       default: return FiUser;
     }
@@ -502,7 +483,6 @@ const MemberManagementReal = () => {
             inactive: updatedMembers.filter(c => c.status === 'inactive').length,
             nonMember: updatedMembers.filter(c => c.status === 'non_member').length,
             expired: updatedMembers.filter(c => c.status === 'expired').length,
-            suspended: updatedMembers.filter(c => c.status === 'suspended').length,
             test: updatedMembers.filter(c => c.status === 'test').length
           };
           setStatistics(newStats);
@@ -638,12 +618,6 @@ const MemberManagementReal = () => {
             icon: FiX
           },
           { 
-            label: '會員暫停', 
-            count: statistics.suspended,
-            color: 'text-gray-600 bg-gray-50 border-gray-200',
-            icon: FiTrash2
-          },
-          { 
             label: '會員測試', 
             count: statistics.test,
             color: 'text-blue-600 bg-blue-50 border-blue-200',
@@ -655,16 +629,14 @@ const MemberManagementReal = () => {
                           (stat.label === '會員未啟用' && statusFilter === 'inactive') ||
                           (stat.label === '會員非會員' && statusFilter === 'non_member') ||
                           (stat.label === '會員過期' && statusFilter === 'expired') ||
-                          (stat.label === '會員暫停' && statusFilter === 'suspended') ||
                           (stat.label === '會員測試' && statusFilter === 'test');
           
-          const getFilterValue = (label: string): 'all' | 'non_member' | 'inactive' | 'activated' | 'expired' | 'suspended' | 'test' => {
+          const getFilterValue = (label: string): 'all' | 'non_member' | 'inactive' | 'activated' | 'expired' | 'cancelled' | 'test' => {
             switch (label) {
               case '會員啟用': return 'activated';
               case '會員未啟用': return 'inactive';
               case '會員非會員': return 'non_member';
               case '會員過期': return 'expired';
-              case '會員暫停': return 'suspended';
               case '會員測試': return 'test';
               default: return 'all';
             }
@@ -736,7 +708,7 @@ const MemberManagementReal = () => {
               <tr>
                 <th className="text-left py-3 px-4 font-medium text-gray-900 w-48">會員資訊</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-900 w-40">會員卡方案</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-900">卡片狀態</th>
+                <th className="text-left py-3 px-4 font-medium text-gray-900">會員狀態</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-900">購買日期</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-900">兌換期限</th>
                 <th className="text-left py-3 px-4 font-medium text-gray-900">開始日期</th>
@@ -834,7 +806,7 @@ const MemberManagementReal = () => {
                         </div>
                       </td>
 
-                      {/* 卡片狀態 */}
+                      {/* 會員狀態 */}
                       <td className="py-4 px-4">
                         <div className="h-9 flex items-center">
                           {editingMemberId === member.id ? (
@@ -846,8 +818,8 @@ const MemberManagementReal = () => {
                               <option value="non_member" className="text-gray-700">非會員</option>
                               <option value="inactive" className="text-orange-700">未啟用</option>
                               <option value="activated" className="text-green-700">啟用</option>
-                              <option value="suspended" className="text-yellow-700">暫停</option>
                               <option value="expired" className="text-red-700">過期</option>
+                              <option value="cancelled" className="text-gray-700">取消</option>
                               <option value="test" className="text-blue-700">測試</option>
                             </select>
                           ) : (
