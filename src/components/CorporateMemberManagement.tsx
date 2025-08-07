@@ -33,11 +33,7 @@ const CorporateMemberManagement = () => {
   const [showMemberDetailModal, setShowMemberDetailModal] = useState(false);
   const [selectedSubscriptionId, setSelectedSubscriptionId] = useState<number | null>(null);
   
-  // 視圖模式控制
-  const [viewMode, setViewMode] = useState<'hierarchy' | 'list'>('hierarchy');
   
-  // 企業會員列表（扁平化）
-  const [allCorporateMembers, setAllCorporateMembers] = useState<CorporateMember[]>([]);
   
   // 編輯功能
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
@@ -117,7 +113,6 @@ const CorporateMemberManagement = () => {
       });
       
       setCorporateData(combinedData);
-      setAllCorporateMembers(members); // 設置扁平化的企業會員列表
       
       // 計算統計數據
       setStatistics({
@@ -216,31 +211,6 @@ const CorporateMemberManagement = () => {
     }
   };
 
-  // 獲取會員卡狀態顏色
-  const getMemberStatusColor = (status: CorporateMember['card_status']): string => {
-    switch (status) {
-      case 'inactive': return 'text-blue-700 bg-blue-50 border-blue-200';
-      case 'activated': return 'text-green-700 bg-green-50 border-green-200';
-      case 'expired': return 'text-red-700 bg-red-50 border-red-200';
-      case 'cancelled': return 'text-gray-700 bg-gray-50 border-gray-200';
-      case 'test': return 'text-purple-700 bg-purple-50 border-purple-200';
-      case 'non_member': return 'text-gray-700 bg-gray-50 border-gray-200';
-      default: return 'text-gray-700 bg-gray-50 border-gray-200';
-    }
-  };
-
-  // 獲取會員卡狀態文字
-  const getMemberStatusText = (status: CorporateMember['card_status']): string => {
-    switch (status) {
-      case 'non_member': return '非會員';
-      case 'inactive': return '未啟用';
-      case 'activated': return '啟用';
-      case 'expired': return '過期';
-      case 'cancelled': return '取消';
-      case 'test': return '測試';
-      default: return '未知';
-    }
-  };
 
   // 新增企業會員
   const handleAddMember = async () => {
@@ -789,35 +759,10 @@ const CorporateMemberManagement = () => {
           </div>
           
           {/* 視圖模式切換 */}
-          <div className="flex bg-gray-100 rounded-lg p-1">
-            <button
-              onClick={() => setViewMode('hierarchy')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                viewMode === 'hierarchy'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <SafeIcon icon={FiUsers} className="inline mr-2" />
-              分層視圖
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                viewMode === 'list'
-                  ? 'bg-white text-blue-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <SafeIcon icon={FiEye} className="inline mr-2" />
-              列表視圖
-            </button>
-          </div>
         </div>
       </motion.div>
 
-      {/* 企業列表 - 根據視圖模式顯示 */}
-      {viewMode === 'hierarchy' ? (
+      {/* 企業組織架構 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1496,258 +1441,6 @@ const CorporateMemberManagement = () => {
           </div>
         )}
         </motion.div>
-      ) : (
-        // 企業會員列表視圖
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
-        >
-          {allCorporateMembers.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      會員資訊
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      企業 / 方案
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      卡片狀態
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      分配日期
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      啟用期限
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      開始日期
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      結束日期
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      操作
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {allCorporateMembers
-                    .filter(member => 
-                      !searchTerm || 
-                      member.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      member.user_email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      member.company_name?.toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                    .map((member) => (
-                    <tr key={member.id} className="hover:bg-gray-50">
-                      {/* 會員資訊 */}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="ml-4 w-[160px]">
-                            <div className="text-sm font-medium text-gray-900 h-5 flex items-center">
-                              {editingMemberId === member.id ? (
-                                <input
-                                  type="text"
-                                  value={editingMember?.user_name || ''}
-                                  onChange={(e) => setEditingMember(prev => prev ? {...prev, user_name: e.target.value} : null)}
-                                  className="w-[140px] px-2 py-0.5 border border-gray-300 rounded text-sm h-6"
-                                />
-                              ) : (
-                                <span className="truncate" title={member.user_name}>{member.user_name}</span>
-                              )}
-                            </div>
-                            <div className="text-sm text-gray-500 h-5 flex items-center mt-1">
-                              {editingMemberId === member.id ? (
-                                <input
-                                  type="email"
-                                  value={editingMember?.user_email || ''}
-                                  onChange={(e) => setEditingMember(prev => prev ? {...prev, user_email: e.target.value} : null)}
-                                  className="w-[140px] px-2 py-0.5 border border-gray-300 rounded text-sm h-6"
-                                />
-                              ) : (
-                                <span className="truncate" title={member.user_email}>{member.user_email}</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-
-                      {/* 企業 / 方案 */}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{member.company_name}</div>
-                        <div className="text-sm text-gray-500">{member.plan_title}</div>
-                      </td>
-
-                      {/* 卡片狀態 */}
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="min-w-[120px] h-6 flex items-center">
-                          {editingMemberId === member.id ? (
-                            <select
-                              value={editingMember?.card_status || ''}
-                              onChange={(e) => setEditingMember(prev => prev ? {...prev, card_status: e.target.value as CorporateMember['card_status']} : null)}
-                              className="w-[120px] px-2 py-0.5 border border-gray-300 rounded text-sm h-6"
-                            >
-                              <option value="non_member">非會員</option>
-                              <option value="inactive">未啟用</option>
-                              <option value="activated">啟用</option>
-                              <option value="expired">過期</option>
-                              <option value="test">測試</option>
-                            </select>
-                          ) : (
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(member.card_status)}`}>
-                              {getStatusText(member.card_status)}
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* 分配日期 */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="min-w-[100px] h-6 flex items-center">
-                          {editingMemberId === member.id ? (
-                            <input
-                              type="date"
-                              value={formatDateForInput(editingMember?.issued_date)}
-                              onChange={(e) => setEditingMember(prev => prev ? {...prev, issued_date: e.target.value} : null)}
-                              className="w-[130px] px-2 py-0.5 border border-gray-300 rounded text-sm h-6 appearance-none cursor-pointer"
-                              style={{ colorScheme: 'light' }}
-                            />
-                          ) : (
-                            <span>{formatDate(member.issued_date)}</span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* 啟用期限 */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="min-w-[100px] h-6 flex items-center">
-                          {editingMemberId === member.id ? (
-                            <input
-                              type="date"
-                              value={formatDateForInput(editingMember?.activation_deadline)}
-                              onChange={(e) => setEditingMember(prev => prev ? {...prev, activation_deadline: e.target.value} : null)}
-                              className="w-[130px] px-2 py-0.5 border border-gray-300 rounded text-sm h-6 appearance-none cursor-pointer"
-                              style={{ colorScheme: 'light' }}
-                            />
-                          ) : (
-                            <span>{formatDate(member.activation_deadline)}</span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* 開始日期 */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="min-w-[100px] h-6 flex items-center">
-                          {editingMemberId === member.id ? (
-                            <input
-                              type="date"
-                              value={formatDateForInput(editingMember?.start_date)}
-                              onChange={(e) => setEditingMember(prev => prev ? {...prev, start_date: e.target.value} : null)}
-                              className="w-[130px] px-2 py-0.5 border border-gray-300 rounded text-sm h-6 appearance-none cursor-pointer"
-                              style={{ colorScheme: 'light' }}
-                            />
-                          ) : (
-                            <span>{formatDate(member.start_date)}</span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* 結束日期 */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        <div className="min-w-[100px] h-6 flex items-center">
-                          {editingMemberId === member.id ? (
-                            <input
-                              type="date"
-                              value={formatDateForInput(editingMember?.end_date)}
-                              onChange={(e) => setEditingMember(prev => prev ? {...prev, end_date: e.target.value} : null)}
-                              className="w-[130px] px-2 py-0.5 border border-gray-300 rounded text-sm h-6 appearance-none cursor-pointer"
-                              style={{ colorScheme: 'light' }}
-                            />
-                          ) : (
-                            <span>{formatDate(member.end_date)}</span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* 操作 */}
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex items-center justify-end space-x-2 min-w-[140px] h-6">
-                          {editingMemberId === member.id ? (
-                            <>
-                              <button
-                                onClick={handleSaveMember}
-                                className="text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100 px-2 py-1 rounded text-xs h-6 flex items-center"
-                              >
-                                儲存
-                              </button>
-                              <button
-                                onClick={handleCancelEdit}
-                                className="text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 px-2 py-1 rounded text-xs h-6 flex items-center"
-                              >
-                                取消
-                              </button>
-                            </>
-                          ) : (
-                            <>
-                              {/* 查看 */}
-                              <button
-                                onClick={() => handleViewMemberDetail(member)}
-                                title="查看詳情"
-                                className="text-gray-600 hover:text-gray-900 bg-gray-50 hover:bg-gray-100 p-1 rounded text-xs h-6 w-6 flex items-center justify-center"
-                              >
-                                <SafeIcon icon={FiEye} className="text-sm" />
-                              </button>
-                              {/* 編輯 */}
-                              <button
-                                onClick={() => handleEditMember(member)}
-                                title="編輯會員"
-                                className="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 p-1 rounded text-xs h-6 w-6 flex items-center justify-center"
-                              >
-                                <SafeIcon icon={FiEdit2} className="text-sm" />
-                              </button>
-                              {/* 刪除 */}
-                              <button
-                                onClick={() => handleDeleteMember(member.id, member.user_name)}
-                                title="刪除會員"
-                                className="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 p-1 rounded text-xs h-6 w-6 flex items-center justify-center"
-                              >
-                                <SafeIcon icon={FiTrash2} className="text-sm" />
-                              </button>
-                              {/* 啟用/停用 */}
-                              <button
-                                onClick={() => handleToggleMemberStatus(member)}
-                                title={member.card_status === 'activated' ? '停用' : '啟用'}
-                                className={`p-1 rounded text-xs h-6 w-6 flex items-center justify-center ${
-                                  member.card_status === 'activated'
-                                    ? 'text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100'
-                                    : 'text-green-600 hover:text-green-900 bg-green-50 hover:bg-green-100'
-                                }`}
-                              >
-                                <SafeIcon icon={member.card_status === 'activated' ? FiPause : FiPlay} className="text-sm" />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="text-center py-12">
-              <SafeIcon icon={FiUsers} className="text-6xl text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">暫無企業會員</h3>
-              <p className="text-gray-600">企業會員創建後，會顯示在這裡</p>
-            </div>
-          )}
-        </motion.div>
-      )}
 
       {/* 新增企業模態框 */}
       <AnimatePresence>

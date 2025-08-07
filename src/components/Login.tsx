@@ -567,8 +567,8 @@ const Login: React.FC = () => {
                       <span className="text-sm font-medium">{account.status}</span>
                     </div>
                     <div className="text-xs text-gray-500">{account.email}</div>
-                    {'description' in account && (account as any).description && (
-                      <div className="text-xs text-gray-400 mt-1">{(account as any).description}</div>
+                    {'description' in account && (account as {description?: string}).description && (
+                      <div className="text-xs text-gray-400 mt-1">{(account as {description?: string}).description}</div>
                     )}
                   </div>
                 </motion.button>

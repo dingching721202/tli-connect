@@ -6,7 +6,6 @@ import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { users } from '@/data/users';
 import { User, UserRole } from '@/types';
-import { MembershipStatus } from '@/types/membership';
 import { authService, memberCardService } from '@/services/dataService';
 
 type RoleType = 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';

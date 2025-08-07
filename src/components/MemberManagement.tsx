@@ -10,6 +10,14 @@ import { memberCardPlans } from '@/data/member_card_plans';
 import { users } from '@/data/users';
 import { MembershipStatus } from '@/types/user';
 import CorporateMemberManagement from './CorporateMemberManagement';
+import { corporateStore } from '@/lib/corporateStore';
+import { Company } from '@/data/corporateData';
+
+
+// 組織分層視圖組件
+const OrganizationHierarchyView = () => {
+  return <CorporateMemberManagement />;
+};
 
 const {
   FiUsers, FiUser, FiBriefcase, FiUserPlus, FiTrash2, FiSearch,
@@ -28,24 +36,43 @@ interface NewMember {
   email: string;
   plan_id: number;
   auto_activation: boolean;
+  company_name?: string;
 }
 
 const MemberManagementReal = () => {
   const [memberCards, setMemberCards] = useState<MemberWithCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'non_member' | 'inactive' | 'activated' | 'expired' | 'cancelled' | 'test'>('all');
-  const [memberTypeTab, setMemberTypeTab] = useState<'all' | 'individual' | 'corporate'>('all');
+  const [activeFilter, setActiveFilter] = useState<'all' | 'individual' | 'corporate' | 'non_member' | 'inactive' | 'activated' | 'expired' | 'cancelled' | 'test'>('all');
+  const [memberTypeTab, setMemberTypeTab] = useState<'all' | 'individual' | 'corporate' | 'organization'>('all');
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-  const [statistics, setStatistics] = useState({
-    total: 0,
-    active: 0,
-    inactive: 0,
-    nonMember: 0,
-    expired: 0,
-    cancelled: 0,
-    test: 0
-  });
+  const [companies, setCompanies] = useState<Company[]>([]);
+
+  // 根據當前分頁動態計算統計數據
+  const getDisplayStatistics = () => {
+    let baseData = memberCards;
+    
+    // 根據分頁篩選基礎數據
+    if (memberTypeTab === 'individual') {
+      baseData = memberCards.filter(card => card.plan_type === 'individual');
+    } else if (memberTypeTab === 'corporate') {
+      baseData = memberCards.filter(card => card.plan_type === 'corporate');
+    }
+    
+    return {
+      total: baseData.length,
+      active: baseData.filter(c => c.status === 'activated').length,
+      inactive: baseData.filter(c => c.status === 'inactive').length,
+      nonMember: baseData.filter(c => c.status === 'non_member').length,
+      expired: baseData.filter(c => c.status === 'expired').length,
+      cancelled: baseData.filter(c => c.status === 'cancelled').length,
+      test: baseData.filter(c => c.status === 'test').length,
+      individual: memberCards.filter(card => card.plan_type === 'individual').length,
+      corporate: memberCards.filter(card => card.plan_type === 'corporate').length
+    };
+  };
+
+  const displayStats = getDisplayStatistics();
 
   // 編輯模式相關狀態
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null);
@@ -158,19 +185,7 @@ const MemberManagementReal = () => {
       // 合併實際會員卡和虛擬記錄
       const allMemberRecords = [...cardsWithExpiry, ...virtualMemberCards];
       
-      // 重新計算統計（包含虛擬記錄）
-      const newStats = {
-        total: allMemberRecords.length,
-        active: allMemberRecords.filter(c => c.status === 'activated').length,
-        inactive: allMemberRecords.filter(c => c.status === 'inactive').length,
-        nonMember: allMemberRecords.filter(c => c.status === 'non_member').length,
-        expired: allMemberRecords.filter(c => c.status === 'expired').length,
-        cancelled: allMemberRecords.filter(c => c.status === 'cancelled').length,
-        test: allMemberRecords.filter(c => c.status === 'test').length
-      };
-      
       setMemberCards(allMemberRecords);
-      setStatistics(newStats);
     } catch (error) {
       console.error('載入會員卡資料失敗:', error);
     } finally {
@@ -180,7 +195,18 @@ const MemberManagementReal = () => {
 
   useEffect(() => {
     loadMemberCards();
+    loadCompanies();
   }, []);
+
+  // 載入企業列表
+  const loadCompanies = async () => {
+    try {
+      const companiesList = await corporateStore.getAllCompanies();
+      setCompanies(companiesList);
+    } catch (error) {
+      console.error('載入企業列表失敗:', error);
+    }
+  };
 
   // 過濾會員資料
   const getFilteredMembers = (): MemberWithCard[] => {
@@ -191,11 +217,20 @@ const MemberManagementReal = () => {
                            (card.plan_title && card.plan_title.toLowerCase().includes(searchTerm.toLowerCase()));
       if (!matchesSearch) return false;
 
-      // 狀態過濾
-      if (statusFilter !== 'all' && card.status !== statusFilter) return false;
-
-      // 會員類型分頁過濾
+      // 分頁篩選（始終生效）
       if (memberTypeTab !== 'all' && card.plan_type !== memberTypeTab) return false;
+
+      // 狀態篩選（基於卡片點擊）
+      if (activeFilter !== 'all') {
+        // 會員類型篩選（僅在全部分頁有效）
+        if (activeFilter === 'individual' || activeFilter === 'corporate') {
+          if (memberTypeTab === 'all' && card.plan_type !== activeFilter) return false;
+        } 
+        // 會員狀態篩選
+        else {
+          if (card.status !== activeFilter) return false;
+        }
+      }
 
       return true;
     });
@@ -283,6 +318,12 @@ const MemberManagementReal = () => {
         return;
       }
 
+      // 企業分頁需要驗證企業名稱
+      if (memberTypeTab === 'corporate' && !newMember.company_name?.trim()) {
+        alert('請填寫企業名稱');
+        return;
+      }
+
       // 檢查email格式
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailPattern.test(newMember.email)) {
@@ -301,7 +342,8 @@ const MemberManagementReal = () => {
         user_name: newMember.name,
         user_email: newMember.email,
         plan_id: newMember.plan_id,
-        auto_activation: newMember.auto_activation
+        auto_activation: newMember.auto_activation,
+        company_name: newMember.company_name
       });
 
       // 重置表單
@@ -309,7 +351,8 @@ const MemberManagementReal = () => {
         name: '',
         email: '',
         plan_id: 1,
-        auto_activation: false
+        auto_activation: false,
+        company_name: ''
       });
       setShowAddMemberModal(false);
       
@@ -476,16 +519,6 @@ const MemberManagementReal = () => {
           const updatedMembers = memberCards.map(m => m.id === memberId ? updatedMember : m);
           setMemberCards(updatedMembers);
           
-          // 重新計算統計
-          const newStats = {
-            total: updatedMembers.length,
-            active: updatedMembers.filter(c => c.status === 'activated').length,
-            inactive: updatedMembers.filter(c => c.status === 'inactive').length,
-            nonMember: updatedMembers.filter(c => c.status === 'non_member').length,
-            expired: updatedMembers.filter(c => c.status === 'expired').length,
-            test: updatedMembers.filter(c => c.status === 'test').length
-          };
-          setStatistics(newStats);
         }
       }
 
@@ -554,11 +587,23 @@ const MemberManagementReal = () => {
             {[
               { id: 'all', label: '全部' },
               { id: 'individual', label: '個人' },
-              { id: 'corporate', label: '企業' }
+              { id: 'corporate', label: '企業' },
+              { id: 'organization', label: '組織' }
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setMemberTypeTab(tab.id as 'all' | 'individual' | 'corporate')}
+                onClick={() => {
+                  setMemberTypeTab(tab.id as 'all' | 'individual' | 'corporate' | 'organization');
+                  // 根據分頁自動設置對應的篩選
+                  if (tab.id === 'all') {
+                    setActiveFilter('all');
+                  } else if (tab.id === 'individual') {
+                    setActiveFilter('individual');
+                  } else if (tab.id === 'corporate') {
+                    setActiveFilter('corporate');
+                  }
+                  // organization 分頁不設置篩選，因為它有特殊的顯示邏輯
+                }}
                 className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   memberTypeTab === tab.id
                     ? 'bg-white text-blue-600 shadow-sm'
@@ -576,94 +621,239 @@ const MemberManagementReal = () => {
       </motion.div>
 
       {/* 根據選中的分頁顯示不同內容 */}
-      {memberTypeTab === 'corporate' ? (
-        <CorporateMemberManagement />
+      {memberTypeTab === 'organization' ? (
+        <OrganizationHierarchyView />
       ) : (
         <>
           {/* Statistics Dashboard */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6"
+            className={`grid gap-4 mb-6 ${
+              memberTypeTab === 'individual' || memberTypeTab === 'corporate'
+                ? 'grid-cols-1 md:grid-cols-4 lg:grid-cols-7' 
+                : 'grid-cols-1 md:grid-cols-4 lg:grid-cols-9'
+            }`}
           >
-        {[
-          { 
-            label: '總會員數', 
-            count: statistics.total,
-            color: 'text-gray-600 bg-gray-50 border-gray-200',
-            icon: FiUsers
-          },
-          { 
-            label: '會員啟用', 
-            count: statistics.active,
-            color: 'text-green-600 bg-green-50 border-green-200',
-            icon: FiCheckCircle
-          },
-          { 
-            label: '會員未啟用', 
-            count: statistics.inactive,
-            color: 'text-orange-600 bg-orange-50 border-orange-200',
-            icon: FiClock
-          },
-          { 
-            label: '會員非會員', 
-            count: statistics.nonMember,
-            color: 'text-gray-600 bg-gray-50 border-gray-200',
-            icon: FiUser
-          },
-          { 
-            label: '會員過期', 
-            count: statistics.expired,
-            color: 'text-red-600 bg-red-50 border-red-200',
-            icon: FiX
-          },
-          { 
-            label: '會員測試', 
-            count: statistics.test,
-            color: 'text-blue-600 bg-blue-50 border-blue-200',
-            icon: FiUser
-          }
-        ].map((stat) => {
-          const isActive = (stat.label === '總會員數' && statusFilter === 'all') ||
-                          (stat.label === '會員啟用' && statusFilter === 'activated') ||
-                          (stat.label === '會員未啟用' && statusFilter === 'inactive') ||
-                          (stat.label === '會員非會員' && statusFilter === 'non_member') ||
-                          (stat.label === '會員過期' && statusFilter === 'expired') ||
-                          (stat.label === '會員測試' && statusFilter === 'test');
-          
-          const getFilterValue = (label: string): 'all' | 'non_member' | 'inactive' | 'activated' | 'expired' | 'cancelled' | 'test' => {
-            switch (label) {
-              case '會員啟用': return 'activated';
-              case '會員未啟用': return 'inactive';
-              case '會員非會員': return 'non_member';
-              case '會員過期': return 'expired';
-              case '會員測試': return 'test';
-              default: return 'all';
-            }
-          };
-          
-          return (
-            <motion.div
-              key={stat.label}
-              whileHover={{ scale: 1.02, y: -2 }}
-              className={`p-4 rounded-xl border cursor-pointer transition-all ${
-                isActive 
-                  ? `${stat.color} ring-2 ring-blue-500 ring-opacity-50` 
-                  : `${stat.color} hover:shadow-md`
-              }`}
-              onClick={() => setStatusFilter(getFilterValue(stat.label))}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-2xl font-bold">{stat.count}</div>
-                  <div className="text-sm font-medium">{stat.label}</div>
+            {/* 總會員 - 只在全部分頁顯示 */}
+            {memberTypeTab === 'all' && (
+              <div 
+                className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+                  activeFilter === 'all' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+                }`}
+                onClick={() => {
+                  setActiveFilter('all');
+                  setSearchTerm('');
+                }}
+              >
+                <div className="flex items-center">
+                  <SafeIcon icon={FiUsers} className="h-8 w-8 text-purple-600" />
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-500">總會員</p>
+                    <p className="text-2xl font-semibold text-gray-900">{displayStats.total}</p>
+                  </div>
                 </div>
-                <SafeIcon icon={stat.icon} className="text-2xl" />
               </div>
-            </motion.div>
-          );
-        })}
-      </motion.div>
+            )}
+
+            {/* 個人會員 - 在個人分頁顯示在第一位，在企業分頁也顯示 */}
+            {memberTypeTab === 'individual' && (
+              <div 
+                className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+                  activeFilter === 'all' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+                }`}
+                onClick={() => {
+                  setActiveFilter('all');
+                  setSearchTerm('');
+                }}
+              >
+                <div className="flex items-center">
+                  <SafeIcon icon={FiUser} className="h-8 w-8 text-indigo-600" />
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-500">個人</p>
+                    <p className="text-2xl font-semibold text-gray-900">{displayStats.total}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 企業會員 - 在企業分頁顯示在第一位 */}
+            {memberTypeTab === 'corporate' && (
+              <div 
+                className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+                  activeFilter === 'all' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+                }`}
+                onClick={() => {
+                  setActiveFilter('all');
+                  setSearchTerm('');
+                }}
+              >
+                <div className="flex items-center">
+                  <SafeIcon icon={FiBriefcase} className="h-8 w-8 text-purple-600" />
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-500">企業</p>
+                    <p className="text-2xl font-semibold text-gray-900">{displayStats.total}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 個人會員 - 只在全部分頁顯示 */}
+            {memberTypeTab === 'all' && (
+              <div 
+                className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+                  activeFilter === 'individual' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+                }`}
+                onClick={() => {
+                  setActiveFilter(activeFilter === 'individual' ? 'all' : 'individual');
+                  setSearchTerm('');
+                }}
+              >
+                <div className="flex items-center">
+                  <SafeIcon icon={FiUser} className="h-8 w-8 text-indigo-600" />
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-500">個人</p>
+                    <p className="text-2xl font-semibold text-gray-900">{displayStats.individual}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 企業會員 - 只在全部分頁顯示 */}
+            {memberTypeTab === 'all' && (
+              <div 
+                className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+                  activeFilter === 'corporate' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+                }`}
+                onClick={() => {
+                  setActiveFilter(activeFilter === 'corporate' ? 'all' : 'corporate');
+                  setSearchTerm('');
+                }}
+              >
+                <div className="flex items-center">
+                  <SafeIcon icon={FiBriefcase} className="h-8 w-8 text-purple-600" />
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-500">企業</p>
+                    <p className="text-2xl font-semibold text-gray-900">{displayStats.corporate}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 非會員 */}
+            <div 
+              className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+                activeFilter === 'non_member' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+              }`}
+              onClick={() => {
+                setActiveFilter(activeFilter === 'non_member' ? 'all' : 'non_member');
+                setSearchTerm('');
+              }}
+            >
+              <div className="flex items-center">
+                <SafeIcon icon={FiUser} className="h-8 w-8 text-gray-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">非會員</p>
+                  <p className="text-2xl font-semibold text-gray-900">{displayStats.nonMember}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 未啟用會員 */}
+            <div 
+              className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+                activeFilter === 'inactive' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+              }`}
+              onClick={() => {
+                setActiveFilter(activeFilter === 'inactive' ? 'all' : 'inactive');
+                setSearchTerm('');
+              }}
+            >
+              <div className="flex items-center">
+                <SafeIcon icon={FiClock} className="h-8 w-8 text-orange-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">未啟用</p>
+                  <p className="text-2xl font-semibold text-gray-900">{displayStats.inactive}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 啟用會員 */}
+            <div 
+              className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+                activeFilter === 'activated' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+              }`}
+              onClick={() => {
+                setActiveFilter(activeFilter === 'activated' ? 'all' : 'activated');
+                setSearchTerm('');
+              }}
+            >
+              <div className="flex items-center">
+                <SafeIcon icon={FiCheckCircle} className="h-8 w-8 text-green-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">啟用</p>
+                  <p className="text-2xl font-semibold text-gray-900">{displayStats.active}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 過期會員 */}
+            <div 
+              className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+                activeFilter === 'expired' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+              }`}
+              onClick={() => {
+                setActiveFilter(activeFilter === 'expired' ? 'all' : 'expired');
+                setSearchTerm('');
+              }}
+            >
+              <div className="flex items-center">
+                <SafeIcon icon={FiX} className="h-8 w-8 text-red-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">過期</p>
+                  <p className="text-2xl font-semibold text-gray-900">{displayStats.expired}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 取消會員 */}
+            <div 
+              className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+                activeFilter === 'cancelled' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+              }`}
+              onClick={() => {
+                setActiveFilter(activeFilter === 'cancelled' ? 'all' : 'cancelled');
+                setSearchTerm('');
+              }}
+            >
+              <div className="flex items-center">
+                <SafeIcon icon={FiX} className="h-8 w-8 text-gray-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">取消</p>
+                  <p className="text-2xl font-semibold text-gray-900">{displayStats.cancelled}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* 測試會員 */}
+            <div 
+              className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+                activeFilter === 'test' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+              }`}
+              onClick={() => {
+                setActiveFilter(activeFilter === 'test' ? 'all' : 'test');
+                setSearchTerm('');
+              }}
+            >
+              <div className="flex items-center">
+                <SafeIcon icon={FiUser} className="h-8 w-8 text-blue-600" />
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">測試</p>
+                  <p className="text-2xl font-semibold text-gray-900">{displayStats.test}</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
 
       {/* Controls */}
       <motion.div
@@ -1027,12 +1217,12 @@ const MemberManagementReal = () => {
                   <td colSpan={9} className="py-12 px-4 text-center">
                     <SafeIcon icon={FiUsers} className="text-6xl text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      {searchTerm || statusFilter !== 'all' || memberTypeTab !== 'all' 
+                      {searchTerm || activeFilter !== 'all' || memberTypeTab !== 'all' 
                         ? '找不到符合條件的會員' 
                         : '暫無會員記錄'}
                     </h3>
                     <p className="text-gray-600">
-                      {searchTerm || statusFilter !== 'all' || memberTypeTab !== 'all'
+                      {searchTerm || activeFilter !== 'all' || memberTypeTab !== 'all'
                         ? '請嘗試調整搜尋條件或篩選設定'
                         : '會員購買會員卡後，記錄會顯示在這裡'}
                     </p>
@@ -1069,6 +1259,27 @@ const MemberManagementReal = () => {
             </div>
 
             <div className="space-y-4">
+              {/* 企業選擇 - 只在企業分頁顯示 */}
+              {memberTypeTab === 'corporate' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    企業 <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    value={newMember.company_name || ''}
+                    onChange={(e) => setNewMember({...newMember, company_name: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">請選擇企業</option>
+                    {companies.map(company => (
+                      <option key={company.id} value={company.name}>
+                        {company.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   姓名 <span className="text-red-500">*</span>
@@ -1104,11 +1315,22 @@ const MemberManagementReal = () => {
                   onChange={(e) => setNewMember({...newMember, plan_id: parseInt(e.target.value)})}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  {memberCardPlans.filter(plan => plan.status === 'PUBLISHED').map(plan => (
-                    <option key={plan.id} value={plan.id}>
-                      {plan.title} ({plan.user_type === 'individual' ? '個人' : '企業'})
-                    </option>
-                  ))}
+                  {memberCardPlans
+                    .filter(plan => {
+                      // 根據當前分頁篩選方案類型
+                      if (memberTypeTab === 'individual') {
+                        return plan.status === 'PUBLISHED' && plan.user_type === 'individual';
+                      } else if (memberTypeTab === 'corporate') {
+                        return plan.status === 'PUBLISHED' && plan.user_type === 'corporate';
+                      } else {
+                        return plan.status === 'PUBLISHED';
+                      }
+                    })
+                    .map(plan => (
+                      <option key={plan.id} value={plan.id}>
+                        {plan.title} ({plan.user_type === 'individual' ? '個人' : '企業'})
+                      </option>
+                    ))}
                 </select>
               </div>
 
