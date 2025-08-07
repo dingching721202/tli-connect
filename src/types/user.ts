@@ -4,7 +4,7 @@
 export type UserRole = 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN';
 
 // 會員狀態類型  
-export type MembershipStatus = 'NON_MEMBER' | 'MEMBER' | 'EXPIRED_MEMBER' | 'TEST_USER';
+export type MembershipStatus = 'non_member' | 'inactive' | 'activated' | 'expired' | 'suspended' | 'test';
 
 // 帳戶狀態類型
 export type AccountStatus = 'ACTIVE' | 'SUSPENDED';

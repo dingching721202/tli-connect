@@ -10,7 +10,7 @@ export interface CorporateClient {
   contractEndDate: string;
   packageType: string;
   monthlyFee: number;
-  status: 'active' | 'inactive' | 'suspended';
+  status: 'non_member' | 'activated' | 'suspended' | 'expired' | 'test';
   createdAt: string;
   updatedAt: string;
 }
@@ -24,7 +24,7 @@ export interface Company {
   address?: string;
   industry: string;
   employeeCount: string;
-  status: 'active' | 'inactive' | 'expired';
+  status: 'non_member' | 'activated' | 'suspended' | 'expired' | 'test';
   createdAt: string;
   membershipPlans?: MembershipPlan[];
   startDate?: string;
@@ -76,7 +76,7 @@ const corporateClients: CorporateClient[] = [
     contractEndDate: '2024-12-31',
     packageType: 'Enterprise',
     monthlyFee: 150000,
-    status: 'active',
+    status: 'activated',
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-07-20T00:00:00Z'
   },
@@ -92,8 +92,24 @@ const corporateClients: CorporateClient[] = [
     contractEndDate: '2025-02-28',
     packageType: 'Professional',
     monthlyFee: 80000,
-    status: 'active',
+    status: 'activated',
     createdAt: '2024-03-01T00:00:00Z',
+    updatedAt: '2024-07-20T00:00:00Z'
+  },
+  {
+    id: 'corp_003',
+    companyName: '中華電信股份有限公司',
+    contactName: '王協理',
+    contactEmail: 'director.wang@cht.com.tw',
+    contactPhone: '+886-2-2344-3488',
+    industry: '電信業',
+    employeeCount: '1000人以上',
+    contractStartDate: '2024-07-01',
+    contractEndDate: '2025-06-30',
+    packageType: 'Enterprise',
+    monthlyFee: 200000,
+    status: 'activated',
+    createdAt: '2024-07-01T00:00:00Z',
     updatedAt: '2024-07-20T00:00:00Z'
   }
 ];
@@ -223,14 +239,14 @@ export function deleteCorporateClient(id: string): boolean {
 // Calculate total monthly revenue
 export function calculateTotalMonthlyRevenue(): number {
   return corporateClients
-    .filter(client => client.status === 'active')
+    .filter(client => client.status === 'activated')
     .reduce((total, client) => total + client.monthlyFee, 0);
 }
 
 // Get corporate statistics
 export function getCorporateStatistics() {
   const totalClients = corporateClients.length;
-  const activeClients = corporateClients.filter(client => client.status === 'active').length;
+  const activeClients = corporateClients.filter(client => client.status === 'activated').length;
   const totalRevenue = calculateTotalMonthlyRevenue();
   
   // Industry breakdown
@@ -259,7 +275,7 @@ export function getCompanies(): Company[] {
     address: '', // Default value since not in CorporateClient
     industry: client.industry,
     employeeCount: client.employeeCount,
-    status: client.status === 'active' ? 'active' : client.status === 'suspended' ? 'inactive' : 'inactive',
+    status: client.status,
     createdAt: client.createdAt,
     membershipPlans: [] // 添加空數組作為預設值
   }));

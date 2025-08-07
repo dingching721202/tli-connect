@@ -34,15 +34,16 @@ const MemberManagementReal = () => {
   const [memberCards, setMemberCards] = useState<MemberWithCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'purchased' | 'activated' | 'expired' | 'cancelled' | 'test'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'non_member' | 'purchased' | 'activated' | 'expired' | 'suspended' | 'test'>('all');
   const [memberTypeTab, setMemberTypeTab] = useState<'all' | 'individual' | 'corporate'>('all');
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
   const [statistics, setStatistics] = useState({
     total: 0,
     active: 0,
     purchased: 0,
+    nonMember: 0,
     expired: 0,
-    cancelled: 0,
+    suspended: 0,
     test: 0
   });
 
@@ -155,8 +156,9 @@ const MemberManagementReal = () => {
         total: allMemberRecords.length,
         active: allMemberRecords.filter(c => c.status === 'activated').length,
         purchased: allMemberRecords.filter(c => c.status === 'purchased').length,
+        nonMember: allMemberRecords.filter(c => c.status === 'non_member').length,
         expired: allMemberRecords.filter(c => c.status === 'expired').length,
-        cancelled: allMemberRecords.filter(c => c.status === 'cancelled').length,
+        suspended: allMemberRecords.filter(c => c.status === 'suspended').length,
         test: allMemberRecords.filter(c => c.status === 'test').length
       };
       
@@ -229,10 +231,11 @@ const MemberManagementReal = () => {
   // 獲取狀態顏色
   const getStatusColor = (status: Membership['status']): string => {
     switch (status) {
+      case 'non_member': return 'text-gray-700 bg-gray-50 border-gray-200';
       case 'purchased': return 'text-orange-700 bg-orange-50 border-orange-200';
       case 'activated': return 'text-green-700 bg-green-50 border-green-200';
+      case 'suspended': return 'text-yellow-700 bg-yellow-50 border-yellow-200';
       case 'expired': return 'text-red-700 bg-red-50 border-red-200';
-      case 'cancelled': return 'text-gray-700 bg-gray-50 border-gray-200';
       case 'test': return 'text-blue-700 bg-blue-50 border-blue-200';
       default: return 'text-gray-700 bg-gray-50 border-gray-200';
     }
@@ -242,10 +245,11 @@ const MemberManagementReal = () => {
   // 獲取狀態文字
   const getStatusText = (status: Membership['status']): string => {
     switch (status) {
-      case 'purchased': return '已購買未開啟';
-      case 'activated': return '已開啟';
-      case 'expired': return '已過期';
-      case 'cancelled': return '已取消';
+      case 'non_member': return '非會員';
+      case 'purchased': return '未啟用';
+      case 'activated': return '啟用';
+      case 'suspended': return '暫停';
+      case 'expired': return '過期';
       case 'test': return '測試';
       default: return '未知';
     }
@@ -254,10 +258,11 @@ const MemberManagementReal = () => {
   // 獲取狀態圖示
   const getStatusIcon = (status: Membership['status']) => {
     switch (status) {
+      case 'non_member': return FiUser;
       case 'purchased': return FiClock;
       case 'activated': return FiCheckCircle;
+      case 'suspended': return FiClock;
       case 'expired': return FiX;
-      case 'cancelled': return FiX;
       case 'test': return FiUser;
       default: return FiUser;
     }
@@ -469,8 +474,9 @@ const MemberManagementReal = () => {
             total: updatedMembers.length,
             active: updatedMembers.filter(c => c.status === 'activated').length,
             purchased: updatedMembers.filter(c => c.status === 'purchased').length,
+            nonMember: updatedMembers.filter(c => c.status === 'non_member').length,
             expired: updatedMembers.filter(c => c.status === 'expired').length,
-            cancelled: updatedMembers.filter(c => c.status === 'cancelled').length,
+            suspended: updatedMembers.filter(c => c.status === 'suspended').length,
             test: updatedMembers.filter(c => c.status === 'test').length
           };
           setStatistics(newStats);
@@ -582,50 +588,58 @@ const MemberManagementReal = () => {
             icon: FiUsers
           },
           { 
-            label: '已開啟', 
+            label: '會員啟用', 
             count: statistics.active,
             color: 'text-green-600 bg-green-50 border-green-200',
             icon: FiCheckCircle
           },
           { 
-            label: '已購買未開啟', 
+            label: '會員未啟用', 
             count: statistics.purchased,
             color: 'text-orange-600 bg-orange-50 border-orange-200',
             icon: FiClock
           },
           { 
-            label: '已過期', 
+            label: '會員非會員', 
+            count: statistics.nonMember,
+            color: 'text-gray-600 bg-gray-50 border-gray-200',
+            icon: FiUser
+          },
+          { 
+            label: '會員過期', 
             count: statistics.expired,
             color: 'text-red-600 bg-red-50 border-red-200',
             icon: FiX
           },
           { 
-            label: '已取消', 
-            count: statistics.cancelled,
+            label: '會員暫停', 
+            count: statistics.suspended,
             color: 'text-gray-600 bg-gray-50 border-gray-200',
             icon: FiTrash2
           },
           { 
-            label: '測試', 
+            label: '會員測試', 
             count: statistics.test,
             color: 'text-blue-600 bg-blue-50 border-blue-200',
             icon: FiUser
           }
         ].map((stat) => {
           const isActive = (stat.label === '總會員數' && statusFilter === 'all') ||
-                          (stat.label === '已開啟' && statusFilter === 'activated') ||
-                          (stat.label === '已購買未開啟' && statusFilter === 'purchased') ||
-                          (stat.label === '已過期' && statusFilter === 'expired') ||
-                          (stat.label === '已取消' && statusFilter === 'cancelled') ||
-                          (stat.label === '測試' && statusFilter === 'test');
+                          (stat.label === '會員啟用' && statusFilter === 'activated') ||
+                          (stat.label === '會員未啟用' && statusFilter === 'purchased') ||
+                          (stat.label === '會員非會員' && statusFilter === 'non_member') ||
+                          (stat.label === '會員過期' && statusFilter === 'expired') ||
+                          (stat.label === '會員暫停' && statusFilter === 'suspended') ||
+                          (stat.label === '會員測試' && statusFilter === 'test');
           
-          const getFilterValue = (label: string): 'all' | 'purchased' | 'activated' | 'expired' | 'cancelled' | 'test' => {
+          const getFilterValue = (label: string): 'all' | 'non_member' | 'purchased' | 'activated' | 'expired' | 'suspended' | 'test' => {
             switch (label) {
-              case '已開啟': return 'activated';
-              case '已購買未開啟': return 'purchased';
-              case '已過期': return 'expired';
-              case '已取消': return 'cancelled';
-              case '測試': return 'test';
+              case '會員啟用': return 'activated';
+              case '會員未啟用': return 'purchased';
+              case '會員非會員': return 'non_member';
+              case '會員過期': return 'expired';
+              case '會員暫停': return 'suspended';
+              case '會員測試': return 'test';
               default: return 'all';
             }
           };
@@ -803,10 +817,11 @@ const MemberManagementReal = () => {
                               onChange={(e) => setEditingMember(prev => prev ? {...prev, status: e.target.value as Membership['status']} : null)}
                               className="w-[140px] px-0 py-0 text-sm border-0 border-b border-gray-300 rounded-none bg-transparent focus:ring-0 focus:border-blue-500 h-6 font-medium text-gray-900"
                             >
-                              <option value="purchased" className="text-orange-700">已購買未開啟</option>
-                              <option value="activated" className="text-green-700">已開啟</option>
-                              <option value="expired" className="text-red-700">已過期</option>
-                              <option value="cancelled" className="text-gray-700">已取消</option>
+                              <option value="non_member" className="text-gray-700">非會員</option>
+                              <option value="purchased" className="text-orange-700">未啟用</option>
+                              <option value="activated" className="text-green-700">啟用</option>
+                              <option value="suspended" className="text-yellow-700">暫停</option>
+                              <option value="expired" className="text-red-700">過期</option>
                               <option value="test" className="text-blue-700">測試</option>
                             </select>
                           ) : (

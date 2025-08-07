@@ -52,7 +52,7 @@ class CompanyStore {
   private getDefaultCompanies(): Company[] {
     return [
       {
-        id: 'comp_001',
+        id: 'corp_001',
         name: '台積電股份有限公司',
         contactName: '張經理',
         contactEmail: 'manager.zhang@tsmc.com',
@@ -60,11 +60,11 @@ class CompanyStore {
         address: '台灣新竹市力行路8號',
         industry: '科技業',
         employeeCount: '1000人以上',
-        status: 'active',
+        status: 'activated',
         createdAt: '2024-01-01T00:00:00Z'
       },
       {
-        id: 'comp_002',
+        id: 'corp_002',
         name: '富邦金融控股股份有限公司',
         contactName: '李主管',
         contactEmail: 'supervisor.li@fubon.com',
@@ -72,20 +72,20 @@ class CompanyStore {
         address: '台北市松山區敦化南路一段108號',
         industry: '金融服務',
         employeeCount: '500-1000人',
-        status: 'active',
+        status: 'activated',
         createdAt: '2024-03-01T00:00:00Z'
       },
       {
-        id: 'comp_003',
-        name: '統一企業股份有限公司',
-        contactName: '王總監',
-        contactEmail: 'director.wang@uni-president.com',
-        contactPhone: '+886-6-243-3456',
-        address: '台南市永康區鹽行里中正路301號',
-        industry: '食品製造',
+        id: 'corp_003',
+        name: '中華電信股份有限公司',
+        contactName: '王協理',
+        contactEmail: 'director.wang@cht.com.tw',
+        contactPhone: '+886-2-2344-3488',
+        address: '台北市中正區信義路一段21-3號',
+        industry: '電信業',
         employeeCount: '1000人以上',
-        status: 'active',
-        createdAt: '2024-02-15T00:00:00Z'
+        status: 'activated',
+        createdAt: '2024-07-01T00:00:00Z'
       }
     ];
   }
@@ -109,7 +109,7 @@ class CompanyStore {
 
   // 創建企業
   async createCompany(companyData: Omit<Company, 'id' | 'createdAt'>): Promise<Company> {
-    const newId = `comp_${Date.now()}`;
+    const newId = `corp_${Date.now()}`;
     const now = new Date().toISOString();
 
     const newCompany: Company = {
@@ -162,9 +162,11 @@ class CompanyStore {
   // 獲取企業統計
   async getCompanyStatistics() {
     const total = this.companies.length;
-    const active = this.companies.filter(c => c.status === 'active').length;
-    const inactive = this.companies.filter(c => c.status === 'inactive').length;
+    const active = this.companies.filter(c => c.status === 'activated').length;
+    const suspended = this.companies.filter(c => c.status === 'suspended').length;
     const expired = this.companies.filter(c => c.status === 'expired').length;
+    const nonMember = this.companies.filter(c => c.status === 'non_member').length;
+    const test = this.companies.filter(c => c.status === 'test').length;
 
     // 行業分布
     const industryBreakdown = this.companies.reduce((acc, company) => {
@@ -181,8 +183,10 @@ class CompanyStore {
     return {
       total,
       active,
-      inactive,
+      suspended,
       expired,
+      nonMember,
+      test,
       industryBreakdown,
       employeeBreakdown
     };

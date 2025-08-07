@@ -73,7 +73,7 @@ const CorporateMemberManagement = () => {
     address: '',
     industry: '',
     employeeCount: '',
-    status: 'active'
+    status: 'activated'
   });
   
   // 新增訂閱表單
@@ -91,7 +91,7 @@ const CorporateMemberManagement = () => {
     totalSubscriptions: 0,
     totalMembers: 0,
     activatedMembers: 0,
-    issuedMembers: 0,
+    purchasedMembers: 0,
     expiredMembers: 0
   });
 
@@ -105,11 +105,16 @@ const CorporateMemberManagement = () => {
       const memberStats = await corporateMemberStore.getMemberStatistics();
       
       // 組合企業數據
-      const combinedData: CorporateData[] = companies.map(company => ({
-        ...company,
-        subscriptions: subscriptions.filter(sub => sub.company_id === company.id),
-        members: members.filter(member => member.company_id === company.id)
-      }));
+      const combinedData: CorporateData[] = companies.map(company => {
+        const companySubscriptions = subscriptions.filter(sub => sub.company_id === company.id);
+        const companyMembers = members.filter(member => member.company_id === company.id);
+        
+        return {
+          ...company,
+          subscriptions: companySubscriptions,
+          members: companyMembers
+        };
+      });
       
       setCorporateData(combinedData);
       setAllCorporateMembers(members); // 設置扁平化的企業會員列表
@@ -120,7 +125,7 @@ const CorporateMemberManagement = () => {
         totalSubscriptions: subscriptions.length,
         totalMembers: memberStats.totalMembers,
         activatedMembers: memberStats.activatedMembers,
-        issuedMembers: memberStats.issuedMembers,
+        purchasedMembers: memberStats.purchasedMembers,
         expiredMembers: memberStats.expiredMembers
       });
       
@@ -134,6 +139,11 @@ const CorporateMemberManagement = () => {
   useEffect(() => {
     loadCorporateData();
   }, []);
+
+  // 獲取企業方案列表
+  const getCorporatePlans = () => {
+    return memberCardPlans.filter(plan => plan.user_type === 'corporate' && plan.status === 'PUBLISHED');
+  };
 
   // 過濾企業數據
   const getFilteredCorporateData = (): CorporateData[] => {
@@ -222,11 +232,11 @@ const CorporateMemberManagement = () => {
   // 獲取會員卡狀態文字
   const getMemberStatusText = (status: CorporateMember['card_status']): string => {
     switch (status) {
-      case 'purchased': return '已購買未開啟';
-      case 'issued': return '已發放未啟用';
-      case 'activated': return '已啟用';
-      case 'expired': return '已過期';
-      case 'cancelled': return '已取消';
+      case 'non_member': return '非會員';
+      case 'purchased': return '未啟用';
+      case 'activated': return '啟用';
+      case 'suspended': return '暫停';
+      case 'expired': return '過期';
       case 'test': return '測試';
       default: return '未知';
     }
@@ -511,10 +521,18 @@ const CorporateMemberManagement = () => {
     if (!editingSubscription) return;
 
     try {
-      // 只允許更新席次使用情況（保持現有 API 的簡單性）
+      // 更新所有可編輯的欄位
       await corporateSubscriptionStore.updateSubscription(editingSubscription.id, {
         seats_used: editingSubscription.seats_used,
-        seats_available: editingSubscription.seats_total - editingSubscription.seats_used
+        seats_available: editingSubscription.seats_total - editingSubscription.seats_used,
+        seats_total: editingSubscription.seats_total,
+        amount_paid: editingSubscription.amount_paid,
+        auto_renewal: editingSubscription.auto_renewal,
+        status: editingSubscription.status,
+        plan_id: editingSubscription.plan_id,
+        plan_title: editingSubscription.plan_title,
+        duration_type: editingSubscription.duration_type,
+        duration_days: editingSubscription.duration_days
       });
       
       setEditingSubscriptionId(null);
@@ -576,16 +594,20 @@ const CorporateMemberManagement = () => {
   // 啟用/停用會員功能
   const handleToggleMemberStatus = async (member: CorporateMember) => {
     try {
-      if (member.card_status === 'purchased' || member.card_status === 'issued') {
+      if (member.card_status === 'non_member') {
         // 啟用會員卡
         await corporateMemberStore.activateMemberCard(member.id);
         alert('✅ 會員卡已成功啟用！');
       } else if (member.card_status === 'activated') {
-        // 停用會員卡（設為過期）
+        // 停用會員卡（設為暫停）
         await corporateMemberStore.updateMember(member.id, {
-          card_status: 'expired'
+          card_status: 'suspended'
         });
-        alert('✅ 會員卡已停用！');
+        alert('✅ 會員卡已暫停！');
+      } else if (member.card_status === 'suspended') {
+        // 重新啟用暫停的會員卡
+        await corporateMemberStore.activateMemberCard(member.id);
+        alert('✅ 會員卡已重新啟用！');
       } else if (member.card_status === 'expired') {
         // 重新啟用已過期的會員卡
         await corporateMemberStore.activateMemberCard(member.id);
@@ -601,11 +623,10 @@ const CorporateMemberManagement = () => {
   // 獲取狀態顏色和圖標
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'purchased': return 'text-blue-700 bg-blue-50 border-blue-200';
-      case 'issued': return 'text-orange-700 bg-orange-50 border-orange-200';
+      case 'non_member': return 'text-gray-700 bg-gray-50 border-gray-200';
       case 'activated': return 'text-green-700 bg-green-50 border-green-200';
+      case 'suspended': return 'text-orange-700 bg-orange-50 border-orange-200';
       case 'expired': return 'text-red-700 bg-red-50 border-red-200';
-      case 'cancelled': return 'text-gray-700 bg-gray-50 border-gray-200';
       case 'test': return 'text-purple-700 bg-purple-50 border-purple-200';
       default: return 'text-gray-700 bg-gray-50 border-gray-200';
     }
@@ -613,11 +634,33 @@ const CorporateMemberManagement = () => {
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'purchased': return '已購買未開啟';
-      case 'issued': return '已發放未啟用';
-      case 'activated': return '已啟用';
-      case 'expired': return '已過期';
-      case 'cancelled': return '已取消';
+      case 'non_member': return '非會員';
+      case 'activated': return '啟用';
+      case 'suspended': return '暫停';
+      case 'expired': return '過期';
+      case 'test': return '測試';
+      default: return status;
+    }
+  };
+
+  // 企業狀態顏色和圖標
+  const getCompanyStatusColor = (status: string) => {
+    switch (status) {
+      case 'non_member': return 'text-gray-700 bg-gray-50 border-gray-200';
+      case 'activated': return 'text-green-700 bg-green-50 border-green-200';
+      case 'suspended': return 'text-orange-700 bg-orange-50 border-orange-200';
+      case 'expired': return 'text-red-700 bg-red-50 border-red-200';
+      case 'test': return 'text-purple-700 bg-purple-50 border-purple-200';
+      default: return 'text-gray-700 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const getCompanyStatusText = (status: string) => {
+    switch (status) {
+      case 'non_member': return '非會員';
+      case 'activated': return '啟用';
+      case 'suspended': return '暫停';
+      case 'expired': return '過期';
       case 'test': return '測試';
       default: return status;
     }
@@ -677,8 +720,8 @@ const CorporateMemberManagement = () => {
             icon: FiCheckCircle
           },
           { 
-            label: '已發放', 
-            count: statistics.issuedMembers,
+            label: '未啟用', 
+            count: statistics.purchasedMembers,
             color: 'text-orange-600 bg-orange-50 border-orange-200',
             icon: FiClock
           },
@@ -836,10 +879,29 @@ const CorporateMemberManagement = () => {
                               <option value="其他">其他</option>
                             </select>
                           </div>
+                          <div className="grid grid-cols-1 gap-2">
+                            <select
+                              value={editingCompany?.status || ''}
+                              onChange={(e) => setEditingCompany(prev => prev ? {...prev, status: e.target.value as 'non_member' | 'activated' | 'suspended' | 'expired' | 'test'} : null)}
+                              className="px-2 py-1 border border-gray-300 rounded text-sm bg-white"
+                            >
+                              <option value="non_member">非會員</option>
+                              <option value="purchased">未啟用</option>
+                              <option value="activated">啟用</option>
+                              <option value="suspended">暫停</option>
+                              <option value="expired">過期</option>
+                              <option value="test">測試</option>
+                            </select>
+                          </div>
                         </div>
                       ) : (
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">{company.name}</h3>
+                          <div className="flex items-center space-x-2">
+                            <h3 className="text-lg font-semibold text-gray-900">{company.name}</h3>
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCompanyStatusColor(company.status)}`}>
+                              {getCompanyStatusText(company.status)}
+                            </span>
+                          </div>
                           <p className="text-sm text-gray-600">
                             {company.contactName} • {company.contactEmail} • {company.industry}
                           </p>
@@ -1022,28 +1084,140 @@ const CorporateMemberManagement = () => {
                                 <div>金額: {formatAmount(subscription.amount_paid)}</div>
                               </div>
                               
-                              {/* 編輯席次使用情況 */}
+                              {/* 編輯訂閱資訊 */}
                               {editingSubscriptionId === subscription.id && editingSubscription && (
-                                <div className="mt-3 p-3 bg-blue-50 rounded-lg border">
-                                  <div className="flex items-center space-x-4">
-                                    <div className="flex items-center space-x-2">
-                                      <label className="text-sm font-medium text-gray-700">已使用席次:</label>
+                                <div className="mt-3 p-4 bg-blue-50 rounded-lg border">
+                                  <h4 className="text-sm font-semibold text-gray-800 mb-3">編輯訂閱資訊</h4>
+                                  
+                                  {/* 方案選擇 */}
+                                  <div className="mb-3">
+                                    <label className="text-xs font-medium text-gray-700">企業方案</label>
+                                    <select
+                                      value={editingSubscription.plan_id}
+                                      onChange={(e) => {
+                                        const selectedPlan = getCorporatePlans().find(plan => plan.id === parseInt(e.target.value));
+                                        if (selectedPlan) {
+                                          setEditingSubscription(prev => prev ? {
+                                            ...prev,
+                                            plan_id: selectedPlan.id,
+                                            plan_title: selectedPlan.title,
+                                            duration_type: selectedPlan.duration_type,
+                                            duration_days: selectedPlan.duration_days,
+                                            // 自動更新建議價格（用戶可以後續修改）
+                                            amount_paid: parseInt(selectedPlan.sale_price)
+                                          } : null);
+                                        }
+                                      }}
+                                      className="w-full px-2 py-1 border border-gray-300 rounded text-sm mt-1"
+                                    >
+                                      {getCorporatePlans().map(plan => (
+                                        <option key={plan.id} value={plan.id}>
+                                          {plan.title} - NT${parseInt(plan.sale_price).toLocaleString()} ({plan.duration_type === 'annual' ? '年方案' : '季方案'})
+                                        </option>
+                                      ))}
+                                    </select>
+                                    {(() => {
+                                      const currentPlan = getCorporatePlans().find(p => p.id === editingSubscription.plan_id);
+                                      return currentPlan && (
+                                        <div className="text-xs text-gray-500 mt-1">
+                                          {currentPlan.duration_days}天有效 • 建議價格: NT${parseInt(currentPlan.sale_price).toLocaleString()}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
+
+                                  {/* 席次管理 */}
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                    <div>
+                                      <label className="text-xs font-medium text-gray-700">總席次</label>
+                                      <input
+                                        type="number"
+                                        min="1"
+                                        value={editingSubscription.seats_total}
+                                        onChange={(e) => {
+                                          const newTotal = parseInt(e.target.value) || 1;
+                                          setEditingSubscription(prev => prev ? {
+                                            ...prev, 
+                                            seats_total: newTotal,
+                                            seats_available: newTotal - prev.seats_used
+                                          } : null);
+                                        }}
+                                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm mt-1"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-xs font-medium text-gray-700">已使用席次</label>
                                       <input
                                         type="number"
                                         min="0"
                                         max={editingSubscription.seats_total}
                                         value={editingSubscription.seats_used}
+                                        onChange={(e) => {
+                                          const used = Math.min(parseInt(e.target.value) || 0, editingSubscription.seats_total);
+                                          setEditingSubscription(prev => prev ? {
+                                            ...prev, 
+                                            seats_used: used,
+                                            seats_available: prev.seats_total - used
+                                          } : null);
+                                        }}
+                                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm mt-1"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-xs font-medium text-gray-700">可用席次</label>
+                                      <input
+                                        type="number"
+                                        value={editingSubscription.seats_total - editingSubscription.seats_used}
+                                        disabled
+                                        className="w-full px-2 py-1 border border-gray-200 rounded text-sm mt-1 bg-gray-50"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* 狀態與金額 */}
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                                    <div>
+                                      <label className="text-xs font-medium text-gray-700">訂閱狀態</label>
+                                      <select
+                                        value={editingSubscription.status}
                                         onChange={(e) => setEditingSubscription(prev => prev ? {
                                           ...prev, 
-                                          seats_used: Math.min(parseInt(e.target.value) || 0, prev.seats_total),
-                                          seats_available: prev.seats_total - (parseInt(e.target.value) || 0)
+                                          status: e.target.value as 'purchased' | 'activated' | 'expired' | 'cancelled'
                                         } : null)}
-                                        className="w-20 px-2 py-1 border border-gray-300 rounded text-sm"
-                                      />
-                                      <span className="text-sm text-gray-500">/ {editingSubscription.seats_total}</span>
+                                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm mt-1"
+                                      >
+                                        <option value="non_member">非會員</option>
+                                        <option value="purchased">未啟用</option>
+                                        <option value="activated">啟用</option>
+                                        <option value="suspended">暫停</option>
+                                        <option value="expired">過期</option>
+                                        <option value="test">測試</option>
+                                      </select>
                                     </div>
-                                    <div className="text-sm text-gray-600">
-                                      可用席次: {editingSubscription.seats_total - editingSubscription.seats_used}
+                                    <div>
+                                      <label className="text-xs font-medium text-gray-700">支付金額</label>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        value={editingSubscription.amount_paid}
+                                        onChange={(e) => setEditingSubscription(prev => prev ? {
+                                          ...prev, 
+                                          amount_paid: parseInt(e.target.value) || 0
+                                        } : null)}
+                                        className="w-full px-2 py-1 border border-gray-300 rounded text-sm mt-1"
+                                      />
+                                    </div>
+                                    <div className="flex items-center mt-5">
+                                      <input
+                                        type="checkbox"
+                                        checked={editingSubscription.auto_renewal}
+                                        onChange={(e) => setEditingSubscription(prev => prev ? {
+                                          ...prev, 
+                                          auto_renewal: e.target.checked
+                                        } : null)}
+                                        className="mr-2"
+                                      />
+                                      <label className="text-xs font-medium text-gray-700">自動續約</label>
                                     </div>
                                   </div>
                                 </div>
@@ -1072,7 +1246,7 @@ const CorporateMemberManagement = () => {
                                               卡片狀態
                                             </th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                              發放日期
+                                              分配日期
                                             </th>
                                             <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                               啟用期限
@@ -1134,11 +1308,11 @@ const CorporateMemberManagement = () => {
                                                     onChange={(e) => setEditingMember(prev => prev ? {...prev, card_status: e.target.value as CorporateMember['card_status']} : null)}
                                                     className="px-2 py-0.5 border border-gray-300 rounded text-sm w-[120px] h-6"
                                                   >
-                                                    <option value="purchased">已購買未開啟</option>
-                                                    <option value="issued">已發放未啟用</option>
-                                                    <option value="activated">已啟用</option>
-                                                    <option value="expired">已過期</option>
-                                                    <option value="cancelled">已取消</option>
+                                                    <option value="non_member">非會員</option>
+                                                    <option value="purchased">未啟用</option>
+                                                    <option value="activated">啟用</option>
+                                                    <option value="suspended">暫停</option>
+                                                    <option value="expired">過期</option>
                                                     <option value="test">測試</option>
                                                   </select>
                                                 ) : (
@@ -1148,7 +1322,7 @@ const CorporateMemberManagement = () => {
                                                 )}
                                               </td>
 
-                                              {/* 發放日期 */}
+                                              {/* 分配日期 */}
                                               <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                                                 {editingMemberId === member.id ? (
                                                   <input
@@ -1335,7 +1509,7 @@ const CorporateMemberManagement = () => {
                       卡片狀態
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      發放日期
+                      分配日期
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       啟用期限
@@ -1408,11 +1582,11 @@ const CorporateMemberManagement = () => {
                               onChange={(e) => setEditingMember(prev => prev ? {...prev, card_status: e.target.value as CorporateMember['card_status']} : null)}
                               className="w-[120px] px-2 py-0.5 border border-gray-300 rounded text-sm h-6"
                             >
-                              <option value="purchased">已購買未開啟</option>
-                              <option value="issued">已發放未啟用</option>
-                              <option value="activated">已啟用</option>
-                              <option value="expired">已過期</option>
-                              <option value="cancelled">已取消</option>
+                              <option value="non_member">非會員</option>
+                              <option value="purchased">未啟用</option>
+                              <option value="activated">啟用</option>
+                              <option value="suspended">暫停</option>
+                              <option value="expired">過期</option>
                               <option value="test">測試</option>
                             </select>
                           ) : (
@@ -1423,7 +1597,7 @@ const CorporateMemberManagement = () => {
                         </div>
                       </td>
 
-                      {/* 發放日期 */}
+                      {/* 分配日期 */}
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                         <div className="min-w-[100px] h-6 flex items-center">
                           {editingMemberId === member.id ? (
@@ -1687,6 +1861,22 @@ const CorporateMemberManagement = () => {
                       <option value="1000人以上">1000人以上</option>
                     </select>
                   </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">企業狀態</label>
+                  <select
+                    value={newCompany.status}
+                    onChange={(e) => setNewCompany({...newCompany, status: e.target.value as 'non_member' | 'activated' | 'suspended' | 'expired' | 'test'})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  >
+                    <option value="non_member">非會員</option>
+                    <option value="purchased">未啟用</option>
+                    <option value="activated">啟用</option>
+                    <option value="suspended">暫停</option>
+                    <option value="expired">過期</option>
+                    <option value="test">測試</option>
+                  </select>
                 </div>
                 
                 <div className="flex justify-end space-x-3 pt-4">
@@ -2120,11 +2310,11 @@ const MemberDetailModal = ({ member, onClose }: { member: CorporateMember, onClo
   // 獲取會員卡狀態文字
   const getMemberStatusText = (status: CorporateMember['card_status']): string => {
     switch (status) {
-      case 'purchased': return '已購買未開啟';
-      case 'issued': return '已發放未啟用';
-      case 'activated': return '已啟用';
-      case 'expired': return '已過期';
-      case 'cancelled': return '已取消';
+      case 'non_member': return '非會員';
+      case 'purchased': return '未啟用';
+      case 'activated': return '啟用';
+      case 'suspended': return '暫停';
+      case 'expired': return '過期';
       case 'test': return '測試';
       default: return '未知';
     }
@@ -2223,7 +2413,7 @@ const MemberDetailModal = ({ member, onClose }: { member: CorporateMember, onClo
               <div className="space-y-4">
                 <h4 className="font-semibold text-gray-900 border-b pb-2">時間資訊</h4>
                 <div className="space-y-2 text-sm">
-                  <div><span className="text-gray-600">發放日期:</span> {formatDate(member.issued_date)}</div>
+                  <div><span className="text-gray-600">分配日期:</span> {formatDate(member.issued_date)}</div>
                   <div><span className="text-gray-600">啟用期限:</span> {formatDate(member.activation_deadline)}</div>
                   {member.activation_date && (
                     <div><span className="text-gray-600">啟用日期:</span> {formatDate(member.activation_date)}</div>

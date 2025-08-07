@@ -34,7 +34,7 @@ export const corporateMembers: CorporateMember[] = [
     activation_deadline: '2024-02-26T00:00:00Z',
     purchase_date: '2024-01-15T00:00:00Z',
     redemption_deadline: '2024-02-15T00:00:00Z',
-    card_status: 'issued',
+    card_status: 'non_member',
     created_at: '2024-01-26T00:00:00Z',
     updated_at: '2024-01-26T00:00:00Z',
     company_id: 'corp_001',

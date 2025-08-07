@@ -165,7 +165,7 @@ class CorporateMemberStore {
       activation_deadline: activationDeadline.toISOString(),
       purchase_date: data.purchase_date,
       redemption_deadline: data.redemption_deadline,
-      card_status: 'issued',
+      card_status: 'inactive',
       created_at: now,
       updated_at: now,
       company_id: data.company_id,
@@ -210,12 +210,12 @@ class CorporateMemberStore {
     const member = this.members[memberIndex];
     
     // 允許啟用未啟用的會員卡或重新啟用過期的會員卡
-    if (member.card_status !== 'purchased' && member.card_status !== 'issued' && member.card_status !== 'expired') {
+    if (member.card_status !== 'inactive' && member.card_status !== 'expired') {
       throw new Error(`會員卡狀態為 ${member.card_status}，無法啟用`);
     }
 
     // 對於未啟用的會員卡，檢查啟用期限
-    if ((member.card_status === 'purchased' || member.card_status === 'issued') && new Date() > new Date(member.activation_deadline)) {
+    if (member.card_status === 'purchased' && new Date() > new Date(member.activation_deadline)) {
       throw new Error('會員卡啟用期限已過');
     }
 
@@ -332,7 +332,7 @@ class CorporateMemberStore {
   async getMemberStatistics() {
     const totalMembers = this.members.length;
     const activatedMembers = this.members.filter(m => m.card_status === 'activated').length;
-    const issuedMembers = this.members.filter(m => m.card_status === 'issued').length;
+    const purchasedMembers = this.members.filter(m => m.card_status === 'purchased').length;
     const expiredMembers = this.members.filter(m => m.card_status === 'expired').length;
     
     const totalLearningHours = this.learningRecords.reduce((sum, record) => 
@@ -344,7 +344,7 @@ class CorporateMemberStore {
     return {
       totalMembers,
       activatedMembers,
-      issuedMembers,
+      purchasedMembers,
       expiredMembers,
       totalLearningHours: Math.round(totalLearningHours * 10) / 10,
       totalReservations,
@@ -372,7 +372,7 @@ class CorporateMemberStore {
       }
       
       // 檢查未啟用的會員卡是否超過啟用期限
-      if (member.card_status === 'issued' && new Date(member.activation_deadline) < now) {
+      if (member.card_status === 'purchased' && new Date(member.activation_deadline) < now) {
         const autoExpire = this.getSystemSetting('auto_expire_inactive_members', true) as boolean;
         if (autoExpire) {
           this.members[i] = {

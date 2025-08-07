@@ -136,7 +136,18 @@ class CorporateSubscriptionStore {
 
 
   // 更新企業訂閱
-  async updateSubscription(id: number, updates: { seats_used?: number, seats_available?: number }): Promise<CorporateSubscription | null> {
+  async updateSubscription(id: number, updates: { 
+    seats_used?: number, 
+    seats_available?: number,
+    seats_total?: number,
+    amount_paid?: number,
+    auto_renewal?: boolean,
+    status?: 'purchased' | 'activated' | 'expired' | 'cancelled',
+    plan_id?: number,
+    plan_title?: string,
+    duration_type?: 'season' | 'annual',
+    duration_days?: number
+  }): Promise<CorporateSubscription | null> {
     const subscriptionIndex = this.subscriptions.findIndex(s => s.id === id);
     if (subscriptionIndex === -1) {
       throw new Error('找不到指定的企業訂閱');
