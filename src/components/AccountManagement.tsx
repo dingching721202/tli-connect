@@ -362,7 +362,7 @@ const AccountManagement = () => {
         </div>
 
         {/* 統計卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
           {/* 總用戶數 */}
           <div className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('ALL'); setRoleFilter('ALL'); setStatusFilter('ALL'); setSearchTerm(''); }}>
             <div className="flex items-center">
@@ -400,17 +400,6 @@ const AccountManagement = () => {
               </div>
             </div>
           </div>
-          <div className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('STUDENT'); setStatusFilter('activated'); setRoleFilter('ALL'); setSearchTerm(''); }}>
-            <div className="flex items-center">
-              <SafeIcon icon={FiUser} className="h-8 w-8 text-green-600" />
-              <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">啟用</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && u.membership_status === 'activated').length}
-                </p>
-              </div>
-            </div>
-          </div>
           <div className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('STUDENT'); setStatusFilter('inactive'); setRoleFilter('ALL'); setSearchTerm(''); }}>
             <div className="flex items-center">
               <SafeIcon icon={FiUser} className="h-8 w-8 text-orange-600" />
@@ -422,6 +411,17 @@ const AccountManagement = () => {
               </div>
             </div>
           </div>
+          <div className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('STUDENT'); setStatusFilter('activated'); setRoleFilter('ALL'); setSearchTerm(''); }}>
+            <div className="flex items-center">
+              <SafeIcon icon={FiUser} className="h-8 w-8 text-green-600" />
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">啟用</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && u.membership_status === 'activated').length}
+                </p>
+              </div>
+            </div>
+          </div>
           <div className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('STUDENT'); setStatusFilter('expired'); setRoleFilter('ALL'); setSearchTerm(''); }}>
             <div className="flex items-center">
               <SafeIcon icon={FiUser} className="h-8 w-8 text-red-600" />
@@ -429,6 +429,17 @@ const AccountManagement = () => {
                 <p className="text-sm font-medium text-gray-500">過期</p>
                 <p className="text-2xl font-semibold text-gray-900">
                   {usersWithRoles.filter(u => u.roles.includes('STUDENT') && u.membership_status === 'expired').length}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('STUDENT'); setStatusFilter('cancelled'); setRoleFilter('ALL'); setSearchTerm(''); }}>
+            <div className="flex items-center">
+              <SafeIcon icon={FiUser} className="h-8 w-8 text-gray-600" />
+              <div className="ml-3">
+                <p className="text-sm font-medium text-gray-500">取消</p>
+                <p className="text-2xl font-semibold text-gray-900">
+                  {usersWithRoles.filter(u => u.roles.includes('STUDENT') && u.membership_status === 'cancelled').length}
                 </p>
               </div>
             </div>
