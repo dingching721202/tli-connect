@@ -120,7 +120,7 @@ export interface UpdateMembershipRequest {
 // 會員統計
 export interface MembershipStats {
   total: number;
-  purchased: number;
+  inactive: number;
   activated: number;
   expired: number;
   cancelled: number;

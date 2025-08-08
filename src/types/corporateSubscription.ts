@@ -1,6 +1,6 @@
 // 企業訂閱相關類型定義
 
-export type CorporateSubscriptionStatus = 'inactive' | 'activated' | 'expired' | 'cancelled';
+export type CorporateSubscriptionStatus = 'inactive' | 'activated' | 'expired' | 'cancelled' | 'test';
 
 export interface CorporateSubscription {
   id: number;

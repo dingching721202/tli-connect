@@ -101,12 +101,7 @@ const CorporateMemberManagement = () => {
     try {
       setLoading(true);
       const companies = await corporateStore.getAllCompanies();
-      const rawSubscriptions = await corporateSubscriptionStore.getAllSubscriptions();
-      // 將 purchased 狀態轉換為 inactive
-      const subscriptions = rawSubscriptions.map(sub => ({
-        ...sub,
-        status: sub.status === 'purchased' ? 'inactive' : sub.status
-      }));
+      const subscriptions = await corporateSubscriptionStore.getAllSubscriptions();
       const members = await corporateMemberStore.getAllMembers();
       const memberStats = await corporateMemberStore.getMemberStatistics();
       
