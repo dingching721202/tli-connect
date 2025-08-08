@@ -33,7 +33,6 @@ export default function Home() {
 
     if (Object.keys(newErrors).length === 0) {
       try {
-        // 發送到諮詢API
         const response = await fetch('/api/consultations', {
           method: 'POST',
           headers: {
@@ -58,7 +57,6 @@ export default function Home() {
           setTimeout(() => setSuccess(''), 5000);
         } else {
           console.error('Failed to submit consultation:', result.error);
-          // 可以在這裡添加錯誤處理，比如顯示錯誤訊息
           setErrors({...errors, [formType]: { submit: 'Failed to submit. Please try again.' }});
         }
       } catch (error) {
@@ -68,1703 +66,1228 @@ export default function Home() {
     }
   };
 
-  const [activeLearnItem, setActiveLearnItem] = useState(0);
-  const [currentImage, setCurrentImage] = useState("https://images.unsplash.com/photo-1522199710521-72d69614c702?w=2000&auto=format&fit=crop&q=80");
-
-  const learnItems = [
-    {
-      title: "Video Library",
-      description: "400+ curated videos — learn anytime, anywhere",
-      badge: "400+ · 24/7",
-      image: "https://images.unsplash.com/photo-1522199710521-72d69614c702?w=2000&auto=format&fit=crop&q=80"
-    },
-    {
-      title: "Live Mini‑Classes",
-      description: "45‑minute small‑group sessions, immediate feedback",
-      badge: "45m · small‑group",
-      image: "https://images.unsplash.com/photo-1587614382346-4ec70e388b28?w=2000&auto=format&fit=crop&q=80"
-    },
-    {
-      title: "Events & Workshops",
-      description: "Networking & themed workshops every month",
-      badge: "Monthly",
-      image: "https://images.unsplash.com/photo-1511578314322-379afb476865?w=2000&auto=format&fit=crop&q=80"
-    },
-    {
-      title: "Expert Channels",
-      description: "Cross‑discipline guest instructors, fresh content weekly",
-      badge: "Weekly",
-      image: "https://images.unsplash.com/photo-1551836022-4c4c79ecde51?w=2000&auto=format&fit=crop&q=80"
-    },
-    {
-      title: "Member Community",
-      description: "Discussion forums & language‑exchange groups",
-      badge: "24/7",
-      image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=2000&auto=format&fit=crop&q=80"
-    }
-  ];
-
   return (
     <>
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
         
         :root{
+          /* Layout */
           --container: 1200px;
           --r32: 32px;
-          --black: #F5F8FC;
-          --black-900: #103A63;
-          --paper: #FFFFFF;
-          --paper-soft: #F9FBFE;
-          --ink: #102335;
-          --ink-dim: #6A7A8A;
+
+          /* Palette — 輕藍 × 黃 */
+          /* Page backgrounds */
+          --black: #F5F8FC;          /* 原做為整頁底色，改成極淺藍 */
+          --black-900: #103A63;      /* 深藍，用於 filmstrip 區塊底 */
+          --paper: #FFFFFF;          /* 主要卡片／Hero 底色 */
+          --paper-soft: #F9FBFE;     /* 柔和卡片底 */
+
+          /* Text */
+          --ink: #262626;            /* 主要文字深藍灰 */
+          --ink-dim: #6A7A8A;        /* 次要文字 */
+
+          /* Lines */
           --divider: rgba(16,35,53,.14);
-          --gold: #F2C14E;
-          --gold-strong: #E4B43B;
+
+          /* Accents */
+          --gold: #027AB9;           /* 主 CTA 與重點*/
+          --gold-strong: #026AA7;    /* hover */
+
+          /* States */
           --error: #D54848;
           --success: #1CA87A;
-          --blue-500: #2E6EB6;
-          --blue-100: #E9F2FF;
+
+          /* 補充（若需） */
+          --blue-500: #027AB9;       /* 行銷文案標色／強調 */
+          --blue-100: #E9F2FF;       /* 很淺的藍色背景 */
         }
         
-        body {
-          font-family: Inter, "Noto Sans", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
-          color: var(--ink);
-          background: var(--black);
-          margin: 0;
-          padding: 0;
+        *,*::before,*::after{box-sizing:border-box}
+        html,body{margin:0;padding:0}
+        body{font-family:Inter, "Noto Sans", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif; color:var(--ink); background:var(--black)}
+        a{text-decoration:none; color:#1E60A9}
+        img{max-width:100%; display:block}
+        .container{max-width:var(--container); margin:0 auto; padding:0 24px}
+        .section{padding:88px 0}
+        @media (max-width:767px){.section{padding:64px 0}}
+
+        h1,h2,h3{margin:0 0 16px; color:var(--ink); font-family:"Plus Jakarta Sans", "Noto Sans TC", Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-feature-settings:"pnum" 1, "lnum" 1; font-weight:800}
+        .h1{font-size:48px; line-height:64px; font-weight:800; letter-spacing:-0.015em}
+        .h2{font-size:34px; line-height:42px; font-weight:800; letter-spacing:-0.01em}
+        .h3{font-size:20px; line-height:30px; font-weight:300; letter-spacing:-0.01em}
+        .body-l{font-size:18px; line-height:28px; color:var(--ink)}
+        .body-m{font-size:16px; line-height:26px; color:var(--ink-dim)}
+        .label{font-size:14px; line-height:20px; font-weight:600; color:#027AB9}
+        .caption{font-size:12px; line-height:18px; color:var(--ink-dim)}
+        @media (max-width:1100px){.h1{font-size:44px; line-height:52px} .h2{font-size:30px; line-height:38px}}
+
+        /* Responsive */
+        @media (max-width: 768px) {
+          #hero { padding: 64px 16px !important; }
+          .hero-text-box { padding: 18px 14px; border-radius: 12px; }
+          .h1 { font-size: 30px; line-height: 38px; }
+          
+          #heroForm.horizontal-form.center-form { grid-template-columns: 1fr; }
+          #heroForm .btn { grid-column: 1 / -1; width: 100%; }
+          #heroForm .h-input { min-width: 0; font-size: 16px; height: 46px; }
+          #heroForm .h-label { font-size: 12px; }
+          
+          .hero-form-card { padding: 14px; border-radius: 16px; }
+          
+          .filmstrip-row, .caption-row { grid-template-columns: repeat(2, 1fr); }
+          .filmstrip-row img { height: 120px; }
+          
+          .num-grid { grid-template-columns: 1fr; text-align: left; }
+          .num { font-size: 28px; }
+          
+          .why-item { grid-template-columns: 1fr; }
+          .topics-grid { grid-template-columns: 1fr; }
+          .learn-split { grid-template-columns: 1fr; gap: 24px; }
         }
         
-        .page-container {
+        @media (max-width: 1024px) {
+          .filmstrip-row, .caption-row { grid-template-columns: repeat(3, 1fr); }
+          .filmstrip-row img { height: 150px; }
+          
+          #heroForm.horizontal-form.center-form {
+            grid-template-columns: minmax(220px,1fr) minmax(220px,1fr);
+          }
+          #heroForm .btn {
+            grid-column: 1 / -1;
+            justify-self: stretch;
+          }
+        }
+        
+        @media (max-width: 1180px) {
+          #heroForm.horizontal-form.center-form {
+            grid-template-columns: minmax(220px,1fr) minmax(220px,1fr);
+          }
+          #heroForm .btn {
+            grid-column: 1 / -1;
+            justify-self: stretch;
+          }
+        }
+
+        /* Hero styles */
+        .hero-bg {
+          position: absolute;
+          inset: 0;
+          z-index: 0;
+          background: url('https://drive.google.com/thumbnail?id=1dqPrlDGVMgKHbwcRm2Ww8TcuSjkoJF-F&sz=w3200');
+          background-size: cover;
+          background-position: 70% 60%;
+          pointer-events: none;
+          transition: background 0.5s;
+        }
+
+        .hero-grid {
           max-width: var(--container);
           margin: 0 auto;
           padding: 0 24px;
+          position: relative;
+          z-index: 2;
         }
-        
-        .section {
-          padding: 88px 0;
+
+        .hero-text-box {
+          background: rgba(255, 255, 255, 0.7);
+          border: 1px solid rgba(255, 255, 255, 0.7);
+          padding: 28px 24px;
+          border-radius: 16px;
+          text-align: left;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+          margin-left: 0;
+          margin-right: auto;
+          max-width: 680px;
         }
-        
-        @media (max-width: 767px) {
-          .section {
-            padding: 64px 0;
-          }
+
+        .hero-content {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 12px;
+          padding-top: 1px;
         }
-        
-        .h1 {
-          font-size: 56px;
-          line-height: 64px;
-          font-weight: 800;
-          letter-spacing: -0.015em;
-          font-family: "Plus Jakarta Sans", "Noto Sans TC", Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-          color: var(--ink);
-          margin: 0 0 16px;
+
+        .hero-form-row {
+          width: 100%;
+          display: flex;
+          justify-content: center;
+          margin-top: 20px;
+          z-index: 2;
+          position: relative;
         }
-        
-        .h2 {
-          font-size: 34px;
-          line-height: 42px;
-          font-weight: 800;
-          letter-spacing: -0.01em;
-          font-family: "Plus Jakarta Sans", "Noto Sans TC", Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-          color: var(--ink);
-          margin: 0 0 16px;
+
+        .hero-form-card {
+          background: #fff;
+          border-radius: 999px;
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
+          border: 1px solid #E9EFFB;
+          padding: 10px 20px;
+          max-width: 1120px;
+          width: 100%;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          transition: box-shadow .2s;
+          position: relative;
+          top: 40px;
         }
-        
-        .h3 {
-          font-size: 22px;
-          line-height: 30px;
-          font-weight: 800;
-          letter-spacing: -0.01em;
-          font-family: "Plus Jakarta Sans", "Noto Sans TC", Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-          color: var(--ink);
-          margin: 0 0 16px;
+
+        .horizontal-form.center-form {
+          display: grid !important;
+          grid-template-columns: minmax(220px,1fr) minmax(220px,1fr) minmax(220px,1fr) minmax(160px,auto);
+          column-gap: 12px;
+          row-gap: 12px;
+          align-items: end;
+          padding: 0;
+          border: 0;
+          box-shadow: none;
+          background: transparent;
+          border-radius: 999px;
+          justify-content: center;
+          width: 100%;
+          max-width: 900px;
+          margin: 0 auto;
         }
-        
-        .body-l {
-          font-size: 18px;
-          line-height: 28px;
-          color: var(--ink);
+
+        .h-field {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          min-width: 0;
+          flex: 1 1 180px;
+          margin: 0 4px;
         }
-        
-        .body-m {
+
+        .h-label {
+          font-size: 13px;
+          color: #027AB9;
+          font-weight: 700;
+          margin-bottom: 2px;
+          padding-left: 2px;
+          letter-spacing: 0.01em;
+        }
+
+        .h-input {
+          width: 100%;
+          border: none;
+          background: transparent;
           font-size: 16px;
-          line-height: 26px;
-          color: var(--ink-dim);
+          outline: none;
+          padding: 0 10px;
+          height: 46px;
+          min-width: 0;
         }
-        
-        .label {
-          font-size: 14px;
-          line-height: 20px;
+
+        .h-input:focus {
+          background: #F0F6FF;
+          border-radius: 12px;
+        }
+
+        .horizontal-form .btn {
+          height: 52px;
+          padding: 0 24px;
+          font-size: 16px;
+          font-weight: 700;
+          line-height: 1;
+          border: none;
+          border-radius: 999px;
+          background: linear-gradient(90deg, #009FB6, #027AB9);
+          color: #FFFFFF;
+          box-shadow: 0 4px 12px rgba(2,122,185,0.16);
+          cursor: pointer;
+          white-space: nowrap;
+          align-self: stretch;
+        }
+
+        .horizontal-form .btn:hover {
+          background: linear-gradient(90deg, #00BEE3, #0286C9);
+          transform: scale(1.04);
+          box-shadow: 0 8px 24px rgba(2, 122, 185, 0.32);
+          transition: all 0.25s ease-in-out;
+        }
+
+        .caption {
+          color: #6A7A8A;
+          font-size: 13px;
+          text-align: center;
+          margin-bottom: 0;
+        }
+
+        /* Filmstrip */
+        .filmstrip {
+          height: 200px;
+          background: #ffffff;
+          overflow: hidden;
+          border-top: 20px solid #ffffff;
+          border-bottom: 1px solid #ffffff;
+        }
+        .filmstrip .row {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 0;
+          height: 100%;
+          width: 100vw;
+          margin-left: calc(50% - 50vw);
+        }
+        .tile {
+          position: relative;
+          overflow: hidden;
+        }
+        .tile img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          filter: grayscale(6%) contrast(1.03) saturate(0.96);
+        }
+        .tile::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(0deg, rgba(16,35,53,.18), rgba(16,35,53,.18));
+        }
+        @media (max-width:767px) {
+          .filmstrip { height: 140px; }
+        }
+
+        /* Numbers */
+        .numbers { background: #FFFFFF; }
+        .num-grid {
+          display: grid;
+          grid-template-columns: repeat(3,1fr);
+          gap: 24px;
+          text-align: center;
+        }
+        .filmstrip-row {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          width: 100%;
+          margin: 0;
+          padding: 0;
+          border: none;
+        }
+        .filmstrip-row img {
+          width: 100%;
+          height: 180px;
+          display: block;
+          margin: 0;
+          padding: 0;
+          border: none;
+        }
+        .caption-row {
+          display: grid;
+          grid-template-columns: repeat(5, 1fr);
+          margin-top: 8px;
+        }
+        .caption-row p {
+          text-align: center;
+          font-size: 10px;
+          color: #333;
+          line-height: 1.4;
+          margin: 0;
+          padding: 0 4px;
+        }
+        .num {
+          font-size: 32px;
+          color: #027AB9;
+          font-weight: bold;
+          line-height: 1.2;
+        }
+
+        /* Why */
+        .why { background: #FFFFFF; }
+        .why-rows { display: grid; gap: 24px; margin-top: 40px; }
+        .why-item {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 24px;
+          border: 1px solid var(--divider);
+          border-radius: 24px;
+          background: #FFFFFF;
+          padding: 28px;
+        }
+        .why-tag {
+          display: inline-block;
+          font-size: 12px;
+          letter-spacing: .04em;
+          text-transform: uppercase;
+          border-radius: 999px;
+          padding: 4px 10px;
+          margin-bottom: 12px;
+        }
+        .why-tag.pain {
+          background: #009FB6;
+          color: #ffffff;
+          font-weight: 500;
+        }
+        .why-tag.solution {
+          background: var(--gold);
+          color: #ffffff;
+          font-weight: 800;
+        }
+        @media (max-width:1024px) {
+          .why-item { grid-template-columns: 1fr; }
+        }
+
+        /* Topics */
+        .topics { background: linear-gradient(to bottom, #F6F9FE, #F2F6FB); }
+        .topics-grid {
+          display: grid;
+          grid-template-columns: repeat(3,1fr);
+          gap: 40px;
+          margin-top: 24px;
+        }
+        .topic-cards {
+          display: flex;
+          flex-direction: row;
+          gap: 90px;
+          flex-wrap: wrap;
+          justify-content: center;
+        }
+        .course-card {
+          display: flex;
+          flex-direction: column;
+          width: 320px;
+          background: #fff;
+          border-radius: 24px;
+          border: 1px solid #EDF1F8;
+          box-shadow: 0 4px 18px rgba(30,60,120,.09);
+          overflow: hidden;
+          cursor: default;
+        }
+        .course-card-imgbox {
+          width: 100%;
+          height: 180px;
+          background-color: #F3F6F9;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .course-card-imgbox img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+        .course-card-content {
+          padding: 14px 18px 18px;
+          display: flex;
+          flex-direction: column;
+          justify-content: flex-start;
+          gap: 8px;
+        }
+        .course-tag {
+          background: #e6f7fb;
+          color: #027AB9;
+          font-size: 13px;
           font-weight: 600;
+          padding: 4px 10px;
+          border-radius: 8px;
+          width: fit-content;
+          white-space: nowrap;
+        }
+        .course-title {
+          font-size: 18px;
+          font-weight: 700;
+          color: #14263F;
+          line-height: 1.5;
+          white-space: normal;
+          overflow-wrap: break-word;
+        }
+        .course-desc {
+          font-size: 14px;
+          color: #6A7A8A;
+          line-height: 1.4;
+          white-space: normal;
+          overflow-wrap: break-word;
+        }
+        .topic-label {
+          font-size: 20px;
+          font-weight: 600;
+          color: #027AB9;
+          margin-bottom: 16px;
+          margin-top: 48px;
+          font-family: 'Inter', sans-serif;
+        }
+
+        @media (max-width: 768px) {
+          .topic-cards {
+            gap: 20px;
+          }
+          .course-card {
+            width: 100%;
+          }
+        }
+        @media (max-width:1024px) {
+          .topics-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Learn split */
+        .learn-split {
+          position: relative;
+          display: grid;
+          grid-template-columns: 560px minmax(0,1fr);
+          gap: 40px;
+          align-items: start;
+        }
+        .learn-photo {
+          position: relative;
+          border-radius: 28px;
+          overflow: hidden;
+          border: 1px solid var(--divider);
+          box-shadow: 0 18px 40px rgba(16,58,99,.10);
+          aspect-ratio: 1/1;
+          background: #0B0C0D;
+        }
+        .learn-photo img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          filter: grayscale(6%) contrast(1.02) saturate(0.98);
+        }
+        .learn-photo::after {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(to bottom, rgba(16,35,53,.10), rgba(16,35,53,.18));
+        }
+        .learn-list {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .learn-item {
+          padding-bottom: 14px;
+          border-bottom: 1px solid rgba(16,35,53,.12);
+        }
+        .learn-item:last-child {
+          border-bottom: none;
+        }
+        .learn-item button {
+          all: unset;
+          cursor: pointer;
+          display: block;
+        }
+        .learn-item h3 {
+          font-size: 18px;
+          line-height: 26px;
+          font-weight: 800;
+          margin: 0 0 6px;
           color: var(--ink);
         }
-        
-        @media (max-width: 1100px) {
-          .h1 {
-            font-size: 44px;
-            line-height: 52px;
+        .learn-item p {
+          margin: 0 0 6px;
+          color: var(--ink-dim);
+          font-size: 14px;
+          line-height: 22px;
+        }
+        .learn-badge {
+          display: inline-block;
+          border: 1px solid var(--divider);
+          border-radius: 999px;
+          padding: 5px 10px;
+          font-size: 11px;
+          color: #5B6D7E;
+          background: #FFFFFF;
+        }
+        .learn-item.active h3 {
+          color: #2E6EB6;
+        }
+        .learn-item.active .learn-badge {
+          border-color: #2E6EB6;
+          color: #2E6EB6;
+          background: #E9F2FF;
+        }
+        @media (max-width:900px) {
+          .learn-split { grid-template-columns: 1fr; gap: 24px; }
+        }
+
+        /* Redirect */
+        .redirect {
+          background: rgba(0, 159, 182, 0.1);
+          color: var(--ink);
+          border-top: 1px solid var(--divider);
+          border-bottom: 1px solid var(--divider);
+          position: relative;
+        }
+        .redirect::before {
+          content: "";
+          position: absolute;
+          inset: 0;
+          background: radial-gradient(90% 140% at 0% 50%, rgba(46,110,182,.15), rgba(255,255,255,0) 55%), radial-gradient(90% 140% at 100% 50%, rgba(242,193,78,.12), rgba(255,255,255,0) 55%);
+          pointer-events: none;
+        }
+        .redirect .container {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          padding: 40px 24px;
+        }
+        .redirect h3 {
+          margin: 0;
+          font-weight: 800;
+          letter-spacing: -.01em;
+          font-size: 28px;
+          line-height: 34px;
+        }
+        .redirect p {
+          margin: 6px 0 0;
+          color: #49647B;
+        }
+        .redirect-cta.secondary {
+          background: #ffffff;
+          color: #027AB9;
+          border: 2px solid #027AB9;
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 16px 28px;
+          border-radius: 999px;
+          font-weight: 800;
+          box-shadow: 0 10px 24px rgba(2, 122, 185, 0.22);
+          text-decoration: none;
+        }
+        .redirect-cta.secondary:hover {
+          background: #F0F9FD;
+          color: #027AB9;
+          border-color: #027AB9;
+          transform: scale(1.02);
+          box-shadow: 0 4px 12px rgba(2, 122, 185, 0.12);
+          transition: all 0.2s ease-in-out;
+        }
+        .redirect-cta svg {
+          flex: none;
+        }
+        @media (max-width:768px) {
+          .redirect .container {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
           }
-          .h2 {
-            font-size: 30px;
-            line-height: 38px;
+          .redirect h3 {
+            font-size: 24px;
+            line-height: 30px;
           }
         }
-        
+
+        /* Footer */
+        .footer-cta-section {
+          background: #F7FAFE;
+          padding: 72px 0;
+          border-top: 1px solid var(--divider);
+        }
+        .footer-info-section {
+          background: #DFDFDF;
+          padding-top: 24px;
+          padding-bottom: 16px;
+          border-top: 1px solid #DCE3ED;
+        }
+        .footer-bottom {
+          text-align: center;
+          font-size: 14px;
+          color: #5F7180;
+        }
+        .footer-bottom .footer-info {
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          gap: 8px;
+          flex-wrap: wrap;
+          margin-bottom: 8px;
+        }
+        .footer-bottom .social {
+          display: flex;
+          justify-content: center;
+          gap: 16px;
+          flex-wrap: wrap;
+          margin-bottom: 8px;
+        }
+        .footer-bottom .legal {
+          font-size: 13px;
+          color: #64798A;
+        }
+
+        /* Form design styles */
+        .footer-card .form-grid {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0,1fr));
+          gap: 24px;
+          align-items: end;
+        }
+        .footer-card .form-grid > div {
+          min-width: 0;
+        }
+        .footer-card .form-grid button {
+          grid-column: 3;
+          justify-self: end;
+          height: 52px;
+        }
+        .footer-card .form-grid label {
+          font-weight: 600;
+          font-size: 14px;
+          color: #1F2937;
+          margin-bottom: 4px;
+        }
+        .footer-card .form-grid input {
+          padding: 12px 16px;
+          font-size: 16px;
+          border: 1px solid #DCE3ED;
+          border-radius: 12px;
+        }
+        .footer-card .form-grid button {
+          padding: 0 24px;
+          line-height: 1;
+          white-space: nowrap;
+          border: none;
+          border-radius: 999px;
+          background: linear-gradient(90deg, #009FB6, #027AB9);
+          color: #FFFFFF;
+          font-weight: 600;
+          font-size: 16px;
+          box-shadow: 0 8px 24px rgba(2, 122, 185, 0.24);
+          cursor: pointer;
+          align-self: flex-end;
+        }
+        .footer-card .form-grid button:hover {
+          background: linear-gradient(90deg, #00BEE3, #0286C9);
+          transform: scale(1.04);
+          box-shadow: 0 8px 24px rgba(2, 122, 185, 0.32);
+          transition: all 0.25s ease-in-out;
+        }
+        .footer-card .form-grid .caption {
+          flex-basis: 100%;
+          margin-top: 12px;
+          font-size: 13px;
+          color: var(--ink-dim, #64798A);
+          text-align: center;
+        }
+
+        /* Mobile: vertical stacking, full-width button */
         @media (max-width: 768px) {
-          .hero-grid,
-          .numbers-grid,
-          .why-card-grid,
-          .topics-grid,
-          .learn-grid,
-          .footer-grid {
-            grid-template-columns: 1fr !important;
+          .footer-card .form-grid {
+            grid-template-columns: 1fr;
+            align-items: stretch;
           }
+          .footer-card .form-grid button {
+            grid-column: 1 / -1;
+            width: 100%;
+          }
+        }
+        @media (max-width: 1024px) {
+          .footer-card .form-grid {
+            grid-template-columns: repeat(2, minmax(0,1fr));
+          }
+          .footer-card .form-grid button {
+            grid-column: 1 / -1;
+            justify-self: stretch;
+          }
+        }
 
-          .hero-grid { gap: 40px !important; }
-          .numbers-grid { gap: 40px !important; }
-          .why-card-grid { gap: 24px !important; padding: 24px !important; }
-          .topics-grid { gap: 48px !important; }
-          .learn-grid { gap: 32px !important; }
-          .footer-grid { gap: 40px !important; }
+        #fSuccess,
+        #fFail {
+          display: none;
+        }
 
-          .redirect-flex {
-            flex-direction: column !important;
-            text-align: center !important;
-            gap: 32px !important;
-            padding: 48px 24px !important;
-          }
-          
-          .h1 {
-            font-size: 36px !important;
-            line-height: 44px !important;
-          }
-          .h2 {
-            font-size: 28px !important;
-            line-height: 36px !important;
-          }
-
-          .products-grid {
-            grid-template-columns: 1fr !important;
-            gap: 24px !important;
-          }
-          
-          .product-section-grid {
-            grid-template-columns: 1fr !important;
-            gap: 12px !important;
-          }
-          
-          .product-card {
-            padding: 12px !important;
-          }
-          
-          .product-icon {
-            width: 40px !important;
-            height: 40px !important;
-          }
-          
-          .product-title {
-            font-size: 14px !important;
-          }
-          
-          .product-section-header {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 12px !important;
-          }
-          
-          .product-section-icon {
-            width: 48px !important;
-            height: 48px !important;
-          }
-          
-          .product-section-title {
-            font-size: 20px !important;
-            line-height: 28px !important;
-          }
-          
-          .product-card-image {
-            height: 120px !important;
-          }
+        html, body { 
+          overflow-x: hidden; 
         }
       `}</style>
       
-      <div style={{minHeight: '100vh', background: 'var(--black)'}}>
-        {/* Navigation First */}
-        <Navigation />
-        
-        {/* HERO */}
-        <section className="section" style={{background: 'linear-gradient(180deg, #FFFFFF 0%, #F7FAFE 60%, #F5F8FC 100%)'}}>
-          <div className="page-container">
-            <div className="hero-grid" style={{display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 440px', gap: '32px', alignItems: 'start'}}>
-              <div>
-                <h1 className="h1">Master the Global Stage — Join TLI Connect</h1>
-                <p className="body-l" style={{color: '#7FA8D8'}}>Language × Culture × Business — empowering tomorrow&apos;s global talent.</p>
-                <span style={{
-                  display: 'inline-block',
-                  padding: '6px 12px',
-                  border: '1px solid var(--blue-500)',
-                  borderRadius: '999px',
-                  fontSize: '14px',
-                  color: 'var(--blue-500)',
-                  margin: '20px 0',
-                  background: '#F0F6FF'
-                }}>
-                  Membership | 3‑Month / 1‑Year Plans
-                </span>
-                <p className="body-m" style={{marginTop: '24px', color: '#49647B'}}>Since 1956, TLI has empowered learners worldwide.</p>
-              </div>
-              
-              <div style={{
-                background: 'var(--paper)',
-                border: '1px solid var(--divider)',
-                borderRadius: 'var(--r32)',
-                boxShadow: '0 10px 30px rgba(16,58,99,.06)',
-                padding: '32px'
+      {/* Header */}
+      <header style={{position: 'sticky', top: 0, zIndex: 20, background: 'linear-gradient(to bottom, rgba(255,255,255,.86), rgba(255,255,255,.75))', backdropFilter: 'blur(8px)', borderBottom: '1px solid var(--divider)'}}>
+        <div style={{display: 'flex', alignItems: 'center', height: '72px', maxWidth: 'var(--container)', margin: '0 auto', padding: '0 24px'}}>
+          <a href="#hero" style={{display: 'inline-flex', alignItems: 'center', gap: '12px'}}>
+            <img 
+              src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
+              srcSet="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400 1x, https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w800 2x"
+              alt="Taipei Language Institute logo"
+              style={{height: '36px', width: 'auto'}}
+            />
+          </a>
+        </div>
+      </header>
+
+      {/* HERO */}
+      <section className="section" id="hero" style={{padding: '96px 60px', position: 'relative'}}>
+        <div className="hero-bg" />
+
+        <div className="hero-grid">
+          <div className="hero-content">
+            <div className="hero-text-box">
+              <span style={{
+                display: 'inline-block',
+                padding: '6px 12px',
+                border: '1px solid #009FB6',
+                borderRadius: '999px',
+                fontSize: '14px',
+                color: '#009FB6',
+                margin: '20px 0',
+                background: '#ffffff'
               }}>
-                <h2 className="h3" style={{marginBottom: '12px', color: '#2E6EB6'}}>Talk to Us</h2>
-                <form onSubmit={handleSubmit('hero', heroForm)}>
-                  <div style={{display: 'grid', gridTemplateColumns: '1fr', gap: '16px'}}>
-                    <div>
-                      <label className="label">Name<span style={{color: 'var(--gold)'}}>*</span></label>
-                      <input
-                        type="text"
-                        placeholder="Your name"
-                        required
-                        value={heroForm.name}
-                        onChange={(e) => setHeroForm({...heroForm, name: e.target.value})}
-                        style={{
-                          height: '52px',
-                          border: '1px solid var(--divider)',
-                          borderRadius: '16px',
-                          padding: '0 16px',
-                          fontSize: '16px',
-                          color: 'var(--ink)',
-                          background: '#FFFFFF',
-                          outline: 'none',
-                          width: '100%'
-                        }}
-                      />
-                      {errors.hero?.name && <div style={{display: 'block', color: 'var(--error)', fontSize: '12px', marginTop: '6px'}}>{errors.hero.name}</div>}
-                    </div>
-                    <div>
-                      <label className="label">Email<span style={{color: 'var(--gold)'}}>*</span></label>
-                      <input
-                        type="email"
-                        placeholder="you@example.com"
-                        required
-                        value={heroForm.email}
-                        onChange={(e) => setHeroForm({...heroForm, email: e.target.value})}
-                        style={{
-                          height: '52px',
-                          border: '1px solid var(--divider)',
-                          borderRadius: '16px',
-                          padding: '0 16px',
-                          fontSize: '16px',
-                          color: 'var(--ink)',
-                          background: '#FFFFFF',
-                          outline: 'none',
-                          width: '100%'
-                        }}
-                      />
-                      {errors.hero?.email && <div style={{display: 'block', color: 'var(--error)', fontSize: '12px', marginTop: '6px'}}>{errors.hero.email}</div>}
-                    </div>
-                    <div>
-                      <label className="label">Phone <span style={{fontSize: '12px', lineHeight: '18px', color: 'var(--ink-dim)'}}>(optional)</span></label>
-                      <input
-                        type="tel"
-                        placeholder="+886 912 345 678"
-                        value={heroForm.phone}
-                        onChange={(e) => setHeroForm({...heroForm, phone: e.target.value})}
-                        style={{
-                          height: '52px',
-                          border: '1px solid var(--divider)',
-                          borderRadius: '16px',
-                          padding: '0 16px',
-                          fontSize: '16px',
-                          color: 'var(--ink)',
-                          background: '#FFFFFF',
-                          outline: 'none',
-                          width: '100%'
-                        }}
-                      />
-                      {errors.hero?.phone && <div style={{display: 'block', color: 'var(--error)', fontSize: '12px', marginTop: '6px'}}>{errors.hero.phone}</div>}
-                    </div>
-                    <button
-                      type="submit"
-                      style={{
-                        height: '56px',
-                        border: 'none',
-                        borderRadius: '999px',
-                        background: 'var(--gold)',
-                        color: '#1E2328',
-                        fontSize: '16px',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        boxShadow: '0 10px 24px rgba(242,193,78,.22)',
-                        marginBottom: '12px'
-                      }}
-                    >
-                      Talk to Us
-                    </button>
-                    <a
-                      href="/role-select"
-                      style={{
-                        display: 'block',
-                        height: '56px',
-                        border: '2px solid var(--blue-500)',
-                        borderRadius: '999px',
-                        background: 'transparent',
-                        color: 'var(--blue-500)',
-                        fontSize: '16px',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        textDecoration: 'none',
-                        textAlign: 'center',
-                        lineHeight: '52px',
-                        marginBottom: '16px'
-                      }}
-                    >
-                      Choose Your Role to Login
-                    </a>
-                    <div style={{fontSize: '12px', lineHeight: '18px', color: 'var(--ink-dim)'}}>
-                      We&apos;ll get back to you within 1–2 business days. Your information is kept strictly confidential.
-                    </div>
-                    {success === 'hero' && (
-                      <div style={{
-                        display: 'block',
-                        borderLeft: '4px solid var(--success)',
-                        background: 'rgba(28,168,122,.08)',
-                        color: '#0F7F5F',
-                        padding: '12px 16px',
-                        borderRadius: '12px',
-                        marginTop: '16px',
-                        fontSize: '14px'
-                      }}>
-                        Thanks! We&apos;ll contact you within 1–2 business days.
-                      </div>
-                    )}
-                    {errors.hero?.submit && (
-                      <div style={{
-                        display: 'block',
-                        borderLeft: '4px solid var(--error)',
-                        background: 'rgba(213,72,72,.08)',
-                        color: '#B91C1C',
-                        padding: '12px 16px',
-                        borderRadius: '12px',
-                        marginTop: '16px',
-                        fontSize: '14px'
-                      }}>
-                        {errors.hero.submit}
-                      </div>
-                    )}
-                  </div>
-                </form>
+                Membership | 3‑Month / 1‑Year Plans
+              </span>
+              <h1 className="h1">Break Language Barriers. Unlock Asian Markets.</h1>
+              <p className="body-l" style={{color: '#7FA8D8'}}>
+                Language × Culture × Business —<br/>
+                Sharpen your skills alongside professionals worldwide and<br/>
+                become the next generation of international leaders.
+              </p>
+            </div>
+          </div>
+
+          <div className="hero-form-row">
+            <div className="hero-form-card">
+              <form id="heroForm" className="horizontal-form center-form" onSubmit={handleSubmit('hero', heroForm)}>
+                <div className="h-field">
+                  <label className="h-label">Name<span style={{color:'var(--gold)'}}>*</span></label>
+                  <input 
+                    id="hName" 
+                    name="name" 
+                    type="text" 
+                    placeholder="Your name" 
+                    required 
+                    className="h-input"
+                    value={heroForm.name}
+                    onChange={(e) => setHeroForm({...heroForm, name: e.target.value})}
+                  />
+                  {errors.hero?.name && <div style={{display: 'block', color: 'var(--error)', fontSize: '12px', marginTop: '6px'}}>{errors.hero.name}</div>}
+                </div>
+                <div className="h-field">
+                  <label className="h-label">Email<span style={{color:'var(--gold)'}}>*</span></label>
+                  <input 
+                    id="hEmail" 
+                    name="email" 
+                    type="email" 
+                    placeholder="you@example.com" 
+                    required 
+                    className="h-input"
+                    value={heroForm.email}
+                    onChange={(e) => setHeroForm({...heroForm, email: e.target.value})}
+                  />
+                  {errors.hero?.email && <div style={{display: 'block', color: 'var(--error)', fontSize: '12px', marginTop: '6px'}}>{errors.hero.email}</div>}
+                </div>
+                <div className="h-field">
+                  <label className="h-label">Phone <span className="caption">(optional)</span></label>
+                  <input 
+                    id="hPhone" 
+                    name="phone" 
+                    type="tel" 
+                    placeholder="+886 912 345 678" 
+                    className="h-input"
+                    value={heroForm.phone}
+                    onChange={(e) => setHeroForm({...heroForm, phone: e.target.value})}
+                  />
+                  {errors.hero?.phone && <div style={{display: 'block', color: 'var(--error)', fontSize: '12px', marginTop: '6px'}}>{errors.hero.phone}</div>}
+                </div>
+                <button className="btn" type="submit">Free Consultation</button>
+              </form>
+              <div className="caption" style={{margin: '12px 0 0 0', textAlign: 'center'}}>
+                We'll get back to you within 1–2 business days. Your information is kept strictly confidential.
+              </div>
+              {success === 'hero' && (
+                <div style={{
+                  display: 'block',
+                  borderLeft: '4px solid var(--success)',
+                  background: 'rgba(28,168,122,.08)',
+                  color: '#0F7F5F',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  marginTop: '16px',
+                  fontSize: '14px'
+                }}>
+                  Thank you for your submission! We'll be in touch within 1–2 business days.
+                </div>
+              )}
+              {errors.hero?.submit && (
+                <div style={{
+                  display: 'block',
+                  borderLeft: '4px solid var(--error)',
+                  background: 'rgba(213,72,72,.08)',
+                  color: '#B91C1C',
+                  padding: '12px 16px',
+                  borderRadius: '12px',
+                  marginTop: '16px',
+                  fontSize: '14px'
+                }}>
+                  {errors.hero.submit}
+                </div>
+              )}
+              <div style={{textAlign: 'center', marginTop: '16px'}}>
+                <a
+                  href="/role-select"
+                  style={{
+                    display: 'inline-block',
+                    padding: '12px 24px',
+                    border: '2px solid var(--blue-500)',
+                    borderRadius: '999px',
+                    background: 'transparent',
+                    color: 'var(--blue-500)',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    textDecoration: 'none'
+                  }}
+                >
+                  Already a member? Login here
+                </a>
               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Filmstrip */}
-        <div style={{
-          height: '200px',
-          background: 'var(--black-900)',
-          overflow: 'hidden',
-          borderTop: '1px solid var(--divider)',
-          borderBottom: '1px solid var(--divider)'
-        }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(6, 1fr)',
-            gap: '0',
-            height: '100%',
-            width: '100vw',
-            marginLeft: 'calc(50% - 50vw)'
-          }}>
-            {[
-              "https://images.unsplash.com/photo-1522199710521-72d69614c702?w=2000&auto=format&fit=crop&q=80",
-              "https://images.unsplash.com/photo-1511578314322-379afb476865?w=2000&auto=format&fit=crop&q=80",
-              "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=2000&auto=format&fit=crop&q=80",
-              "https://images.unsplash.com/photo-1553877522-43269d4ea984?w=2000&auto=format&fit=crop&q=80",
-              "https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=2000&auto=format&fit=crop&q=80",
-              "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=2000&auto=format&fit=crop&q=80"
-            ].map((src, i) => (
-              <div key={i} style={{position: 'relative', overflow: 'hidden'}}>
-                <Image 
-                  src={src}
-                  alt=""
-                  fill
-                  style={{
-                    objectFit: 'cover',
-                    filter: 'grayscale(6%) contrast(1.03) saturate(0.96)'
-                  }}
-                />
-                <div style={{
-                  content: '""',
-                  position: 'absolute',
-                  inset: '0',
-                  background: 'linear-gradient(0deg, rgba(16,35,53,.18), rgba(16,35,53,.18))'
-                }} />
+      {/* Filmstrip */}
+      <div className="filmstrip">
+        <div className="row">
+          <div className="tile">
+            <img src="https://images.unsplash.com/photo-1699443218794-589f8bdd48e4?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/>
+          </div>
+          <div className="tile">
+            <img src="https://images.unsplash.com/photo-1515168833906-d2a3b82b302a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/>
+          </div>
+          <div className="tile">
+            <img src="https://images.unsplash.com/photo-1517456793572-1d8efd6dc135?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/>
+          </div>
+          <div className="tile">
+            <img src="https://images.unsplash.com/photo-1548684133-8739f016b2ac?q=80&w=1674&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/>
+          </div>
+        </div>
+      </div>
+
+      {/* Why */}
+      <section className="section why">
+        <div className="container">
+          <h2 className="h2">Why Do You Need a Cross‑Cultural Learning Community?</h2>
+          <div className="why-rows">
+            <div className="why-item">
+              <div>
+                <span className="why-tag pain">Common Challenge</span>
+                <h3 className="h3">"I need flexibility, but I also want real connection—not just watching videos alone."</h3>
               </div>
-            ))}
+              <div>
+                <span className="why-tag solution">Solution</span>
+                <p>We're more than a classroom—it's a curated community. Connect with like-minded professionals in Taiwan and worldwide to exchange ideas, practice Mandarin, and build meaningful networks that support both your language journey and your career growth.</p>
+              </div>
+            </div>
+            <div className="why-item">
+              <div>
+                <span className="why-tag pain">Common Challenge</span>
+                <h3 className="h3">"I feel like an outsider, unable to connect with Chinese colleagues or clients."</h3>
+              </div>
+              <div>
+                <span className="why-tag solution">Solution</span>
+                <p>We focus on cultural immersion and practical language application, helping you build trust, credibility, and confidence in both formal and informal settings.</p>
+              </div>
+            </div>
+            <div className="why-item">
+              <div>
+                <span className="why-tag pain">Common Challenge</span>
+                <h3 className="h3">"I've already studied Chinese before, but I'm losing touch—and I need to keep it sharp to maintain client relationships."</h3>
+              </div>
+              <div>
+                <span className="why-tag solution">Solution</span>
+                <p>With advanced-level classes, industry-specific workshops, and a global professional community, we help you sustain and expand your Mandarin fluency for ongoing professional impact.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Topics */}
+      <section className="section topics">
+        <div className="container">
+          <h2 className="h2">Language, Culture & Business — All in One Membership</h2>
+          <p className="body-m" style={{margin: '8px 0 32px 0', color: '#49647B'}}>
+            Membership term: 3‑month or 1‑year. Same benefits — choose your pace.
+          </p>
+
+          {/* Chinese Proficiency */}
+          <div>
+            <div className="topic-label">Chinese Proficiency</div>
+            <div className="topic-cards">
+              <div className="course-card">
+                <div className="course-card-imgbox">
+                  <img
+                    src="https://drive.google.com/thumbnail?id=1_NyugcIq2A1IxVae0oqbbmOF7S_tbDuc&sz=w1200"
+                    alt="Practical Real Life Based Essentials"
+                    style={{transform: 'scale(0.98)', transformOrigin: 'center center', display: 'block', margin: '0 auto'}}
+                  />
+                </div>
+                <div className="course-card-content">
+                  <div className="course-tag">Video Library</div>
+                  <div className="course-title">Practical Real Life Based Essentials</div>
+                  <div className="course-desc">Self-pace, Anytime, Anywhere</div>
+                </div>
+              </div>
+              <div className="course-card">
+                <div className="course-card-imgbox">
+                  <img src="https://images.pexels.com/photos/4226140/pexels-photo-4226140.jpeg" alt="Daily Life & Business Communication" />
+                </div>
+                <div className="course-card-content">
+                  <div className="course-tag">Live Mini‑Classes</div>
+                  <div className="course-title">Daily Life & Business Communication</div>
+                  <div className="course-desc">Interactive, Small group, Themed</div>
+                </div>
+              </div>
+              <div className="course-card">
+                <div className="course-card-imgbox">
+                  <img src="https://drive.google.com/thumbnail?id=1hFq0oBzJvJm3isL3ElTvnnNy7NZ8Z6_l&sz=w1200" alt="Mandarin Lounge" />
+                </div>
+                <div className="course-card-content">
+                  <div className="course-tag">Live speaking arena</div>
+                  <div className="course-title">Mandarin Lounge</div>
+                  <div className="course-desc">Stress-free practice</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Cultural Insight */}
+          <div>
+            <div className="topic-label">Cultural Insight</div>
+            <div className="topic-cards">
+              <div className="course-card">
+                <div className="course-card-imgbox">
+                  <img src="https://drive.google.com/thumbnail?id=1V_1-zTB0N-Eq0PvvDFpP3MHycN-OtO1B&sz=w1200" alt="Local Folk Culture Experience" />
+                </div>
+                <div className="course-card-content">
+                  <div className="course-tag">Events</div>
+                  <div className="course-title">Local Folk Culture Experience</div>
+                  <div className="course-desc">Immersive, Cultural deep-dive</div>
+                </div>
+              </div>
+              <div className="course-card">
+                <div className="course-card-imgbox">
+                  <img src="https://drive.google.com/thumbnail?id=19QrdateU5N8G0RS-dtmpx43rRd2hIiJc&sz=w1200" alt="Yoga Martial Home Fitness Series" />
+                </div>
+                <div className="course-card-content">
+                  <div className="course-tag">Workshops</div>
+                  <div className="course-title">Yoga Martial Home Fitness Series</div>
+                  <div className="course-desc">Wellness, Monthly</div>
+                </div>
+              </div>
+              <div className="course-card">
+                <div className="course-card-imgbox">
+                  <img src="https://images.unsplash.com/photo-1672826980330-93ae1ac07b41?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Global Etiquette" />
+                </div>
+                <div className="course-card-content">
+                  <div className="course-tag">Events & Workshops</div>
+                  <div className="course-title">Global Etiquette</div>
+                  <div className="course-desc">Member exclusive</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Industry Firepower */}
+          <div>
+            <div className="topic-label">Industry Firepower</div>
+            <div className="topic-cards">
+              <div className="course-card">
+                <div className="course-card-imgbox">
+                  <img src="https://drive.google.com/thumbnail?id=1Dr3O7I80LIGirmqxreB5fnqrRtxEJOBx&sz=w1200" alt="Regenerative medicine & Longevity: Reverse Aging with Science" />
+                </div>
+                <div className="course-card-content">
+                  <div className="course-tag">Expert Channels</div>
+                  <div className="course-title">Regenerative medicine & Longevity: Reverse Aging with Science</div>
+                  <div className="course-desc">Expert guest, Industry insights</div>
+                </div>
+              </div>
+              <div className="course-card">
+                <div className="course-card-imgbox">
+                  <img src="https://drive.google.com/thumbnail?id=1flasExlMfa01xbwSr1Uf_yfOcL2-GAS4&sz=w1200" alt="Networking for Conscious Entrepreneurs and Investors" />
+                </div>
+                <div className="course-card-content">
+                  <div className="course-tag">Expert Channels</div>
+                  <div className="course-title">Networking for Conscious Entrepreneurs and Investors</div>
+                  <div className="course-desc">Expand horizons, Networking</div>
+                </div>
+              </div>
+              <div className="course-card">
+                <div className="course-card-imgbox">
+                  <img src="https://drive.google.com/thumbnail?id=1xM0bM-uYXYkcRyGQQ5b9K_pJyMpbBG_Z&sz=w1200" alt="Kickstarting Global Impact: A Martial Artist's Journey in Business and Cross-Cultural Leadership" />
+                </div>
+                <div className="course-card-content">
+                  <div className="course-tag">Expert Channels</div>
+                  <div className="course-title">Kickstarting Global Impact: A Martial Artist's Journey in Business and Cross-Cultural Leadership</div>
+                  <div className="course-desc">Hands-on, Cross-culture</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Numbers with Historical Photos */}
+      <section className="section numbers">
+        <div className="container">
+          <h2 className="h2">
+            TLI Connect — Building on 70 Years of TLI Language Excellence to Launch a Global Learning Community
+          </h2>
+        </div>
+
+        {/* Filmstrip row: images and captions separated */}
+        <div style={{margin: '40px 0'}}>
+          <div className="filmstrip-row">
+            <img src="https://drive.google.com/thumbnail?id=1ty5zRQX-Na3YIiVVt0-NTLLW-HA-zrc_&sz=w1600" alt="Professor John King Fairbank" />
+            <img src="https://drive.google.com/thumbnail?id=12zdFoBZzR6gcRwEBG37IRb85a4Sn00mu&sz=w1600" alt="Mr. James Stapleton Roy" />
+            <img src="https://drive.google.com/thumbnail?id=13r0Zn7E9YCj9-waSjb3Wp9uFJ65iBluS&sz=w1600" alt="Mr. Nicholas Kristof and Ms. Sheryl WuDunn" />
+            <img src="https://drive.google.com/thumbnail?id=13Q4uM8toWNxVaN9tSzbw9GtWHnjxrBI9&sz=w1600" alt="Mr. Lee Kuan Yew" />
+            <img src="https://drive.google.com/thumbnail?id=1co45YrsO_hgKCZnUdYxoz-9ik9WzmZHw&sz=w1600" alt="Mr. Mike Chinoy" />
+          </div>
+          <div className="caption-row">
+            <p>Professor John King Fairbank — Harvard University Sinologist</p>
+            <p>Mr. James Stapleton Roy — Former U.S. Ambassador to Beijing</p>
+            <p>Mr. Nicholas Kristof & Ms. Sheryl WuDunn — Pulitzer Prize Winners for International Reporting</p>
+            <p>Mr. Lee Kuan Yew — Former Prime Minister of Singapore</p>
+            <p>Mr. Mike Chinoy — Former Asia-Pacific Regional Director, CNN</p>
           </div>
         </div>
 
-        {/* Numbers */}
-        <section className="section" style={{background: '#EFF5FC'}}>
-          <div className="page-container">
-            <h2 className="h2">TLI Connect — The Digital Extension of TLI&apos;s Legacy</h2>
-            <div className="numbers-grid" style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3,1fr)',
-              gap: '24px',
-              textAlign: 'center',
-              marginTop: '40px'
-            }}>
-              <div>
-                <div style={{
-                  fontSize: '44px',
-                  lineHeight: '52px',
-                  fontWeight: '800',
-                  color: '#2E6EB6',
-                  letterSpacing: '-0.015em'
-                }}>
-                  Established<br/>1956
-                </div>
-                <p className="body-m">Taiwan&apos;s pioneer language institute.</p>
-              </div>
-              <div>
-                <div style={{
-                  fontSize: '44px',
-                  lineHeight: '52px',
-                  fontWeight: '800',
-                  color: '#2E6EB6',
-                  letterSpacing: '-0.015em'
-                }}>
-                  600k+<br/>Learners
-                </div>
-                <p className="body-m">Served across business, academia & NGOs.</p>
-              </div>
-              <div>
-                <div style={{
-                  fontSize: '44px',
-                  lineHeight: '52px',
-                  fontWeight: '800',
-                  color: '#2E6EB6',
-                  letterSpacing: '-0.015em'
-                }}>
-                  Global +<br/>Digital
-                </div>
-                <p className="body-m">On‑campus & online, same quality standard.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Why */}
-        <section className="section" style={{background: 'linear-gradient(to bottom, #F6F9FE, #F2F6FB)'}}>
-          <div className="page-container">
-            <h2 className="h2">Why Do You Need a Cross‑Cultural Learning Community?</h2>
-            <div style={{display: 'grid', gap: '24px', marginTop: '40px'}}>
-              {[
-                {
-                  pain: "Training feels disconnected from work",
-                  solution: "Scenario‑based courses mirror real presentations, meetings, emails and negotiations."
-                },
-                {
-                  pain: "No practice arena or peer circle",
-                  solution: "Monthly workshops & networking sessions provide live practice and high‑quality connections."
-                },
-                {
-                  pain: "Missing the cultural lens",
-                  solution: "Deep‑dive cultural cases decode unspoken rules so you avoid missteps and communicate confidently."
-                }
-              ].map((item, i) => (
-                <div key={i} className="why-card-grid" style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '24px',
-                  border: '1px solid var(--divider)',
-                  borderRadius: '24px',
-                  background: '#FFFFFF',
-                  padding: '28px'
-                }}>
-                  <div>
-                    <span style={{
-                      display: 'inline-block',
-                      fontSize: '12px',
-                      letterSpacing: '.04em',
-                      textTransform: 'uppercase',
-                      borderRadius: '999px',
-                      padding: '4px 10px',
-                      marginBottom: '12px',
-                      border: '1px solid var(--blue-500)',
-                      color: 'var(--blue-500)',
-                      background: '#E9F2FF'
-                    }}>
-                      Pain
-                    </span>
-                    <h3 className="h3">{item.pain}</h3>
-                  </div>
-                  <div>
-                    <span style={{
-                      display: 'inline-block',
-                      fontSize: '12px',
-                      letterSpacing: '.04em',
-                      textTransform: 'uppercase',
-                      borderRadius: '999px',
-                      padding: '4px 10px',
-                      marginBottom: '12px',
-                      background: 'var(--gold)',
-                      color: '#1E2328',
-                      fontWeight: '800'
-                    }}>
-                      Solution
-                    </span>
-                    <p style={{margin: 0, color: 'var(--ink-dim)'}}>{item.solution}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Topics */}
-        <section className="section" style={{background: '#F7FAFE'}}>
-          <div className="page-container">
-            <h2 className="h2">Language, Culture & Business — All in One Membership</h2>
-            <p style={{marginTop: '12px', color: '#7FA8D8', fontSize: '12px', lineHeight: '18px'}}>
-              Membership term: 3‑month or 1‑year. Same benefits — choose your pace.
-            </p>
-
-            <h3 style={{
-              fontSize: '18px',
-              lineHeight: '28px',
-              fontWeight: '700',
-              letterSpacing: '.08em',
-              textTransform: 'uppercase',
-              color: '#2E6EB6',
-              marginTop: '40px'
-            }}>
-              What you&apos;ll master
-            </h3>
-            
-            <div style={{
-              position: 'relative',
-              padding: '64px 0',
-              background: 'radial-gradient(circle at 50% 0%, rgba(46,110,182,.06), rgba(0,0,0,0) 60%)',
-              marginTop: '16px'
-            }}>
-              <div className="topics-grid" style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3,1fr)',
-                gap: '40px'
-              }}>
-                {[
-                  {
-                    icon: (
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke="#2E6EB6" d="M12 3C7.582 3 4 6.134 4 9.999c0 1.63.6 3.142 1.63 4.372l-.367 3.299 3.08-1.737C9.391 16.314 10.654 16.6 12 16.6c4.418 0 8-3.134 8-7.001C20 6.134 16.418 3 12 3Z" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path stroke="#2E6EB6" d="M15.5 7.75h-7M17 10.25H8.5" strokeWidth="1.6" strokeLinecap="round"/>
-                        <path stroke="#2E6EB6" d="M6.5 21.5l4.2-1.2 6.8-6.8a1.6 1.6 0 0 0 0-2.263v0a1.6 1.6 0 0 0-2.263 0L8.437 18.037 6.5 21.5Z" strokeWidth="1.6" strokeLinejoin="round"/>
-                      </svg>
-                    ),
-                    title: "Chinese Proficiency",
-                    desc: "A0→B2 structured path: speak, write, present with ease."
-                  },
-                  {
-                    icon: (
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke="#2E6EB6" d="M12 21c4.971 0 9-4.029 9-9s-4.029-9-9-9-9 4.029-9 9 4.029 9 9 9Z" strokeWidth="1.6"/>
-                        <path stroke="#2E6EB6" d="M3.5 12h17M12 3.5c2.5 2.5 2.5 14.5 0 17M8 5c1.2 1.6 1.8 5.4 1.8 7s-.6 5.4-1.8 7" strokeWidth="1.6" strokeLinecap="round"/>
-                        <path stroke="#2E6EB6" d="M21.5 18.5c-2.2 2.2-5.8 2.2-8 0 2.2-2.2 5.8-2.2 8 0Z" strokeWidth="1.6" strokeLinejoin="round"/>
-                        <circle stroke="#2E6EB6" cx="17.5" cy="18.5" r="1.2" strokeWidth="1.6"/>
-                      </svg>
-                    ),
-                    title: "Cultural Insight",
-                    desc: "Business etiquette & local know‑how: read the subtext."
-                  },
-                  {
-                    icon: (
-                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke="#2E6EB6" d="M3.5 20.5h17" strokeWidth="1.6" strokeLinecap="round"/>
-                        <path stroke="#2E6EB6" d="M6 16l4-4 3 3 6-6" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path stroke="#2E6EB6" d="M16.5 7.5H20v3.5" strokeWidth="1.6" strokeLinecap="round"/>
-                      </svg>
-                    ),
-                    title: "Business Firepower",
-                    desc: "Presentations, negotiations, crisis emails: real‑world comms."
-                  }
-                ].map((topic, i) => (
-                  <div key={i} style={{display: 'flex', flexDirection: 'column', gap: '12px'}}>
-                    <div style={{
-                      width: '56px',
-                      height: '56px',
-                      borderRadius: '16px',
-                      background: '#FFFFFF',
-                      border: '1px solid var(--divider)',
-                      display: 'grid',
-                      placeItems: 'center',
-                      boxShadow: '0 6px 16px rgba(16,58,99,.06)'
-                    }}>
-                      {topic.icon}
-                    </div>
-                    <div style={{
-                      fontSize: '24px',
-                      lineHeight: '32px',
-                      fontWeight: '700',
-                      color: 'var(--ink)'
-                    }}>
-                      {topic.title}
-                    </div>
-                    <div style={{
-                      fontSize: '16px',
-                      lineHeight: '26px',
-                      color: 'var(--ink-dim)'
-                    }}>
-                      {topic.desc}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Products Section */}
-            <section style={{
-              marginTop: '64px',
-              marginBottom: '48px'
-            }}>
-              <h3 style={{
-                fontSize: '18px',
-                lineHeight: '28px',
-                fontWeight: '700',
-                letterSpacing: '.08em',
-                textTransform: 'uppercase',
-                color: '#2E6EB6',
-                marginBottom: '40px'
-              }}>
-                Our Products
-              </h3>
-              
-              {/* 横向产品展示 */}
-              <div style={{
-                display: 'grid',
-                gap: '48px'
-              }}>
-                {/* 影音課程 */}
-                <div>
-                  <div className="product-section-header" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    marginBottom: '24px'
-                  }}>
-                    <div className="product-section-icon" style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '16px',
-                      background: 'linear-gradient(135deg, #2E6EB6, #4A90E2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 8px 24px rgba(46,110,182,.20)'
-                    }}>
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 5v14l11-7L8 5z" fill="white"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="product-section-title" style={{
-                        fontSize: '24px',
-                        lineHeight: '32px',
-                        fontWeight: '800',
-                        color: 'var(--ink)',
-                        margin: '0 0 4px'
-                      }}>
-                        Video Courses
-                      </h4>
-                      <p style={{
-                        fontSize: '16px',
-                        color: 'var(--ink-dim)',
-                        margin: '0'
-                      }}>
-                        Learn anytime, anywhere at your own pace
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="product-section-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                    gap: '16px'
-                  }}>
-                    {[
-                      {
-                        title: 'Pronunciation',
-                        description: 'Standard pronunciation techniques and tone practice',
-                        image: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&auto=format&fit=crop&q=80',
-                        level: 'Basic',
-                        duration: '4 weeks'
-                      },
-                      {
-                        title: 'Beginner 1',
-                        description: 'Basic Chinese vocabulary and daily conversation',
-                        image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80',
-                        level: 'Beginner',
-                        duration: '8 weeks'
-                      },
-                      {
-                        title: 'Beginner 2', 
-                        description: 'Everyday Chinese and basic grammar',
-                        image: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=800&auto=format&fit=crop&q=80',
-                        level: 'Beginner',
-                        duration: '8 weeks'
-                      },
-                      {
-                        title: 'Intermediate 1',
-                        description: 'Business Chinese and advanced expression',
-                        image: 'https://images.unsplash.com/photo-1551836022-4c4c79ecde51?w=800&auto=format&fit=crop&q=80',
-                        level: 'Intermediate',
-                        duration: '10 weeks'
-                      },
-                      {
-                        title: 'Intermediate 2',
-                        description: 'Cultural understanding and professional communication',
-                        image: 'https://images.unsplash.com/photo-1511578314322-379afb476865?w=800&auto=format&fit=crop&q=80',
-                        level: 'Intermediate',
-                        duration: '10 weeks'
-                      }
-                    ].map((course, i) => (
-                      <a
-                        key={i}
-                        href="/membership"
-                        style={{
-                          display: 'block',
-                          background: '#FFFFFF',
-                          border: '1px solid var(--divider)',
-                          borderRadius: '20px',
-                          textDecoration: 'none',
-                          color: 'var(--ink)',
-                          transition: 'all 0.3s ease',
-                          boxShadow: '0 4px 16px rgba(16,58,99,.08)',
-                          overflow: 'hidden'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-4px)';
-                          e.currentTarget.style.boxShadow = '0 12px 32px rgba(16,58,99,.15)';
-                          e.currentTarget.style.borderColor = '#2E6EB6';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,58,99,.08)';
-                          e.currentTarget.style.borderColor = 'var(--divider)';
-                        }}
-                      >
-                        <div className="product-card-image" style={{position: 'relative', height: '160px', overflow: 'hidden'}}>
-                          <Image 
-                            src={course.image}
-                            alt={course.title}
-                            fill
-                            style={{
-                              objectFit: 'cover',
-                              filter: 'brightness(0.9)'
-                            }}
-                          />
-                          <div style={{
-                            position: 'absolute',
-                            top: '12px',
-                            left: '12px',
-                            background: 'rgba(46,110,182,.9)',
-                            color: 'white',
-                            padding: '4px 8px',
-                            borderRadius: '12px',
-                            fontSize: '12px',
-                            fontWeight: '600'
-                          }}>
-                            {course.level}
-                          </div>
-                          <div style={{
-                            position: 'absolute',
-                            top: '12px',
-                            right: '12px',
-                            background: 'rgba(255,255,255,.9)',
-                            color: 'var(--ink)',
-                            padding: '4px 8px',
-                            borderRadius: '12px',
-                            fontSize: '12px',
-                            fontWeight: '600'
-                          }}>
-                            {course.duration}
-                          </div>
-                        </div>
-                        <div style={{padding: '20px'}}>
-                          <h5 style={{
-                            fontSize: '18px',
-                            fontWeight: '700',
-                            color: 'var(--ink)',
-                            margin: '0 0 8px'
-                          }}>
-                            {course.title}
-                          </h5>
-                          <p style={{
-                            fontSize: '14px',
-                            color: 'var(--ink-dim)',
-                            margin: '0',
-                            lineHeight: '20px'
-                          }}>
-                            {course.description}
-                          </p>
-                        </div>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 互動團課 */}
-                <div>
-                  <div className="product-section-header" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    marginBottom: '24px'
-                  }}>
-                    <div className="product-section-icon" style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '16px',
-                      background: 'linear-gradient(135deg, #10B981, #059669)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 8px 24px rgba(16,185,129,.20)'
-                    }}>
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <circle cx="9" cy="7" r="4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="product-section-title" style={{
-                        fontSize: '24px',
-                        lineHeight: '32px',
-                        fontWeight: '800',
-                        color: 'var(--ink)',
-                        margin: '0 0 4px'
-                      }}>
-                        Interactive Group Classes
-                      </h4>
-                      <p style={{
-                        fontSize: '16px',
-                        color: 'var(--ink-dim)',
-                        margin: '0'
-                      }}>
-                        Small group interactive learning with real-time communication practice
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="product-section-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                    gap: '16px'
-                  }}>
-                    {[
-                      {
-                        title: 'Pronunciation',
-                        description: 'Pronunciation correction and tone training group classes',
-                        image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800&auto=format&fit=crop&q=80',
-                        level: 'Basic',
-                        students: '20 students'
-                      },
-                      {
-                        title: 'Beginner 1',
-                        description: 'Interactive Chinese beginner group learning',
-                        image: 'https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=800&auto=format&fit=crop&q=80',
-                        level: 'Beginner',
-                        students: '20 students'
-                      },
-                      {
-                        title: 'Beginner 2', 
-                        description: 'Daily conversation practice courses',
-                        image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80',
-                        level: 'Beginner',
-                        students: '20 students'
-                      },
-                      {
-                        title: 'Intermediate 1',
-                        description: 'Business Chinese interactive discussion courses',
-                        image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&auto=format&fit=crop&q=80',
-                        level: 'Intermediate',
-                        students: '20 students'
-                      },
-                      {
-                        title: 'Intermediate 2',
-                        description: 'Cultural exchange and in-depth dialogue practice',
-                        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
-                        level: 'Intermediate',
-                        students: '20 students'
-                      }
-                    ].map((course, i) => (
-                      <a
-                        key={i}
-                        href="/membership"
-                        style={{
-                          display: 'block',
-                          background: '#FFFFFF',
-                          border: '1px solid var(--divider)',
-                          borderRadius: '20px',
-                          textDecoration: 'none',
-                          color: 'var(--ink)',
-                          transition: 'all 0.3s ease',
-                          boxShadow: '0 4px 16px rgba(16,58,99,.08)',
-                          overflow: 'hidden'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-4px)';
-                          e.currentTarget.style.boxShadow = '0 12px 32px rgba(16,58,99,.15)';
-                          e.currentTarget.style.borderColor = '#10B981';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,58,99,.08)';
-                          e.currentTarget.style.borderColor = 'var(--divider)';
-                        }}
-                      >
-                        <div className="product-card-image" style={{position: 'relative', height: '160px', overflow: 'hidden'}}>
-                          <Image 
-                            src={course.image}
-                            alt={course.title}
-                            fill
-                            style={{
-                              objectFit: 'cover',
-                              filter: 'brightness(0.9)'
-                            }}
-                          />
-                          <div style={{
-                            position: 'absolute',
-                            top: '12px',
-                            left: '12px',
-                            background: 'rgba(16,185,129,.9)',
-                            color: 'white',
-                            padding: '4px 8px',
-                            borderRadius: '12px',
-                            fontSize: '12px',
-                            fontWeight: '600'
-                          }}>
-                            {course.level}
-                          </div>
-                          <div style={{
-                            position: 'absolute',
-                            top: '12px',
-                            right: '12px',
-                            background: 'rgba(255,255,255,.9)',
-                            color: 'var(--ink)',
-                            padding: '4px 8px',
-                            borderRadius: '12px',
-                            fontSize: '12px',
-                            fontWeight: '600'
-                          }}>
-                            {course.students}
-                          </div>
-                        </div>
-                        <div style={{padding: '20px'}}>
-                          <h5 style={{
-                            fontSize: '18px',
-                            fontWeight: '700',
-                            color: 'var(--ink)',
-                            margin: '0 0 8px'
-                          }}>
-                            {course.title}
-                          </h5>
-                          <p style={{
-                            fontSize: '14px',
-                            color: 'var(--ink-dim)',
-                            margin: '0',
-                            lineHeight: '20px'
-                          }}>
-                            {course.description}
-                          </p>
-                        </div>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 活動專區 */}
-                <div>
-                  <div className="product-section-header" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    marginBottom: '24px'
-                  }}>
-                    <div className="product-section-icon" style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '16px',
-                      background: 'linear-gradient(135deg, #1CA87A, #2DD4BF)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 8px 24px rgba(28,168,122,.20)'
-                    }}>
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M8 6L21 12L8 18V6Z" fill="white"/>
-                        <path d="M2 6V18" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="product-section-title" style={{
-                        fontSize: '24px',
-                        lineHeight: '32px',
-                        fontWeight: '800',
-                        color: 'var(--ink)',
-                        margin: '0 0 4px'
-                      }}>
-                        Events & Activities
-                      </h4>
-                      <p style={{
-                        fontSize: '16px',
-                        color: 'var(--ink-dim)',
-                        margin: '0'
-                      }}>
-                        Diverse activity experiences with hands-on interactive learning
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="product-section-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: '16px'
-                  }}>
-                    {[
-                      {
-                        title: 'Chinese Teacher Workshop',
-                        description: 'Professional teaching methods and experience sharing',
-                        image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=80',
-                        type: 'Workshop',
-                        frequency: 'Monthly'
-                      },
-                      {
-                        title: 'Immersion Field Study',
-                        description: 'On-site cultural experience and language immersion',
-                        image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80',
-                        type: 'Field Study',
-                        frequency: 'Quarterly'
-                      },
-                      {
-                        title: 'Language Corner',
-                        description: 'Casual conversation practice and language exchange opportunities',
-                        image: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800&auto=format&fit=crop&q=80',
-                        type: 'Language Exchange',
-                        frequency: 'Weekly'
-                      }
-                    ].map((activity, i) => (
-                      <a
-                        key={i}
-                        href="/membership"
-                        style={{
-                          display: 'block',
-                          background: '#FFFFFF',
-                          border: '1px solid var(--divider)',
-                          borderRadius: '20px',
-                          textDecoration: 'none',
-                          color: 'var(--ink)',
-                          transition: 'all 0.3s ease',
-                          boxShadow: '0 4px 16px rgba(16,58,99,.08)',
-                          overflow: 'hidden'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-4px)';
-                          e.currentTarget.style.boxShadow = '0 12px 32px rgba(16,58,99,.15)';
-                          e.currentTarget.style.borderColor = '#1CA87A';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,58,99,.08)';
-                          e.currentTarget.style.borderColor = 'var(--divider)';
-                        }}
-                      >
-                        <div style={{position: 'relative', height: '160px', overflow: 'hidden'}}>
-                          <Image 
-                            src={activity.image}
-                            alt={activity.title}
-                            fill
-                            style={{
-                              objectFit: 'cover',
-                              filter: 'brightness(0.9)'
-                            }}
-                          />
-                          <div style={{
-                            position: 'absolute',
-                            top: '12px',
-                            left: '12px',
-                            background: 'rgba(28,168,122,.9)',
-                            color: 'white',
-                            padding: '4px 8px',
-                            borderRadius: '12px',
-                            fontSize: '12px',
-                            fontWeight: '600'
-                          }}>
-                            {activity.type}
-                          </div>
-                          <div style={{
-                            position: 'absolute',
-                            top: '12px',
-                            right: '12px',
-                            background: 'rgba(255,255,255,.9)',
-                            color: 'var(--ink)',
-                            padding: '4px 8px',
-                            borderRadius: '12px',
-                            fontSize: '12px',
-                            fontWeight: '600'
-                          }}>
-                            {activity.frequency}
-                          </div>
-                        </div>
-                        <div style={{padding: '20px'}}>
-                          <h5 style={{
-                            fontSize: '18px',
-                            fontWeight: '700',
-                            color: 'var(--ink)',
-                            margin: '0 0 8px'
-                          }}>
-                            {activity.title}
-                          </h5>
-                          <p style={{
-                            fontSize: '14px',
-                            color: 'var(--ink-dim)',
-                            margin: '0',
-                            lineHeight: '20px'
-                          }}>
-                            {activity.description}
-                          </p>
-                        </div>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 聯盟專區 */}
-                <div>
-                  <div className="product-section-header" style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '16px',
-                    marginBottom: '24px'
-                  }}>
-                    <div className="product-section-icon" style={{
-                      width: '64px',
-                      height: '64px',
-                      borderRadius: '16px',
-                      background: 'linear-gradient(135deg, #F2C14E, #F4D03F)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 8px 24px rgba(242,193,78,.20)'
-                    }}>
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <circle cx="9" cy="7" r="4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <path d="m22 21-3-3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        <circle cx="19.5" cy="16.5" r="2.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="product-section-title" style={{
-                        fontSize: '24px',
-                        lineHeight: '32px',
-                        fontWeight: '800',
-                        color: 'var(--ink)',
-                        margin: '0 0 4px'
-                      }}>
-                        Partnership Zone
-                      </h4>
-                      <p style={{
-                        fontSize: '16px',
-                        color: 'var(--ink-dim)',
-                        margin: '0'
-                      }}>
-                        Collaborate with top institutions to expand learning horizons
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="product-section-grid" style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                    gap: '16px'
-                  }}>
-                    {[
-                      {
-                        title: 'Aexo Bio',
-                        description: 'Professional Chinese for biotech industry and business communication',
-                        image: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?w=800&auto=format&fit=crop&q=80',
-                        category: 'Biotech',
-                        level: 'Professional'
-                      },
-                      {
-                        title: 'Light Dao',
-                        description: 'Chinese language education for blockchain and fintech',
-                        image: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&auto=format&fit=crop&q=80',
-                        category: 'Fintech',
-                        level: 'Professional'
-                      },
-                      {
-                        title: 'Purdue University',
-                        description: 'Academic Chinese and research collaboration exchange',
-                        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
-                        category: 'Academic',
-                        level: 'Advanced'
-                      },
-                      {
-                        title: 'INSEAD',
-                        description: 'International business school Chinese business courses',
-                        image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&auto=format&fit=crop&q=80',
-                        category: 'MBA',
-                        level: 'Advanced'
-                      },
-                      {
-                        title: 'Yu Mei-ren',
-                        description: 'Media Chinese and oral expression techniques',
-                        image: 'https://images.unsplash.com/photo-1478737270239-2f02b77fc618?w=800&auto=format&fit=crop&q=80',
-                        category: 'Media',
-                        level: 'Advanced'
-                      },
-                      {
-                        title: 'Professor Meng Zhu-yi',
-                        description: 'Business negotiation and cross-cultural communication',
-                        image: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?w=800&auto=format&fit=crop&q=80',
-                        category: 'Business',
-                        level: 'Professional'
-                      }
-                    ].map((partner, i) => (
-                      <a
-                        key={i}
-                        href="/membership"
-                        style={{
-                          display: 'block',
-                          background: '#FFFFFF',
-                          border: '1px solid var(--divider)',
-                          borderRadius: '20px',
-                          textDecoration: 'none',
-                          color: 'var(--ink)',
-                          transition: 'all 0.3s ease',
-                          boxShadow: '0 4px 16px rgba(16,58,99,.08)',
-                          overflow: 'hidden'
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.transform = 'translateY(-4px)';
-                          e.currentTarget.style.boxShadow = '0 12px 32px rgba(16,58,99,.15)';
-                          e.currentTarget.style.borderColor = '#F2C14E';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = '0 4px 16px rgba(16,58,99,.08)';
-                          e.currentTarget.style.borderColor = 'var(--divider)';
-                        }}
-                      >
-                        <div style={{position: 'relative', height: '160px', overflow: 'hidden'}}>
-                          <Image 
-                            src={partner.image}
-                            alt={partner.title}
-                            fill
-                            style={{
-                              objectFit: 'cover',
-                              filter: 'brightness(0.9)'
-                            }}
-                          />
-                          <div style={{
-                            position: 'absolute',
-                            top: '12px',
-                            left: '12px',
-                            background: 'rgba(242,193,78,.9)',
-                            color: 'white',
-                            padding: '4px 8px',
-                            borderRadius: '12px',
-                            fontSize: '12px',
-                            fontWeight: '600'
-                          }}>
-                            {partner.category}
-                          </div>
-                          <div style={{
-                            position: 'absolute',
-                            top: '12px',
-                            right: '12px',
-                            background: 'rgba(255,255,255,.9)',
-                            color: 'var(--ink)',
-                            padding: '4px 8px',
-                            borderRadius: '12px',
-                            fontSize: '12px',
-                            fontWeight: '600'
-                          }}>
-                            {partner.level}
-                          </div>
-                        </div>
-                        <div style={{padding: '20px'}}>
-                          <h5 style={{
-                            fontSize: '18px',
-                            fontWeight: '700',
-                            color: 'var(--ink)',
-                            margin: '0 0 8px'
-                          }}>
-                            {partner.title}
-                          </h5>
-                          <p style={{
-                            fontSize: '14px',
-                            color: 'var(--ink-dim)',
-                            margin: '0',
-                            lineHeight: '20px'
-                          }}>
-                            {partner.description}
-                          </p>
-                        </div>
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <h3 style={{
-              fontSize: '18px',
-              lineHeight: '28px',
-              fontWeight: '700',
-              letterSpacing: '.08em',
-              textTransform: 'uppercase',
-              color: '#2E6EB6',
-              marginTop: '48px'
-            }}>
-              How you&apos;ll learn
-            </h3>
-            
-            <div style={{
-              position: 'relative',
-              padding: '64px 0',
-              background: 'radial-gradient(circle at 50% 0%, rgba(46,110,182,.06), rgba(0,0,0,0) 60%)',
-              marginTop: '16px'
-            }}>
-              <div className="learn-grid" style={{
-                position: 'relative',
-                display: 'grid',
-                gridTemplateColumns: '560px minmax(0,1fr)',
-                gap: '40px',
-                alignItems: 'start'
-              }}>
-                <div style={{
-                  position: 'relative',
-                  borderRadius: '28px',
-                  overflow: 'hidden',
-                  border: '1px solid var(--divider)',
-                  boxShadow: '0 18px 40px rgba(16,58,99,.10)',
-                  aspectRatio: '1/1',
-                  background: '#0B0C0D'
-                }}>
-                  <Image 
-                    src={currentImage}
-                    alt=""
-                    fill
-                    style={{
-                      objectFit: 'cover',
-                      display: 'block',
-                      filter: 'grayscale(6%) contrast(1.02) saturate(0.98)',
-                      transition: 'opacity 0.3s'
-                    }}
-                  />
-                </div>
-                <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '16px'
-                }}>
-                  {learnItems.map((item, i) => (
-                    <div key={i} style={{
-                      paddingBottom: '14px',
-                      borderBottom: i === learnItems.length - 1 ? 'none' : '1px solid rgba(16,35,53,.12)'
-                    }}>
-                      <button
-                        onClick={() => {
-                          setActiveLearnItem(i);
-                          setCurrentImage(item.image);
-                        }}
-                        style={{
-                          all: 'unset',
-                          cursor: 'pointer',
-                          display: 'block',
-                          width: '100%'
-                        }}
-                      >
-                        <h3 style={{
-                          fontSize: '18px',
-                          lineHeight: '26px',
-                          fontWeight: '800',
-                          margin: '0 0 6px',
-                          color: activeLearnItem === i ? '#2E6EB6' : 'var(--ink)'
-                        }}>
-                          {item.title}
-                        </h3>
-                        <p style={{
-                          margin: '0 0 6px',
-                          color: 'var(--ink-dim)',
-                          fontSize: '14px',
-                          lineHeight: '22px'
-                        }}>
-                          {item.description}
-                        </p>
-                        <span style={{
-                          display: 'inline-block',
-                          border: `1px solid ${activeLearnItem === i ? '#2E6EB6' : 'var(--divider)'}`,
-                          borderRadius: '999px',
-                          padding: '5px 10px',
-                          fontSize: '11px',
-                          color: activeLearnItem === i ? '#2E6EB6' : '#5B6D7E',
-                          background: activeLearnItem === i ? '#E9F2FF' : '#FFFFFF'
-                        }}>
-                          {item.badge}
-                        </span>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Redirect */}
-        <section style={{
-          background: 'linear-gradient(90deg, #F7FAFE, #FFFFFF)',
-          color: 'var(--ink)',
-          borderTop: '1px solid var(--divider)',
-          borderBottom: '1px solid var(--divider)',
-          position: 'relative'
-        }}>
-          <div style={{
-            content: '""',
-            position: 'absolute',
-            inset: '0',
-            background: 'radial-gradient(90% 140% at 0% 50%, rgba(46,110,182,.15), rgba(255,255,255,0) 55%), radial-gradient(90% 140% at 100% 50%, rgba(242,193,78,.12), rgba(255,255,255,0) 55%)',
-            pointerEvents: 'none'
-          }} />
-          <div className="page-container redirect-flex" style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '24px',
-            padding: '40px 24px'
-          }}>
+        <div className="container">
+          <div className="num-grid" style={{marginTop: '40px'}}>
             <div>
-              <h3 style={{
-                margin: '0',
-                fontWeight: '800',
-                letterSpacing: '-.01em',
-                fontSize: '28px',
-                lineHeight: '34px'
-              }}>
-                Looking for a team solution?
-              </h3>
-              <p style={{
-                margin: '6px 0 0',
-                color: '#49647B'
-              }}>
-                Custom training, reporting, and admin tools for teams.
-              </p>
+              <div className="num">Established<br/>1956</div>
+              <p className="body-m">TLI is Taiwan's pioneer language institute.</p>
             </div>
-            <a
-              href="#"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '10px',
-                padding: '16px 28px',
-                borderRadius: '999px',
-                background: 'var(--gold)',
-                color: '#1E2328',
-                fontWeight: '800',
-                boxShadow: '0 10px 30px rgba(242,193,78,.20)',
-                border: 'none',
-                textDecoration: 'none'
-              }}
-            >
-              <span>Visit our corporate page</span>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5 12h14M13 5l7 7-7 7" stroke="#1E2328" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            </a>
+            <div>
+              <div className="num">600k+<br/>Learners</div>
+              <p className="body-m">We have served learners across business, academia, and NGOs.</p>
+            </div>
+            <div>
+              <div className="num">Global +<br/>Digital</div>
+              <p className="body-m">We deliver the same quality standard both on-campus and online.</p>
+            </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* Footer with Form */}
-        <footer className="section" style={{background: 'linear-gradient(to top,#EDF3FA,#F7FAFE)', borderTop: '1px solid var(--divider)'}}>
-          <div className="page-container">
-            <div className="footer-grid" style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0,1fr) 600px',
-              gap: '48px',
-              alignItems: 'flex-start'
-            }}>
-              <div>
-                <h2 className="h2" style={{marginBottom: '16px'}}>Ready to Join TLI Connect?</h2>
-                <p className="body-m" style={{margin: '0'}}>Leave your info and we&apos;ll send you full plan details within one business day.</p>
-              </div>
-              
-              <div style={{
-                background: 'var(--paper)',
-                border: '1px solid var(--divider)',
-                borderRadius: 'var(--r32)',
-                boxShadow: '0 10px 30px rgba(16,58,99,.06)',
-                padding: '32px'
-              }}>
-                <form onSubmit={handleSubmit('footer', footerForm)}>
-                  <div style={{display: 'grid', gridTemplateColumns: '1fr', gap: '16px'}}>
-                    <div>
-                      <label className="label">Name<span style={{color: 'var(--gold)'}}>*</span></label>
-                      <input
-                        type="text"
-                        placeholder="Your name"
-                        required
-                        value={footerForm.name}
-                        onChange={(e) => setFooterForm({...footerForm, name: e.target.value})}
-                        style={{
-                          height: '52px',
-                          border: '1px solid var(--divider)',
-                          borderRadius: '16px',
-                          padding: '0 16px',
-                          fontSize: '16px',
-                          color: 'var(--ink)',
-                          background: '#FFFFFF',
-                          outline: 'none',
-                          width: '100%'
-                        }}
-                      />
-                      {errors.footer?.name && <div style={{display: 'block', color: 'var(--error)', fontSize: '12px', marginTop: '6px'}}>{errors.footer.name}</div>}
-                    </div>
-                    <div>
-                      <label className="label">Email<span style={{color: 'var(--gold)'}}>*</span></label>
-                      <input
-                        type="email"
-                        placeholder="you@example.com"
-                        required
-                        value={footerForm.email}
-                        onChange={(e) => setFooterForm({...footerForm, email: e.target.value})}
-                        style={{
-                          height: '52px',
-                          border: '1px solid var(--divider)',
-                          borderRadius: '16px',
-                          padding: '0 16px',
-                          fontSize: '16px',
-                          color: 'var(--ink)',
-                          background: '#FFFFFF',
-                          outline: 'none',
-                          width: '100%'
-                        }}
-                      />
-                      {errors.footer?.email && <div style={{display: 'block', color: 'var(--error)', fontSize: '12px', marginTop: '6px'}}>{errors.footer.email}</div>}
-                    </div>
-                    <div>
-                      <label className="label">Phone <span style={{fontSize: '12px', lineHeight: '18px', color: 'var(--ink-dim)'}}>(optional)</span></label>
-                      <input
-                        type="tel"
-                        placeholder="+886 912 345 678"
-                        value={footerForm.phone}
-                        onChange={(e) => setFooterForm({...footerForm, phone: e.target.value})}
-                        style={{
-                          height: '52px',
-                          border: '1px solid var(--divider)',
-                          borderRadius: '16px',
-                          padding: '0 16px',
-                          fontSize: '16px',
-                          color: 'var(--ink)',
-                          background: '#FFFFFF',
-                          outline: 'none',
-                          width: '100%'
-                        }}
-                      />
-                      {errors.footer?.phone && <div style={{display: 'block', color: 'var(--error)', fontSize: '12px', marginTop: '6px'}}>{errors.footer.phone}</div>}
-                    </div>
-                    <button
-                      type="submit"
-                      style={{
-                        height: '56px',
-                        border: 'none',
-                        borderRadius: '999px',
-                        background: 'var(--gold)',
-                        color: '#1E2328',
-                        fontSize: '16px',
-                        fontWeight: '700',
-                        cursor: 'pointer',
-                        boxShadow: '0 10px 24px rgba(242,193,78,.22)'
-                      }}
-                    >
-                      Talk to Us
-                    </button>
-                    <div style={{fontSize: '12px', lineHeight: '18px', color: 'var(--ink-dim)'}}>
-                      We&apos;ll get back to you within 1–2 business days. Your information is kept strictly confidential.
-                    </div>
-                    {success === 'footer' && (
-                      <div style={{
-                        display: 'block',
-                        borderLeft: '4px solid var(--success)',
-                        background: 'rgba(28,168,122,.08)',
-                        color: '#0F7F5F',
-                        padding: '12px 16px',
-                        borderRadius: '12px',
-                        marginTop: '16px',
-                        fontSize: '14px'
-                      }}>
-                        Thanks! We&apos;ll contact you within 1–2 business days.
-                      </div>
-                    )}
-                    {errors.footer?.submit && (
-                      <div style={{
-                        display: 'block',
-                        borderLeft: '4px solid var(--error)',
-                        background: 'rgba(213,72,72,.08)',
-                        color: '#B91C1C',
-                        padding: '12px 16px',
-                        borderRadius: '12px',
-                        marginTop: '16px',
-                        fontSize: '14px'
-                      }}>
-                        {errors.footer.submit}
-                      </div>
-                    )}
-                  </div>
-                </form>
-              </div>
-            </div>
-            
-            <div style={{textAlign: 'center', maxWidth: 'var(--container)', padding: '0', marginTop: '48px'}}>
-              <div className="body-m" style={{
-                display: 'flex',
-                width: '100%',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '8px',
-                flexWrap: 'wrap',
-                marginBottom: '10px',
-                color: '#5F7180',
-                textAlign: 'center'
-              }}>
-                <span>TLI Taipei Language Institute</span><span>|</span><a href="mailto:contact@tli1956.com" style={{color: '#1E60A9'}}>contact@tli1956.com</a>
-              </div>
-              <div className="body-m" style={{marginBottom: '24px', display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap'}}>
-                <a href="#" style={{color: '#1E60A9'}}>Privacy Policy</a><span>|</span><a href="#" style={{color: '#1E60A9'}}>Terms of Use</a>
-              </div>
-              <div className="body-m" style={{marginBottom: '8px', display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap'}}>
-                <a href="#" style={{color: '#1E60A9'}}>LinkedIn</a>
-                <a href="#" style={{color: '#1E60A9'}}>YouTube</a>
-                <a href="#" style={{color: '#1E60A9'}}>Instagram</a>
-                <a href="#" style={{color: '#1E60A9'}}>Facebook</a>
-              </div>
-              <div style={{fontSize: '0.875rem', color: '#64798A'}}>© TLI Taipei Language Institute. All rights reserved.</div>
-            </div>
+      {/* Redirect */}
+      <section className="redirect">
+        <div className="container">
+          <div>
+            <h3>Need a Customized Corporate Training Solution?</h3>
+            <p>Tailored team training programs with management tools and performance tracking.</p>
           </div>
-        </footer>
-      </div>
+          <a className="redirect-cta secondary" href="#">
+            <span>Explore Corporate Plans</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 12h14M13 5l7 7-7 7" stroke="#027AB9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </a>
+        </div>
+      </section>
+
+      {/* Footer Call-to-Action (Form 區塊) */}
+      <section className="footer-cta-section section">
+        <div className="container" style={{display: 'flex', gap: '48px', alignItems: 'flex-start'}}>
+          <div style={{flex: '1'}}>
+            <h2 className="h2">Ready to Join TLI Connect?</h2>
+            <p className="body-m">Leave your info and we'll send you full plan details within one business day.</p>
+          </div>
+          <div style={{
+            background: 'var(--paper)',
+            border: '1px solid var(--divider)',
+            borderRadius: 'var(--r32)',
+            boxShadow: '0 10px 30px rgba(16,58,99,.06)',
+            padding: '32px',
+            minWidth: '500px'
+          }}>
+            <form id="footerForm" onSubmit={handleSubmit('footer', footerForm)}>
+              <div className="form-grid">
+                <div>
+                  <label className="label">Name<span style={{color:'var(--gold)'}}>*</span></label>
+                  <input 
+                    id="fName" 
+                    name="name" 
+                    type="text" 
+                    placeholder="Your name" 
+                    required
+                    value={footerForm.name}
+                    onChange={(e) => setFooterForm({...footerForm, name: e.target.value})}
+                  />
+                  {errors.footer?.name && <div style={{display: 'block', color: 'var(--error)', fontSize: '12px', marginTop: '6px'}}>{errors.footer.name}</div>}
+                </div>
+                <div>
+                  <label className="label">Email<span style={{color:'var(--gold)'}}>*</span></label>
+                  <input 
+                    id="fEmail" 
+                    name="email" 
+                    type="email" 
+                    placeholder="you@example.com" 
+                    required
+                    value={footerForm.email}
+                    onChange={(e) => setFooterForm({...footerForm, email: e.target.value})}
+                  />
+                  {errors.footer?.email && <div style={{display: 'block', color: 'var(--error)', fontSize: '12px', marginTop: '6px'}}>{errors.footer.email}</div>}
+                </div>
+                <div>
+                  <label className="label">Phone <span className="caption">(optional)</span></label>
+                  <input 
+                    id="fPhone" 
+                    name="phone" 
+                    type="tel" 
+                    placeholder="+886 912 345 678"
+                    value={footerForm.phone}
+                    onChange={(e) => setFooterForm({...footerForm, phone: e.target.value})}
+                  />
+                  {errors.footer?.phone && <div style={{display: 'block', color: 'var(--error)', fontSize: '12px', marginTop: '6px'}}>{errors.footer.phone}</div>}
+                </div>
+                <button type="submit">Free Consultation</button>
+                <div className="caption">We'll get back to you within 1–2 business days. Your information is kept strictly confidential.</div>
+                {success === 'footer' && (
+                  <div style={{
+                    display: 'block',
+                    borderLeft: '4px solid var(--success)',
+                    background: 'rgba(28,168,122,.08)',
+                    color: '#0F7F5F',
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    marginTop: '16px',
+                    fontSize: '14px'
+                  }}>
+                    Thanks! We'll contact you within 1–2 business days.
+                  </div>
+                )}
+                {errors.footer?.submit && (
+                  <div style={{
+                    display: 'block',
+                    borderLeft: '4px solid var(--error)',
+                    background: 'rgba(213,72,72,.08)',
+                    color: '#B91C1C',
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    marginTop: '16px',
+                    fontSize: '14px'
+                  }}>
+                    {errors.footer.submit}
+                  </div>
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer Info（最底部資訊）*/}
+      <footer className="footer-info-section">
+        <div className="container footer-bottom">
+          <div className="body-m footer-info">
+            <a href="https://tli1956.com/?lang=tc" target="_blank" rel="noopener noreferrer">TLI Taipei Language Institute</a><span> | </span>
+            <a href="mailto:contact@tli1956.com" style={{color:'#1E60A9'}}>contact@tli1956.com</a>
+          </div>
+          <div className="social body-m" style={{marginBottom:'8px'}}>
+            <a href="https://www.linkedin.com/school/taipei-language-institute/posts/?feedView=all" target="_blank" rel="noopener noreferrer">LinkedIn</a>
+            <a href="https://www.youtube.com/channel/UCCySlsmCXX8Id-m5NSTLCrw" target="_blank" rel="noopener noreferrer">YouTube</a>
+            <a href="https://www.instagram.com/learn.chinese.tli/?hl=en" target="_blank" rel="noopener noreferrer">Instagram</a>
+            <a href="https://www.facebook.com/tli1956/?locale=zh_TW" target="_blank" rel="noopener noreferrer">Facebook</a>
+          </div>
+          <div className="legal">© TLI Taipei Language Institute. All rights reserved.</div>
+        </div>
+      </footer>
     </>
   );
 }
