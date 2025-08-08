@@ -63,12 +63,12 @@ const AccountManagement = () => {
           setUsersWithRoles(response.data);
         } else {
           // 如果 API 失敗，使用本地資料作為備選
-          setUsersWithRoles(users);
+          setUsersWithRoles(users as ExtendedUser[]);
         }
       } catch (error) {
         console.error('載入用戶資料失敗:', error);
         // 使用本地資料作為備選
-        setUsersWithRoles(users.map(convertUserToExtendedUser));
+        setUsersWithRoles(users as ExtendedUser[]);
       }
     };
 
