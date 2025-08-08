@@ -120,7 +120,11 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans), 'Noto Sans TC', 'Microsoft JhengHei', '微軟正黑體', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif;
+    font-family: var(--font-inter), 'Noto Sans TC', 'Microsoft JhengHei', '微軟正黑體', 'PingFang TC', 'Helvetica Neue', Arial, sans-serif;
+    background: #F5F8FC;
+    color: #262626;
+    margin: 0;
+    padding: 0;
   }
   
   /* 優化中文字體渲染 */
@@ -130,7 +134,41 @@
   
   /* 確保中文字體在不同設備上的最佳顯示 */
   h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-geist-sans), 'Noto Sans TC', 'Microsoft JhengHei', '微軟正黑體', 'PingFang TC', sans-serif;
-    font-weight: 600;
+    font-family: var(--font-plus-jakarta-sans), var(--font-noto-sans-tc), var(--font-inter), 'Microsoft JhengHei', '微軟正黑體', 'PingFang TC', sans-serif;
+    font-weight: 800;
+    margin: 0 0 16px;
+    color: #262626;
+  }
+  
+  /* 防止 FOUC - 關鍵樣式提前載入 */
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  
+  .section {
+    padding: 88px 0;
+  }
+  
+  /* Hero 區域的關鍵樣式 */
+  .hero {
+    background: linear-gradient(180deg, #FFFFFF 0%, #F7FAFE 60%, #F5F8FC 100%);
+    position: relative;
+  }
+  
+  /* 防止 FOUC - 在 JS 載入前隱藏內容 */
+  .hero-content, .hero-form-row, .filmstrip, .footer-cta-section {
+    visibility: hidden;
+  }
+  
+  /* React 水化完成後顯示內容 */
+  body.hydrated .hero-content,
+  body.hydrated .hero-form-row,
+  body.hydrated .filmstrip,
+  body.hydrated .footer-cta-section {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
   }
 }
