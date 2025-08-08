@@ -101,7 +101,12 @@ const CorporateMemberManagement = () => {
     try {
       setLoading(true);
       const companies = await corporateStore.getAllCompanies();
-      const subscriptions = await corporateSubscriptionStore.getAllSubscriptions();
+      const rawSubscriptions = await corporateSubscriptionStore.getAllSubscriptions();
+      // 將 purchased 狀態轉換為 inactive
+      const subscriptions = rawSubscriptions.map(sub => ({
+        ...sub,
+        status: sub.status === 'purchased' ? 'inactive' : sub.status
+      }));
       const members = await corporateMemberStore.getAllMembers();
       const memberStats = await corporateMemberStore.getMemberStatistics();
       
@@ -1124,6 +1129,13 @@ const CorporateMemberManagement = () => {
                                   <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
                                     {subscription.duration_type === 'annual' ? '年度方案' : '季度方案'}
                                   </span>
+                                  <span className={`text-xs px-2 py-1 rounded-full ${getSubscriptionStatusColor(subscription.status)}`}>
+                                    {subscription.status === 'activated' ? '啟用' :
+                                     subscription.status === 'inactive' ? '未啟用' :
+                                     subscription.status === 'expired' ? '過期' : 
+                                     subscription.status === 'cancelled' ? '取消' :
+                                     subscription.status === 'test' ? '測試' : subscription.status}
+                                  </span>
                                 </div>
                                 <div className="flex items-center space-x-2">
                                   <span className="text-sm text-gray-600">
@@ -2049,9 +2061,11 @@ const CorporateMemberManagement = () => {
                         <p className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium mt-1 ${
                           getSubscriptionStatusColor(selectedSubscription.status)
                         }`}>
-                          {selectedSubscription.status === 'activated' ? '已啟用' :
-                           selectedSubscription.status === 'inactive' ? '已購買' :
-                           selectedSubscription.status === 'expired' ? '已過期' : '已取消'}
+                          {selectedSubscription.status === 'activated' ? '啟用' :
+                           selectedSubscription.status === 'inactive' ? '未啟用' :
+                           selectedSubscription.status === 'expired' ? '過期' : 
+                           selectedSubscription.status === 'cancelled' ? '取消' :
+                           selectedSubscription.status === 'test' ? '測試' : '未知'}
                         </p>
                       </div>
                       <div>
