@@ -13,6 +13,7 @@ import { dashboardService, leaveService, bookingService } from '@/services/dataS
 import { teacherDataService } from '@/data/teachers';
 import { Membership, ClassAppointment } from '@/types';
 import { getCourseLinksFromBooking } from '@/utils/courseLinksUtils';
+import { corporateMemberStore } from '@/lib/corporateMemberStore';
 // 調試工具已移除
 
 interface BookedCourse {
@@ -155,6 +156,29 @@ const Dashboard = () => {
           // 🔧 教師也使用 getDashboardData，與我的預約頁面保持一致
           const data = await dashboardService.getDashboardData(user.id, 'TEACHER');
           setDashboardData(data as { membership: Membership | null; upcomingClasses: BookedCourse[] });
+        } else if (user.roles.includes('CORPORATE_CONTACT')) {
+          // 載入當前企業的會員統計數據（假設企業窗口用戶有company_id）
+          const userCompanyId = user.company_id || 'corp_001'; // 假設默認為corp_001
+          
+          // 只獲取當前企業的會員數據
+          const companyMembers = await corporateMemberStore.getMembersByCompany(userCompanyId);
+          
+          // 計算各狀態的會員數量
+          const activeMembers = companyMembers.filter(m => m.card_status === 'activated').length;
+          const inactiveMembers = companyMembers.filter(m => m.card_status === 'inactive').length;
+          const expiredMembers = companyMembers.filter(m => m.card_status === 'expired').length;
+          const cancelledMembers = companyMembers.filter(m => m.card_status === 'cancelled').length;
+          const testMembers = companyMembers.filter(m => m.card_status === 'test').length;
+          
+          setCorporateStats({
+            activePlans: 1, // 當前企業的方案數量（可以從企業訂閱數據獲取）
+            totalMembers: companyMembers.length,
+            testMembers,
+            inactiveMembers,
+            activeMembers,
+            expiredMembers,
+            cancelledMembers
+          });
         }
       } catch (error) {
         console.error('載入 Dashboard 資料失敗:', error);
@@ -213,6 +237,24 @@ const Dashboard = () => {
     reason: ''
   });
   const [isViewMode, setIsViewMode] = useState(false);
+  
+  // 企業儀表板篩選狀態
+  const [corporateFilters, setCorporateFilters] = useState({
+    company: '',
+    plan: '',
+    status: ''
+  });
+  
+  // 企業會員統計數據（只顯示當前企業的數據）
+  const [corporateStats, setCorporateStats] = useState({
+    activePlans: 1, // 當前企業的方案數量
+    totalMembers: 50, // 當前企業的總會員數
+    testMembers: 2, // 當前企業的測試會員
+    inactiveMembers: 15, // 當前企業未啟用會員
+    activeMembers: 25, // 當前企業啟用會員
+    expiredMembers: 5, // 當前企業過期會員
+    cancelledMembers: 3 // 當前企業取消會員
+  });
   
   // 取消預約相關狀態
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -373,12 +415,7 @@ const Dashboard = () => {
         { label: '系統使用率', value: '92%', icon: FiBarChart }
       ];
     } else if (user?.roles.includes('CORPORATE_CONTACT')) {
-      return [
-        { label: '企業員工數', value: '45', icon: FiUsers },
-        { label: '已用名額', value: '32/50', icon: FiUserCheck },
-        { label: '本月課程', value: '28', icon: FiCalendar },
-        { label: '方案狀態', value: '已啟用', icon: FiCheckCircle }
-      ];
+      return []; // 企業窗口不顯示快速統計區塊
     }
 
     return [];
@@ -1111,7 +1148,7 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
-      {/* Corporate Management for Corporate Contact */}
+      {/* Corporate Management for Corporate Contact - Updated Dashboard */}
       {user?.roles.includes('CORPORATE_CONTACT') && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -1120,7 +1157,7 @@ const Dashboard = () => {
           className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8"
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">企業方案管理</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">會員管理儀表板</h2>
             <Link 
               href="/corporate-management"
               className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center space-x-1"
@@ -1130,31 +1167,54 @@ const Dashboard = () => {
             </Link>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Company Info */}
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h3 className="font-medium text-blue-900 mb-2">企業資訊</h3>
-              <div className="space-y-2 text-sm text-blue-700">
-                <div>公司名稱：台灣科技股份有限公司</div>
-                <div>方案類型：企業方案 (50人)</div>
-                <div>方案狀態：<span className="text-green-600 font-medium">已啟用</span></div>
-                <div>到期日期：2025-07-01</div>
-              </div>
+          {/* Member Status Statistics */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            {/* 方案 */}
+            <div className="bg-green-50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-green-600 mb-1">{corporateStats.activePlans}</div>
+              <div className="text-sm text-green-800">方案</div>
             </div>
             
-            {/* Usage Stats */}
-            <div className="bg-green-50 rounded-lg p-4">
-              <h3 className="font-medium text-green-900 mb-2">使用統計</h3>
-              <div className="space-y-2 text-sm text-green-700">
-                <div>已註冊員工：32/50 人</div>
-                <div>本月課程：28 堂</div>
-                <div>使用率：64%</div>
-                <div className="w-full bg-green-200 rounded-full h-2 mt-2">
-                  <div className="bg-green-600 h-2 rounded-full" style={{ width: '64%' }}></div>
-                </div>
-              </div>
+            {/* 會員 */}
+            <div className="bg-purple-50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-purple-600 mb-1">{corporateStats.totalMembers}</div>
+              <div className="text-sm text-purple-800">會員</div>
+            </div>
+            
+            {/* 測試 */}
+            <div className="bg-orange-50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-orange-600 mb-1">{corporateStats.testMembers}</div>
+              <div className="text-sm text-orange-800">測試</div>
             </div>
           </div>
+          
+          {/* Member Status Breakdown */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            {/* 未啟用 */}
+            <div className="bg-gray-50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-gray-600 mb-1">{corporateStats.inactiveMembers}</div>
+              <div className="text-sm text-gray-800">未啟用</div>
+            </div>
+            
+            {/* 啟用 */}
+            <div className="bg-green-50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-green-600 mb-1">{corporateStats.activeMembers}</div>
+              <div className="text-sm text-green-800">啟用</div>
+            </div>
+            
+            {/* 過期 */}
+            <div className="bg-red-50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-red-600 mb-1">{corporateStats.expiredMembers}</div>
+              <div className="text-sm text-red-800">過期</div>
+            </div>
+            
+            {/* 取消 */}
+            <div className="bg-yellow-50 rounded-lg p-4 text-center">
+              <div className="text-2xl font-bold text-yellow-600 mb-1">{corporateStats.cancelledMembers}</div>
+              <div className="text-sm text-yellow-800">取消</div>
+            </div>
+          </div>
+          
         </motion.div>
       )}
 

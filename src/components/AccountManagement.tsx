@@ -310,7 +310,7 @@ const AccountManagement = () => {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
               <SafeIcon icon={FiUsers} className="h-8 w-8" />
@@ -318,51 +318,10 @@ const AccountManagement = () => {
             </h1>
             <p className="text-gray-600 mt-1">管理用戶角色和權限</p>
           </div>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center gap-2"
-          >
-            <SafeIcon icon={FiPlus} className="h-4 w-4" />
-            新增用戶
-          </button>
         </div>
 
-        {/* 搜尋和篩選 */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <SafeIcon icon={FiSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="搜尋用戶名稱或信箱..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setRoleFilter('ALL');
-                setStatusFilter('ALL');
-              }}
-            />
-          </div>
-          <select
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value as 'ALL' | 'non_member' | 'inactive' | 'activated' | 'expired' | 'cancelled' | 'test');
-              setRoleFilter('ALL');
-            }}
-          >
-            <option value="ALL">所有狀態</option>
-            <option value="non_member">非會員</option>
-            <option value="inactive">未啟用</option>
-            <option value="activated">啟用</option>
-            <option value="expired">過期</option>
-            <option value="cancelled">取消</option>
-            <option value="test">測試</option>
-          </select>
-        </div>
-
-        {/* 統計卡片 */}
-        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6">
+        {/* 統計卡片 - 一行最多7個 */}
+        <div className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
           {/* 總用戶數 */}
           <div className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('ALL'); setRoleFilter('ALL'); setStatusFilter('ALL'); setSearchTerm(''); }}>
             <div className="flex items-center">
@@ -492,6 +451,27 @@ const AccountManagement = () => {
               </div>
             );
           })}
+        </div>
+
+        {/* 搜尋用戶 */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div className="relative flex-1 max-w-md">
+            <SafeIcon icon={FiSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="搜尋用戶名稱或信箱..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <SafeIcon icon={FiPlus} />
+            <span>新增用戶</span>
+          </button>
         </div>
 
         {/* 用戶列表 */}

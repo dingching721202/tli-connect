@@ -14,7 +14,7 @@ import { memberCardPlans } from '@/data/member_card_plans';
 const {
   FiUsers, FiUserCheck, FiUserPlus, FiSearch, FiPlus,
   FiX, FiClock, FiCheckCircle, FiChevronDown, FiChevronRight,
-  FiEye, FiBook, FiCalendar, FiEdit2, FiTrash2, FiPlay, FiPause, FiSave
+  FiEye, FiBook, FiCalendar, FiEdit2, FiTrash2, FiPlay, FiPause, FiSave, FiBriefcase, FiUser
 } = FiIcons;
 
 interface CorporateData extends Company {
@@ -84,12 +84,17 @@ const CorporateMemberManagement = () => {
   // 統計數據
   const [statistics, setStatistics] = useState({
     totalCompanies: 0,
-    totalSubscriptions: 0,
+    activePlans: 0, // 有效的方案
     totalMembers: 0,
-    activatedMembers: 0,
     inactiveMembers: 0,
-    expiredMembers: 0
+    activatedMembers: 0,
+    expiredMembers: 0,
+    cancelledMembers: 0,
+    testMembers: 0
   });
+  
+  // 篩選狀態
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   // 載入企業會員數據
   const loadCorporateData = async () => {
@@ -115,13 +120,19 @@ const CorporateMemberManagement = () => {
       setCorporateData(combinedData);
       
       // 計算統計數據
+      const activePlans = subscriptions.filter(sub => sub.status === 'activated').length;
+      const cancelledMembers = members.filter(m => m.card_status === 'cancelled').length;
+      const testMembers = members.filter(m => m.card_status === 'test').length;
+      
       setStatistics({
         totalCompanies: companies.length,
-        totalSubscriptions: subscriptions.length,
+        activePlans,
         totalMembers: memberStats.totalMembers,
-        activatedMembers: memberStats.activatedMembers,
         inactiveMembers: memberStats.inactiveMembers,
-        expiredMembers: memberStats.expiredMembers
+        activatedMembers: memberStats.activatedMembers,
+        expiredMembers: memberStats.expiredMembers,
+        cancelledMembers,
+        testMembers
       });
       
     } catch (error) {
@@ -140,19 +151,79 @@ const CorporateMemberManagement = () => {
     return memberCardPlans.filter(plan => plan.user_type === 'corporate' && plan.status === 'PUBLISHED');
   };
 
+  // 處理卡片篩選
+  const handleFilterClick = (filterType: string) => {
+    if (activeFilter === filterType) {
+      setActiveFilter(null); // 取消篩選
+    } else {
+      setActiveFilter(filterType); // 設置新篩選
+    }
+  };
+
   // 過濾企業數據
   const getFilteredCorporateData = (): CorporateData[] => {
-    if (!searchTerm) return corporateData;
+    let filteredData = corporateData;
     
-    return corporateData.filter(company =>
-      company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.contactEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    // 應用搜索篩選
+    if (searchTerm) {
+      filteredData = filteredData.filter(company =>
+        company.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        company.contactName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        company.contactEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
       company.members.some(member => 
         member.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         member.user_email.toLowerCase().includes(searchTerm.toLowerCase())
       )
     );
+    }
+    
+    // 應用狀態篩選
+    if (activeFilter) {
+      filteredData = filteredData.map(company => {
+        let filteredMembers = company.members;
+        
+        switch (activeFilter) {
+          case 'companies':
+            // 顯示所有企業，不篩選會員
+            break;
+          case 'plans':
+            // 只顯示有啟用訂閱的企業
+            if (company.subscriptions.filter(sub => sub.status === 'activated').length === 0) {
+              filteredMembers = [];
+            }
+            break;
+          case 'inactive':
+            filteredMembers = company.members.filter(m => m.card_status === 'inactive');
+            break;
+          case 'activated':
+            filteredMembers = company.members.filter(m => m.card_status === 'activated');
+            break;
+          case 'expired':
+            filteredMembers = company.members.filter(m => m.card_status === 'expired');
+            break;
+          case 'cancelled':
+            filteredMembers = company.members.filter(m => m.card_status === 'cancelled');
+            break;
+          case 'test':
+            filteredMembers = company.members.filter(m => m.card_status === 'test');
+            break;
+          default:
+            break;
+        }
+        
+        return {
+          ...company,
+          members: filteredMembers
+        };
+      });
+      
+      // 過濾掉沒有匹配會員的企業（除了企業和方案篩選）
+      if (!['companies', 'plans'].includes(activeFilter)) {
+        filteredData = filteredData.filter(company => company.members.length > 0);
+      }
+    }
+    
+    return filteredData;
   };
 
   // 切換企業展開狀態
@@ -671,64 +742,139 @@ const CorporateMemberManagement = () => {
 
   return (
     <div>
-      {/* 企業統計儀表板 */}
+      {/* 企業統計儀表板 - 與全部分頁相同格式 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4 mb-6"
+        className="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-8 gap-4 mb-6"
       >
-        {[
-          { 
-            label: '企業總數', 
-            count: statistics.totalCompanies,
-            color: 'text-purple-600 bg-purple-50 border-purple-200',
-            icon: FiUsers
-          },
-          { 
-            label: '訂閱總數', 
-            count: statistics.totalSubscriptions,
-            color: 'text-blue-600 bg-blue-50 border-blue-200',
-            icon: FiUsers
-          },
-          { 
-            label: '會員總數', 
-            count: statistics.totalMembers,
-            color: 'text-indigo-600 bg-indigo-50 border-indigo-200',
-            icon: FiUserCheck
-          },
-          { 
-            label: '已啟用', 
-            count: statistics.activatedMembers,
-            color: 'text-green-600 bg-green-50 border-green-200',
-            icon: FiCheckCircle
-          },
-          { 
-            label: '未啟用', 
-            count: statistics.inactiveMembers,
-            color: 'text-orange-600 bg-orange-50 border-orange-200',
-            icon: FiClock
-          },
-          { 
-            label: '已過期', 
-            count: statistics.expiredMembers,
-            color: 'text-red-600 bg-red-50 border-red-200',
-            icon: FiX
-          }
-        ].map((stat) => (
-          <motion.div
-            key={stat.label}
-            whileHover={{ scale: 1.02, y: -2 }}
-            className={`p-4 rounded-xl border ${stat.color}`}
-          >
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-2xl font-bold">{stat.count}</div>
-                <div className="text-sm font-medium">{stat.label}</div>
-              </div>
-              <SafeIcon icon={stat.icon} className="text-2xl" />
+        {/* 企業 */}
+        <div 
+          className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+            activeFilter === 'companies' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+          }`}
+          onClick={() => handleFilterClick('companies')}
+        >
+          <div className="flex items-center">
+            <SafeIcon icon={FiUsers} className="h-8 w-8 text-purple-600" />
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-500">企業</p>
+              <p className="text-2xl font-semibold text-gray-900">{statistics.totalCompanies}</p>
             </div>
-          </motion.div>
-        ))}
+          </div>
+        </div>
+
+        {/* 方案 */}
+        <div 
+          className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+            activeFilter === 'plans' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+          }`}
+          onClick={() => handleFilterClick('plans')}
+        >
+          <div className="flex items-center">
+            <SafeIcon icon={FiBriefcase} className="h-8 w-8 text-blue-600" />
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-500">方案</p>
+              <p className="text-2xl font-semibold text-gray-900">{statistics.activePlans}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 會員 */}
+        <div 
+          className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+            activeFilter === 'members' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+          }`}
+          onClick={() => handleFilterClick('members')}
+        >
+          <div className="flex items-center">
+            <SafeIcon icon={FiUserCheck} className="h-8 w-8 text-indigo-600" />
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-500">會員</p>
+              <p className="text-2xl font-semibold text-gray-900">{statistics.totalMembers}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 未啟用 */}
+        <div 
+          className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+            activeFilter === 'inactive' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+          }`}
+          onClick={() => handleFilterClick('inactive')}
+        >
+          <div className="flex items-center">
+            <SafeIcon icon={FiClock} className="h-8 w-8 text-orange-600" />
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-500">未啟用</p>
+              <p className="text-2xl font-semibold text-gray-900">{statistics.inactiveMembers}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 啟用 */}
+        <div 
+          className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+            activeFilter === 'activated' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+          }`}
+          onClick={() => handleFilterClick('activated')}
+        >
+          <div className="flex items-center">
+            <SafeIcon icon={FiCheckCircle} className="h-8 w-8 text-green-600" />
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-500">啟用</p>
+              <p className="text-2xl font-semibold text-gray-900">{statistics.activatedMembers}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 過期 */}
+        <div 
+          className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+            activeFilter === 'expired' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+          }`}
+          onClick={() => handleFilterClick('expired')}
+        >
+          <div className="flex items-center">
+            <SafeIcon icon={FiX} className="h-8 w-8 text-red-600" />
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-500">過期</p>
+              <p className="text-2xl font-semibold text-gray-900">{statistics.expiredMembers}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 取消 */}
+        <div 
+          className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+            activeFilter === 'cancelled' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+          }`}
+          onClick={() => handleFilterClick('cancelled')}
+        >
+          <div className="flex items-center">
+            <SafeIcon icon={FiX} className="h-8 w-8 text-gray-600" />
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-500">取消</p>
+              <p className="text-2xl font-semibold text-gray-900">{statistics.cancelledMembers}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 測試 */}
+        <div 
+          className={`bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50 transition-all ${
+            activeFilter === 'test' ? 'ring-2 ring-blue-500 shadow-lg' : ''
+          }`}
+          onClick={() => handleFilterClick('test')}
+        >
+          <div className="flex items-center">
+            <SafeIcon icon={FiUser} className="h-8 w-8 text-blue-600" />
+            <div className="ml-3">
+              <p className="text-sm font-medium text-gray-500">測試</p>
+              <p className="text-2xl font-semibold text-gray-900">{statistics.testMembers}</p>
+            </div>
+          </div>
+        </div>
       </motion.div>
 
       {/* 搜尋控制項與視圖切換 */}
@@ -749,14 +895,36 @@ const CorporateMemberManagement = () => {
                 className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            <button
-              onClick={() => setShowAddCompanyModal(true)}
-              className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-            >
-              <SafeIcon icon={FiPlus} className="text-sm" />
-              <span>新增企業</span>
-            </button>
+            {activeFilter && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">篩選：</span>
+                <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium">
+                  {activeFilter === 'companies' ? '企業' :
+                   activeFilter === 'plans' ? '方案' :
+                   activeFilter === 'members' ? '會員' :
+                   activeFilter === 'inactive' ? '未啟用' :
+                   activeFilter === 'activated' ? '啟用' :
+                   activeFilter === 'expired' ? '過期' :
+                   activeFilter === 'cancelled' ? '取消' :
+                   activeFilter === 'test' ? '測試' : activeFilter}
+                </span>
+                <button
+                  onClick={() => setActiveFilter(null)}
+                  className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                  title="清除篩選"
+                >
+                  <SafeIcon icon={FiX} className="text-sm" />
+                </button>
+              </div>
+            )}
           </div>
+          <button
+            onClick={() => setShowAddCompanyModal(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            <SafeIcon icon={FiPlus} className="text-sm" />
+            <span>新增企業</span>
+          </button>
           
           {/* 視圖模式切換 */}
         </div>

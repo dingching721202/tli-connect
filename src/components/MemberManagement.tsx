@@ -878,7 +878,7 @@ const MemberManagementReal = () => {
             className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
           >
             <SafeIcon icon={FiUserPlus} />
-            <span>手動新增會員</span>
+            <span>新增會員</span>
           </button>
         </div>
 
@@ -1249,7 +1249,7 @@ const MemberManagementReal = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-bold">手動新增會員</h3>
+              <h3 className="text-xl font-bold">新增會員</h3>
               <button
                 onClick={() => setShowAddMemberModal(false)}
                 className="text-gray-500 hover:text-gray-700"
