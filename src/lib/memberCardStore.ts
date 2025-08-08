@@ -425,6 +425,7 @@ class MemberCardStore {
     user_email: string;
     plan_id: number;
     auto_activation?: boolean; // 是否自動開啟
+    company_name?: string; // 企業名稱
   }): Promise<Membership> {
     // 這裡我們需要創建一個虛擬的user_id或者與現有用戶系統整合
     // 暫時使用email hash作為user_id

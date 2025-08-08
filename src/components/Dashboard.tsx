@@ -62,7 +62,6 @@ const {
   FiX,
   FiCheckCircle,
   FiBook,
-  FiUserCheck,
   FiUser
 } = FiIcons;
 
@@ -238,12 +237,12 @@ const Dashboard = () => {
   });
   const [isViewMode, setIsViewMode] = useState(false);
   
-  // 企業儀表板篩選狀態
-  const [corporateFilters, setCorporateFilters] = useState({
-    company: '',
-    plan: '',
-    status: ''
-  });
+  // 企業儀表板篩選狀態 (預留未來使用)
+  // const [corporateFilters, setCorporateFilters] = useState({
+  //   company: '',
+  //   plan: '',
+  //   status: ''
+  // });
   
   // 企業會員統計數據（只顯示當前企業的數據）
   const [corporateStats, setCorporateStats] = useState({

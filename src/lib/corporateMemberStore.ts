@@ -140,6 +140,7 @@ class CorporateMemberStore {
     duration_days: number;
     purchase_date: string;
     redemption_deadline: string;
+    card_status?: 'non_member' | 'inactive' | 'activated' | 'suspended' | 'expired' | 'cancelled' | 'test';
   }): Promise<CorporateMember> {
     const newId = Math.max(...this.members.map(m => m.id), 0) + 1;
     const now = new Date().toISOString();
@@ -165,7 +166,7 @@ class CorporateMemberStore {
       activation_deadline: activationDeadline.toISOString(),
       purchase_date: data.purchase_date,
       redemption_deadline: data.redemption_deadline,
-      card_status: 'inactive',
+      card_status: data.card_status || 'inactive',
       created_at: now,
       updated_at: now,
       company_id: data.company_id,

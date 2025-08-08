@@ -142,7 +142,7 @@ class CorporateSubscriptionStore {
     seats_total?: number,
     amount_paid?: number,
     auto_renewal?: boolean,
-    status?: 'inactive' | 'activated' | 'expired' | 'cancelled',
+    status?: 'inactive' | 'activated' | 'expired' | 'cancelled' | 'test',
     plan_id?: number,
     plan_title?: string,
     duration_type?: 'season' | 'annual',

@@ -18,6 +18,7 @@ interface User {
   membership?: Membership | null;
   avatar?: string;
   agentData?: Agent | null; // 代理專用資料
+  company_id?: string | number; // 企業窗口用戶的公司ID
 }
 
 interface AuthContextType {

@@ -176,7 +176,7 @@ export function getCorporateClientById(id: string): CorporateClient | null {
 
 // Get active corporate clients
 export function getActiveCorporateClients(): CorporateClient[] {
-  return corporateClients.filter(client => client.status === 'active');
+  return corporateClients.filter(client => client.status === 'activated');
 }
 
 // Get corporate clients by industry

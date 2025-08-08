@@ -28,7 +28,7 @@ interface MemberWithCard extends Membership {
   daysUntilExpiry?: number;
   isExpiringSoon?: boolean;
   user_membership_status?: MembershipStatus;
-  user_account_status?: 'ACTIVE' | 'SUSPENDED';
+  user_account_status?: 'ACTIVE' | 'SUSPENDED' | 'CANCELLED';
 }
 
 interface NewMember {
