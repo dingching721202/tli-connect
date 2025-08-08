@@ -184,47 +184,51 @@ const CorporateMemberManagement = () => {
     
     // 應用狀態篩選
     if (activeFilter) {
-      filteredData = filteredData.map(company => {
-        let filteredMembers = company.members;
+      if (activeFilter === 'plans') {
+        // 方案篩選：只顯示有啟用訂閱的企業，並且只顯示啟用的訂閱
+        filteredData = filteredData
+          .map(company => ({
+            ...company,
+            subscriptions: company.subscriptions.filter(sub => sub.status === 'activated')
+          }))
+          .filter(company => company.subscriptions.length > 0);
+      } else {
+        filteredData = filteredData.map(company => {
+          let filteredMembers = company.members;
+          
+          switch (activeFilter) {
+            case 'companies':
+              // 顯示所有企業，不篩選會員
+              break;
+            case 'inactive':
+              filteredMembers = company.members.filter(m => m.card_status === 'inactive');
+              break;
+            case 'activated':
+              filteredMembers = company.members.filter(m => m.card_status === 'activated');
+              break;
+            case 'expired':
+              filteredMembers = company.members.filter(m => m.card_status === 'expired');
+              break;
+            case 'cancelled':
+              filteredMembers = company.members.filter(m => m.card_status === 'cancelled');
+              break;
+            case 'test':
+              filteredMembers = company.members.filter(m => m.card_status === 'test');
+              break;
+            default:
+              break;
+          }
+          
+          return {
+            ...company,
+            members: filteredMembers
+          };
+        });
         
-        switch (activeFilter) {
-          case 'companies':
-            // 顯示所有企業，不篩選會員
-            break;
-          case 'plans':
-            // 只顯示有啟用訂閱的企業
-            if (company.subscriptions.filter(sub => sub.status === 'activated').length === 0) {
-              filteredMembers = [];
-            }
-            break;
-          case 'inactive':
-            filteredMembers = company.members.filter(m => m.card_status === 'inactive');
-            break;
-          case 'activated':
-            filteredMembers = company.members.filter(m => m.card_status === 'activated');
-            break;
-          case 'expired':
-            filteredMembers = company.members.filter(m => m.card_status === 'expired');
-            break;
-          case 'cancelled':
-            filteredMembers = company.members.filter(m => m.card_status === 'cancelled');
-            break;
-          case 'test':
-            filteredMembers = company.members.filter(m => m.card_status === 'test');
-            break;
-          default:
-            break;
+        // 過濾掉沒有匹配會員的企業（除了企業篩選）
+        if (activeFilter !== 'companies') {
+          filteredData = filteredData.filter(company => company.members.length > 0);
         }
-        
-        return {
-          ...company,
-          members: filteredMembers
-        };
-      });
-      
-      // 過濾掉沒有匹配會員的企業（除了企業和方案篩選）
-      if (!['companies', 'plans'].includes(activeFilter)) {
-        filteredData = filteredData.filter(company => company.members.length > 0);
       }
     }
     
@@ -322,14 +326,11 @@ const CorporateMemberManagement = () => {
         duration_type: subscription.duration_type || 'annual',
         duration_days: subscription.duration_days || 365,
         purchase_date: subscription.purchase_date,
-        redemption_deadline: subscription.activation_deadline
+        redemption_deadline: subscription.activation_deadline,
+        card_status: 'inactive'  // 新增會員預設為未啟用狀態
       });
 
-      // 更新企業訂閱的席次使用數
-      await corporateSubscriptionStore.updateSubscription(selectedSubscriptionId, {
-        seats_used: subscription.seats_used + 1,
-        seats_available: subscription.seats_available - 1
-      });
+      // 不立即占用席次，等會員啟用後才計算席次使用數
 
       // 重置表單
       setNewMember({ user_name: '', user_email: '' });
@@ -353,8 +354,8 @@ const CorporateMemberManagement = () => {
 
       // 獲取會員信息以更新席次
       const member = await corporateMemberStore.getMemberById(memberId);
-      if (member) {
-        // 更新企業訂閱的席次使用數
+      if (member && member.card_status === 'activated') {
+        // 只有啟用的會員被刪除時才需要更新席次使用數
         const subscription = corporateData
           .flatMap(company => company.subscriptions)
           .find(sub => sub.id === member.subscription_id);
@@ -640,21 +641,62 @@ const CorporateMemberManagement = () => {
   // 啟用/停用會員功能
   const handleToggleMemberStatus = async (member: CorporateMember) => {
     try {
-      if (member.card_status === 'non_member') {
+      const subscription = corporateData
+        .flatMap(company => company.subscriptions)
+        .find(sub => sub.id === member.subscription_id);
+        
+      if (!subscription) {
+        alert('找不到對應的企業訂閱');
+        return;
+      }
+
+      const wasActivated = member.card_status === 'activated';
+      let willBeActivated = false;
+
+      if (member.card_status === 'non_member' || member.card_status === 'inactive') {
+        // 檢查席次是否已滿
+        if (!wasActivated && subscription.seats_used >= subscription.seats_total) {
+          alert('席次已滿，無法啟用會員');
+          return;
+        }
         // 啟用會員卡
         await corporateMemberStore.activateMemberCard(member.id);
+        willBeActivated = true;
         alert('✅ 會員卡已成功啟用！');
       } else if (member.card_status === 'activated') {
         // 停用會員卡（設為暫停）
         await corporateMemberStore.updateMember(member.id, {
           card_status: 'expired'
         });
+        willBeActivated = false;
         alert('✅ 會員卡已暫停！');
       } else if (member.card_status === 'expired') {
+        // 檢查席次是否已滿
+        if (subscription.seats_used >= subscription.seats_total) {
+          alert('席次已滿，無法重新啟用會員');
+          return;
+        }
         // 重新啟用已過期的會員卡
         await corporateMemberStore.activateMemberCard(member.id);
+        willBeActivated = true;
         alert('✅ 會員卡已重新啟用！');
       }
+
+      // 更新席次使用數
+      if (wasActivated && !willBeActivated) {
+        // 從啟用變為未啟用，席次使用數減1
+        await corporateSubscriptionStore.updateSubscription(subscription.id, {
+          seats_used: Math.max(0, subscription.seats_used - 1),
+          seats_available: Math.min(subscription.seats_total, subscription.seats_available + 1)
+        });
+      } else if (!wasActivated && willBeActivated) {
+        // 從未啟用變為啟用，席次使用數加1
+        await corporateSubscriptionStore.updateSubscription(subscription.id, {
+          seats_used: subscription.seats_used + 1,
+          seats_available: subscription.seats_available - 1
+        });
+      }
+
       await loadCorporateData();
     } catch (error) {
       console.error('切換會員卡片狀態失敗:', error);

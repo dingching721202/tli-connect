@@ -214,9 +214,11 @@ class CorporateMemberStore {
       throw new Error(`會員卡狀態為 ${member.card_status}，無法啟用`);
     }
 
-    // 對於未啟用的會員卡，檢查啟用期限
+    // 對於未啟用的會員卡，如果期限已過，則自動延長期限到今日
     if (member.card_status === 'inactive' && new Date() > new Date(member.activation_deadline)) {
-      throw new Error('會員卡啟用期限已過');
+      const today = new Date();
+      member.activation_deadline = today.toISOString();
+      console.log('⚠️  會員卡啟用期限已過，自動延長至:', today.toISOString());
     }
 
     const now = new Date().toISOString();
