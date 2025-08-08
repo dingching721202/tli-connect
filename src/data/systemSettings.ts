@@ -40,6 +40,67 @@ export const systemSettings: SystemSettings[] = [
     data_type: 'boolean',
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z'
+  },
+  // 課程預約設定
+  {
+    id: 'course_reservation_advance_days',
+    category: 'course',
+    key: 'reservation_advance_days',
+    value: 7,
+    description: '提前多少天可以預約課程',
+    data_type: 'number',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: 'course_reservation_advance_hours',
+    category: 'course',
+    key: 'reservation_advance_hours',
+    value: 2,
+    description: '課程開始前多少小時截止預約',
+    data_type: 'number',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: 'course_modification_deadline_hours',
+    category: 'course',
+    key: 'modification_deadline_hours',
+    value: 4,
+    description: '課程開始前多少小時可以修改預約',
+    data_type: 'number',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: 'course_cancellation_deadline_hours',
+    category: 'course',
+    key: 'cancellation_deadline_hours',
+    value: 6,
+    description: '課程開始前多少小時可以取消預約',
+    data_type: 'number',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: 'course_allow_same_day_reservation',
+    category: 'course',
+    key: 'allow_same_day_reservation',
+    value: true,
+    description: '是否允許當天預約課程',
+    data_type: 'boolean',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: 'course_auto_cancel_no_show',
+    category: 'course',
+    key: 'auto_cancel_no_show',
+    value: false,
+    description: '自動取消未出席的預約',
+    data_type: 'boolean',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
   }
 ];
 

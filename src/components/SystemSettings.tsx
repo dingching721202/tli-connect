@@ -25,6 +25,16 @@ const SystemSettings = () => {
       maxConcurrentSessions: 3
     },
     
+    // 課程設定
+    courseSettings: {
+      reservationAdvanceDays: 7,
+      reservationAdvanceHours: 2,
+      modificationDeadlineHours: 4,
+      cancellationDeadlineHours: 6,
+      allowSameDayReservation: true,
+      autoCancelNoShow: false
+    },
+    
     // 通知設定
     notifications: {
       emailEnabled: true,
@@ -179,6 +189,97 @@ const SystemSettings = () => {
                   onChange={(e) => updateSetting('membershipSettings', 'maxConcurrentSessions', parseInt(e.target.value))}
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 課程設定 */}
+        <div className="border border-gray-200 rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+            <SafeIcon icon={FiSettings} />
+            <span>課程預約設定</span>
+          </h3>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">預約提前天數</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="30"
+                  value={settings.courseSettings.reservationAdvanceDays}
+                  onChange={(e) => updateSetting('courseSettings', 'reservationAdvanceDays', parseInt(e.target.value))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">提前多少天可以預約課程</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">預約截止時間（小時）</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="24"
+                  value={settings.courseSettings.reservationAdvanceHours}
+                  onChange={(e) => updateSetting('courseSettings', 'reservationAdvanceHours', parseInt(e.target.value))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">課程開始前多少小時截止預約</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">修改截止時間（小時）</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="24"
+                  value={settings.courseSettings.modificationDeadlineHours}
+                  onChange={(e) => updateSetting('courseSettings', 'modificationDeadlineHours', parseInt(e.target.value))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">課程開始前多少小時可以修改預約</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">取消截止時間（小時）</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="24"
+                  value={settings.courseSettings.cancellationDeadlineHours}
+                  onChange={(e) => updateSetting('courseSettings', 'cancellationDeadlineHours', parseInt(e.target.value))}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">課程開始前多少小時可以取消預約</p>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">允許當天預約</label>
+                  <p className="text-xs text-gray-500">是否允許當天預約課程</p>
+                </div>
+                <button
+                  onClick={() => updateSetting('courseSettings', 'allowSameDayReservation', !settings.courseSettings.allowSameDayReservation)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    settings.courseSettings.allowSameDayReservation ? 'text-blue-600' : 'text-gray-400'
+                  }`}
+                >
+                  <SafeIcon icon={settings.courseSettings.allowSameDayReservation ? FiToggleRight : FiToggleLeft} />
+                </button>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">自動取消未出席</label>
+                  <p className="text-xs text-gray-500">自動取消未出席的預約記錄</p>
+                </div>
+                <button
+                  onClick={() => updateSetting('courseSettings', 'autoCancelNoShow', !settings.courseSettings.autoCancelNoShow)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    settings.courseSettings.autoCancelNoShow ? 'text-blue-600' : 'text-gray-400'
+                  }`}
+                >
+                  <SafeIcon icon={settings.courseSettings.autoCancelNoShow ? FiToggleRight : FiToggleLeft} />
+                </button>
               </div>
             </div>
           </div>
