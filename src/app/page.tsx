@@ -123,12 +123,34 @@ export default function Home() {
         @media (max-width:1100px){.h1{font-size:44px; line-height:52px} .h2{font-size:30px; line-height:38px}}
 
         /* Header */
-        .site-header{position:sticky; top:0; z-index:20; background:linear-gradient(to bottom, rgba(255,255,255,.86), rgba(255,255,255,.75)); backdrop-filter:blur(8px); border-bottom:1px solid var(--divider)}
-        .site-header .inner{display:flex; align-items:center; height:72px}
+        .site-header{position:sticky !important; top:0 !important; z-index:999 !important; background:linear-gradient(to bottom, rgba(255,255,255,.86), rgba(255,255,255,.75)); backdrop-filter:blur(8px); border-bottom:1px solid var(--divider); width:100%; left:0}
+        .site-header .inner{display:flex; align-items:center; justify-content:space-between; height:72px}
         .brand-logo{display:inline-flex; align-items:center; gap:12px}
         .brand-logo img{height:36px; width:auto; display:block}
-        @media (max-width:767px){.brand-logo img{height:30px}}
         .brand{font-weight:800; letter-spacing:.01em; color:var(--ink)}
+        
+        /* Navigation */
+        .main-nav{display:flex; align-items:center}
+        .nav-list{display:flex; list-style:none; margin:0; padding:0; gap:32px; align-items:center}
+        .nav-link{font-size:15px; font-weight:500; color:var(--ink); text-decoration:none; padding:8px 0; position:relative; transition:color 0.2s ease}
+        .nav-link:hover{color:var(--gold)}
+        .nav-link::after{content:''; position:absolute; bottom:0; left:0; width:0; height:2px; background:var(--gold); transition:width 0.3s ease}
+        .nav-link:hover::after{width:100%}
+        
+        /* Header Actions */
+        .header-actions{display:flex; align-items:center; gap:16px}
+        .login-link{font-size:15px; font-weight:600; background:linear-gradient(90deg, #009FB6, #027AB9); color:#FFFFFF; text-decoration:none; padding:10px 20px; border-radius:999px; transition:all 0.2s ease; box-shadow:0 2px 8px rgba(2,122,185,0.16)}
+        .login-link:hover{background:linear-gradient(90deg, #00BEE3, #0286C9); transform:translateY(-1px); box-shadow:0 4px 12px rgba(2,122,185,0.24)}
+        .cta-btn{font-size:15px; font-weight:600; background:linear-gradient(90deg, #009FB6, #027AB9); color:#FFFFFF; text-decoration:none; padding:10px 20px; border-radius:999px; transition:all 0.2s ease; box-shadow:0 2px 8px rgba(2,122,185,0.16)}
+        .cta-btn:hover{background:linear-gradient(90deg, #00BEE3, #0286C9); transform:translateY(-1px); box-shadow:0 4px 12px rgba(2,122,185,0.24)}
+        
+        /* Mobile Menu Button */
+        .mobile-menu-btn{display:none; flex-direction:column; gap:4px; background:none; border:none; cursor:pointer; padding:8px}
+        .mobile-menu-btn span{width:24px; height:2px; background:var(--ink); border-radius:1px; transition:all 0.3s ease}
+        
+        /* Mobile Styles */
+        @media (max-width:1024px){.main-nav{display:none} .mobile-menu-btn{display:flex}}
+        @media (max-width:767px){.brand-logo img{height:30px} .header-actions{gap:12px} .cta-btn{padding:8px 16px; font-size:14px} .login-link{padding:6px 12px; font-size:14px}}
 
         /* HERO：標題左、表單右 */
         .hero{background:linear-gradient(180deg, #FFFFFF 0%, #F7FAFE 60%, #F5F8FC 100%)}
@@ -279,7 +301,8 @@ export default function Home() {
         .footer-bottom .social{display:flex; justify-content:center; gap:16px; flex-wrap:wrap; margin-bottom:8px}
         .footer-bottom .legal{font-size:13px; color:#64798A}
 
-        html, body{overflow-x:hidden}
+        html{overflow-x:hidden}
+        body{overflow-x:hidden; position:relative}
         @media (max-width:360px){.h1, .h2{overflow-wrap:anywhere; word-break:break-word}}
       `}</style>
       
@@ -294,6 +317,16 @@ export default function Home() {
               style={{height:'36px', width:'auto'}}
             />
           </a>
+          
+          <div className="header-actions">
+            <a href="/login" className="login-link">Login</a>
+          </div>
+          
+          <button className="mobile-menu-btn" aria-label="開啟選單">
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
         </div>
       </header>
 
@@ -397,7 +430,7 @@ export default function Home() {
       </div>
 
       {/* Why */}
-      <section className="section why">
+      <section id="about" className="section why">
         <div className="container">
           <h2 className="h2">Why Do You Need a Cross‑Cultural Learning Community?</h2>
           <div className="why-rows">
@@ -436,7 +469,7 @@ export default function Home() {
       </section>
 
       {/* Topics */}
-      <section className="section topics">
+      <section id="topics" className="section topics">
         <div className="container">
           <h2 className="h2">Language, Culture & Business — All in One Membership</h2>
           <p className="body-m" style={{margin: '8px 0 32px 0', color: '#49647B'}}>
@@ -561,7 +594,7 @@ export default function Home() {
       </section>
 
       {/* Numbers with Historical Photos */}
-      <section className="section numbers">
+      <section id="courses" className="section numbers">
         <div className="container">
           <h2 className="h2">
             TLI Connect — Building on 70 Years of TLI Language Excellence to Launch a Global Learning Community
@@ -621,7 +654,7 @@ export default function Home() {
       </section>
 
       {/* Footer Call-to-Action (Form 區塊) */}
-      <section className="footer-cta-section section">
+      <section id="contact" className="footer-cta-section section">
         <div className="container footer-cta">
           <div className="footer-copy">
             <h2 className="h2">Ready to Join TLI Connect?</h2>
