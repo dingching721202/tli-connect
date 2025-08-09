@@ -238,7 +238,7 @@ export default function Home() {
         /* Horizontal form layout */
         .horizontal-form.center-form{display:flex; justify-content:center; gap:18px; align-items:flex-end; max-width:900px; margin:0 auto; flex-wrap:nowrap}
         .h-field{display:flex; flex-direction:column; align-items:flex-start; gap:2px; flex:1 1 auto; min-width:0}
-        .h-label{font-size:13px; color:#027AB9; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; margin:0 0 6px 8px; display:block}
+        .h-label{font-size:13px; color:#027AB9; font-weight:700; letter-spacing:0.5px; margin:0 0 6px 8px; display:block}
         .h-input{width:100%; border:none; background:transparent; font-size:15px; color:#333; padding:10px 12px 8px 12px; border-bottom:2px solid #E0E8F0; transition:all 0.25s ease; outline:none; font-family:inherit}
         .h-input:focus{background:#F0F6FF; border-radius:12px}
         .horizontal-form .btn{height:52px; padding:0 24px; font-size:16px; font-weight:700; border:none; border-radius:999px; background:linear-gradient(90deg, #00BEE3, #027AB9); color:#FFFFFF; cursor:pointer; transition:all 0.25s ease; align-self:flex-end; white-space:nowrap}
