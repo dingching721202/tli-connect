@@ -59,10 +59,10 @@ const NewCourseManagement = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div>
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-white shadow-sm border-b -mx-6 mb-6">
+        <div className="px-6">
           <div className="flex items-center justify-between h-16">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">課程系統管理</h1>
@@ -86,8 +86,8 @@ const NewCourseManagement = () => {
       </div>
 
       {/* Tab Navigation */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="bg-white border-b -mx-6 mb-6">
+        <div className="px-6">
           <div className="flex space-x-1 py-4">
             {tabs.map((tab) => (
               <motion.button
@@ -118,7 +118,7 @@ const NewCourseManagement = () => {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div>
         <motion.div
           key={activeTab}
           initial={{ opacity: 0, y: 20 }}

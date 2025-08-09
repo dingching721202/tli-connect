@@ -6,9 +6,9 @@ import SystemSettings from '@/components/SystemSettings';
 
 const SystemSettingsPage: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="main-layout">
       <Navigation />
-      <div className="container mx-auto px-4 py-8">
+      <div className="page-container">
         <SystemSettings />
       </div>
     </div>

@@ -585,9 +585,9 @@ const MemberCardPlanManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="main-layout">
         <Navigation />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="page-container">
           <div className="text-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-gray-600">載入中...</p>
@@ -598,10 +598,10 @@ const MemberCardPlanManagement: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="main-layout">
       <Navigation />
       
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="page-container">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">會員卡方案管理</h1>
@@ -689,7 +689,7 @@ const MemberCardPlanManagement: React.FC = () => {
             </div>
 
             {/* Member Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {memberCardsData.map((card) => (
                 <motion.div
                   key={card.id}
@@ -716,19 +716,27 @@ const MemberCardPlanManagement: React.FC = () => {
                   </div>
                   
                   <div className="mb-4">
-                    <p className="text-sm text-gray-600 mb-2">可存取課程 ({card.available_course_ids.length})</p>
-                    <div className="space-y-1">
-                      {card.available_course_ids.slice(0, 3).map((courseId) => {
-                        const course = courses.find(c => c.id === courseId);
-                        return course ? (
-                          <div key={courseId} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                            {course.title}
-                          </div>
-                        ) : null;
-                      })}
-                      {card.available_course_ids.length > 3 && (
-                        <div className="text-xs text-gray-500">
-                          還有 {card.available_course_ids.length - 3} 個課程...
+                    <p className="text-sm font-medium text-gray-700 mb-2">可存取課程 ({card.available_course_ids.length})</p>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {card.available_course_ids.length > 0 ? (
+                        card.available_course_ids.map((courseId) => {
+                          const course = courses.find(c => c.id === courseId);
+                          return course ? (
+                            <div key={courseId} className="text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded flex items-center justify-between">
+                              <span className="truncate">{course.title}</span>
+                              <span className="text-blue-500 text-xs ml-1 flex-shrink-0">
+                                {course.category}
+                              </span>
+                            </div>
+                          ) : (
+                            <div key={courseId} className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">
+                              課程ID: {courseId} (未找到)
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded">
+                          尚未選擇課程
                         </div>
                       )}
                     </div>
@@ -814,7 +822,7 @@ const MemberCardPlanManagement: React.FC = () => {
             </div>
 
             {/* Plans Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               {plans.map((plan) => {
                 const config = getPlanTypeConfig(plan.user_type, plan.duration_type);
                 const Icon = config.icon;
@@ -1120,23 +1128,66 @@ const MemberCardPlanManagement: React.FC = () => {
                 </div>
 
                 {/* Selected Courses Summary */}
-                {memberCardFormData.available_course_ids.length > 0 && (
-                  <div className="bg-blue-50 rounded-lg p-4">
-                    <h4 className="text-sm font-medium text-blue-900 mb-2">
-                      已選擇課程 ({memberCardFormData.available_course_ids.length})
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {memberCardFormData.available_course_ids.map((courseId) => {
-                        const course = courses.find(c => c.id === courseId);
-                        return course ? (
-                          <span key={courseId} className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                            {course.title}
-                          </span>
-                        ) : null;
-                      })}
+                <div className="bg-blue-50 rounded-lg p-4">
+                  <h4 className="text-sm font-medium text-blue-900 mb-3">
+                    已選擇課程 ({memberCardFormData.available_course_ids.length}/{courses.length})
+                  </h4>
+                  {memberCardFormData.available_course_ids.length > 0 ? (
+                    <div className="max-h-40 overflow-y-auto">
+                      <div className="grid grid-cols-1 gap-2">
+                        {memberCardFormData.available_course_ids.map((courseId) => {
+                          const course = courses.find(c => c.id === courseId);
+                          return course ? (
+                            <div key={courseId} className="bg-white rounded-lg p-3 border border-blue-200">
+                              <div className="flex items-center justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <h5 className="text-sm font-medium text-gray-900 truncate">
+                                    {course.title}
+                                  </h5>
+                                  <div className="flex items-center space-x-2 mt-1">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                      {course.language}
+                                    </span>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                      {course.level}
+                                    </span>
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                                      {course.category}
+                                    </span>
+                                  </div>
+                                </div>
+                                <button
+                                  onClick={() => handleCourseSelection(courseId, false)}
+                                  className="ml-3 text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50"
+                                  title="移除此課程"
+                                >
+                                  <SafeIcon icon={FiX} size={14} />
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div key={courseId} className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                              <div className="text-sm text-gray-500">
+                                課程ID: {courseId} (未找到對應課程)
+                              </div>
+                              <button
+                                onClick={() => handleCourseSelection(courseId, false)}
+                                className="mt-2 text-red-500 hover:text-red-700 text-xs"
+                              >
+                                移除此無效課程
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ) : (
+                    <div className="text-center py-4">
+                      <p className="text-sm text-blue-600">尚未選擇任何課程</p>
+                      <p className="text-xs text-blue-500 mt-1">請在上方課程列表中選擇課程</p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Actions */}

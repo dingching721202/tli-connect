@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { FiUser, FiUsers, FiShield, FiBriefcase, FiUserCheck, FiShare2 } from 'react-icons/fi';
+import Navigation from '@/components/Navigation';
 
 const RoleSelectPage = () => {
   const router = useRouter();
@@ -60,8 +61,9 @@ const RoleSelectPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
-      <div className="container mx-auto px-4 py-12">
+    <div className="main-layout">
+      <Navigation />
+      <div className="page-container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

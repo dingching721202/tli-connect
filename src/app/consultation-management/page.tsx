@@ -546,10 +546,9 @@ const ConsultationManagementPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="main-layout">
       <Navigation />
-      <div className="py-8 px-4">
-        <div className="container mx-auto max-w-7xl">
+      <div className="page-container">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -1031,7 +1030,6 @@ const ConsultationManagementPage: React.FC = () => {
               </div>
             )}
           </motion.div>
-        </div>
       </div>
 
       {/* Detail Modal */}

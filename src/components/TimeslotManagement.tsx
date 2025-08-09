@@ -553,13 +553,14 @@ const TimeslotManagement: React.FC = () => {
             <table className="w-full table-fixed">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="w-44 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">日期時間</th>
-                  <th className="w-64 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">課程名稱</th>
-                  <th className="w-32 px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">教師</th>
-                  <th className="w-20 px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">容量</th>
-                  <th className="w-28 px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">學生預約</th>
-                  <th className="w-24 px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">狀態</th>
-                  <th className="w-auto px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                  <th className="w-56 px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">日期</th>
+                  <th className="w-44 px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">時間</th>
+                  <th className="w-80 px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">課程名稱</th>
+                  <th className="w-36 px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">教師</th>
+                  <th className="w-20 px-6 py-3 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">容量</th>
+                  <th className="w-36 px-6 py-3 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">預約數</th>
+                  <th className="w-32 px-6 py-3 text-center text-sm font-semibold text-gray-700 uppercase tracking-wider">狀態</th>
+                  <th className="w-auto px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">操作</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -570,40 +571,36 @@ const TimeslotManagement: React.FC = () => {
                     animate={{ opacity: 1 }}
                     className="hover:bg-gray-50"
                   >
-                    <td className="w-44 px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div>
-                        <div className="font-medium">{formatDateTime(`${timeslot.date} ${timeslot.startTime}`)}</div>
-                        <div className="text-gray-500 text-xs">{timeslot.startTime} - {timeslot.endTime}</div>
-                      </div>
+                    <td className="w-56 px-6 py-4 text-base text-gray-900">
+                      <div className="font-semibold">{formatDateTime(`${timeslot.date} ${timeslot.startTime}`)}</div>
                     </td>
-                    <td className="w-64 px-6 py-4 text-sm text-gray-900">
-                      <div className="truncate">
-                        <div className="font-medium text-gray-900 truncate" title={timeslot.title}>{timeslot.title}</div>
-                      </div>
+                    <td className="w-44 px-6 py-4 text-base text-gray-900">
+                      <div className="font-semibold">{timeslot.startTime} - {timeslot.endTime}</div>
                     </td>
-                    <td className="w-32 px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="truncate" title={timeslot.teacherName}>{timeslot.teacherName}</div>
+                    <td className="w-80 px-6 py-4 text-base text-gray-900">
+                      <div className="font-semibold text-gray-900" title={timeslot.title}>{timeslot.title}</div>
                     </td>
-                    <td className="w-20 px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center">
+                    <td className="w-36 px-6 py-4 text-base text-gray-900">
+                      <div className="truncate font-medium" title={timeslot.teacherName}>{timeslot.teacherName}</div>
+                    </td>
+                    <td className="w-20 px-6 py-4 text-base text-gray-900 text-center font-semibold">
                       {timeslot.capacity}
                     </td>
-                    <td className="w-28 px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <div className="flex items-center justify-center">
-                        <span className={`inline-flex px-2 py-1 text-xs rounded-full ${
-                          timeslot.bookedCount > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {timeslot.bookedCount} 位學生
-                        </span>
-                      </div>
+                    <td className="w-36 px-6 py-4 text-base text-gray-900 text-center">
+                      <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+                        timeslot.bookedCount > 0 ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {timeslot.bookedCount} 位學生
+                      </span>
                     </td>
-                    <td className="w-24 px-6 py-4 whitespace-nowrap">
+                    <td className="w-32 px-6 py-4">
                       <div className="flex justify-center">
-                        <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(timeslot)}`}>
+                        <span className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full border ${getStatusColor(timeslot)}`}>
                           {getStatusText(timeslot)}
                         </span>
                       </div>
                     </td>
-                    <td className="w-auto px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <td className="w-auto px-6 py-4 text-base text-gray-900">
                       <div className="flex space-x-2">
                         <motion.button
                           whileHover={{ scale: 1.05 }}

@@ -1115,7 +1115,7 @@ const Dashboard = () => {
     : 0;
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8">
+    <div>
       {/* Welcome Section - 手機優化 */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

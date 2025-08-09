@@ -371,7 +371,7 @@ const CourseTemplateManagement = () => {
       </div>
 
       {/* Templates List */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
         {getFilteredTemplates().map((template) => (
           <motion.div
             key={template.id}

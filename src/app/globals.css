@@ -172,4 +172,15 @@
     opacity: 1;
     transition: opacity 0.3s ease-in-out;
   }
+
+  /* 統一的頁面容器樣式 - 與帳號管理一樣的寬度 */
+  .page-container {
+    padding: 1.5rem;
+  }
+
+  /* 確保與導航列有適當間距的頁面佈局 */
+  .main-layout {
+    min-height: 100vh;
+    background-color: rgb(249 250 251);
+  }
 }

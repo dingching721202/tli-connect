@@ -36,9 +36,9 @@ export default function BookingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="main-layout">
       <Navigation />
-      <div id="booking">
+      <div id="booking" className="page-container">
         <Suspense fallback={<div className="p-8 text-center">載入中...</div>}>
           <BookingSystem />
         </Suspense>

@@ -1,6 +1,7 @@
 export interface MemberCard {
   id: number;
   created_at: string;
+  updated_at?: string;
   name: string;
   available_course_ids: (number | string)[];
 }

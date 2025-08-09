@@ -3,9 +3,11 @@ import Navigation from '@/components/Navigation';
 
 export default function DashboardPage() {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="main-layout">
       <Navigation />
-      <Dashboard />
+      <div className="page-container">
+        <Dashboard />
+      </div>
     </div>
   );
 }

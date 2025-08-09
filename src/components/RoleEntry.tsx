@@ -48,10 +48,12 @@ const RoleEntry: React.FC<RoleEntryProps> = ({ requiredRole, children }) => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">載入中...</p>
+      <div className="main-layout">
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">載入中...</p>
+          </div>
         </div>
       </div>
     );
@@ -59,9 +61,11 @@ const RoleEntry: React.FC<RoleEntryProps> = ({ requiredRole, children }) => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">重新導向至登入頁面...</p>
+      <div className="main-layout">
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <p className="text-gray-600">重新導向至登入頁面...</p>
+          </div>
         </div>
       </div>
     );
@@ -69,18 +73,20 @@ const RoleEntry: React.FC<RoleEntryProps> = ({ requiredRole, children }) => {
 
   if (!hasRole(requiredRole)) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-gray-600">您沒有權限存取此頁面，正在重新導向...</p>
+      <div className="main-layout">
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <p className="text-gray-600">您沒有權限存取此頁面，正在重新導向...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="main-layout">
       <Navigation />
-      <main>
+      <main className="page-container">
         {children}
       </main>
     </div>

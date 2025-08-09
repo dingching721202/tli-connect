@@ -161,12 +161,12 @@ const VideoCoursePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="main-layout">
       <Navigation />
       
       {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white">
-        <div className="container mx-auto px-4 py-16">
+        <div className="page-container py-16">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -196,7 +196,7 @@ const VideoCoursePage: React.FC = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
+      <div className="page-container py-8">
         {/* Search and Filters */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

@@ -68,10 +68,10 @@ const PaymentResultContent = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="main-layout">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="page-container">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -211,16 +211,18 @@ const PaymentResultContent = () => {
 const PaymentResultPage = () => {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="inline-block mb-4"
-          >
-            <SafeIcon icon={FiLoader} className="text-4xl text-blue-600" />
-          </motion.div>
-          <p className="text-gray-600">載入中...</p>
+      <div className="main-layout">
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="inline-block mb-4"
+            >
+              <SafeIcon icon={FiLoader} className="text-4xl text-blue-600" />
+            </motion.div>
+            <p className="text-gray-600">載入中...</p>
+          </div>
         </div>
       </div>
     }>

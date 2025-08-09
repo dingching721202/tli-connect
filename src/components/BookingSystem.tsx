@@ -467,7 +467,7 @@ const BookingSystem: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-6 sm:py-8">
+    <div>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -30 }}

@@ -153,9 +153,9 @@ export default function LeaveManagementPage() {
   // Check if user has admin permission
   if (!user || !isAdmin) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="main-layout">
         <Navigation />
-        <div className="container mx-auto px-4 py-8">
+        <div className="page-container">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">存取被拒</h1>
             <p className="text-gray-600">您沒有權限存取此頁面。</p>
@@ -404,10 +404,10 @@ export default function LeaveManagementPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="main-layout">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="page-container">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

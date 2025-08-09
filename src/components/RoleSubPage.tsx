@@ -30,7 +30,6 @@ const RoleSubPage: React.FC<RoleSubPageProps> = ({
 
   return (
     <RoleEntry requiredRole={requiredRole}>
-      <div className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <button
             onClick={() => router.push(`/${rolePath}`)}
@@ -66,7 +65,6 @@ const RoleSubPage: React.FC<RoleSubPageProps> = ({
         )}
 
         {/* 這裡可以整合原本的功能 */}
-      </div>
     </RoleEntry>
   );
 };

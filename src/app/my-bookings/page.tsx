@@ -374,9 +374,9 @@ export default function MyBookingsPage() {
   // Check if user is student or instructor
   if (!user || !user?.roles.some(role => ['STUDENT', 'TEACHER'].includes(role))) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="main-layout">
         <Navigation />
-        <div className="container mx-auto px-4 py-8">
+        <div className="page-container">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">存取被拒</h1>
             <p className="text-gray-600">此頁面僅供學生和教師使用。</p>
@@ -952,10 +952,10 @@ export default function MyBookingsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="main-layout">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-8">
+      <div className="page-container">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
