@@ -3,115 +3,325 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>TLI Connect — Master the Global Stage</title>
-  <meta name="description" content="TLI Connect — Language × Culture × Business membership. Scenario‑based courses, workshops, and a cross‑cultural community backed by TLI since 1956." />
-  <!-- Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <title>TLI Connect — Build Your Own Global Talent Community</title>
+  <meta name="description" content="TLI Connect — Language × Culture × Business membership. Scenario-based courses, workshops, and a cross‑cultural community backed by TLI since 1956." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- ================= Core Styles ================= -->
   <style>
-    :root{
-      /* Layout */
-      --container: 1200px;
-      --r32: 32px;
+    /* ---- Global Tokens ---- */
+    :root {
+      /* layout */
+      --container: 1200px;            /* max content width */
+      --page-padding: 100px;          /* 全站左右留白 */
+      --page-padding-mobile: 16px;    /* 行動裝置留白 */
 
+      /* palette */
+      --black: #F5F8FC;
+      --paper-soft: #F9FBFE;
+      --ink: #262626;
+      --ink-dim: #4A4A4A;logo
+      --divider: rgba(38, 38, 38, 0.14);
 
-      /* Palette — 輕藍 × 黃 */
-      /* Page backgrounds */
-      --black: #F5F8FC;          /* 原做為整頁底色，改成極淺藍 */
-      --black-900: #103A63;      /* 深藍，用於 filmstrip 區塊底 */
-      --paper: #FFFFFF;          /* 主要卡片／Hero 底色 */
-      --paper-soft: #F9FBFE;     /* 柔和卡片底 */
-
-      /* Text */
-      --ink: #262626;            /* 主要文字深藍灰 */
-      --ink-dim: #6A7A8A;        /* 次要文字 */
-
-      /* Lines */
-      --divider: rgba(16,35,53,.14);
-
-      /* Accents */
-      --gold: #027AB9;           /* 主 CTA 與重點*/
-      --gold-strong: #026AA7;    /* hover */
-
-      /* States */
-      --error: #D54848;
-      --success: #1CA87A;
-
-      /* 補充（若需） */
-      --blue-500: #027AB9;       /* 行銷文案標色／強調 */
-      --blue-100: #E9F2FF;       /* 很淺的藍色背景 */
+      --cta-gradient-left: #009FB6;
+      --cta-gradient-right: #027AB9;
+      --cta-gradient-hover-left: #00BEE3;
+      --cta-gradient-hover-right: #0286C9;
+      --primary: #027AB9;
+      --blue-100: #E3F1F8;
+      --gold: #F5C04E;
     }
-    *,*::before,*::after{box-sizing:border-box}
-    html,body{margin:0;padding:0}
-    body{font-family:Inter, "Noto Sans", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif; color:var(--ink); background:var(--black)}
-    a{text-decoration:none; color:#1E60A9}
-    img{max-width:100%; display:block}
-    .container{max-width:var(--container); margin:0 auto; padding:0 24px}
-    .section{padding:88px 0}
-    @media (max-width:767px){.section{padding:64px 0}}
 
-    h1,h2,h3{margin:0 0 16px; color:var(--ink); font-family:"Plus Jakarta Sans", "Noto Sans TC", Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; font-feature-settings:"pnum" 1, "lnum" 1; font-weight:800}
-    .h1{font-size:48px; line-height:64px; font-weight:800; letter-spacing:-0.015em}
-    .h2{font-size:34px; line-height:42px; font-weight:800; letter-spacing:-0.01em}
-    .h3{font-size:20px; line-height:30px; font-weight:300; letter-spacing:-0.01em}
-    .body-l{font-size:18px; line-height:28px; color:var(--ink)}
-    .body-m{font-size:16px; line-height:26px; color:var(--ink-dim)}
-    .label{font-size:14px; line-height:20px; font-weight:600; color:#027AB9}
-    .caption{font-size:12px; line-height:18px; color:var(--ink-dim)}
-    @media (max-width:1100px){.h1{font-size:44px; line-height:52px} .h2{font-size:30px; line-height:38px}}
+    /* RWD – 自動縮減左右邊距 */
+    @media (max-width: 600px) {
+      :root { --page-padding: var(--page-padding-mobile); }
+    }
 
-    /* Header */
-    .site-header{position:sticky; top:0; z-index:20; background:linear-gradient(to bottom, rgba(255,255,255,.86), rgba(255,255,255,.75)); backdrop-filter:blur(8px); border-bottom:1px solid var(--divider)}
-    .site-header .inner{display:flex; align-items:center; height:72px}
-    .brand-logo{display:inline-flex; align-items:center; gap:12px}
-    .brand-logo img{height:36px; width:auto; display:block}
-    @media (max-width:767px){.brand-logo img{height:30px}}
-    .brand{font-weight:800; letter-spacing:.01em; color:var(--ink)}
+    /* ---- Reset & Base ---- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      font-family: Inter, "Noto Sans", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      color: var(--ink);
+      background: var(--black);
+    }
+    a { text-decoration: none; color: #1E60A9; }
+    img { max-width: 100%; display: block; }
 
-    /* HERO：標題左、表單右 */
-    .hero{background:linear-gradient(180deg, #FFFFFF 0%, #F7FAFE 60%, #F5F8FC 100%)}
-    .hero-grid{display:block}
-    .hero-inline{display:grid; grid-template-columns:minmax(0,1fr) 440px; gap:32px; align-items:start}
-    @media (max-width:992px){.hero-inline{grid-template-columns:1fr; gap:28px}}
-    .hero-copy .tagline{color:#7FA8D8}
-    .badge {
-  display: inline-block;
-  padding: 6px 12px;
-  border: 1px solid #009FB6;
-  border-radius: 999px;
-  font-size: 14px;
-  color: #009FB6;
-  margin: 20px 0;
-  background: #ffffff;
+    /* ---- Layout Helpers ---- */
+    .container { max-width: var(--container); margin: 0 auto; }
+    body > section, footer { padding-left: var(--page-padding); padding-right: var(--page-padding); }
+
+    h1, h2, h3 { margin: 0 0 16px; font-family: "Plus Jakarta Sans", "Noto Sans TC", Inter, sans-serif; font-weight: 800; color: var(--ink); font-feature-settings: "pnum" 1, "lnum" 1; }
+    .h1 { font-size: 56px; line-height: 64px; letter-spacing: -0.015em; }
+    .h2 { font-size: 32px; line-height: 42px; letter-spacing: -0.01em; }
+    .body-l { font-size: 18px; line-height: 28px; color: var(--ink); }
+    .body-m { font-size: 16px; line-height: 26px; color: var(--ink-dim); }
+    @media (max-width: 1100px) { .h1 { font-size: 44px; line-height: 52px; } .h2 { font-size: 30px; line-height: 38px; } }
+
+    /* ---- Buttons ---- */
+    button, .cta-btn, .secondary-btn { border-radius: 999px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.25s ease-in-out; }
+
+    /* Primary CTA 基本樣式 */
+    .cta-btn {
+      background: linear-gradient(90deg, var(--cta-gradient-left), var(--cta-gradient-right));
+      color: #FFFFFF; border: none; padding: 16px 40px; box-shadow: 0 10px 24px rgba(2, 122, 185, 0.22);
+    }
+    .cta-btn:hover {
+      background: linear-gradient(90deg, var(--cta-gradient-hover-left), var(--cta-gradient-hover-right));
+      transform: scale(1.04);
+      box-shadow: 0 8px 24px rgba(2, 122, 185, 0.32);
+    }
+
+    /* Secondary CTA */
+    .secondary-btn {
+      background: #ffffff; color: var(--primary); border: 2px solid var(--primary); padding: 14px 32px;
+    }
+    .secondary-btn:hover {
+      background: #F0F9FD; color: var(--primary); transform: scale(1.02); box-shadow: 0 4px 12px rgba(2, 122, 185, 0.12);
+    }
+
+.secondary-btn {
+  display: inline-flex;    /* 讓內容置中好排版 */
+  align-items: center;
+  gap: 8px;                /* 有圖示時的間距，沒有也可留著 */
+  width: auto;             /* <= 重點：不要固定寬度 */
+  padding: 14px 24px;      /* 內距可自行調整 */
+  white-space: nowrap;     /* 讓文字不換行（可拿掉） */
 }
-    .hero-bullets{margin-top:24px}
-    @media (max-width:1200px){.hero-grid{grid-template-columns:1fr; gap:32px}}
 
-    /* Form */
-    .card-form{background:var(--paper); border:1px solid var(--divider); border-radius: 24px; box-shadow:0 10px 30px rgba(16,58,99,.06); padding:32px}
-    .form-grid{display:grid; grid-template-columns:1fr; gap:16px}
-    input[type="text"],input[type="email"],input[type="tel"]{height:52px; border:1px solid var(--divider); border-radius:12px; padding:0 16px; font-size:16px; color:var(--ink); background:#FFFFFF; outline:none}
-    input::placeholder{color:#98A6B3}
-    input:focus{border-color:var(--blue-500); box-shadow:0 0 0 3px rgba(46,110,182,.18)}
-    .btn{height:56px; border:none; border-radius:999px; background:linear-gradient(90deg, #009FB6, #027AB9); color:#FFFFFF; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 10px 24px rgba(242,193,78,.22)}
-    .btn:hover{background:linear-gradient(90deg, #009FB6, #026AA7)}
-    .error-msg{display:none; color:var(--error); font-size:12px; margin-top:6px}
-    .success{display:none; border-left:4px solid var(--success); background:rgba(28,168,122,.08); color:#0F7F5F; padding:12px 16px; border-radius:12px; margin-top:16px; font-size:14px}
-    .fail{display:none; border-left:4px solid var(--error); background:rgba(213,72,72,.08); color:#B04343; padding:12px 16px; border-radius:12px; margin-top:16px; font-size:14px}
+/* 防止被父層 flex:1 或舊規則影響撐滿 */
+.cta-section .secondary-btn,
+.membership-wrapper .secondary-btn {
+  flex: 0 0 auto;
+}
 
-    /* Filmstrip */
-    .filmstrip{height:200px; background:#ffffff; overflow:hidden; border-top:20px solid #ffffff; border-bottom:1px solid #ffffff}
-    .filmstrip .row{display:grid; grid-template-columns:repeat(4, 1fr); gap:0; height:100%; width:100vw; margin-left:calc(50% - 50vw)}
-    .tile{position:relative; overflow:hidden}
-    .tile img{width:100%; height:100%; object-fit:cover; filter:grayscale(6%) contrast(1.03) saturate(0.96)}
-    .tile::after{content:""; position:absolute; inset:0; background:linear-gradient(0deg, rgba(16,35,53,.18), rgba(16,35,53,.18))}
-    @media (max-width:767px){.filmstrip{height:140px}}
+/* Header 專用小尺寸 CTA（覆蓋 .cta-btn 的內距/字級/陰影） */
+header .cta-btn--sm{
+  padding:10px 18px;     /* 原本 16px 40px → 更精緻 */
+  font-size:14px;        /* 原本 16px */
+  box-shadow:0 6px 14px rgba(2,122,185,.18);
+}
+header .cta-btn--sm:hover{
+  transform:scale(1.02); /* 原本 1.04，縮小一點就好 */
+  box-shadow:0 8px 18px rgba(2,122,185,.24);
+}
 
-    /* Numbers */
-    .numbers{background:#FFFFFF}
-    .num-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:24px; text-align:center}
-  .filmstrip-row {
+/* 手機再小一點，或需要就隱藏（擇一） */
+@media (max-width:768px){
+  header .cta-btn--sm{ padding:8px 14px; font-size:13px; }
+  /* 或直接隱藏：
+  header .cta-btn--sm{ display:none; }
+  */
+}
+    /* ---- Hero ---- */
+    .hero { position: relative; background:url('https://images.pexels.com/photos/3184416/pexels-photo-3184416.jpeg') center/cover no-repeat; padding: 120px 300px; text-align: center; }
+    .hero::after { content:""; position:absolute; inset:0; background:rgba(255,255,255,0.2); }
+    .hero .container { position:relative; z-index:1; }
+
+    /* ---- Pain & Solution ---- */
+    .pain-solution-section { background:#fff; padding:72px 0; text-align:center; }
+    .pain-checklist { max-width:720px; margin:0 auto; background:var(--paper-soft); border-radius:24px; padding:40px 32px; box-shadow:0 8px 20px rgba(16,35,53,.08); }
+    .pain-checklist li { display:flex; align-items:flex-start; margin:16px 0; font-size:16px; font-weight:600; line-height:1.5; }
+    .pain-checklist li::before { content:"✖"; color:#D9534F; font-weight:700; font-size:20px; margin-right:12px; }
+
+
+/* ---- Third Section (Roles) ---- */
+.third-section{
+  background:#ffffff;
+  padding:72px 0;
+  text-align:center;
+}
+.roles-wrapper{
+  max-width:var(--container);
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  gap:56px;
+}
+
+/* 左圖 40% / 右文 60% */
+.roles-img{ flex:0 0 40%; overflow:visible; }  /* overflow:visible 防止陰影被截掉 */
+.roles-content{ flex:0 0 60%; }
+
+/* 圖片尺寸 + 統一陰影（基礎） */
+.roles-img img{
+  width:65%;
+  height:320px;                   /* 你的原設定；若 HTML 有內聯 height，會以內聯為準 */
+  object-fit:cover;
+  border-radius:24px;
+  box-shadow:
+    0 16px 36px rgba(16,35,53,.22),
+    0 6px 14px  rgba(16,35,53,.12);
+}
+
+/* 直接覆蓋內聯陰影：三張圖都有 class="zz-img" */
+.third-section .zz-img{
+  box-shadow:
+    0 16px 36px rgba(16,35,53,.22),
+    0 6px 14px  rgba(16,35,53,.12) !important;
+  border-radius:24px; /* 保險重申，陰影跟圓角 */
+}
+
+/* Accordion 基本樣式（原樣保留） */
+.role-accordion details{
+  border:1px solid var(--divider);
+  border-left:6px solid #262626;
+  border-radius:16px;
+  overflow:hidden;
+  transition:background .2s, border-left-color .2s;
+box-shadow:
+    0 10px 14px  rgba(2,122,185,.1);
+}
+.role-accordion details+details{ margin-top:8px; }
+.role-accordion summary{
+  list-style:none; cursor:pointer;
+  padding:20px 56px 20px 20px;
+  font-weight:400; font-size:18px; position:relative;
+}
+.role-accordion summary::-webkit-details-marker{ display:none; }
+.role-accordion summary::after{
+  content:"›"; position:absolute; right:20px; top:50%;
+  transform:translateY(-50%); font-size:20px; transition:transform .2s;}
+.role-accordion details[open]{ background:var(--paper-soft); border-left-color:#027AB9; }
+.role-accordion details[open] summary::after{ transform:translateY(-50%) rotate(90deg); }
+.role-body{ padding:0 20px 20px; font-size:16px; line-height:1.5; font-weight:400; color:var(--ink); }
+.role-accordion {
+  background: #fff;
+  margin: 12px 16px 16px;   /* 與外框留一點距離，陰影比較看得出來 */
+  padding: 16px 20px;}
+
+/* 展開時陰影稍微加強（可選） */
+.role-accordion details[open] {
+  box-shadow:
+    0 12px 28px rgba(2,122,185,.18),
+    0 6px 14px  rgba(2,122,185,.12);
+}
+/* 手機：陰影收斂一點，圖高也可微調 */
+@media (max-width:768px){
+  .roles-img img{ height:260px; } /* 需要就留；不需要可刪 */
+  .third-section .zz-img{
+    box-shadow:
+      0 12px 28px rgba(16,35,53,.20),
+      0 4px 10px  rgba(16,35,53,.12) !important;
+  }
+}
+
+
+
+/* ---- Fourth Section (Features) ---- */
+.fourth-section {
+  background: #025F96;
+  padding: 80px 0;
+}
+
+/* 主標題：置中且白字 */
+.fourth-section .h2 {
+  color: #fff;
+  text-align: center;
+  margin: 0 0 48px;
+}
+
+/* 容器 + zigzag 佈局（文字:圖片 = 60% : 40%） */
+.feature-wrapper {
+  max-width: var(--container);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+  padding: 0 var(--page-padding);
+  box-sizing: content-box;
+}
+.feature-block {
+  display: flex;
+  align-items: center;
+  gap: 56px;
+}
+.feature-block:nth-child(even) {
+  flex-direction: row-reverse;
+}
+.feature-text  { flex: 0 0 60%; }
+.feature-visual{ flex: 0 0 40%; }
+
+/* 文字：全白，只有條列首句可加粗 */
+.fourth-section .feature-text,
+.fourth-section .feature-text * {
+  color: #fff;
+  font-weight: 400;
+}
+.fourth-section .feature-text h3 {
+  font-size: 24px;
+  line-height: 32px;
+  margin: 0 0 16px;
+}
+.fourth-section .feature-text ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.fourth-section .feature-text li {
+  margin-bottom: 12px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.fourth-section .feature-text li strong {
+  font-weight: 700;       /* 僅首句加粗 */
+  display: block;
+  margin-bottom: 6px;
+}
+
+/* 視覺區：支援放 <img> */
+.feature-visual {
+  height: 260px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.12); /* 若用 <img> 也可保留淡底 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.feature-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 24px;
+  display: block;
+  box-shadow: 0 8px 20px rgba(0,0,0,.12);
+}
+
+/* RWD：手機改直向堆疊 */
+@media (max-width: 960px) {
+  .feature-block,
+  .feature-block:nth-child(even) {
+    flex-direction: column;
+  }
+  .feature-text,
+  .feature-visual {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+}
+
+
+    /* ---- Brand Trust ---- */
+    .brand-trust-section { background:#fff; padding: 72px var(--page-padding); text-align:center; }
+    .trust-list { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:32px; max-width:960px; margin:0 auto; }
+.brand-trust-section .filmstrip-vintage{
+  margin-left: calc(-1 * var(--page-padding));
+  margin-right: calc(-1 * var(--page-padding));
+  width: calc(100% + 2 * var(--page-padding));
+}
+.brand-trust-section .h2 { margin-bottom: 16px; }        /* 標題 → 副標 */
+.brand-trust-section .subtitle { margin: 0 0 32px; }     /* 副標 → 圖帶 */
+.brand-trust-section .filmstrip-vintage {                /* 圖帶上下距 */
+  margin-top: 16px;
+  margin-bottom: 32px;
+}
+.brand-trust-section .trust-list { margin-top: 48px; }   /* 圖帶 → 數字卡 */
+.filmstrip-row {
     display: grid;
     grid-template-columns: repeat(5, 1fr); /* 五格，完全對齊 */
     width: 100%;
@@ -122,7 +332,7 @@
 
   .filmstrip-row img {
     width: 100%;
-    height: 180px; /* 一致高度 */
+    height: 170px; /* 一致高度 */
     display: block;
     margin: 0;
     padding: 0;
@@ -144,887 +354,553 @@
     padding: 0 4px;
   }
 
-  .num {
-    font-size: 32px;
-    color: #027AB9;
-    font-weight: bold;
-    line-height: 1.2;
+ /* ===== Individual Membership 修正版（70/30 + 中線/右邊留白） ===== */
+.individual-membership-section{
+  background:#fff;
+  padding:24px 0;
+
+  /* 想調距離只改這裡 */
+  --edge-x: 32px;           /* 外框左右內距（整塊卡片 ↔ 內容） */
+  --text-right-inset: 24px; /* 左欄文字 → 中線 的距離 */
+  --cta-left-inset: 24px;   /* 右欄按鈕 → 中線 的距離 */
+  --cta-right-gap: 48px;    /* 右欄按鈕 → 外框右邊 的距離 */
+}
+
+.individual-membership-section .membership-wrapper{
+  max-width:var(--container);
+  margin:0 auto;
+  padding:40px var(--edge-x);
+  background:rgba(0,159,182,.08);
+  border-radius:24px;
+
+  display:grid;
+  grid-template-columns:70% 30%;  /* ← 回到 70/30 */
+  align-items:center;
+  gap:40px;
+}
+
+/* 左欄：離中線留白 */
+.individual-membership-section .membership-text{
+  min-width:0;
+  padding-right:var(--text-right-inset);
+}
+
+/* 右欄：離中線 + 離外框右邊都留白，按鈕仍靠右 */
+.individual-membership-section .membership-cta{
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  padding-left:var(--cta-left-inset);
+  padding-right:var(--cta-right-gap);
+}
+
+/* 保險：避免奇怪的 margin 影響位置 */
+.individual-membership-section .secondary-btn{ margin:0; }
+
+/* 手機直排：拿掉內側留白，避免擠 */
+@media (max-width:960px){
+  .individual-membership-section .membership-wrapper{
+    grid-template-columns:1fr;
+    gap:20px;
+    padding:28px 20px;
   }
+  .individual-membership-section .membership-text,
+  .individual-membership-section .membership-cta{
+    padding:0;
+  }
+}
+ /* ===== CTA ===== */
+.cta-section {
+  background: #fff;
+  padding: 64px 0;
+}
+.cta-wrapper {
+  max-width: var(--container);
+  margin: 0 auto;
+  display: flex;
+  align-items: stretch;
+  gap: 48px;
+}
 
+/* 左側：表單卡片（維持原寬，行數變少 → 整體更矮） */
+.cta-form {
+  flex: 1 1 560px;
+  background: #FFFFFF;
+  border: 1px solid var(--divider);
+  border-radius: 24px;
+  padding: 28px;
+  box-shadow: 0 10px 30px rgba(16,58,99,.06);
+  --row-gap: 20px;   /* 每一行之間垂直距離 */
+  --col-gap: 16px;   /* 同一行欄位之間的水平距離 */
+  box-shadow:
+    0 14px 36px rgba(2, 122, 185, 0.22),   /* 主色大陰影 */
+    0 4px 12px  rgba(2, 122, 185, 0.14);   /* 主色小陰影 */
+  border: 1px solid rgba(2, 122, 185, 0.2); /*（可選）邊框也帶一點主色 */
+}
+.cta-form .h2 { margin: 0 0 8px; }
+.cta-form .subtitle {
+  font-size: 15px;
+  line-height: 22px;
+  color: var(--ink-dim);
+  margin: 0 0 18px;
+}
 
+/* 表單網格排版 */
+.form-row { display: grid; gap: 12px; margin-bottom: var(--row-gap); }
+.form-row.two   { grid-template-columns: repeat(2, 1fr); }
+.form-row.three { grid-template-columns: repeat(3, 1fr); }
+.form-row.four  { grid-template-columns: repeat(4, 1fr); }
 
-    /* Why */
-    .why{background:#FFFFFF}
-    .why-rows{display:grid; gap:24px; margin-top:40px}
-    .why-item{display:grid; grid-template-columns:1fr 1fr; gap:24px; border:1px solid var(--divider); border-radius:24px; background:#FFFFFF; padding:28px}
-    .why-tag{display:inline-block; font-size:12px; letter-spacing:.04em; text-transform:uppercase; border-radius:999px; padding:4px 10px; margin-bottom:12px}
-    .why-tag.pain{background:#009FB6; color:#ffffff; font-weight:500}
-    .why-tag.solution{background:var(--gold); color:#ffffff; font-weight:800}
-    @media (max-width:1024px){.why-item{grid-template-columns:1fr}}
+.cta-form .form-row.two,
+.cta-form .form-row.three,
+.cta-form .form-row.four { column-gap: var(--col-gap); }
 
+.field { display: flex; flex-direction: column; gap: 6px; }
 
+/* Labels：主藍色，(optional) 灰色 */
+.cta-form label {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .01em;
+  color: #027AB9;
+}
+.cta-form label .opt {
+  color: #6A7A8A;
+  font-weight: 700;
+}
 
-     /* Topics */
-    .topics{background:linear-gradient( to bottom, #F6F9FE, #F2F6FB)}
-    .topics-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:40px; margin-top:24px}
-    .topic-card{display:flex; flex-direction:column; gap:12px}
-    .topic-icon{width:56px; height:56px; border-radius:16px; background:#FFFFFF; border:1px solid var(--divider); display:grid; place-items:center; box-shadow:0 6px 16px rgba(16,58,99,.06)}
-    .topic-title{font-size:30px; line-height:32px; font-weight:700; color:var(--ink)}
-    .topic-desc{font-size:16px; line-height:26px; color:var(--ink-dim)}
-    @media (max-width:1024px){.topics-grid{grid-template-columns:1fr}}
-    .stroke{stroke:#2E6EB6;} .fill{fill:#2E6EB6;}
+/* 欄位外觀 */
+.cta-form input,
+.cta-form select,
+.cta-form textarea {
+  width: 100%;
+  height: 56px;
+  border: 1.5px solid #D7DEE8;
+  border-radius: 18px;
+  background: #FFFFFF;
+  font-size: 16px;
+  color: #1F2937;
+  padding: 12px 16px;
+  outline: none;
+  transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.cta-form textarea {
+  min-height: 100px;  /* ↓ 稍短一點 */
+  height: auto;
+  line-height: 1.5;
+  resize: vertical;
+}
+.cta-form ::placeholder { color: #A9B4C2; }
 
-    /* Bands */
-    .band{position:relative; padding:64px 0; background:radial-gradient(circle at 50% 0%, rgba(46,110,182,.06), rgba(0,0,0,0) 60%)}
-    .band::after{content:""; position:absolute; inset:0; pointer-events:none}
-    .band--3::after{background:linear-gradient(to right, transparent calc(33.333% - .5px), rgba(16,35,53,.08) 33.333%, transparent calc(33.333% + .5px), transparent calc(66.666% - .5px), rgba(16,35,53,.08) 66.666%, transparent calc(66.666% + .5px)); opacity:.25}
-    .band--5::after{background:linear-gradient(to right,
-      transparent calc(20% - .5px), rgba(16,35,53,.08) 20%, transparent calc(20% + .5px),
-      transparent calc(40% - .5px), rgba(16,35,53,.08) 40%, transparent calc(40% + .5px),
-      transparent calc(60% - .5px), rgba(16,35,53,.08) 60%, transparent calc(60% + .5px),
-      transparent calc(80% - .5px), rgba(16,35,53,.08) 80%, transparent calc(80% + .5px)); opacity:.25}
-    .subhead{font-size:18px; line-height:28px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:#2E6EB6}
+/* Focus 效果 */
+.cta-form input:focus,
+.cta-form select:focus,
+.cta-form textarea:focus {
+  border-color: #027AB9;
+  box-shadow: 0 0 0 3px rgba(2,122,185,.18);
+  background: #FFFFFF;
+}
 
-    /* Features grid（若未使用，保留樣式） */
-    .features-grid{display:grid; gap:40px}
-    .features-grid--5{grid-template-columns:repeat(5,1fr)}
-    @media (max-width:1200px){.features-grid--5{grid-template-columns:repeat(3,1fr)}}
-    @media (max-width:767px){.features-grid--5{grid-template-columns:1fr}}
-    .feature{display:flex; flex-direction:column; gap:12px}
-    .feature h3{font-size:24px; line-height:32px; font-weight:700; margin:0}
-    .feature p{margin:0; color:var(--ink-dim)}
-    .badge-mini{display:inline-block; border:1px solid var(--divider); border-radius:999px; padding:4px 10px; font-size:12px; color:var(--ink-dim); margin-top:4px}
-
-    /* Learn split */
-    .learn-split{position:relative; display:grid; grid-template-columns:560px minmax(0,1fr); gap:40px; align-items:start}
-    .learn-photo{position:relative; border-radius:28px; overflow:hidden; border:1px solid var(--divider); box-shadow:0 18px 40px rgba(16,58,99,.10); aspect-ratio:1/1; background:#0B0C0D}
-    .learn-photo img{width:100%; height:100%; object-fit:cover; display:block; filter:grayscale(6%) contrast(1.02) saturate(0.98)}
-    .learn-photo::after{content:""; position:absolute; inset:0; background:linear-gradient(to bottom, rgba(16,35,53,.10), rgba(16,35,53,.18))}
-    .learn-list{display:flex; flex-direction:column; gap:16px}
-    .learn-item{padding-bottom:14px; border-bottom:1px solid rgba(16,35,53,.12)}
-    .learn-item:last-child{border-bottom:none}
-    .learn-item button{all:unset; cursor:pointer; display:block}
-    .learn-item h3{font-size:18px; line-height:26px; font-weight:800; margin:0 0 6px; color:var(--ink)}
-    .learn-item p{margin:0 0 6px; color:var(--ink-dim); font-size:14px; line-height:22px}
-    .learn-badge{display:inline-block; border:1px solid var(--divider); border-radius:999px; padding:5px 10px; font-size:11px; color:#5B6D7E; background:#FFFFFF}
-    .learn-item.active h3{color:#2E6EB6}
-    .learn-item.active .learn-badge{border-color:#2E6EB6; color:#2E6EB6; background:#E9F2FF}
-    @media (max-width:900px){.learn-split{grid-template-columns:1fr; gap:24px}}
-
-    /* Cards */
-    .grid-5{display:grid; grid-template-columns:repeat(5,1fr); gap:24px}
-    @media (max-width:1024px){.grid-5{grid-template-columns:repeat(3,1fr)}}
-    @media (max-width:767px){.grid-5{grid-template-columns:1fr}}
-    .card{background:#FFFFFF; border:1px solid var(--divider); border-radius:24px; padding:28px; box-shadow:0 10px 30px rgba(16,58,99,.06)}
-    .card h3{color:var(--ink)}
-    .card p{color:var(--ink-dim)}
-    .badge-mini{display:inline-block; border:1px solid var(--divider); border-radius:999px; padding:4px 10px; font-size:12px; color:var(--ink-dim); margin-top:12px; background:#FFFFFF}
-
-    /* Redirect & Footer */
-    .redirect{background:#ffffff; color:var(--ink); border-top:1px solid var(--divider); border-bottom:1px solid var(--divider); position:relative}
-    .redirect::before{content:""; position:absolute; inset:0; background:radial-gradient(90% 140% at 0% 50%, rgba(46,110,182,.15), rgba(255,255,255,0) 55%), radial-gradient(90% 140% at 100% 50%, rgba(242,193,78,.12), rgba(255,255,255,0) 55%); pointer-events:none}
-    .redirect .container{display:flex; align-items:center; justify-content:space-between; gap:24px; padding:40px 24px}
-    .redirect h3{margin:0; font-weight:800; letter-spacing:-.01em; font-size:28px; line-height:34px}
-    .redirect p{margin:6px 0 0; color:#49647B}
- .redirect-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px 28px;
+/* 送出按鈕（沿用全站 hover） */
+.cta-form .cta-btn {
+  height: 52px;
+  padding: 0 28px;
+  border: none;
   border-radius: 999px;
   background: linear-gradient(90deg, #009FB6, #027AB9);
-  color: #FFFFFF;
+  color: #fff;
   font-weight: 800;
-  box-shadow: 0 10px 24px rgba(2, 122, 185, 0.22);
-  border: none;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(2,122,185,.22);
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+  display: block;
+  margin: 12px auto 0;  /* 置中 */
+}
+.cta-form .cta-btn:hover {
+  background: linear-gradient(90deg, #00BEE3, #0286C9);
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(2,122,185,.28);
 }
 
-    .redirect-cta svg{flex:none}
-    @media (max-width:768px){.redirect .container{flex-direction:column; align-items:flex-start; gap:20px} .redirect h3{font-size:24px; line-height:30px}}
-
-.redirect-cta.secondary {
-  background: #ffffff;
-  color: #027AB9;
-  border: 2px solid #027AB9;
-}
-.redirect-cta.secondary:hover {
-  background: #F0F9FD;                      /* 淺藍底 */
-  color: #027AB9;                           /* 保持主色 */
-  border-color: #027AB9;
-  transform: scale(1.02);                   /* 輕微放大就好 */
-  box-shadow: 0 4px 12px rgba(2, 122, 185, 0.12); /* 微陰影 */
-  transition: all 0.2s ease-in-out;
+.form-row.four .field.company { 
+  grid-column: span 2;
 }
 
-
-   .footer-cta-section {
-  background: #F7FAFE;
-  padding: 72px 0;
-  border-top: 1px solid var(--divider);
+/* RWD */
+@media (max-width: 1200px) {
+  .form-row.four  { grid-template-columns: repeat(2, 1fr); } /* 4 欄 → 2 欄 */
+  .form-row.three { grid-template-columns: repeat(2, 1fr); } /* 3 欄 → 2 欄 */
+}
+@media (max-width: 960px) {
+  .cta-wrapper { flex-direction: column; gap: 24px; }
+  .form-row.two,
+  .form-row.three,
+  .form-row.four { grid-template-columns: 1fr; } /* 手機單欄 */
+  .cta-form { padding: 22px; }
 }
 
-.footer-info-section {
-  background: #FFFFFF;
-  padding-top: 24px;
-  padding-bottom: 16px;
-  border-top: 1px solid #DCE3ED;
-}
+/* ============== Simple Footer ============== */
+footer{
+  --footer-bg: #FFFFFF;           /* 想改底色就改這裡 */
+  --footer-link: #1E60A9;         /* 連結色 */
+  --footer-text: #5F7180;         /* 文字色 */
+  --footer-border: #DCE3ED;       /* 上邊框色 */
 
-.footer-bottom {
-  text-align: center;
+  background: var(--footer-bg);
+  color: var(--footer-text);
+  border-top: 1px solid var(--footer-border);
+  padding: 24px 0 16px;
   font-size: 14px;
-  color: #5F7180;
 }
 
-.footer-bottom .footer-info {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
+footer .container{
+  max-width: var(--container, 1200px);
+  margin: 0 auto;
+  padding: 0 24px;
+  text-align: center;
+}
+
+/* 每行間距 */
+footer .container > div{
   margin-bottom: 8px;
 }
+footer .container > div:last-child{
+  margin-bottom: 0;
+}
 
-.footer-bottom .links,
-.footer-bottom .social {
+/* 連結 */
+footer a{
+  color: var(--footer-link);
+  text-decoration: none;
+}
+footer a:hover{
+  text-decoration: underline;
+}
+footer a:focus-visible{
+  outline: 2px solid var(--footer-link);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* 連結群組（Privacy / Terms） */
+footer .footer-links{
+  margin: 4px 0 8px;
+  line-height: 1.6;
+  color: var(--footer-text);
+}
+
+/* 社群列 */
+footer .social{
   display: flex;
   justify-content: center;
   gap: 16px;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: 8px; /* 若已寫 inline，可移除此行 */
+}
+footer .social a{
+  color: var(--footer-link);
 }
 
-.footer-bottom .legal {
-  font-size: 13px;
-  color: #64798A;
+/* RWD */
+@media (max-width: 768px){
+  footer{ font-size: 13px; }
 }
 
-/* ===== Form 設計樣式：上下排列欄位 ===== */
-.footer-card .form-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 24px;
-  align-items: flex-start;
-  justify-content: space-between;
+/* 讓平板也縮左右邊距 */
+@media (max-width: 960px) {
+  :root { --page-padding: 24px; } /* 原 100px 太大 */
 }
 
-.footer-card .form-grid > div {
-  display: flex;
-  flex-direction: column;
-  flex: 1 1 200px;
-  min-width: 180px;
+/* Hero：用全域留白，手機再縮上下距 */
+.hero { padding: 120px var(--page-padding); }
+@media (max-width: 600px) {
+  .hero { padding: 80px var(--page-padding); }
 }
 
-.footer-card .form-grid label {
-  font-weight: 600;
-  font-size: 14px;
-  color: #1F2937;
-  margin-bottom: 4px;
+/* Features：強制直排，覆蓋 inline 的 row-reverse */
+@media (max-width: 960px) {
+  .feature-block,
+  .feature-block:nth-child(even) {
+    flex-direction: column !important; /* 覆蓋 inline */
+    gap: 24px;
+  }
+  .feature-wrapper { gap: 32px; }
+  .fourth-section .feature-text li { font-size: 14px; } /* 可改 15–16 自行微調 */
 }
 
-.footer-card .form-grid input {
-  padding: 12px 16px;
-  font-size: 16px;
-  border: 1px solid #DCE3ED;
-  border-radius: 12px;
+/* Brand Trust：手機改成橫向滑動的膠卷，避免 5 欄擠爆 */
+@media (max-width: 600px) {
+  .brand-trust-section .filmstrip-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 80vw;      /* 每張佔 80% 螢幕寬 */
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+  }
+  .brand-trust-section .filmstrip-row img {
+    height: 160px;
+    scroll-snap-align: center;
+  }
+  /* caption 太擠可先隱藏；若要保留可做成跟著滑的單行 */
+  .brand-trust-section .caption-row { display: none; }
 }
 
-.footer-card .form-grid button {
-  height: 52px;                 /* ✅ 關鍵：與 input 欄位一致 */
-  padding: 0 24px;
-  line-height: 1;               /* 避免按鈕內文太高或擠壓 */
-  white-space: nowrap;
-  border: none;
-  border-radius: 999px;          /* 可以微調圓角，不影響對齊 */
-  background: linear-gradient(90deg, #009FB6, #027AB9);
-  color: #FFFFFF;
-  font-weight: 600;
-  font-size: 16px;
-  box-shadow: 0 8px 24px rgba(2, 122, 185, 0.24);
-  cursor: pointer;
-  align-self: flex-end;         /* ✅ 如果按鈕掉下去就加這行 */
-}
-.footer-card .form-grid button:hover {
-  background: linear-gradient(90deg, #00BEE3, #0286C9);
-  transform: scale(1.04);
-  box-shadow: 0 8px 24px rgba(2, 122, 185, 0.32);
-  transition: all 0.25s ease-in-out;
+/* Heading 更友善的小尺寸（可選） */
+@media (max-width: 600px) {
+  .h1 { font-size: 36px; line-height: 44px; }
+  .h2 { font-size: 24px; line-height: 32px; }
 }
 
-
-
-.footer-card .form-grid .caption {
-  flex-basis: 100%;
-  margin-top: 12px;
-  font-size: 13px;
-  color: var(--ink-dim, #64798A);
-  text-align: center;
-}
-
-#fSuccess,
-#fFail {
-  display: none;
-}
-
-/* 手機版：欄位直式堆疊，按鈕滿版 */
-@media (max-width: 768px) {
-  .footer-card .form-grid {
+/* Roles：在 960px 以下強制直排，間距別太大 */
+@media (max-width: 960px) {
+  .roles-wrapper {
     flex-direction: column;
-    align-items: stretch;
+    gap: 24px;
+    text-align: center;
   }
+  .roles-content { text-align: left; } /* 內容仍以左對齊較好讀 */
+}
 
-  .footer-card .form-grid button {
-    width: 100%;
+/* Roles 圖片群：手機版不要爆版（兩種選一：A 保留交疊、B 只留一張） */
+
+/* A. 保留交疊但縮小＆限制範圍 */
+@media (max-width: 960px) {
+  .roles-img { 
+    max-width: 320px; 
+    margin: 0 auto; 
+    height: 320px;       /* 固定容器高，避免往下壓到文字 */
+    position: relative;
   }
-}
-
-/* 1) Hero padding / 標題縮小 */
-@media (max-width: 767px) {
-  #hero { padding: 72px 16px !important; }
-  .hero-text-box { padding: 20px 16px; border-radius: 12px; }
-  .h1 { font-size: 32px; line-height: 40px; }
-  .hero-bg { background-position: 50% 35%; }
-}
-
-/* 2) Hero 表單：平板先允許換行，手機改直式堆疊 */
-@media (max-width: 1024px) {
-  .hero-form-card { border-radius: 20px; top: 16px; padding: 16px; }
-  .horizontal-form.center-form { flex-wrap: wrap; gap: 12px; }
-  .h-field { flex: 1 1 260px; min-width: 0; }
-}
-@media (max-width: 768px) {
-  .horizontal-form.center-form { flex-direction: column; align-items: stretch; }
-  .h-field { width: 100%; margin: 0; }
-  .horizontal-form .btn { width: 100%; align-self: stretch; }
-}
-
-/* 3) 五張歷史照片 + caption：桌機 5 欄 → 平板 3 欄 → 手機 2 欄 */
-@media (max-width: 1024px) {
-  .filmstrip-row, .caption-row { grid-template-columns: repeat(3, 1fr); }
-  .filmstrip-row img { height: 150px; }
-}
-@media (max-width: 640px) {
-  .filmstrip-row, .caption-row { grid-template-columns: repeat(2, 1fr); }
-  .filmstrip-row img { height: 120px; }
-}
-
-/* 4) Numbers 三欄收斂 */
-@media (max-width: 900px)  { .num-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 600px)  {
-  .num-grid { grid-template-columns: 1fr; text-align: left; }
-  .num { font-size: 28px; }
-}
-
-/* 5) Topics 標籤間距在手機不要那麼高 */
-@media (max-width: 768px) { .topic-label { margin-top: 28px; } }
-
-/* 6) 保險擋掉水平捲動（filmstrip 等計算誤差） */
-html, body { overflow-x: hidden; }
-
-/* 7) 超小螢幕標題換行 */
-@media (max-width: 360px) { .h1, .h2 { overflow-wrap: anywhere; word-break: break-word; } }
-
-/* 8) Redirect 文字顏色與底色分離，避免對比問題（若保留 inline color 可加 !important） */
-.redirect { color: #14263F; }
-.redirect h3 { color: #14263F; }
-.redirect p  { color: #49647B; }
-@media (max-width: 768px) { .redirect .container { padding: 28px 24px; } }
-
-/* 卡片不要上移＋圓角回正常，避免內容被裁 */
-#hero .hero-form-card{
-  top: 0;
-  margin-top: 12px;
-  padding: 16px;
-  border-radius: 20px;
-  overflow: hidden;
-}
-
-/* 用 Grid（不是 flex）排版：桌機 3 欄輸入 + 1 欄按鈕 */
-#heroForm.horizontal-form.center-form{
-  max-width: 100% !important;            /* 解除原本 900px 限制 */
-  display: grid !important;               /* 強制改用 grid */
-  grid-template-columns:
-    minmax(220px,1fr)                     /* Name */
-    minmax(220px,1fr)                     /* Email */
-    minmax(220px,1fr)                     /* Phone */
-    minmax(160px,auto);                   /* Button */
-  column-gap: 12px;
-  row-gap: 12px;
-  align-items: end;
-  padding: 0;
-  border: 0;
-  box-shadow: none;
-}
-
-/* 修掉舊 flex 設定的副作用（邊距/對齊） */
-#heroForm .h-field{ min-width: 0; margin: 0; }
-#heroForm .btn{
-  align-self: stretch !important;         /* 蓋掉舊的 align-self:flex-end */
-  height: 52px;
-  white-space: nowrap;
-}
-
-/* 1180px 以下：改成兩欄輸入，按鈕獨佔一列滿版 */
-@media (max-width: 1180px){
-  #heroForm.horizontal-form.center-form{
-    grid-template-columns: minmax(220px,1fr) minmax(220px,1fr);
+  .roles-img .zz-img { 
+    width: 70%; 
+    height: 240px; 
+    object-fit: cover; 
+    border-radius: 24px;
   }
-  #heroForm .btn{
-    grid-column: 1 / -1;
-    justify-self: stretch;
-  }
+  /* 三張的位置微調，縮短位移距離 */
+  .roles-img .zz-img:nth-child(1) { position: relative; top: 0; left: 0; z-index: 3; }
+  .roles-img .zz-img:nth-child(2) { position: absolute; top: 20px; left: 28%; z-index: 2; }
+  .roles-img .zz-img:nth-child(3) { position: absolute; top: 40px; left: 0; z-index: 1; }
 }
 
-/* 900px 以下：卡片縮小內距 */
-@media (max-width: 900px){
-  #hero .hero-form-card{ padding: 14px; border-radius: 16px; }
+/* B.（替代方案）手機只顯示第一張，比較乾淨 */
+/*
+@media (max-width: 600px) {
+  .roles-img { max-width: 360px; margin: 0 auto; }
+  .roles-img .zz-img:nth-child(n+2) { display: none; }
+  .roles-img .zz-img:nth-child(1) { width: 100%; height: 260px; }
+}
+*/
+
+/* 副標 20px（確保這塊的第二行說明字級到位） */
+#roles .subtitle,
+.roles-content .subtitle { 
+  font-size: 20px; 
+  line-height: 30px;
 }
 
-/* 768px 以下：單欄直排，按鈕滿版 */
-@media (max-width: 768px){
-  #hero{ padding: 64px 16px !important; }
-  #heroForm.horizontal-form.center-form{ grid-template-columns: 1fr; }
-  #heroForm .btn{ grid-column: 1 / -1; width: 100%; }
+/* 平板也縮左右留白，避免 100px 太寬 */
+@media (max-width: 960px) {
+  :root { --page-padding: 24px; }
 }
 
-/* 極小螢幕：避免 placeholder 撐寬、避免 iOS 放大 */
-#heroForm .h-input{ min-width: 0; font-size:16px; height:46px; }
-#heroForm .h-label{ font-size:12px; }
-
-/* 手機上方文字卡片收斂一下 */
-@media (max-width: 768px){
-  .hero-text-box{ padding: 18px 14px; border-radius: 12px; }
-  .h1{ font-size: 30px; line-height: 38px; }
-}
-
-/* 用 Grid 取代 flex-wrap，避免按鈕「掉半格」或靠右對不齊 */
-.footer-card .form-grid{
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0,1fr)); /* 桌機：3 欄輸入 */
-  gap: 24px;
-  align-items: end;
-}
-
-/* 解除舊設定造成的擠壓 */
-.footer-card .form-grid > div{ min-width: 0; }
-.footer-card .form-grid button{
-  grid-column: 3;               /* 與第三欄對齊 */
-  justify-self: end;
-  height: 52px;
-}
-
-/* 平板：2 欄，按鈕跨整列滿版 */
-@media (max-width: 1024px){
-  .footer-card .form-grid{
-    grid-template-columns: repeat(2, minmax(0,1fr));
-  }
-  .footer-card .form-grid button{
-    grid-column: 1 / -1;
-    justify-self: stretch;
-  }
-}
-
-/* 手機：單欄直排，按鈕 100% */
-@media (max-width: 768px){
-  .footer-card .form-grid{
-    grid-template-columns: 1fr;
-  }
-  .footer-card .form-grid button{
-    grid-column: 1 / -1;
-    width: 100%;
-  }
+@media (max-width: 960px) {
+  .roles-img { display: none; }
+  .roles-content { flex: 1 1 100%; width: 100%; }
 }
 
   </style>
 </head>
 
 <body>
-  <!-- Header -->
-  <header class="site-header" role="banner">
-    <div class="container inner">
-      <a class="brand brand-logo" href="#hero" aria-label="Taipei Language Institute"><img id="brandLogo"
-     src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
-     srcset="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400 1x, https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w800 2x"
-     alt="Taipei Language Institute logo"
-     style="height:36px; width:auto;"/></a>
+
+  <!-- ===== Sticky Top Bar ===== -->
+<header style="position:fixed;top:0;left:0;right:0;height:72px;background:#fff;z-index:9998;display:flex;align-items:center;justify-content:space-between;padding:0 var(--page-padding);">
+<a href="#hero" aria-label="Taipei Language Institute Logo" style="display:inline-block;width:200px;">
+  <img src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
+       alt="Taipei Language Institute logo" style="width:100%;height:auto;">
+</a>
+
+  <a href="#contact" class="cta-btn cta-btn--sm" aria-label="Free Consultation">Free Consultation</a>
+</header>
+
+
+
+  <!-- Spacer to compensate fixed header -->
+  <div style="height: 72px;"></div>
+
+<!-- Hero Section -->
+<section class="hero" id="hero">
+  <div class="container hero-text" style="text-align:center;">
+    <!-- ✨ 白色半透明框，只包文字 -->
+<div style="background:rgba(255,255,255,0.8); padding:32px 40px; border-radius:24px; display:block; max-width: 720px; width: 100%;margin:0 auto;">
+      <h1 class="h1">TLI Connect — Build Your Own Global Talent Community</h1>
+      <p class="body-l" style="font-size: 20px;">Integrated language, culture &amp; business modules — learn anytime, anywhere with global professionals.</p>
+      <p class="body-m" style="margin-bottom: 0;">Since 1956, TLI has specialized in language education, serving enterprises and academic institutions around the world.</p>
     </div>
-  </header>
-
-<section class="hero section" id="hero" style="padding: 96px 60px; position: relative;">
-  <div class="hero-bg"></div>
-
-  <div class="container hero-grid">
-    <div class="hero-content">
-      <div class="hero-text-box">
-        <span class="badge">Membership | 3‑Month / 1‑Year Plans</span>
-        <h1 class="h1">Break Language Barriers. Unlock Asian Markets.</h1>
-        <p class="body-l tagline">
-          Language × Culture × Business —<br>
-          Sharpen your skills alongside professionals worldwide and<br>
-          become the next generation of international leaders.
-        </p>
-      </div>
-    </div>
-
-    <div class="hero-form-row">
-      <div class="hero-form-card">
-        <form id="heroForm" class="horizontal-form center-form" novalidate>
-          <div class="h-field">
-            <label for="hName" class="h-label">Name<span style="color:var(--gold)">*</span></label>
-            <input id="hName" name="name" type="text" placeholder="Your name" required aria-required="true" class="h-input" />
-          </div>
-          <div class="h-field">
-            <label for="hEmail" class="h-label">Email<span style="color:var(--gold)">*</span></label>
-            <input id="hEmail" name="email" type="email" placeholder="you@example.com" required aria-required="true" class="h-input" />
-          </div>
-          <div class="h-field">
-            <label for="hPhone" class="h-label">Phone <span class="caption" aria-hidden="true">(optional)</span></label>
-            <input id="hPhone" name="phone" type="tel" placeholder="+886 912 345 678" class="h-input" />
-          </div>
-          <button class="btn" type="submit" aria-label="Submit contact form">Free Consultation</button>
-        </form>
-        <div class="caption" style="margin: 12px 0 0 0; text-align:center;">
-          We’ll get back to you within 1–2 business days. Your information is kept strictly confidential.
-        </div>
-        <div class="success" id="hSuccess">Thank you for your submission! We’ll be in touch within 1–2 business days.</div>
-        <div class="fail" id="hFail">Sorry, something went wrong. Please try again later.</div>
-      </div>
-    </div>
-  </div>
-
- <style>
-  .hero-bg {
-    position: absolute;
-    inset: 0;
-    z-index: 0;
-    background: url('https://drive.google.com/thumbnail?id=1dqPrlDGVMgKHbwcRm2Ww8TcuSjkoJF-F&sz=w3200') ;
-    background-size: cover;
-    background-position: 70% 60%;
-    pointer-events: none;
-    transition: background 0.5s;
-  }
-
-  .hero-grid {
-    max-width: var(--container);
-    margin: 0 auto;
-    padding: 0 24px;
-    position: relative;
-    z-index: 2;
-  }
-
-  .hero-text-box {
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    padding: 28px 24px;
-    border-radius: 16px;
-    text-align: left;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    margin-left: 0;
-    margin-right: auto;
-    max-width: 680px;
-  }
-
-  .hero-content {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
-    padding-top: 1px;
-  }
-
-  .hero-form-row {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-top: 20px;
-    z-index: 2;
-    position: relative;
-  }
-
-  .hero-form-card {
-    background: #fff;
-    border-radius: 999px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16);
-    border: 1px solid #E9EFFB;
-    padding: 10px 20px;
-    max-width: 1120px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: box-shadow .2s;
-    position: relative;
-    top: 40px;
-  }
-
-  .horizontal-form.center-form {
-    display: flex;
-    justify-content: center;
-    gap: 18px;
-    background: transparent;
-    border-radius: 999px;
-    box-shadow: none;
-    border: none;
-    padding: 0;
-    align-items: center;
-    width: 100%;
-    max-width: 900px;
-    margin: 0 auto;
-  }
-
-  .h-field {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    min-width: 160px;
-    flex: 1 1 180px;
-    margin: 0 4px;
-  }
-
-  .h-label {
-    font-size: 13px;
-    color: #027AB9;
-    font-weight: 700;
-    margin-bottom: 2px;
-    padding-left: 2px;
-    letter-spacing: 0.01em;
-  }
-
-  .h-input {
-    width: 100%;
-    border: none;
-    background: transparent;
-    font-size: 16px;
-    outline: none;
-    padding: 0 10px;
-    height: 46px;
-  }
-
-  .h-input:focus {
-    background: #F0F6FF;
-    border-radius: 12px;
-  }
-
-  .horizontal-form .btn {
-    height: 52px;
-    padding: 0 24px;
-    font-size: 16px;
-    font-weight: 700;
-    line-height: 1;
-    border: none;
-    border-radius: 999px;
-    background: linear-gradient(90deg, #009FB6, #027AB9);
-    color: #FFFFFF;
-    box-shadow: 0 4px 12px rgba(2,122,185,0.16);
-    cursor: pointer;
-    align-self: flex-end;
-  }
-
-  .horizontal-form .btn:hover {
-    background: linear-gradient(90deg, #00BEE3, #0286C9);
-    transform: scale(1.04);
-    box-shadow: 0 8px 24px rgba(2, 122, 185, 0.32);
-    transition: all 0.25s ease-in-out;
-  }
-
-  .caption {
-    color: #6A7A8A;
-    font-size: 13px;
-    text-align: center;
-    margin-bottom: 0;
-  }
-</style>
+    <!-- 按鈕移到白框外，稍微留空隙 -->
+<button
+  type="button"
+  class="cta-btn"
+  aria-label="Free Consultation"
+  style="margin-top:24px;"
+  onclick="document.querySelector('#contact').scrollIntoView({behavior:'smooth', block:'start'})">
+  Free Consultation
+</button>  </div>
 </section>
 
 
-  <!-- Filmstrip -->
-  <div class="filmstrip" aria-hidden="true">
-    <div class="row">
-      <div class="tile"><img src="https://images.unsplash.com/photo-1699443218794-589f8bdd48e4?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/></div>
-      <div class="tile"><img src="https://images.unsplash.com/photo-1515168833906-d2a3b82b302a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/></div>
-      <div class="tile"><img src="https://images.unsplash.com/photo-1517456793572-1d8efd6dc135?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/></div>
-      <div class="tile"><img src="https://images.unsplash.com/photo-1548684133-8739f016b2ac?q=80&w=1674&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/></div>
-    </div>
-  </div>
+<!-- ===== Pain & Solution ===== -->
+<section class="pain-solution-section" style="background: rgba(0,159,182,0.08); padding:72px 0; text-align:center;">
+  <h2 class="h2">What Challenges Are You Facing in International Training?</h2>
+  <p class="subtitle" style="font-size: 20px;">As you help employees adapt to diverse cultures and markets, do any of these issues resonate?</p>
 
-<!-- Why -->
-  <section class="why section" id="why" aria-labelledby="why-title">
-    <div class="container">
-      <h2 class="h2" id="why-title">Why Do You Need a Cross‑Cultural Learning Community?</h2>
-      <div class="why-rows">
-        <div class="why-item">
-          <div>
-            <span class="why-tag pain" aria-hidden="true">Common Challenge</span>
-            <h3 class="h3">“I need flexibility, but I also want real connection—not just watching videos alone.”</h3>
-          </div>
-          <div>
-            <span class="why-tag solution" aria-hidden="true">Solution</span>
-            <p>We’re more than a classroom—it’s a curated community. Connect with like-minded professionals in Taiwan and worldwide to exchange ideas, practice Mandarin, and build meaningful networks that support both your language journey and your career growth.</p>
-          </div>
+  <!-- Card Grid List (5 in one row on desktop) -->
+  <style>
+    .pain-card-list {max-width:1200px; margin:40px auto 0; display:grid; gap:24px; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); padding:0; list-style:none;}
+    @media (min-width:1024px){ .pain-card-list{grid-template-columns:repeat(5,1fr);} }
+
+    /* 卡片改用 grid：上下各占一半 */
+    .pain-card{border-radius:24px; box-shadow:0 6px 16px rgba(16,35,53,.08); overflow:hidden; display:grid; grid-template-rows:1fr 1fr; height:220px; transition:transform .2s, box-shadow .2s;}
+    .pain-card:hover{transform:translateY(-4px); box-shadow:0 12px 28px rgba(16,35,53,.15);}    
+
+    .pain-card .card-title{background:#009FB6; color:#ffffff; font-weight:700; font-size:16px; line-height:1.4; padding:16px 20px; display:flex; align-items:center; justify-content:center; text-align:center;}
+    .pain-card .card-body{background:#ffffff; color:var(--ink); font-size:14px; line-height:1.5; padding:16px 20px; overflow:hidden;}
+  </style>
+
+  <ul class="pain-card-list">
+    <li class="pain-card">
+      <div class="card-title">Low communication efficiency</div>
+      <div class="card-body">Meetings drag on, presentations fall flat, undermining decisions and persuasion.</div>
+    </li>
+    <li class="pain-card">
+      <div class="card-title">Frequent cultural clashes</div>
+      <div class="card-body">Missteps in local customs disrupt team trust and cohesion.</div>
+    </li>
+    <li class="pain-card">
+      <div class="card-title">Slow market roll‑out</div>
+      <div class="card-body">Lack of ready‑to‑deploy language and support staff delays your launch schedule.</div>
+    </li>
+    <li class="pain-card">
+      <div class="card-title">Unclear training impact & management burden</div>
+      <div class="card-body">Dispersed courses across platforms make tracking progress and ROI nearly impossible.</div>
+    </li>
+    <li class="pain-card">
+      <div class="card-title">Low engagement & weak learning culture</div>
+      <div class="card-body">Employees lack motivation and community support, so continuous learning never takes hold.</div>
+    </li>
+  </ul>
+</section>
+
+
+   <!-- ===== Third Section - Role Scenarios ===== -->
+  <section class="third-section" id="roles">
+    <div class="roles-wrapper">
+      <div class="roles-img" aria-hidden="true" style="position:relative;max-width:350px;margin:0 auto;">
+          <img class="zz-img" src="https://images.pexels.com/photos/2381069/pexels-photo-2381069.jpeg" alt="Scenario 1" style="width:65%;height:250px;object-fit:cover;border-radius:24px;box-shadow:0 8px 24px rgba(16,35,53,.12);position:relative;top:-125px;left:-15%;z-index:1;">
+          <img class="zz-img" src="https://images.unsplash.com/photo-1701980889802-55ff39e2e973?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Scenario 2" style="width:65%;height:250px;object-fit:cover;border-radius:24px;box-shadow:0 8px 24px rgba(16,35,53,.12);position:absolute;top:-20px;left:50%;z-index:2;">
+          <img class="zz-img" src="https://images.pexels.com/photos/12437056/pexels-photo-12437056.jpeg" alt="Scenario 3" style="width:65%;height:250px;object-fit:cover;border-radius:24px;box-shadow:0 8px 24px rgba(16,35,53,.12);position:absolute;top:160px;left:0%;z-index:3;">
         </div>
-        <div class="why-item">
-          <div>
-            <span class="why-tag pain" aria-hidden="true">Common Challenge</span>
-            <h3 class="h3">“I feel like an outsider, unable to connect with Chinese colleagues or clients.”</h3>
-          </div>
-          <div>
-            <span class="why-tag solution" aria-hidden="true">Solution</span>
-            <p>We focus on cultural immersion and practical language application, helping you build trust, credibility, and confidence in both formal and informal settings.</p>
-          </div>
-        </div>
-        <div class="why-item">
-          <div>
-            <span class="why-tag pain" aria-hidden="true">Common Challenge</span>
-            <h3 class="h3">“I’ve already studied Chinese before, but I’m losing touch—and I need to keep it sharp to maintain client relationships.”</h3>
-          </div>
-          <div>
-            <span class="why-tag solution" aria-hidden="true">Solution</span>
-            <p>With advanced-level classes, industry-specific workshops, and a global professional community, we help you sustain and expand your Mandarin fluency for ongoing professional impact.</p>
-          </div>
+      <div class="roles-content">
+        <h2 class="h2">Tailored Training for Every Role on Your Team</h2>
+        <p class="subtitle" style="font-size: 20px;">Whether you're launching a new project or collaborating day-to-day, we help you bridge departmental divides. We empower your team by building a common language and fostering a shared cultural understanding for smoother collaboration.</p>
+
+        <div class="role-accordion">
+          <details open>
+            <summary>Expats &amp; New Hires</summary>
+            <div class="role-body">Strengthen language skills and local cultural awareness before day one.</div>
+          </details>
+          <details>
+            <summary>Foreign Managers &amp; Technical Experts</summary>
+            <div class="role-body">Learn local management styles to reduce onboarding friction.</div>
+          </details>
+          <details>
+            <summary>Sales &amp; Project Teams</summary>
+            <div class="role-body">Master cross‑border presentations, proposals, and negotiation tactics.</div>
+          </details>
+          <details>
+            <summary>Customer Support &amp; Service</summary>
+            <div class="role-body">Improve client interactions and cultural sensitivity.</div>
+          </details>
+          <details>
+            <summary>Global Project Contributors</summary>
+            <div class="role-body">Align training with project milestones to ensure consistent communication quality.</div>
+          </details>
         </div>
       </div>
     </div>
   </section>
 
-<!-- Topics -->
-<section class="topics section" id="topics" aria-labelledby="topics-title">
-  <div class="container">
-    <h2 class="h2" id="topics-title">Language, Culture & Business — All in One Membership</h2>
-    <p class="body-m" style="margin:8px 0 32px 0; color:#49647B">
-      Membership term: 3‑month or 1‑year. Same benefits — choose your pace.
-    </p>
 
-    <!-- 三大主題分組 -->
-    <div class="topic-block">
 
-      <!-- Chinese Proficiency -->
-      <div class="topic-section">
-        <div class="topic-label">Chinese Proficiency</div>
-        <div class="topic-cards">
-          <div class="course-card">
-            <div class="course-card-imgbox">
+<!-- ===== Fourth Section - Features ===== -->
+<section class="fourth-section" id="features" style="background:#025F96; padding:80px 0; color:#fff;">
+  <h2 class="h2" style="text-align:center; margin:0 0 48px;">How We Help You Achieve Your Training Goals</h2>
+
+  <div class="feature-wrapper" style="max-width:var(--container); margin:0 auto; display:flex; flex-direction:column; gap:56px; padding:0 var(--page-padding); box-sizing:content-box;">
+    <!-- Block A -->
+    <div class="feature-block" style="display:flex; align-items:center; gap:56px;">
+      <div class="feature-text" style="flex:0 0 60%;">
+        <h3 style="margin:0 0 16px; font-size:24px; line-height:32px; font-weight:400;">We Create a Learning Experience Your Team Will Love</h3>
+        <ul style="list-style:none; margin:0; padding:0;">
+          <li style="margin-bottom:12px; font-size:16px; line-height:1.6; font-weight:400;"><strong style="display:block; margin-bottom:6px; font-weight:700;">Flexible &amp; Cost-Effective Training</strong><span>Combine a video library, live small-group classes, and in-person workshops to create a blended learning program that fits your team's schedule and your budget.</span></li>
+          <li style="margin-bottom:12px; font-size:16px; line-height:1.6; font-weight:400;"><strong style="display:block; margin-bottom:6px; font-weight:700;">A Community to Boost Engagement</strong><span>A cross-border forum allows learners to ask questions, share insights, and network, building a powerful internal knowledge network for your company.</span></li>
+        </ul>
+      </div>
+      <div class="feature-visual" aria-hidden="true" style="flex:0 0 40%;">
   <img
-    class="small-img"
-    src="https://drive.google.com/thumbnail?id=1_NyugcIq2A1IxVae0oqbbmOF7S_tbDuc&sz=w1200"
-    alt="Practical Real Life Based Essentials"
-  >
+    src="https://drive.google.com/thumbnail?id=1-2N3ADEgUMbVAVpJMkdNehtAfCWPC8M-&sz=w1600"
+    alt="Learning Hub"
+    style="width:100%; height:260px; object-fit:cover; border-radius:24px; display:block; box-shadow:0 8px 20px rgba(0,0,0,.12);"
+  />
 </div>
-            <div class="course-card-content">
-              <div class="course-tag">Video Library</div>
-              <div class="course-title">Practical Real Life Based Essentials</div>
-              <div class="course-desc">Self-pace, Anytime, Anywhere</div>
-            </div>
-          </div>
-          <div class="course-card">
-            <div class="course-card-imgbox">
-              <img src="https://images.pexels.com/photos/4226140/pexels-photo-4226140.jpeg" alt="Daily Life & Business Communication">
-            </div>
-            <div class="course-card-content">
-              <div class="course-tag">Live Mini‑Classes</div>
-              <div class="course-title">Daily Life & Business Communication</div>
-              <div class="course-desc">Interactive, Small group, Themed</div>
-            </div>
-          </div>
-          <div class="course-card">
-            <div class="course-card-imgbox">
-              <img src="https://drive.google.com/thumbnail?id=1hFq0oBzJvJm3isL3ElTvnnNy7NZ8Z6_l&sz=w1200" alt="Mandarin Lounge">
-            </div>
-            <div class="course-card-content">
-              <div class="course-tag">Live speaking arena</div>
-              <div class="course-title">Mandarin Lounge</div>
-              <div class="course-desc">Stress-free practice</div>
-            </div>
-          </div>
-        </div>
+    </div>
+
+    <!-- Block B -->
+    <div class="feature-block" style="display:flex; align-items:center; gap:56px; flex-direction:row-reverse;">
+      <div class="feature-text" style="flex:0 0 60%;">
+        <h3 style="margin:0 0 16px; font-size:24px; line-height:32px; font-weight:400;">Streamline Processes &amp; Measure What Matters</h3>
+        <ul style="list-style:none; margin:0; padding:0;">
+          <li style="margin-bottom:12px; font-size:16px; line-height:1.6; font-weight:400;"><strong style="display:block; margin-bottom:6px; font-weight:700;">Automated HR &amp; Admin</strong><span>Cut down on manual work with self-service enrollment, automated reminders, and attendance tracking, reducing administrative burden and paperwork.</span></li>
+          <li style="margin-bottom:12px; font-size:16px; line-height:1.6; font-weight:400;"><strong style="display:block; margin-bottom:6px; font-weight:700;">Real-Time Progress Tracking</strong><span>Monitor learning status with dashboard reports and at-a-glance summaries. Easily track team progress and align training with your company's performance goals.</span></li>
+        </ul>
       </div>
+      <div class="feature-visual" aria-hidden="true" style="flex:0 0 40%;">
+  <img
+    src="https://drive.google.com/thumbnail?id=1DJnDUDcbaryrG27Jgb-gt0AWPXr-SKGo&sz=w1600"
+    alt="Automation & KPI"
+    style="width:100%; height:260px; object-fit:cover; border-radius:24px; display:block; box-shadow:0 8px 20px rgba(0,0,0,.12);"
+  />
+</div>
+    </div>
 
-      <!-- Cultural Insight -->
-      <div class="topic-section">
-        <div class="topic-label">Cultural Insight</div>
-        <div class="topic-cards">
-          <div class="course-card">
-            <div class="course-card-imgbox">
-              <img src="https://drive.google.com/thumbnail?id=1V_1-zTB0N-Eq0PvvDFpP3MHycN-OtO1B&sz=w1200" alt="Local Folk Culture Experience">
-            </div>
-            <div class="course-card-content">
-              <div class="course-tag">Events</div>
-              <div class="course-title">Local Folk Culture Experience</div>
-              <div class="course-desc">Immersive, Cultural deep-dive</div>
-            </div>
-          </div>
-          <div class="course-card">
-            <div class="course-card-imgbox">
-              <img src="https://drive.google.com/thumbnail?id=19QrdateU5N8G0RS-dtmpx43rRd2hIiJc&sz=w1200" alt="Yoga Martial Home Fitness Series">
-            </div>
-            <div class="course-card-content">
-              <div class="course-tag">Workshops</div>
-              <div class="course-title">Yoga Martial Home Fitness Series</div>
-              <div class="course-desc">Wellness, Monthly</div>
-            </div>
-          </div>
-          <div class="course-card">
-            <div class="course-card-imgbox">
-              <img src="https://images.unsplash.com/photo-1672826980330-93ae1ac07b41?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Global Etiquette">
-            </div>
-            <div class="course-card-content">
-              <div class="course-tag">Events & Workshops</div>
-              <div class="course-title">Global Etiquette</div>
-              <div class="course-desc">Member exclusive</div>
-            </div>
-          </div>
-        </div>
+    <!-- Block C -->
+    <div class="feature-block" style="display:flex; align-items:center; gap:56px;">
+      <div class="feature-text" style="flex:0 0 60%;">
+        <h3 style="margin:0 0 16px; font-size:24px; line-height:32px; font-weight:400;">Scale Your Training Across the Globe</h3>
+        <ul style="list-style:none; margin:0; padding:0;">
+          <li style="margin-bottom:12px; font-size:16px; line-height:1.6; font-weight:400;"><strong style="display:block; margin-bottom:6px; font-weight:700;">Multi-Language Support for Global Teams</strong><span>Access content covering language, culture, and key business topics, all available in multiple languages. The platform easily expands to support your new regional markets as you grow.</span></li>
+        </ul>
       </div>
-
-      <!-- Industry Firepower -->
-      <div class="topic-section">
-        <div class="topic-label">Industry Firepower</div>
-        <div class="topic-cards">
-          <div class="course-card">
-            <div class="course-card-imgbox">
-              <img src="https://drive.google.com/thumbnail?id=1Dr3O7I80LIGirmqxreB5fnqrRtxEJOBx&sz=w1200" alt="Regenerative medicine & Longevity: Reverse Aging with Science">
-            </div>
-            <div class="course-card-content">
-              <div class="course-tag">Expert Channels</div>
-              <div class="course-title">Regenerative medicine & Longevity: Reverse Aging with Science</div>
-              <div class="course-desc">Expert guest, Industry insights</div>
-            </div>
-          </div>
-          <div class="course-card">
-            <div class="course-card-imgbox">
-              <img src="https://drive.google.com/thumbnail?id=1flasExlMfa01xbwSr1Uf_yfOcL2-GAS4&sz=w1200" alt="Networking for Conscious Entrepreneurs and Investors">
-            </div>
-            <div class="course-card-content">
-              <div class="course-tag">Expert Channels</div>
-              <div class="course-title">Networking for Conscious Entrepreneurs and Investors</div>
-              <div class="course-desc">Expand horizons, Networking</div>
-            </div>
-          </div>
-          <div class="course-card">
-            <div class="course-card-imgbox">
-              <img src="https://drive.google.com/thumbnail?id=1xM0bM-uYXYkcRyGQQ5b9K_pJyMpbBG_Z&sz=w1200" alt="Kickstarting Global Impact: A Martial Artist’s Journey in Business and Cross-Cultural Leadership">
-            </div>
-            <div class="course-card-content">
-              <div class="course-tag">Expert Channels</div>
-              <div class="course-title">Kickstarting Global Impact: A Martial Artist’s Journey in Business and Cross-Cultural Leadership</div>
-              <div class="course-desc">Hands-on, Cross-culture</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-<style>
-
-.small-img {
-  transform: scale(0.98);          /* 整體等比例縮小到 90% */
-  transform-origin: center center;
-  display: block;
-  margin: 0 auto;
-}
-
-.topic-label {
-  font-size: 20px;        /* 建議值：18px～22px */
-  font-weight: 600;       /* 或 500/700 看視覺層級 */
-  color: #027AB9;         /* 主色或自訂 */
-  margin-bottom: 16px;    /* 與卡片間距 */
-  margin-top: 48px;
-  font-family: 'Inter', sans-serif;
-}
-
-  .topic-cards {
-    display: flex;
-    flex-direction: row;
-    gap: 90px; /* 調整這個 gap 即可控制左右寬度貼齊 */
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .course-card {
-    display: flex;
-    flex-direction: column;
-    width: 320px;
-    background: #fff;
-    border-radius: 24px;
-    border: 1px solid #EDF1F8;
-    box-shadow: 0 4px 18px rgba(30,60,120,.09);
-    overflow: hidden;
-    cursor: default;
-  }
-
-  .course-card-imgbox {
-    width: 100%;
-    height: 180px;
-    background-color: #F3F6F9;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .course-card-imgbox img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-
-  .course-card-content {
-    padding: 14px 18px 18px;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    gap: 8px;
-  }
-
-.course-tag {
-  background: #e6f7fb; /* 比 F0F6FF 更貼近你現在的主色漸層 */
-  color: #027AB9;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 4px 10px;
-  border-radius: 8px;
-  width: fit-content;
-  white-space: nowrap;
-}
-  .course-title {
-    font-size: 18px;
-    font-weight: 700;
-    color: #14263F;
-    line-height: 1.5;
-    white-space: normal;
-    overflow-wrap: break-word;
-  }
-
-  .course-desc {
-    font-size: 14px;
-    color: #6A7A8A;
-    line-height: 1.4;
-    white-space: normal;
-    overflow-wrap: break-word;
-  }
-
-  @media (max-width: 768px) {
-    .topic-cards {
-      gap: 20px;
-    }
-    .course-card {
-      width: 100%;
-    }
-  }
-</style>
-
-
-
+<div class="feature-visual" aria-hidden="true" style="flex:0 0 40%;">
+    <img
+      src="https://drive.google.com/thumbnail?id=1CTnouKt7sz-z_0CFRuIwk5ROZDBTO3QZ&sz=w1600"
+      alt="Learning Hub"
+      style="width:100%; height:260px; object-fit:cover; border-radius:24px; display:block; box-shadow:0 8px 20px rgba(0,0,0,.12);"
+    /></div>
+    </div>
   </div>
 </section>
 
-
-
-<section class="numbers section" aria-labelledby="num-title" style="padding-bottom:72px" >
-  <div class="container">
-    <h2 id="num-title" class="h2">
-      TLI Connect — Building on 70 Years of TLI Language Excellence to Launch a Global Learning Community
-    </h2>
-  </div>
-
+  <!-- ===== Brand Trust ===== -->
+<section class="brand-trust-section">
+  <h2 class="h2">From Language Instruction to Cross-Cultural Collaboration—TLI’s Commitment</h2>
+  <p class="subtitle" style="font-size: 20px;">TLI Connect extends 70 years of TLI’s educational heritage, delivering scalable, governable, and measurable cross-cultural training solutions.</p>
   <!-- Filmstrip row: images and captions separated -->
   <div class="filmstrip-vintage">
     <div class="filmstrip-row">
@@ -1042,87 +918,125 @@ html, body { overflow-x: hidden; }
       <p>Mr. Mike Chinoy — Former Asia-Pacific Regional Director, CNN</p>
     </div>
   </div>
-
-  <div class="container">
-    <div class="num-grid" style="margin-top: 40px;">
-      <div>
-        <div class="num">Established<br>1956</div>
-        <p class="body-m">TLI is Taiwan’s pioneer language institute.</p>
-      </div>
-      <div>
-        <div class="num">600k+<br>Learners</div>
-        <p class="body-m">We have served learners across business, academia, and NGOs.</p>
-      </div>
-      <div>
-        <div class="num">Global +<br>Digital</div>
-        <p class="body-m">We deliver the same quality standard both on-campus and online.</p>
-      </div>
-    </div>
-  </div>
-
-</section> 
-
-<!-- Redirect -->
-<section class="redirect" aria-label="Corporate redirect"style="background-color: rgba(0, 159, 182, 0.1);">
-  <div class="container">
+  <div class="trust-list">
     <div>
-      <h3>Need a Customized Corporate Training Solution?</h3>
-      <p>Tailored team training programs with management tools and performance tracking.</p>
+      <p style="font-size: 48px; font-weight: 800; color: var(--primary); margin: 0 0 8px 0;">1956</p>
+      <p style="color: var(--ink); font-weight: 200;">TLI founded, serving the U.S. State Department's stationed diplomats and advisors</p>
     </div>
-    <a class="redirect-cta secondary" href="#" aria-label="Explore Corporate Plans">
-      <span>Explore Corporate Plans</span>
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M5 12h14M13 5l7 7-7 7" stroke="#1E2328" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </a>
+    <div>
+      <p style="font-size: 48px; font-weight: 800; color: var(--primary); margin: 0 0 8px 0;">80,000+</p>
+      <p style="color: var(--ink); font-weight: 200;">Chinese teachers certified with over 500 teaching materials developed</p>
+    </div>
+    <div>
+      <p style="font-size: 48px; font-weight: 800; color: var(--primary); margin: 0 0 8px 0;">400,000+</p>
+      <p style="color: var(--ink); font-weight: 200;">Students trained across Fortune 500 firms, embassies, and institutions</p>
+    </div>
   </div>
 </section>
 
-
-
- <!-- Footer Call-to-Action (Form 區塊) -->
-<section class="footer-cta-section section" id="footer-cta">
-  <div class="container footer-cta">
-    <div class="footer-copy">
-      <h2 class="h2" id="footer-title">Ready to Join TLI Connect?</h2>
-      <p class="body-m">Leave your info and we’ll send you full plan details within one business day.</p>
+  <!-- ===== Individual Membership ===== -->
+  <section class="individual-membership-section" id="membership">
+    <div class="membership-wrapper">
+      <div class="membership-text">
+        <h2>Activate Your Individual Membership—Join the Global Learning Community Today</h2>
+        <p class="body-l" style="font-size:15px; line-height:18px;">
+  Choose our flexible 3- or 12-month plan to enjoy curated video courses, live small-group sessions, and exclusive forum interactions—grow alongside learners worldwide.
+</p>
+      </div>
+      <div class="membership-cta">
+        <button type="button" class="secondary-btn" aria-label="View Individual Plans">View Individual Plans</button>
+      </div>
     </div>
-    <div class="card-form footer-card" role="form" aria-labelledby="footer-title">
-      <form id="footerForm" novalidate>
-        <div class="form-grid">
-          <div>
-            <label class="label" for="fName">Name<span style="color:var(--gold)">*</span></label>
-            <input id="fName" name="name" type="text" placeholder="Your name" required />
-            <div class="error-msg" id="fNameErr">Please enter your name.</div>
+  </section>
+
+<!-- ================= CTA Section ================= -->
+<section class="cta-section" id="contact">
+  <div class="cta-wrapper">
+    <!-- LEFT – Form -->
+    <div class="cta-form">
+      <h2 class="h2">Ready to Kick-Start Corporate Cross-Cultural Training?</h2>
+      <p class="subtitle">Tell us what you need, and our consultants will craft a scalable, measurable training roadmap for your team.</p>
+
+      <form id="ctaForm" novalidate>
+       <!-- Row 1：Name / Email / Company（4 欄，Company 跨 2 欄） -->
+<div class="form-row four">
+  <div class="field">
+    <label for="name">Name *</label>
+    <input type="text" id="name" name="name" placeholder="Your name" required />
+  </div>
+  <div class="field">
+    <label for="email">Email *</label>
+    <input type="email" id="email" name="email" placeholder="you@example.com" required />
+  </div>
+  <div class="field company">
+    <label for="company">Company *</label>
+    <input type="text" id="company" name="company" placeholder="Your company" required />
+  </div>
+</div>
+
+        <!-- Row 2：Phone / Job Title / Primary Training / Number of Participants（4 欄） -->
+        <div class="form-row four">
+          <div class="field">
+            <label for="phone">Phone <span class="opt">(optional)</span></label>
+            <input type="tel" id="phone" name="phone" placeholder="+886 912 345 678" />
           </div>
-          <div>
-            <label class="label" for="fEmail">Email<span style="color:var(--gold)">*</span></label>
-            <input id="fEmail" name="email" type="email" placeholder="you@example.com" required />
-            <div class="error-msg" id="fEmailErr">Please enter a valid email address.</div>
+          <div class="field">
+            <label for="jobtitle">Job Title <span class="opt">(optional)</span></label>
+            <input type="text" id="jobtitle" name="jobtitle" placeholder="Your job title" />
           </div>
-          <div>
-            <label class="label" for="fPhone">Phone <span class="caption" aria-hidden="true">(optional)</span></label>
-            <input id="fPhone" name="phone" type="tel" placeholder="+886 912 345 678" />
-            <div class="error-msg" id="fPhoneErr">Please enter numbers only or include + / - / ( ).</div>
+          <div class="field">
+            <label for="primaryTraining">Primary Training Needs <span class="opt">(optional)</span></label>
+            <select id="primaryTraining" name="primaryTraining">
+              <option value="" disabled selected>Select one</option>
+              <option value="language">Language</option>
+              <option value="culture">Culture</option>
+              <option value="business">Business</option>
+              <option value="instructor">Instructor Training</option>
+            </select>
           </div>
-          <button class="btn" type="submit">Free Consultation</button>
-          <div class="caption">We’ll get back to you within 1–2 business days. Your information is kept strictly confidential.</div>
-          <div class="success" id="fSuccess">Thanks! We’ll contact you within 1–2 business days.</div>
-          <div class="fail" id="fFail">Sorry, something went wrong. Please try again later.</div>
+          <div class="field">
+            <label for="participants">Number of Participants <span class="opt">(optional)</span></label>
+            <select id="participants" name="participants">
+              <option value="" disabled selected>Select one</option>
+              <option value="<50">&lt;50</option>
+              <option value="50-100">50–100</option>
+              <option value="100-300">100–300</option>
+              <option value="300-500">300–500</option>
+              <option value="500+">500+</option>
+            </select>
+          </div>
         </div>
+
+        <!-- Row 3：Brief Description（單欄） -->
+        <div class="form-row">
+          <div class="field">
+            <label for="requirements">Brief Description of Your Requirements <span class="opt">(optional)</span></label>
+            <textarea id="requirements" name="requirements" placeholder="Describe your requirements"></textarea>
+          </div>
+        </div>
+
+        <button type="submit" class="cta-btn" aria-label="Free Consultation">Free Consultation</button>
       </form>
     </div>
+
   </div>
 </section>
 
-<!-- Footer Info（最底部資訊）-->
-<footer class="footer-info-section" style="background-color: #DFDFDF;">
-  <div class="container footer-bottom">
-    <div class="body-m footer-info">
-      <a href="https://tli1956.com/?lang=tc" target="_blank" rel="noopener noreferrer">TLI Taipei Language Institute</a><span> | </span>
-      <a href="mailto:contact@tli1956.com" style="color:#1E60A9">contact@tli1956.com</a>
+
+
+  <!-- ===== Footer ===== -->
+  <footer>
+  <div class="container">
+    <div>
+      <a href="https://tli1956.com/?lang=en" target="_blank" rel="noopener noreferrer" title="TLI Website">
+        TLI Taipei Language Institute
+      </a>
+      | <a href="mailto:contact@tli1956.com">contact@tli1956.com</a>
     </div>
-    <div class="social body-m" style="margin-bottom:8px">
+
+      <div class="footer-links">
+      </div>
+       <div class="social body-m" style="margin-bottom:8px">
      <a href="https://www.linkedin.com/school/taipei-language-institute/posts/?feedView=all"
      target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">LinkedIn</a>
   <a href="https://www.youtube.com/channel/UCCySlsmCXX8Id-m5NSTLCrw"
@@ -1132,45 +1046,29 @@ html, body { overflow-x: hidden; }
   <a href="https://www.facebook.com/tli1956/?locale=zh_TW"
      target="_blank" rel="noopener noreferrer" aria-label="Facebook">Facebook</a>
     </div>
-    <div class="legal">© TLI Taipei Language Institute. All rights reserved.</div>
-  </div>
-</footer>
+      <div>© TLI Taipei Language Institute. All rights reserved.</div>
+    </div>
+  </footer>
 
+  <!-- ===== JS (simple form validation) ===== -->
+  <script>
+    document.getElementById('ctaForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const form = e.target;
+      const name = form.name.value.trim();
+      const email = form.email.value.trim();
+      const company = form.company.value.trim();
+      let valid = true;
 
+      if (!name) { alert('Please enter your name.'); valid = false; }
+      if (!email || !/\S+@\S+\.\S+/.test(email)) { alert('Please enter a valid email.'); valid = false; }
+      if (!company) { alert('Please enter your company name.'); valid = false; }
 
-<script>
-  // Hero 區
-  document.getElementById('heroForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const name = document.getElementById('hName').value.trim();
-    const email = document.getElementById('hEmail').value.trim();
-
-    if (name && email) {
-      document.getElementById('hSuccess').style.display = 'block';
-      document.getElementById('hFail').style.display = 'none';
-    } else {
-      document.getElementById('hSuccess').style.display = 'none';
-      document.getElementById('hFail').style.display = 'block';
-    }
-  });
-
-  // Footer 區
-  document.getElementById('footerForm').addEventListener('submit', function (e) {
-    e.preventDefault();
-
-    const name = document.getElementById('fName').value.trim();
-    const email = document.getElementById('fEmail').value.trim();
-
-    if (name && email) {
-      document.getElementById('fSuccess').style.display = 'block';
-      document.getElementById('fFail').style.display = 'none';
-    } else {
-      document.getElementById('fSuccess').style.display = 'none';
-      document.getElementById('fFail').style.display = 'block';
-    }
-  });
-</script>
-
-
+      if (valid) {
+        alert('Thank you for your submission! We will contact you soon.');
+        form.reset();
+      }
+    });
+  </script>
 </body>
+</html>

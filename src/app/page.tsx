@@ -74,6 +74,8 @@ export default function Home() {
         :root{
           /* Layout */
           --container: 1200px;
+          --page-padding: 100px;          /* 全站左右留白 */
+          --page-padding-mobile: 16px;    /* 行動裝置留白 */
           --r32: 32px;
 
           /* Palette — 輕藍 × 黃 */
@@ -93,6 +95,13 @@ export default function Home() {
           /* Accents */
           --gold: #027AB9;           /* 主 CTA 與重點*/
           --gold-strong: #026AA7;    /* hover */
+
+          --cta-gradient-left: #009FB6;
+          --cta-gradient-right: #027AB9;
+          --cta-gradient-hover-left: #00BEE3;
+          --cta-gradient-hover-right: #0286C9;
+          --primary: #027AB9;
+          --blue-100: #E3F1F8;
 
           /* States */
           --error: #D54848;
@@ -141,15 +150,48 @@ export default function Home() {
         .header-actions{display:flex; align-items:center; gap:16px}
         .login-link{font-size:15px; font-weight:600; background:linear-gradient(90deg, #009FB6, #027AB9); color:#FFFFFF; text-decoration:none; padding:10px 20px; border-radius:999px; transition:all 0.2s ease; box-shadow:0 2px 8px rgba(2,122,185,0.16)}
         .login-link:hover{background:linear-gradient(90deg, #00BEE3, #0286C9); transform:translateY(-1px); box-shadow:0 4px 12px rgba(2,122,185,0.24)}
-        .cta-btn{font-size:15px; font-weight:600; background:linear-gradient(90deg, #009FB6, #027AB9); color:#FFFFFF; text-decoration:none; padding:10px 20px; border-radius:999px; transition:all 0.2s ease; box-shadow:0 2px 8px rgba(2,122,185,0.16)}
-        .cta-btn:hover{background:linear-gradient(90deg, #00BEE3, #0286C9); transform:translateY(-1px); box-shadow:0 4px 12px rgba(2,122,185,0.24)}
+        /* Buttons */
+        button, .cta-btn, .secondary-btn { border-radius: 999px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.25s ease-in-out; }
+
+        /* Primary CTA 基本樣式 */
+        .cta-btn {
+          background: linear-gradient(90deg, var(--cta-gradient-left), var(--cta-gradient-right));
+          color: #FFFFFF; border: none; padding: 16px 40px; box-shadow: 0 10px 24px rgba(2, 122, 185, 0.22);
+        }
+        .cta-btn:hover {
+          background: linear-gradient(90deg, var(--cta-gradient-hover-left), var(--cta-gradient-hover-right));
+          transform: scale(1.04);
+          box-shadow: 0 8px 24px rgba(2, 122, 185, 0.32);
+        }
+        
+        /* Header 專用小尺寸 CTA（覆蓋 .cta-btn 的內距/字級/陰影） */
+        header .cta-btn--sm{
+          padding:10px 18px;     /* 原本 16px 40px → 更精緻 */
+          font-size:14px;        /* 原本 16px */
+          box-shadow:0 6px 14px rgba(2,122,185,.18);
+        }
+        header .cta-btn--sm:hover{
+          transform:scale(1.02); /* 原本 1.04，縮小一點就好 */
+          box-shadow:0 8px 18px rgba(2,122,185,.24);
+        }
         
         /* Mobile Menu Button */
         .mobile-menu-btn{display:none; flex-direction:column; gap:4px; background:none; border:none; cursor:pointer; padding:8px}
         .mobile-menu-btn span{width:24px; height:2px; background:var(--ink); border-radius:1px; transition:all 0.3s ease}
         
+        /* RWD – 自動縮減左右邊距 */
+        @media (max-width: 600px) {
+          :root { --page-padding: var(--page-padding-mobile); }
+        }
+
         /* Mobile Styles */
         @media (max-width:1024px){.main-nav{display:none} .mobile-menu-btn{display:flex}}
+        @media (max-width:768px){
+          header .cta-btn--sm{ padding:8px 14px; font-size:13px; }
+        }
+        @media (max-width:960px) {
+          :root { --page-padding: 24px; } /* 原 100px 太大 */
+        }
         @media (max-width:767px){.brand-logo img{height:30px} .header-actions{gap:12px} .cta-btn{padding:8px 16px; font-size:14px} .login-link{padding:6px 12px; font-size:14px}}
 
         /* HERO：標題左、表單右 */
@@ -307,28 +349,55 @@ export default function Home() {
       `}</style>
       
       {/* Header */}
-      <header className="site-header" role="banner">
-        <div className="container inner">
-          <a className="brand brand-logo" href="#hero" aria-label="Taipei Language Institute">
-            <img
-              src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
-              srcSet="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400 1x, https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w800 2x"
-              alt="Taipei Language Institute logo"
-              style={{height:'36px', width:'auto'}}
-            />
+      <header style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: '72px',
+        background: '#fff',
+        zIndex: 9998,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 var(--page-padding)'
+      }}>
+        <a href="#hero" aria-label="Taipei Language Institute Logo" style={{
+          display: 'inline-block',
+          width: '200px'
+        }}>
+          <img 
+            src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
+            alt="Taipei Language Institute logo" 
+            style={{width: '100%', height: 'auto'}}
+          />
+        </a>
+        <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
+          <a href="#contact" className="cta-btn cta-btn--sm" aria-label="Free Consultation">
+            Free Consultation
           </a>
-          
-          <div className="header-actions">
-            <a href="/login" className="login-link">Login</a>
-          </div>
-          
-          <button className="mobile-menu-btn" aria-label="開啟選單">
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
+          <a 
+            href="/login" 
+            className="login-link"
+            style={{
+              fontSize: '15px',
+              fontWeight: 600,
+              background: 'linear-gradient(90deg, #009FB6, #027AB9)',
+              color: '#FFFFFF',
+              textDecoration: 'none',
+              padding: '10px 20px',
+              borderRadius: '999px',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 2px 8px rgba(2,122,185,0.16)'
+            }}
+          >
+            Login
+          </a>
         </div>
       </header>
+
+      {/* Spacer to compensate fixed header */}
+      <div style={{height: '72px'}}></div>
 
       {/* Hero */}
       <section className="hero section" id="hero" style={{padding: '96px 60px', position: 'relative'}}>
@@ -644,7 +713,7 @@ export default function Home() {
             <h3>Need a Customized Corporate Training Solution?</h3>
             <p>Tailored team training programs with management tools and performance tracking.</p>
           </div>
-          <a className="redirect-cta secondary" href="#">
+          <a className="redirect-cta secondary" href="/business">
             <span>Explore Corporate Plans</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M5 12h14M13 5l7 7-7 7" stroke="#027AB9" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

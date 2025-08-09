@@ -432,7 +432,7 @@ const Dashboard = () => {
 
   const getRoleDescription = () => {
     switch (user?.roles[0]) {
-      case 'STUDENT': return '歡迎使用 TLI Connect 課程預約系統，開始您的學習之旅！';
+      case 'STUDENT': return '歡迎使用 TLI Connect，開始您的學習之旅！';
       case 'TEACHER': return '歡迎回到教師管理面板，管理您的課程與學生。';
       case 'STAFF': return '歡迎使用職員面板，管理系統設定與用戶。';
       case 'ADMIN': return '歡迎使用管理員面板，您擁有系統最高權限。';

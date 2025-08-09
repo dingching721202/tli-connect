@@ -480,7 +480,7 @@ const BookingSystem: React.FC = () => {
           animate={{ scale: 1 }}
           transition={{ duration: 0.5 }}
         >
-          課程預約系統
+          TLI Connect
         </motion.h1>
         <motion.p
           className="text-sm sm:text-base text-gray-600 font-medium"

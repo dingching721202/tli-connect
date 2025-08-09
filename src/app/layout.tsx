@@ -25,8 +25,8 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "TLI Connect - 課程預約系統",
-  description: "TLI Connect 華語文課程預約系統，提供完整的學習體驗與課程模組功能",
+  title: "TLI Connect",
+  description: "TLI Connect - Break Language Barriers. Unlock Asian Markets",
 };
 
 export default function RootLayout({
