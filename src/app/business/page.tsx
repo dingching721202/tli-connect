@@ -876,10 +876,12 @@ export default function BusinessLanding() {
               maxWidth: '350px',
               margin: '0 auto'
             }}>
-              <img 
+              <Image 
                 className="zz-img" 
                 src="https://images.pexels.com/photos/2381069/pexels-photo-2381069.jpeg" 
                 alt="Scenario 1" 
+                width={260}
+                height={250}
                 style={{
                   width: '65%',
                   height: '250px',
@@ -892,10 +894,12 @@ export default function BusinessLanding() {
                   zIndex: 1
                 }}
               />
-              <img 
+              <Image 
                 className="zz-img" 
                 src="https://images.unsplash.com/photo-1701980889802-55ff39e2e973?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                 alt="Scenario 2" 
+                width={260}
+                height={250}
                 style={{
                   width: '65%',
                   height: '250px',
@@ -908,10 +912,12 @@ export default function BusinessLanding() {
                   zIndex: 2
                 }}
               />
-              <img 
+              <Image 
                 className="zz-img" 
                 src="https://images.pexels.com/photos/12437056/pexels-photo-12437056.jpeg" 
                 alt="Scenario 3" 
+                width={260}
+                height={250}
                 style={{
                   width: '65%',
                   height: '250px',
@@ -1030,9 +1036,11 @@ export default function BusinessLanding() {
                 </ul>
               </div>
               <div className="feature-visual" aria-hidden="true" style={{flex: '0 0 40%'}}>
-                <img
+                <Image
                   src="https://drive.google.com/thumbnail?id=1-2N3ADEgUMbVAVpJMkdNehtAfCWPC8M-&sz=w1600"
                   alt="Learning Hub"
+                  width={400}
+                  height={260}
                   style={{
                     width: '100%',
                     height: '260px',
@@ -1099,9 +1107,11 @@ export default function BusinessLanding() {
                 </ul>
               </div>
               <div className="feature-visual" aria-hidden="true" style={{flex: '0 0 40%'}}>
-                <img
+                <Image
                   src="https://drive.google.com/thumbnail?id=1DJnDUDcbaryrG27Jgb-gt0AWPXr-SKGo&sz=w1600"
                   alt="Automation & KPI"
+                  width={400}
+                  height={260}
                   style={{
                     width: '100%',
                     height: '260px',
@@ -1150,9 +1160,11 @@ export default function BusinessLanding() {
                 </ul>
               </div>
               <div className="feature-visual" aria-hidden="true" style={{flex: '0 0 40%'}}>
-                <img
+                <Image
                   src="https://drive.google.com/thumbnail?id=1CTnouKt7sz-z_0CFRuIwk5ROZDBTO3QZ&sz=w1600"
                   alt="Learning Hub"
+                  width={400}
+                  height={260}
                   style={{
                     width: '100%',
                     height: '260px',
@@ -1175,11 +1187,11 @@ export default function BusinessLanding() {
           </p>
           <div className="filmstrip-vintage">
             <div className="filmstrip-row">
-              <img src="https://drive.google.com/thumbnail?id=1ty5zRQX-Na3YIiVVt0-NTLLW-HA-zrc_&sz=w1600" alt="Professor John King Fairbank" />
-              <img src="https://drive.google.com/thumbnail?id=12zdFoBZzR6gcRwEBG37IRb85a4Sn00mu&sz=w1600" alt="Mr. James Stapleton Roy" />
-              <img src="https://drive.google.com/thumbnail?id=13r0Zn7E9YCj9-waSjb3Wp9uFJ65iBluS&sz=w1600" alt="Mr. Nicholas Kristof and Ms. Sheryl WuDunn" />
-              <img src="https://drive.google.com/thumbnail?id=13Q4uM8toWNxVaN9tSzbw9GtWHnjxrBI9&sz=w1600" alt="Mr. Lee Kuan Yew" />
-              <img src="https://drive.google.com/thumbnail?id=1co45YrsO_hgKCZnUdYxoz-9ik9WzmZHw&sz=w1600" alt="Mr. Mike Chinoy" />
+              <Image src="https://drive.google.com/thumbnail?id=1ty5zRQX-Na3YIiVVt0-NTLLW-HA-zrc_&sz=w1600" alt="Professor John King Fairbank" width={200} height={150} />
+              <Image src="https://drive.google.com/thumbnail?id=12zdFoBZzR6gcRwEBG37IRb85a4Sn00mu&sz=w1600" alt="Mr. James Stapleton Roy" width={200} height={150} />
+              <Image src="https://drive.google.com/thumbnail?id=13r0Zn7E9YCj9-waSjb3Wp9uFJ65iBluS&sz=w1600" alt="Mr. Nicholas Kristof and Ms. Sheryl WuDunn" width={200} height={150} />
+              <Image src="https://drive.google.com/thumbnail?id=13Q4uM8toWNxVaN9tSzbw9GtWHnjxrBI9&sz=w1600" alt="Mr. Lee Kuan Yew" width={200} height={150} />
+              <Image src="https://drive.google.com/thumbnail?id=1co45YrsO_hgKCZnUdYxoz-9ik9WzmZHw&sz=w1600" alt="Mr. Mike Chinoy" width={200} height={150} />
             </div>
             <div className="caption-row">
               <p>Professor John King Fairbank — Harvard University Sinologist</p>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import Image from 'next/image';
 
 export default function Home() {
   const [heroForm, setHeroForm] = useState({
@@ -827,11 +828,12 @@ export default function Home() {
       <header className="site-header" role="banner">
         <div className="container inner">
           <a className="brand brand-logo" href="#hero" aria-label="Taipei Language Institute">
-            <img 
+            <Image 
               id="brandLogo"
               src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
-              srcSet="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400 1x, https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w800 2x"
               alt="Taipei Language Institute logo"
+              width={100}
+              height={36}
               style={{height:'36px', width:'auto'}}
             />
           </a>
@@ -919,10 +921,10 @@ export default function Home() {
       {/* Filmstrip */}
       <div className="filmstrip" aria-hidden="true">
         <div className="row">
-          <div className="tile"><img src="https://images.unsplash.com/photo-1699443218794-589f8bdd48e4?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Learning experience" /></div>
-          <div className="tile"><img src="https://images.unsplash.com/photo-1515168833906-d2a3b82b302a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Cultural connection" /></div>
-          <div className="tile"><img src="https://images.unsplash.com/photo-1517456793572-1d8efd6dc135?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Business communication" /></div>
-          <div className="tile"><img src="https://images.unsplash.com/photo-1548684133-8739f016b2ac?q=80&w=1674&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Professional development" /></div>
+          <div className="tile"><Image src="https://images.unsplash.com/photo-1699443218794-589f8bdd48e4?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Learning experience" width={300} height={200} /></div>
+          <div className="tile"><Image src="https://images.unsplash.com/photo-1515168833906-d2a3b82b302a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Cultural connection" width={300} height={200} /></div>
+          <div className="tile"><Image src="https://images.unsplash.com/photo-1517456793572-1d8efd6dc135?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Business communication" width={300} height={200} /></div>
+          <div className="tile"><Image src="https://images.unsplash.com/photo-1548684133-8739f016b2ac?q=80&w=1674&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Professional development" width={300} height={200} /></div>
         </div>
       </div>
 
@@ -982,10 +984,12 @@ export default function Home() {
               <div className="topic-cards">
                 <div className="course-card">
                   <div className="course-card-imgbox">
-                    <img
+                    <Image
                       className="small-img"
                       src="https://drive.google.com/thumbnail?id=1_NyugcIq2A1IxVae0oqbbmOF7S_tbDuc&sz=w1200"
                       alt="Practical Real Life Based Essentials"
+                      width={300}
+                      height={200}
                     />
                   </div>
                   <div className="course-card-content">
@@ -996,7 +1000,7 @@ export default function Home() {
                 </div>
                 <div className="course-card">
                   <div className="course-card-imgbox">
-                    <img src="https://images.pexels.com/photos/4226140/pexels-photo-4226140.jpeg" alt="Daily Life & Business Communication" />
+                    <Image src="https://images.pexels.com/photos/4226140/pexels-photo-4226140.jpeg" alt="Daily Life & Business Communication" width={300} height={200} />
                   </div>
                   <div className="course-card-content">
                     <div className="course-tag">Live Mini‑Classes</div>
@@ -1006,7 +1010,7 @@ export default function Home() {
                 </div>
                 <div className="course-card">
                   <div className="course-card-imgbox">
-                    <img src="https://drive.google.com/thumbnail?id=1hFq0oBzJvJm3isL3ElTvnnNy7NZ8Z6_l&sz=w1200" alt="Mandarin Lounge" />
+                    <Image src="https://drive.google.com/thumbnail?id=1hFq0oBzJvJm3isL3ElTvnnNy7NZ8Z6_l&sz=w1200" alt="Mandarin Lounge" width={300} height={200} />
                   </div>
                   <div className="course-card-content">
                     <div className="course-tag">Live speaking arena</div>
@@ -1023,7 +1027,7 @@ export default function Home() {
               <div className="topic-cards">
                 <div className="course-card">
                   <div className="course-card-imgbox">
-                    <img src="https://drive.google.com/thumbnail?id=1V_1-zTB0N-Eq0PvvDFpP3MHycN-OtO1B&sz=w1200" alt="Local Folk Culture Experience" />
+                    <Image src="https://drive.google.com/thumbnail?id=1V_1-zTB0N-Eq0PvvDFpP3MHycN-OtO1B&sz=w1200" alt="Local Folk Culture Experience" width={300} height={200} />
                   </div>
                   <div className="course-card-content">
                     <div className="course-tag">Events</div>
@@ -1033,7 +1037,7 @@ export default function Home() {
                 </div>
                 <div className="course-card">
                   <div className="course-card-imgbox">
-                    <img src="https://drive.google.com/thumbnail?id=19QrdateU5N8G0RS-dtmpx43rRd2hIiJc&sz=w1200" alt="Yoga Martial Home Fitness Series" />
+                    <Image src="https://drive.google.com/thumbnail?id=19QrdateU5N8G0RS-dtmpx43rRd2hIiJc&sz=w1200" alt="Yoga Martial Home Fitness Series" width={300} height={200} />
                   </div>
                   <div className="course-card-content">
                     <div className="course-tag">Workshops</div>
@@ -1043,7 +1047,7 @@ export default function Home() {
                 </div>
                 <div className="course-card">
                   <div className="course-card-imgbox">
-                    <img src="https://images.unsplash.com/photo-1672826980330-93ae1ac07b41?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Global Etiquette" />
+                    <Image src="https://images.unsplash.com/photo-1672826980330-93ae1ac07b41?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Global Etiquette" width={300} height={200} />
                   </div>
                   <div className="course-card-content">
                     <div className="course-tag">Events & Workshops</div>
@@ -1060,7 +1064,7 @@ export default function Home() {
               <div className="topic-cards">
                 <div className="course-card">
                   <div className="course-card-imgbox">
-                    <img src="https://drive.google.com/thumbnail?id=1Dr3O7I80LIGirmqxreB5fnqrRtxEJOBx&sz=w1200" alt="Regenerative medicine & Longevity: Reverse Aging with Science" />
+                    <Image src="https://drive.google.com/thumbnail?id=1Dr3O7I80LIGirmqxreB5fnqrRtxEJOBx&sz=w1200" alt="Regenerative medicine & Longevity: Reverse Aging with Science" width={300} height={200} />
                   </div>
                   <div className="course-card-content">
                     <div className="course-tag">Expert Channels</div>
@@ -1070,7 +1074,7 @@ export default function Home() {
                 </div>
                 <div className="course-card">
                   <div className="course-card-imgbox">
-                    <img src="https://drive.google.com/thumbnail?id=1flasExlMfa01xbwSr1Uf_yfOcL2-GAS4&sz=w1200" alt="Networking for Conscious Entrepreneurs and Investors" />
+                    <Image src="https://drive.google.com/thumbnail?id=1flasExlMfa01xbwSr1Uf_yfOcL2-GAS4&sz=w1200" alt="Networking for Conscious Entrepreneurs and Investors" width={300} height={200} />
                   </div>
                   <div className="course-card-content">
                     <div className="course-tag">Expert Channels</div>
@@ -1080,7 +1084,7 @@ export default function Home() {
                 </div>
                 <div className="course-card">
                   <div className="course-card-imgbox">
-                    <img src="https://drive.google.com/thumbnail?id=1xM0bM-uYXYkcRyGQQ5b9K_pJyMpbBG_Z&sz=w1200" alt="Kickstarting Global Impact: A Martial Artist's Journey in Business and Cross-Cultural Leadership" />
+                    <Image src="https://drive.google.com/thumbnail?id=1xM0bM-uYXYkcRyGQQ5b9K_pJyMpbBG_Z&sz=w1200" alt="Kickstarting Global Impact: A Martial Artist's Journey in Business and Cross-Cultural Leadership" width={300} height={200} />
                   </div>
                   <div className="course-card-content">
                     <div className="course-tag">Expert Channels</div>
@@ -1104,11 +1108,11 @@ export default function Home() {
         {/* Filmstrip row: images and captions separated */}
         <div className="filmstrip-vintage">
           <div className="filmstrip-row">
-            <img src="https://drive.google.com/thumbnail?id=1ty5zRQX-Na3YIiVVt0-NTLLW-HA-zrc_&sz=w1600" alt="Professor John King Fairbank" />
-            <img src="https://drive.google.com/thumbnail?id=12zdFoBZzR6gcRwEBG37IRb85a4Sn00mu&sz=w1600" alt="Mr. James Stapleton Roy" />
-            <img src="https://drive.google.com/thumbnail?id=13r0Zn7E9YCj9-waSjb3Wp9uFJ65iBluS&sz=w1600" alt="Mr. Nicholas Kristof and Ms. Sheryl WuDunn" />
-            <img src="https://drive.google.com/thumbnail?id=13Q4uM8toWNxVaN9tSzbw9GtWHnjxrBI9&sz=w1600" alt="Mr. Lee Kuan Yew" />
-            <img src="https://drive.google.com/thumbnail?id=1co45YrsO_hgKCZnUdYxoz-9ik9WzmZHw&sz=w1600" alt="Mr. Mike Chinoy" />
+            <Image src="https://drive.google.com/thumbnail?id=1ty5zRQX-Na3YIiVVt0-NTLLW-HA-zrc_&sz=w1600" alt="Professor John King Fairbank" width={200} height={150} />
+            <Image src="https://drive.google.com/thumbnail?id=12zdFoBZzR6gcRwEBG37IRb85a4Sn00mu&sz=w1600" alt="Mr. James Stapleton Roy" width={200} height={150} />
+            <Image src="https://drive.google.com/thumbnail?id=13r0Zn7E9YCj9-waSjb3Wp9uFJ65iBluS&sz=w1600" alt="Mr. Nicholas Kristof and Ms. Sheryl WuDunn" width={200} height={150} />
+            <Image src="https://drive.google.com/thumbnail?id=13Q4uM8toWNxVaN9tSzbw9GtWHnjxrBI9&sz=w1600" alt="Mr. Lee Kuan Yew" width={200} height={150} />
+            <Image src="https://drive.google.com/thumbnail?id=1co45YrsO_hgKCZnUdYxoz-9ik9WzmZHw&sz=w1600" alt="Mr. Mike Chinoy" width={200} height={150} />
           </div>
           <div className="caption-row">
             <p>Professor John King Fairbank — Harvard University Sinologist</p>
