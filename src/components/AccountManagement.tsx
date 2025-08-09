@@ -261,14 +261,26 @@ const AccountManagement = () => {
 
   const getRoleColor = (role: string) => {
     const colors = {
-      'ADMIN': 'bg-red-100 text-red-800',
-      'STAFF': 'bg-purple-100 text-purple-800',
-      'TEACHER': 'bg-blue-100 text-blue-800',
-      'CORPORATE_CONTACT': 'bg-green-100 text-green-800',
-      'AGENT': 'bg-yellow-100 text-yellow-800',
-      'STUDENT': 'bg-gray-100 text-gray-800'
+      'ADMIN': 'bg-red-50 text-red-700 border-red-200',
+      'STAFF': 'bg-purple-50 text-purple-700 border-purple-200',
+      'TEACHER': 'bg-blue-50 text-blue-700 border-blue-200',
+      'CORPORATE_CONTACT': 'bg-green-50 text-green-700 border-green-200',
+      'AGENT': 'bg-yellow-50 text-yellow-700 border-yellow-200',
+      'STUDENT': 'bg-indigo-50 text-indigo-700 border-indigo-200'
     };
-    return colors[role as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return colors[role as keyof typeof colors] || 'bg-slate-50 text-slate-700 border-slate-200';
+  };
+
+  const getRoleIconColor = (role: string) => {
+    const colors = {
+      'ADMIN': 'text-red-600',
+      'STAFF': 'text-purple-600',
+      'TEACHER': 'text-blue-600',
+      'CORPORATE_CONTACT': 'text-green-600',
+      'AGENT': 'text-yellow-600',
+      'STUDENT': 'text-indigo-600'
+    };
+    return colors[role as keyof typeof colors] || 'text-gray-600';
   };
 
   const getStatusName = (status: string) => {
@@ -285,14 +297,14 @@ const AccountManagement = () => {
 
   const getStatusColor = (status: string) => {
     const colors = {
-      'non_member': 'bg-gray-100 text-gray-800',
-      'inactive': 'bg-orange-100 text-orange-800',
-      'activated': 'bg-green-100 text-green-800',
-      'expired': 'bg-red-100 text-red-800',
-      'cancelled': 'bg-gray-100 text-gray-800',
-      'test': 'bg-blue-100 text-blue-800'
+      'non_member': 'bg-slate-50 text-slate-700 border-slate-200',
+      'inactive': 'bg-orange-50 text-orange-700 border-orange-200',
+      'activated': 'bg-green-50 text-green-700 border-green-200',
+      'expired': 'bg-red-50 text-red-700 border-red-200',
+      'cancelled': 'bg-slate-50 text-slate-700 border-slate-200',
+      'test': 'bg-blue-50 text-blue-700 border-blue-200'
     };
-    return colors[status as keyof typeof colors] || 'bg-gray-100 text-gray-800';
+    return colors[status as keyof typeof colors] || 'bg-slate-50 text-slate-700 border-slate-200';
   };
 
   if (!isAdmin) {
@@ -308,7 +320,8 @@ const AccountManagement = () => {
   }
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-gray-50">
+      <div className="p-6">
       <div className="mb-6">
         <div className="mb-4">
           <div>
@@ -325,9 +338,9 @@ const AccountManagement = () => {
           {/* 總用戶數 */}
           <div className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('ALL'); setRoleFilter('ALL'); setStatusFilter('ALL'); setSearchTerm(''); }}>
             <div className="flex items-center">
-              <SafeIcon icon={FiUsers} className="h-8 w-8 text-purple-600" />
+              <SafeIcon icon={FiUsers} className="h-8 w-8 text-gray-600" />
               <div className="ml-3">
-                <p className="text-sm font-medium text-gray-500">用戶</p>
+                <p className="text-sm font-medium text-gray-500">總用戶</p>
                 <p className="text-2xl font-semibold text-gray-900">{usersWithRoles.length}</p>
               </div>
             </div>
@@ -335,7 +348,7 @@ const AccountManagement = () => {
           {/* 後台人員數 */}
           <div className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('STAFF'); setRoleFilter('ALL'); setStatusFilter('ALL'); setSearchTerm(''); }}>
             <div className="flex items-center">
-              <SafeIcon icon={FiShield} className="h-8 w-8 text-orange-600" />
+              <SafeIcon icon={FiShield} className="h-8 w-8 text-purple-600" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">後台人員</p>
                 <p className="text-2xl font-semibold text-gray-900">
@@ -350,7 +363,7 @@ const AccountManagement = () => {
           {/* 總學生數 */}
           <div className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('STUDENT'); setRoleFilter('ALL'); setStatusFilter('ALL'); setSearchTerm(''); }}>
             <div className="flex items-center">
-              <SafeIcon icon={FiUsers} className="h-8 w-8 text-blue-600" />
+              <SafeIcon icon={FiUsers} className="h-8 w-8 text-indigo-600" />
               <div className="ml-3">
                 <p className="text-sm font-medium text-gray-500">學生</p>
                 <p className="text-2xl font-semibold text-gray-900">
@@ -426,21 +439,10 @@ const AccountManagement = () => {
             </div>
           </div>
           {availableRoles.filter(role => role !== 'STUDENT').map(role => {
-            const getRoleName = (role: string) => {
-              switch (role) {
-                case 'CORPORATE_CONTACT': return '企業窗口';
-                case 'AGENT': return '代理';
-                case 'TEACHER': return '教師';
-                case 'STAFF': return '員工';
-                case 'ADMIN': return '管理員';
-                default: return role;
-              }
-            };
-            
             return (
               <div key={role} className="bg-white p-4 rounded-lg border cursor-pointer hover:bg-gray-50" onClick={() => { setUserTypeFilter('ALL'); setRoleFilter(role); setStatusFilter('ALL'); setSearchTerm(''); }}>
                 <div className="flex items-center">
-                  <SafeIcon icon={FiShield} className="h-8 w-8 text-purple-600" />
+                  <SafeIcon icon={FiShield} className={`h-8 w-8 ${getRoleIconColor(role)}`} />
                   <div className="ml-3">
                     <p className="text-sm font-medium text-gray-500">{getRoleName(role)}</p>
                     <p className="text-2xl font-semibold text-gray-900">
@@ -516,7 +518,7 @@ const AccountManagement = () => {
                       </div>
                     </td>
                     <td className="w-24 px-4 py-4">
-                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                      <span className="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border bg-slate-50 text-slate-700 border-slate-200">
                         {user.campus}
                       </span>
                     </td>
@@ -524,19 +526,19 @@ const AccountManagement = () => {
                       <div className="flex flex-wrap gap-1">
                         {/* 所有角色 */}
                         {user.roles.map((role) => (
-                          <span key={role} className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(role)}`}>
+                          <span key={role} className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border ${getRoleColor(role)}`}>
                             {getRoleName(role)}
                           </span>
                         ))}
                       </div>
                     </td>
                     <td className="w-32 px-4 py-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(user.membership_status)}`}>
+                      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border ${getStatusColor(user.membership_status)}`}>
                         {getStatusName(user.membership_status)}
                       </span>
                     </td>
                     <td className="w-20 px-4 py-4">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${user.account_status === 'ACTIVE' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      <span className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border ${user.account_status === 'ACTIVE' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}`}>
                         {user.account_status === 'ACTIVE' ? '啟用' : '停用'}
                       </span>
                     </td>
@@ -872,7 +874,7 @@ const AccountManagement = () => {
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       {selectedRoles.map((role) => (
-                        <span key={role} className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${getRoleColor(role)}`}>
+                        <span key={role} className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md border ${getRoleColor(role)}`}>
                           {getRoleName(role)}
                         </span>
                       ))}
@@ -956,6 +958,7 @@ const AccountManagement = () => {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 };

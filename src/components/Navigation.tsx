@@ -141,8 +141,8 @@ const Navigation: React.FC = () => {
 
   return (
     <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="container mx-auto px-3 sm:px-4 lg:px-6">
-        <div className="flex items-center h-12 xl:h-14">
+      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center h-14 xl:h-16">
           {/* Logo */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -156,8 +156,8 @@ const Navigation: React.FC = () => {
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex flex-1 justify-start px-6">
-            <div className="flex items-center space-x-1 xl:space-x-2">
+          <div className="hidden lg:flex flex-1 justify-start px-4 xl:px-8">
+            <div className="flex items-center space-x-2 xl:space-x-4">
               {/* Video Courses Dropdown - Only for STUDENT */}
               {canAccess(['STUDENT']) && (
                 <div className="relative"
@@ -166,7 +166,7 @@ const Navigation: React.FC = () => {
                 >
                   <motion.button
                     className={`
-                      flex items-center space-x-1 px-1.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap
+                      flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
                       ${pathname.startsWith('/video-courses')
                         ? 'text-blue-600 bg-blue-50'
                         : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
@@ -176,10 +176,9 @@ const Navigation: React.FC = () => {
                     whileTap={{ scale: 0.98 }}
                     title="影音課程"
                   >
-                    <SafeIcon icon={FiPlay} size={12} />
-                    <span className="hidden xl:inline text-xs">影音課程</span>
-                    <span className="xl:hidden text-[10px]">影音</span>
-                    <SafeIcon icon={FiChevronDown} size={10} className={`transition-transform duration-200 ${isVideoCoursesOpen ? 'rotate-180' : ''}`} />
+                    <SafeIcon icon={FiPlay} size={14} />
+                    <span className="text-sm">影音課程</span>
+                    <SafeIcon icon={FiChevronDown} size={12} className={`transition-transform duration-200 ${isVideoCoursesOpen ? 'rotate-180' : ''}`} />
                   </motion.button>
 
                   {/* Dropdown Menu */}
@@ -228,7 +227,7 @@ const Navigation: React.FC = () => {
                 >
                   <motion.button
                     className={`
-                      flex items-center space-x-1 px-1.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap
+                      flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
                       ${pathname.startsWith('/online-group-classes')
                         ? 'text-green-600 bg-green-50'
                         : 'text-gray-700 hover:text-green-600 hover:bg-gray-50'
@@ -238,10 +237,9 @@ const Navigation: React.FC = () => {
                     whileTap={{ scale: 0.98 }}
                     title="線上團課"
                   >
-                    <SafeIcon icon={FiVideo} size={12} />
-                    <span className="hidden xl:inline text-xs">線上團課</span>
-                    <span className="xl:hidden text-[10px]">團課</span>
-                    <SafeIcon icon={FiChevronDown} size={10} className={`transition-transform duration-200 ${isOnlineGroupClassesOpen ? 'rotate-180' : ''}`} />
+                    <SafeIcon icon={FiVideo} size={14} />
+                    <span className="text-sm">線上團課</span>
+                    <SafeIcon icon={FiChevronDown} size={12} className={`transition-transform duration-200 ${isOnlineGroupClassesOpen ? 'rotate-180' : ''}`} />
                   </motion.button>
 
                   {/* Dropdown Menu */}
@@ -290,7 +288,7 @@ const Navigation: React.FC = () => {
                 >
                   <motion.button
                     className={`
-                      flex items-center space-x-1 px-1.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap
+                      flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
                       ${pathname.startsWith('/events')
                         ? 'text-orange-600 bg-orange-50'
                         : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50'
@@ -300,10 +298,9 @@ const Navigation: React.FC = () => {
                     whileTap={{ scale: 0.98 }}
                     title="活動"
                   >
-                    <SafeIcon icon={FiActivity} size={12} />
-                    <span className="hidden xl:inline text-xs">活動</span>
-                    <span className="xl:hidden text-[10px]">活動</span>
-                    <SafeIcon icon={FiChevronDown} size={10} className={`transition-transform duration-200 ${isEventsOpen ? 'rotate-180' : ''}`} />
+                    <SafeIcon icon={FiActivity} size={14} />
+                    <span className="text-sm">活動</span>
+                    <SafeIcon icon={FiChevronDown} size={12} className={`transition-transform duration-200 ${isEventsOpen ? 'rotate-180' : ''}`} />
                   </motion.button>
 
                   {/* Dropdown Menu */}
@@ -349,7 +346,7 @@ const Navigation: React.FC = () => {
                   key={item.name}
                   onClick={() => handleNavigation(item.href)}
                   className={`
-                    flex items-center space-x-1 px-1.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap
+                    flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
                     ${isActive(item.href)
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
@@ -359,9 +356,8 @@ const Navigation: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   title={item.name}
                 >
-                  <SafeIcon icon={item.icon} size={12} />
-                  <span className="hidden xl:inline text-xs">{item.name}</span>
-                  <span className="xl:hidden text-[10px]">{item.name.slice(0, 2)}</span>
+                  <SafeIcon icon={item.icon} size={14} />
+                  <span className="text-sm">{item.name}</span>
                 </motion.button>
               ))}
             </div>
@@ -370,11 +366,11 @@ const Navigation: React.FC = () => {
           {/* User Menu */}
           <div className="hidden lg:block">
             {isAuthenticated ? (
-              <div className="flex items-center space-x-1">
+              <div className="flex items-center space-x-2 xl:space-x-3">
                 {/* 推薦系統按鈕 - 小巧設計 */}
                 <motion.button
                   onClick={() => handleNavigation('/referral')}
-                  className={`flex-shrink-0 flex items-center justify-center w-7 h-7 xl:w-auto xl:h-auto xl:px-1.5 xl:py-1 xl:space-x-1 text-xs font-medium rounded transition-colors ${
+                  className={`flex-shrink-0 flex items-center justify-center px-3 py-2 space-x-1.5 text-sm font-medium rounded transition-colors ${
                     isActive('/referral')
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
@@ -383,28 +379,28 @@ const Navigation: React.FC = () => {
                   whileTap={{ scale: 0.98 }}
                   title="推薦系統"
                 >
-                  <SafeIcon icon={FiShare2} size={12} />
-                  <span className="hidden xl:inline text-xs">推薦</span>
+                  <SafeIcon icon={FiShare2} size={14} />
+                  <span className="text-sm">推薦</span>
                 </motion.button>
                 
                 {/* 用戶頭像和信息 - 小巧設計 */}
                 <motion.div 
-                  className="flex-shrink-0 flex items-center cursor-pointer hover:bg-gray-50 rounded p-0.5 xl:p-1 transition-colors"
+                  className="flex-shrink-0 flex items-center cursor-pointer hover:bg-gray-50 rounded px-2 py-1 transition-colors"
                   onClick={() => handleNavigation('/profile')}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   title="查看個人資料"
                 >
                   <Image
-                    className="h-6 w-6 xl:h-7 xl:w-7 rounded-full object-cover flex-shrink-0"
+                    className="h-8 w-8 rounded-full object-cover flex-shrink-0"
                     src={user?.avatar || 'https://www.gravatar.com/avatar/?d=mp&s=28'}
                     alt={user?.name || 'User'}
-                    width={28}
-                    height={28}
+                    width={32}
+                    height={32}
                   />
-                  <div className="hidden xl:block text-xs ml-1.5 min-w-0">
-                    <div className="font-medium text-gray-900 truncate w-14 text-[11px]">{user?.name}</div>
-                    <div className="text-gray-500 capitalize text-[9px] w-14 truncate">{currentRole}</div>
+                  <div className="text-sm ml-2 min-w-0">
+                    <div className="font-medium text-gray-900 truncate max-w-20 text-sm">{user?.name}</div>
+                    <div className="text-gray-500 capitalize text-xs max-w-20 truncate">{currentRole}</div>
                   </div>
                 </motion.div>
                 
@@ -416,7 +412,7 @@ const Navigation: React.FC = () => {
                         setIsRoleSelectorOpen(!isRoleSelectorOpen);
                       }
                     }}
-                    className={`flex items-center justify-center w-6 h-6 xl:w-7 xl:h-7 text-xs font-medium transition-colors rounded ${
+                    className={`flex items-center justify-center w-8 h-8 text-sm font-medium transition-colors rounded ${
                       availableRoles.length > 1 && !isRoleLocked
                         ? 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 cursor-pointer' 
                         : 'text-gray-300 cursor-default'
@@ -427,7 +423,7 @@ const Navigation: React.FC = () => {
                   >
                     <SafeIcon 
                       icon={FiChevronDown} 
-                      size={10} 
+                      size={12} 
                       className={`transition-transform duration-200 ${isRoleSelectorOpen ? 'rotate-180' : ''} ${
                         availableRoles.length > 1 && !isRoleLocked ? '' : 'opacity-30'
                       }`}
@@ -474,24 +470,24 @@ const Navigation: React.FC = () => {
                 {/* 登出按鈕 - 小巧設計 */}
                 <motion.button
                   onClick={handleLogout}
-                  className="flex-shrink-0 flex items-center justify-center w-7 h-7 xl:w-auto xl:h-auto xl:px-1.5 xl:py-1 xl:space-x-1 text-xs font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                  className="flex-shrink-0 flex items-center justify-center px-3 py-2 space-x-1.5 text-sm font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   title="登出"
                 >
-                  <SafeIcon icon={FiLogOut} size={12} />
-                  <span className="hidden xl:inline text-xs">登出</span>
+                  <SafeIcon icon={FiLogOut} size={14} />
+                  <span className="text-sm">登出</span>
                 </motion.button>
               </div>
             ) : (
               <motion.button
                 onClick={() => handleNavigation('/login')}
-                className="bg-blue-600 text-white px-2.5 py-1 xl:px-3 xl:py-1.5 rounded hover:bg-blue-700 transition-colors text-xs font-medium flex items-center space-x-1"
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors text-sm font-medium flex items-center space-x-1.5"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <SafeIcon icon={FiUser} size={12} />
-                <span className="hidden xl:inline text-xs">登入</span>
+                <SafeIcon icon={FiUser} size={14} />
+                <span className="text-sm">登入</span>
               </motion.button>
             )}
           </div>
