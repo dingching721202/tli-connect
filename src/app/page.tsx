@@ -484,16 +484,16 @@ export default function Home() {
       <div className="filmstrip">
         <div className="row">
           <div className="tile">
-            <img src="https://images.unsplash.com/photo-1699443218794-589f8bdd48e4?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/>
+            <img src="https://images.unsplash.com/photo-1699443218794-589f8bdd48e4?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Language Learning"/>
           </div>
           <div className="tile">
-            <img src="https://images.unsplash.com/photo-1515168833906-d2a3b82b302a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/>
+            <img src="https://images.unsplash.com/photo-1515168833906-d2a3b82b302a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Business Communication"/>
           </div>
           <div className="tile">
-            <img src="https://images.unsplash.com/photo-1517456793572-1d8efd6dc135?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/>
+            <img src="https://images.unsplash.com/photo-1517456793572-1d8efd6dc135?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Cultural Exchange"/>
           </div>
           <div className="tile">
-            <img src="https://images.unsplash.com/photo-1548684133-8739f016b2ac?q=80&w=1674&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/>
+            <img src="https://images.unsplash.com/photo-1548684133-8739f016b2ac?q=80&w=1674&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Global Business"/>
           </div>
         </div>
       </div>
@@ -653,7 +653,7 @@ export default function Home() {
                 </div>
                 <div className="course-card-content">
                   <div className="course-tag">Expert Channels</div>
-                  <div className="course-title">Kickstarting Global Impact: A Martial Artist's Journey in Business and Cross-Cultural Leadership</div>
+                  <div className="course-title">Kickstarting Global Impact: A Martial Artist&apos;s Journey in Business and Cross-Cultural Leadership</div>
                   <div className="course-desc">Hands-on, Cross-culture</div>
                 </div>
               </div>
@@ -727,7 +727,7 @@ export default function Home() {
         <div className="container footer-cta">
           <div className="footer-copy">
             <h2 className="h2">Ready to Join TLI Connect?</h2>
-            <p className="body-m">Leave your info and we'll send you full plan details within one business day.</p>
+            <p className="body-m">Leave your info and we&apos;ll send you full plan details within one business day.</p>
           </div>
           <div className="card-form footer-card">
             <form id="footerForm" onSubmit={handleSubmit('footer', footerForm)}>
@@ -765,10 +765,10 @@ export default function Home() {
                   {errors.footer?.phone && <div className="error-msg" style={{display: 'block'}}>{errors.footer.phone}</div>}
                 </div>
                 <button className="btn" type="submit">Free Consultation</button>
-                <div className="caption">We'll get back to you within 1–2 business days. Your information is kept strictly confidential.</div>
+                <div className="caption">We&apos;ll get back to you within 1–2 business days. Your information is kept strictly confidential.</div>
                 {success === 'footer' && (
                   <div className="success" style={{display: 'block'}}>
-                    Thanks! We'll contact you within 1–2 business days.
+                    Thanks! We&apos;ll contact you within 1–2 business days.
                   </div>
                 )}
                 {errors.footer?.submit && (

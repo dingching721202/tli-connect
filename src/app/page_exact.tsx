@@ -921,10 +921,10 @@ export default function Home() {
       {/* Filmstrip */}
       <div className="filmstrip" aria-hidden="true">
         <div className="row">
-          <div className="tile"><img src="https://images.unsplash.com/photo-1699443218794-589f8bdd48e4?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/></div>
-          <div className="tile"><img src="https://images.unsplash.com/photo-1515168833906-d2a3b82b302a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/></div>
-          <div className="tile"><img src="https://images.unsplash.com/photo-1517456793572-1d8efd6dc135?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/></div>
-          <div className="tile"><img src="https://images.unsplash.com/photo-1548684133-8739f016b2ac?q=80&w=1674&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"/></div>
+          <div className="tile"><img src="https://images.unsplash.com/photo-1699443218794-589f8bdd48e4?q=80&w=987&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Learning experience" /></div>
+          <div className="tile"><img src="https://images.unsplash.com/photo-1515168833906-d2a3b82b302a?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Cultural connection" /></div>
+          <div className="tile"><img src="https://images.unsplash.com/photo-1517456793572-1d8efd6dc135?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Business communication" /></div>
+          <div className="tile"><img src="https://images.unsplash.com/photo-1548684133-8739f016b2ac?q=80&w=1674&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Professional development" /></div>
         </div>
       </div>
 
@@ -936,17 +936,17 @@ export default function Home() {
             <div className="why-item">
               <div>
                 <span className="why-tag pain" aria-hidden="true">Common Challenge</span>
-                <h3 className="h3">"I need flexibility, but I also want real connection—not just watching videos alone."</h3>
+                <h3 className="h3">&ldquo;I need flexibility, but I also want real connection—not just watching videos alone.&rdquo;</h3>
               </div>
               <div>
                 <span className="why-tag solution" aria-hidden="true">Solution</span>
-                <p>We're more than a classroom—it's a curated community. Connect with like-minded professionals in Taiwan and worldwide to exchange ideas, practice Mandarin, and build meaningful networks that support both your language journey and your career growth.</p>
+                <p>We&apos;re more than a classroom—it&apos;s a curated community. Connect with like-minded professionals in Taiwan and worldwide to exchange ideas, practice Mandarin, and build meaningful networks that support both your language journey and your career growth.</p>
               </div>
             </div>
             <div className="why-item">
               <div>
                 <span className="why-tag pain" aria-hidden="true">Common Challenge</span>
-                <h3 className="h3">"I feel like an outsider, unable to connect with Chinese colleagues or clients."</h3>
+                <h3 className="h3">&ldquo;I feel like an outsider, unable to connect with Chinese colleagues or clients.&rdquo;</h3>
               </div>
               <div>
                 <span className="why-tag solution" aria-hidden="true">Solution</span>
@@ -956,7 +956,7 @@ export default function Home() {
             <div className="why-item">
               <div>
                 <span className="why-tag pain" aria-hidden="true">Common Challenge</span>
-                <h3 className="h3">"I've already studied Chinese before, but I'm losing touch—and I need to keep it sharp to maintain client relationships."</h3>
+                <h3 className="h3">&ldquo;I&apos;ve already studied Chinese before, but I&apos;m losing touch—and I need to keep it sharp to maintain client relationships.&rdquo;</h3>
               </div>
               <div>
                 <span className="why-tag solution" aria-hidden="true">Solution</span>
@@ -1086,7 +1086,7 @@ export default function Home() {
                   </div>
                   <div className="course-card-content">
                     <div className="course-tag">Expert Channels</div>
-                    <div className="course-title">Kickstarting Global Impact: A Martial Artist's Journey in Business and Cross-Cultural Leadership</div>
+                    <div className="course-title">Kickstarting Global Impact: A Martial Artist&apos;s Journey in Business and Cross-Cultural Leadership</div>
                     <div className="course-desc">Hands-on, Cross-culture</div>
                   </div>
                 </div>
@@ -1125,7 +1125,7 @@ export default function Home() {
           <div className="num-grid" style={{marginTop: '40px'}}>
             <div>
               <div className="num">Established<br />1956</div>
-              <p className="body-m">TLI is Taiwan's pioneer language institute.</p>
+              <p className="body-m">TLI is Taiwan&apos;s pioneer language institute.</p>
             </div>
             <div>
               <div className="num">600k+<br />Learners</div>
@@ -1160,7 +1160,7 @@ export default function Home() {
         <div className="container footer-cta">
           <div className="footer-copy">
             <h2 className="h2" id="footer-title">Ready to Join TLI Connect?</h2>
-            <p className="body-m">Leave your info and we'll send you full plan details within one business day.</p>
+            <p className="body-m">Leave your info and we&apos;ll send you full plan details within one business day.</p>
           </div>
           <div className="card-form footer-card" role="form" aria-labelledby="footer-title">
             <form id="footerForm" onSubmit={handleSubmit('footer', footerForm)} noValidate>
@@ -1204,9 +1204,9 @@ export default function Home() {
                   {errors.footer?.phone && <div className="error-msg" style={{display: 'block'}}>{errors.footer.phone}</div>}
                 </div>
                 <button className="btn" type="submit">Free Consultation</button>
-                <div className="caption">We'll get back to you within 1–2 business days. Your information is kept strictly confidential.</div>
+                <div className="caption">We&apos;ll get back to you within 1–2 business days. Your information is kept strictly confidential.</div>
                 {success === 'footer' && (
-                  <div className="success" style={{display: 'block'}}>Thanks! We'll contact you within 1–2 business days.</div>
+                  <div className="success" style={{display: 'block'}}>Thanks! We&apos;ll contact you within 1–2 business days.</div>
                 )}
                 {errors.footer?.submit && (
                   <div className="fail" style={{display: 'block'}}>{errors.footer.submit}</div>

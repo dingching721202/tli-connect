@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 
 export default function BusinessLanding() {
   const [ctaForm, setCtaForm] = useState({
@@ -923,7 +924,7 @@ export default function BusinessLanding() {
             <div className="roles-content">
               <h2 className="h2">Tailored Training for Every Role on Your Team</h2>
               <p className="subtitle" style={{fontSize: '20px'}}>
-                Whether you're launching a new project or collaborating day-to-day, we help you bridge departmental divides. 
+                Whether you&apos;re launching a new project or collaborating day-to-day, we help you bridge departmental divides. 
                 We empower your team by building a common language and fostering a shared cultural understanding for smoother collaboration.
               </p>
 
@@ -1002,7 +1003,7 @@ export default function BusinessLanding() {
                       Flexible & Cost-Effective Training
                     </strong>
                     <span>
-                      Combine a video library, live small-group classes, and in-person workshops to create a blended learning program that fits your team's schedule and your budget.
+                      Combine a video library, live small-group classes, and in-person workshops to create a blended learning program that fits your team&apos;s schedule and your budget.
                     </span>
                   </li>
                   <li style={{
@@ -1088,7 +1089,7 @@ export default function BusinessLanding() {
                       Real-Time Progress Tracking
                     </strong>
                     <span>
-                      Monitor learning status with dashboard reports and at-a-glance summaries. Easily track team progress and align training with your company's performance goals.
+                      Monitor learning status with dashboard reports and at-a-glance summaries. Easily track team progress and align training with your company&apos;s performance goals.
                     </span>
                   </li>
                 </ul>
@@ -1164,9 +1165,9 @@ export default function BusinessLanding() {
 
         {/* Brand Trust */}
         <section className="brand-trust-section">
-          <h2 className="h2">From Language Instruction to Cross-Cultural Collaboration—TLI's Commitment</h2>
+          <h2 className="h2">From Language Instruction to Cross-Cultural Collaboration—TLI&apos;s Commitment</h2>
           <p className="subtitle" style={{fontSize: '20px'}}>
-            TLI Connect extends 70 years of TLI's educational heritage, delivering scalable, governable, and measurable cross-cultural training solutions.
+            TLI Connect extends 70 years of TLI&apos;s educational heritage, delivering scalable, governable, and measurable cross-cultural training solutions.
           </p>
           <div className="filmstrip-vintage">
             <div className="filmstrip-row">
@@ -1190,7 +1191,7 @@ export default function BusinessLanding() {
                 1956
               </p>
               <p style={{color: 'var(--ink)', fontWeight: 200}}>
-                TLI founded, serving the U.S. State Department's stationed diplomats and advisors
+                TLI founded, serving the U.S. State Department&apos;s stationed diplomats and advisors
               </p>
             </div>
             <div>
@@ -1222,9 +1223,9 @@ export default function BusinessLanding() {
               </p>
             </div>
             <div className="membership-cta">
-              <a href="/" className="secondary-btn" aria-label="View Individual Plans">
+              <Link href="/" className="secondary-btn" aria-label="View Individual Plans">
                 View Individual Plans
-              </a>
+              </Link>
             </div>
           </div>
         </section>
