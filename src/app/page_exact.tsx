@@ -1,8 +1,6 @@
 'use client';
 
-import Navigation from "@/components/Navigation";
 import { useState } from "react";
-import Image from "next/image";
 
 export default function Home() {
   const [heroForm, setHeroForm] = useState({
@@ -905,10 +903,10 @@ export default function Home() {
                 <button className="btn" type="submit" aria-label="Submit contact form">Free Consultation</button>
               </form>
               <div className="caption" style={{margin: '12px 0 0 0', textAlign:'center'}}>
-                We'll get back to you within 1–2 business days. Your information is kept strictly confidential.
+                We&apos;ll get back to you within 1–2 business days. Your information is kept strictly confidential.
               </div>
               {success === 'hero' && (
-                <div className="success" style={{display: 'block'}}>Thank you for your submission! We'll be in touch within 1–2 business days.</div>
+                <div className="success" style={{display: 'block'}}>Thank you for your submission! We&apos;ll be in touch within 1–2 business days.</div>
               )}
               {errors.hero?.submit && (
                 <div className="fail" style={{display: 'block'}}>{errors.hero.submit}</div>

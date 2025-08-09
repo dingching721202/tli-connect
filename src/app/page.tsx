@@ -692,7 +692,7 @@ export default function Home() {
           <div className="num-grid">
             <div>
               <div className="num">Established<br/>1956</div>
-              <p className="body-m">TLI is Taiwan's pioneer language institute.</p>
+              <p className="body-m">TLI is Taiwan&apos;s pioneer language institute.</p>
             </div>
             <div>
               <div className="num">600k+<br/>Learners</div>
