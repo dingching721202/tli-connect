@@ -1,0 +1,267 @@
+/* Landing Page Shared Styles */
+
+/* CSS Variables */
+:root {
+  --ink: #1E2328;
+  --black: #0F1419;
+  --divider: #E8EAED;
+  --gold: #F2C14E;
+  --page-padding: 24px;
+  --container: 1200px;
+}
+
+/* Base Typography and Layout */
+body {
+  font-family: Inter, "Noto Sans", system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  color: var(--ink);
+  background: var(--black);
+}
+
+h1, h2, h3 {
+  margin: 0 0 16px;
+  color: var(--ink);
+  font-family: "Plus Jakarta Sans", "Noto Sans TC", Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  font-feature-settings: "pnum" 1, "lnum" 1;
+  font-weight: 800;
+}
+
+/* Header and Navigation */
+.site-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 72px;
+  background: #fff;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--page-padding);
+}
+
+/* Navigation Links */
+.nav-link {
+  position: relative;
+  text-decoration: none;
+  font-weight: 500;
+  color: var(--ink);
+  transition: color 0.3s ease;
+  padding-bottom: 4px;
+}
+
+.nav-link:hover {
+  color: var(--gold);
+}
+
+.nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--gold);
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover::after {
+  width: 100%;
+}
+
+/* CTA Buttons */
+.cta-btn {
+  font-size: 15px;
+  font-weight: 600;
+  background: linear-gradient(90deg, #009FB6, #027AB9);
+  color: #FFFFFF;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: 999px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(2, 122, 185, 0.16);
+  border: none;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.cta-btn:hover {
+  box-shadow: 0 4px 16px rgba(2, 122, 185, 0.24);
+  transform: translateY(-2px);
+}
+
+.cta-btn--sm {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+/* Form Elements */
+input[type="text"],
+input[type="email"],
+input[type="tel"] {
+  height: 52px;
+  border: 1px solid var(--divider);
+  border-radius: 12px;
+  padding: 0 16px;
+  font-size: 16px;
+  color: var(--ink);
+  background: #FFFFFF;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+input:focus {
+  border-color: var(--gold);
+}
+
+/* Hero Section */
+.hero {
+  padding: 96px 60px;
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+}
+
+.hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: url('https://drive.google.com/thumbnail?id=1dqPrlDGVMgKHbwcRm2Ww8TcuSjkoJF-F&sz=w3200');
+  background-size: cover;
+  background-position: 70% 60%;
+  pointer-events: none;
+  transition: background 0.5s;
+}
+
+/* Container */
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 var(--page-padding);
+  position: relative;
+  z-index: 2;
+}
+
+/* Course Cards */
+.course-card {
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.course-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.course-card-imgbox {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.course-card-content {
+  padding: 20px;
+}
+
+.course-tag {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.course-title {
+  font-weight: 700;
+  font-size: 18px;
+  line-height: 1.3;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+
+.course-desc {
+  color: #666;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+/* Error and Success Messages */
+.error-msg {
+  color: #e74c3c;
+  font-size: 14px;
+  margin-top: 4px;
+  display: none;
+}
+
+.success {
+  color: #27ae60;
+  font-size: 14px;
+  margin-top: 8px;
+  display: none;
+}
+
+.fail {
+  color: #e74c3c;
+  font-size: 14px;
+  margin-top: 8px;
+  display: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero {
+    padding: 80px 20px;
+  }
+  
+  .container {
+    padding: 0 20px;
+  }
+  
+  .site-header {
+    padding: 0 20px;
+  }
+  
+  :root {
+    --page-padding: 20px;
+  }
+}
+
+/* Filmstrip Effects */
+.filmstrip {
+  background: rgba(0, 0, 0, 0.05);
+  padding: 24px 0;
+  overflow: hidden;
+}
+
+.filmstrip-row {
+  display: flex;
+  gap: 16px;
+  padding: 0 24px;
+}
+
+.tile {
+  position: relative;
+  min-width: 200px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.tile::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(0deg, rgba(16, 35, 53, .18), rgba(16, 35, 53, .18));
+}

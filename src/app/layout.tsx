@@ -25,8 +25,26 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "TLI Connect",
-  description: "TLI Connect - Break Language Barriers. Unlock Asian Markets",
+  title: "TLI Connect - Break Language Barriers. Unlock Asian Markets",
+  description: "Join TLI Connect's cross-cultural learning community. Master Chinese language, culture, and business skills with Taiwan's pioneer language institute since 1956.",
+  keywords: "Chinese language learning, Mandarin classes, Taiwan language school, cross-cultural training, business Chinese, TLI",
+  authors: [{ name: "TLI Connect" }],
+  creator: "TLI Connect",
+  publisher: "TLI Connect",
+  robots: "index, follow",
+  openGraph: {
+    title: "TLI Connect - Break Language Barriers. Unlock Asian Markets",
+    description: "Join TLI Connect's cross-cultural learning community. Master Chinese language, culture, and business skills with Taiwan's pioneer language institute since 1956.",
+    type: "website",
+    locale: "en_US",
+    alternateLocale: "zh_TW",
+    siteName: "TLI Connect",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "TLI Connect - Break Language Barriers. Unlock Asian Markets",
+    description: "Join TLI Connect's cross-cultural learning community. Master Chinese language, culture, and business skills.",
+  },
 };
 
 export default function RootLayout({

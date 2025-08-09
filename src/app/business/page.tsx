@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function BusinessLanding() {
@@ -764,9 +765,12 @@ export default function BusinessLanding() {
             display: 'inline-block',
             width: '200px'
           }}>
-            <img 
+            <Image 
               src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
-              alt="Taipei Language Institute logo" 
+              alt="Taipei Language Institute logo"
+              width={400}
+              height={120}
+              priority
               style={{width: '100%', height: 'auto'}}
             />
           </a>
