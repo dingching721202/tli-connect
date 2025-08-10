@@ -20,7 +20,7 @@ const Login: React.FC = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { register, login } = useAuth();
+  const { register, login, setRoleLock, switchRole } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -185,8 +185,39 @@ const Login: React.FC = () => {
       }
       
       if (result.success && result.user) {
-        // 登入成功後重導向到指定頁面
-        router.push(redirectUrl);
+        // 登入成功後，根據選擇的角色導向正確的路徑
+        if (loginMode !== 'general' && loginMode !== 'selection') {
+          // 從角色入口登入 - 設置角色鎖定並導向角色專區
+          const rolePathMap = {
+            'student': { role: 'STUDENT', path: '/student' },
+            'teacher': { role: 'TEACHER', path: '/teacher' },
+            'corporate': { role: 'CORPORATE_CONTACT', path: '/corporate' },
+            'agent': { role: 'AGENT', path: '/agent' },
+            'staff': { role: 'STAFF', path: '/staff' },
+            'admin': { role: 'ADMIN', path: '/admin' }
+          };
+          
+          const roleConfig = rolePathMap[loginMode as keyof typeof rolePathMap];
+          if (roleConfig && result.user.roles.includes(roleConfig.role)) {
+            // 先切換到正確的角色，然後設置角色鎖定並導向角色專區
+            switchRole(roleConfig.role);
+            setRoleLock(roleConfig.role);
+            // 添加小延遲讓AuthContext同步狀態
+            setTimeout(() => {
+              router.push(roleConfig.path);
+            }, 200);
+          } else if (roleConfig) {
+            // 沒有該角色權限
+            setError(`您的帳號沒有${roleConfigs.find(r => r.id === loginMode)?.title}權限`);
+            return;
+          } else {
+            // 一般登入導向預設頁面
+            router.push(redirectUrl);
+          }
+        } else {
+          // 通用登入導向預設頁面
+          router.push(redirectUrl);
+        }
       } else {
         // 處理錯誤碼
         let errorMessage = result.error || (isRegisterMode ? '註冊失敗' : '登入失敗');
@@ -365,10 +396,10 @@ const Login: React.FC = () => {
                   className="text-white" 
                 />
               </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold mb-2" style={{color: 'white'}}>
                 {isRegisterMode ? '建立新帳戶' : (isGeneral ? '通用登入' : currentRole?.title || '登入')}
               </h1>
-              <p className="text-blue-100 text-sm sm:text-base">
+              <p className="text-sm sm:text-base" style={{color: 'white'}}>
                 {isRegisterMode 
                   ? '註冊您的 TLI Connect 帳戶' 
                   : (isGeneral ? 'TLI Connect 通用登入入口' : currentRole?.description || '登入您的帳戶')

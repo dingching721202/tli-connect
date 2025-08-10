@@ -133,8 +133,13 @@
     font-family: 'Noto Sans TC', 'Microsoft JhengHei', '微軟正黑體', 'PingFang TC', sans-serif;
   }
   
-  /* 確保中文字體在不同設備上的最佳顯示 */
-  h1, h2, h3, h4, h5, h6 {
+  /* 確保中文字體在不同設備上的最佳顯示 - 但不影響登入頁面 */
+  .main-layout h1, 
+  .main-layout h2, 
+  .main-layout h3, 
+  .main-layout h4, 
+  .main-layout h5, 
+  .main-layout h6 {
     font-family: var(--font-plus-jakarta-sans), var(--font-noto-sans-tc), var(--font-inter), 'Microsoft JhengHei', '微軟正黑體', 'PingFang TC', sans-serif;
     font-weight: 800;
     margin: 0 0 16px;

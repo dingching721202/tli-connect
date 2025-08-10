@@ -1,9 +1,9 @@
 import RoleEntry from '@/components/RoleEntry';
 import LeaveManagement from '@/components/LeaveManagement';
 
-export default function StaffLeaveManagementPage() {
+export default function AdminLeaveManagementPage() {
   return (
-    <RoleEntry requiredRole="STAFF">
+    <RoleEntry requiredRole="ADMIN">
       <LeaveManagement />
     </RoleEntry>
   );

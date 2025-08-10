@@ -2,13 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import MemberCardStorage from '@/lib/memberCardStorage';
 
 interface RouteParams {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // PUT - 更新會員卡
 export async function PUT(request: NextRequest, { params }: RouteParams) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const cardId = parseInt(id);
     const body = await request.json();
     const { name, available_course_ids } = body;
@@ -58,7 +58,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 // DELETE - 刪除會員卡
 export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const cardId = parseInt(id);
 
     const storage = MemberCardStorage.getInstance();

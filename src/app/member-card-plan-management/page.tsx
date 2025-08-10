@@ -583,19 +583,6 @@ const MemberCardPlanManagement: React.FC = () => {
     return Math.round(((originalPrice - salePrice) / originalPrice) * 100);
   };
 
-  if (loading) {
-    return (
-      <div className="main-layout">
-        <Navigation />
-        <div className="page-container">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">載入中...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="main-layout">

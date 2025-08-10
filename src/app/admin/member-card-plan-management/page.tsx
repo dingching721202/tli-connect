@@ -1,9 +1,9 @@
 import RoleEntry from '@/components/RoleEntry';
 import MemberCardPlanManagement from '@/components/MemberCardPlanManagement';
 
-export default function StaffMemberCardPlanManagementPage() {
+export default function AdminMemberCardPlanManagementPage() {
   return (
-    <RoleEntry requiredRole="STAFF">
+    <RoleEntry requiredRole="ADMIN">
       <MemberCardPlanManagement />
     </RoleEntry>
   );

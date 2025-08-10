@@ -1,9 +1,9 @@
 import RoleEntry from '@/components/RoleEntry';
 import SystemSettings from '@/components/SystemSettings';
 
-export default function StaffSystemSettingsPage() {
+export default function AdminSystemSettingsPage() {
   return (
-    <RoleEntry requiredRole="STAFF">
+    <RoleEntry requiredRole="ADMIN">
       <SystemSettings />
     </RoleEntry>
   );

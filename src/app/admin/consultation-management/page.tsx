@@ -1,9 +1,9 @@
 import RoleEntry from '@/components/RoleEntry';
 import ConsultationManagement from '@/components/ConsultationManagement';
 
-export default function StaffConsultationManagementPage() {
+export default function AdminConsultationManagementPage() {
   return (
-    <RoleEntry requiredRole="STAFF">
+    <RoleEntry requiredRole="ADMIN">
       <ConsultationManagement />
     </RoleEntry>
   );

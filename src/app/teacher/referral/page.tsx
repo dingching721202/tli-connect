@@ -1,9 +1,9 @@
 import RoleEntry from '@/components/RoleEntry';
 import ReferralSystemPage from '@/components/ReferralSystemPage';
 
-export default function AgentReferralPage() {
+export default function TeacherReferralPage() {
   return (
-    <RoleEntry requiredRole="AGENT">
+    <RoleEntry requiredRole="TEACHER">
       <ReferralSystemPage />
     </RoleEntry>
   );

@@ -26,15 +26,20 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login, isAuthenticated, hasRole, loading } = useAuth();
+  const { login, isAuthenticated, hasRole, loading, setRoleLock, switchRole } = useAuth();
   const router = useRouter();
 
-  // 如果已登入且有權限，直接跳轉
+  // 如果已登入且有權限，設置角色鎖定並直接跳轉
   useEffect(() => {
     if (!loading && isAuthenticated && hasRole(requiredRole)) {
-      router.push(redirectPath);
+      switchRole(requiredRole);
+      setRoleLock(requiredRole);
+      // 添加小延遲讓AuthContext同步狀態
+      setTimeout(() => {
+        router.push(redirectPath);
+      }, 200);
     }
-  }, [isAuthenticated, hasRole, requiredRole, redirectPath, router, loading]);
+  }, [isAuthenticated, hasRole, requiredRole, redirectPath, router, loading, setRoleLock, switchRole]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,8 +52,13 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
       if (result.success && result.user) {
         // 檢查是否有所需角色
         if (result.user.roles.includes(requiredRole)) {
-          // 登入成功且有權限，跳轉到角色專區
-          router.push(redirectPath);
+          // 登入成功且有權限，先切換角色，然後設置角色鎖定並跳轉到角色專區
+          switchRole(requiredRole);
+          setRoleLock(requiredRole);
+          // 添加小延遲讓AuthContext同步狀態
+          setTimeout(() => {
+            router.push(redirectPath);
+          }, 200);
         } else {
           // 沒有該角色權限，跳轉到通用登入頁面
           alert(`您的帳號沒有${roleDisplayName}權限，將跳轉到通用登入頁面`);
@@ -118,8 +128,8 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
               animate={{ scale: 1 }}
               className="text-white"
             >
-              <h1 className="text-2xl font-bold mb-2">TLI Connect</h1>
-              <p className="text-blue-100">{roleDisplayName}專用登入</p>
+              <h1 className="text-2xl font-bold mb-2" style={{color: 'white'}}>TLI Connect</h1>
+              <p style={{color: 'white'}}>{roleDisplayName}專用登入</p>
             </motion.div>
           </div>
 
