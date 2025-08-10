@@ -173,7 +173,7 @@ const CourseListView: React.FC<CourseListViewProps> = ({
     >
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 sm:p-6">
-        <h2 className="text-xl sm:text-2xl font-bold flex items-center">
+        <h2 className="text-xl sm:text-2xl font-bold flex items-center text-white">
           <SafeIcon icon={FiCalendar} size={24} className="mr-2" />
           課程列表
         </h2>

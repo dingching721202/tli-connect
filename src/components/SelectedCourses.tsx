@@ -101,7 +101,7 @@ const SelectedCourses: React.FC<SelectedCoursesProps> = ({
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 sm:p-6">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg sm:text-xl font-bold mb-1">已選課程</h3>
+            <h3 className="text-lg sm:text-xl font-bold mb-1 text-white">已選課程</h3>
             <p className="text-blue-100 text-sm">
               {selectedCourses.length === 0 
                 ? '尚未選擇任何課程' 
