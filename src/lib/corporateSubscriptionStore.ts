@@ -64,7 +64,7 @@ class CorporateSubscriptionStore {
 
   // 根據公司獲取訂閱
   async getSubscriptionsByCompany(companyId: string | number): Promise<CorporateSubscription[]> {
-    return this.subscriptions.filter(sub => sub.company_id === companyId);
+    return this.subscriptions.filter(sub => sub.corp_id === companyId);
   }
 
   // 獲取企業訂閱統計
@@ -97,9 +97,9 @@ class CorporateSubscriptionStore {
 
     // 獲取公司信息
     const companies = getCompanies();
-    const company = companies.find(c => c.id === data.company_id);
+    const company = companies.find(c => c.id === data.corp_id);
     if (!company) {
-      throw new Error(`找不到ID為 ${data.company_id} 的公司`);
+      throw new Error(`找不到ID為 ${data.corp_id} 的公司`);
     }
 
     // 計算開啟期限
@@ -108,7 +108,7 @@ class CorporateSubscriptionStore {
 
     const newSubscription: CorporateSubscription = {
       id: newId,
-      company_id: data.company_id,
+      corp_id: data.corp_id,
       plan_id: data.plan_id,
       seats_total: data.seats_total,
       seats_used: 0,

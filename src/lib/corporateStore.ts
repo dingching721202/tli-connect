@@ -52,7 +52,7 @@ class CorporateStore {
   private getDefaultCompanies(): Company[] {
     return [
       {
-        id: 'corp_001',
+        id: '1',
         name: '台積電股份有限公司',
         contactName: '張經理',
         contactEmail: 'manager.zhang@tsmc.com',
@@ -64,7 +64,7 @@ class CorporateStore {
         createdAt: '2024-01-01T00:00:00Z'
       },
       {
-        id: 'corp_002',
+        id: '2',
         name: '富邦金融控股股份有限公司',
         contactName: '李主管',
         contactEmail: 'supervisor.li@fubon.com',
@@ -76,7 +76,7 @@ class CorporateStore {
         createdAt: '2024-03-01T00:00:00Z'
       },
       {
-        id: 'corp_003',
+        id: '3',
         name: '中華電信股份有限公司',
         contactName: '王協理',
         contactEmail: 'director.wang@cht.com.tw',

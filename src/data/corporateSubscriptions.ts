@@ -4,7 +4,7 @@ import { CorporateSubscription } from '@/types/corporateSubscription';
 export const corporateSubscriptions: CorporateSubscription[] = [
   {
     id: 1,
-    company_id: 'corp_001',
+    corp_id: '1',
     plan_id: 3, // 企業年度方案
     order_id: 1001,
     seats_total: 50,
@@ -25,7 +25,7 @@ export const corporateSubscriptions: CorporateSubscription[] = [
   },
   {
     id: 2,
-    company_id: 'corp_002',
+    corp_id: '2',
     plan_id: 4, // 企業季度方案
     order_id: 1002,
     seats_total: 20,
@@ -46,7 +46,7 @@ export const corporateSubscriptions: CorporateSubscription[] = [
   },
   {
     id: 3,
-    company_id: 'corp_003',
+    corp_id: '3',
     plan_id: 3,
     seats_total: 100,
     seats_used: 0,

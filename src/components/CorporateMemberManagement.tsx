@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
+import { useAuth } from '@/contexts/AuthContext';
 import { corporateSubscriptionStore } from '@/lib/corporateSubscriptionStore';
 import { corporateMemberStore } from '@/lib/corporateMemberStore';
 import { corporateStore } from '@/lib/corporateStore';
@@ -23,6 +24,7 @@ interface CorporateData extends Company {
 }
 
 const CorporateMemberManagement = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [corporateData, setCorporateData] = useState<CorporateData[]>([]);
@@ -74,7 +76,7 @@ const CorporateMemberManagement = () => {
   
   // 新增訂閱表單
   const [newSubscription, setNewSubscription] = useState({
-    company_id: '',
+    corp_id: '',
     plan_id: 0,
     seats_total: 10,
     amount_paid: 0,
@@ -105,10 +107,37 @@ const CorporateMemberManagement = () => {
       const members = await corporateMemberStore.getAllMembers();
       const memberStats = await corporateMemberStore.getMemberStatistics();
       
+      // 過濾企業數據 - 企業聯絡人只能看到自己所屬的企業
+      let filteredCompanies = companies;
+      console.log('Current user:', user);
+      console.log('User roles:', user?.roles);
+      console.log('User corp_id:', user?.corp_id);
+      if (user?.roles.includes('CORPORATE_CONTACT') && (user as any).corp_id) {
+        console.log('Filtering companies for CORPORATE_CONTACT user');
+        console.log('🔍 CORPORATE DEBUG:');
+        console.log('- User corp_id:', (user as any).corp_id, '(type:', typeof (user as any).corp_id, ')');
+        console.log('- Available companies:', companies.map(c => ({ id: c.id, name: c.name, type: typeof c.id })));
+        
+        filteredCompanies = companies.filter(company => {
+          const match = company.id === (user as any).corp_id;
+          console.log(`- Match check: "${company.id}" === "${(user as any).corp_id}" = ${match}`);
+          return match;
+        });
+        
+        console.log('✅ Filtered companies result:', filteredCompanies.length, 'companies');
+        if (filteredCompanies.length > 0) {
+          console.log('- Company found:', filteredCompanies[0].name);
+        } else {
+          console.log('❌ No companies found for corp_id:', (user as any).corp_id);
+        }
+      } else if (user?.roles.includes('CORPORATE_CONTACT')) {
+        console.log('CORPORATE_CONTACT user but no corp_id found');
+      }
+      
       // 組合企業數據
-      const combinedData: CorporateData[] = companies.map(company => {
-        const companySubscriptions = subscriptions.filter(sub => sub.company_id === company.id);
-        const companyMembers = members.filter(member => member.company_id === company.id);
+      const combinedData: CorporateData[] = filteredCompanies.map(company => {
+        const companySubscriptions = subscriptions.filter(sub => sub.corp_id === company.id);
+        const companyMembers = members.filter(member => member.corp_id === company.id);
         
         return {
           ...company,
@@ -119,18 +148,34 @@ const CorporateMemberManagement = () => {
       
       setCorporateData(combinedData);
       
-      // 計算統計數據
-      const activePlans = subscriptions.filter(sub => sub.status === 'activated').length;
-      const cancelledMembers = members.filter(m => m.card_status === 'cancelled').length;
-      const testMembers = members.filter(m => m.card_status === 'test').length;
+      // 計算統計數據 - 企業聯絡人只看自己公司的數據
+      let filteredSubscriptions = subscriptions;
+      let filteredMembers = members;
+      
+      if (user?.roles.includes('CORPORATE_CONTACT') && (user as any).corp_id) {
+        // 企業聯絡人只看自己公司的訂閱和會員
+        const userCorpId = (user as any).corp_id;
+        filteredSubscriptions = subscriptions.filter(sub => sub.corp_id === userCorpId);
+        filteredMembers = members.filter(member => member.corp_id === userCorpId);
+        console.log('🔍 STATS DEBUG: Filtered for corp_id', userCorpId);
+        console.log('- Subscriptions:', filteredSubscriptions.length, '/', subscriptions.length);
+        console.log('- Members:', filteredMembers.length, '/', members.length);
+      }
+      
+      const activePlans = filteredSubscriptions.filter(sub => sub.status === 'activated').length;
+      const cancelledMembers = filteredMembers.filter(m => m.card_status === 'cancelled').length;
+      const testMembers = filteredMembers.filter(m => m.card_status === 'test').length;
+      const activatedMembers = filteredMembers.filter(m => m.card_status === 'activated').length;
+      const inactiveMembers = filteredMembers.filter(m => m.card_status === 'inactive').length;
+      const expiredMembers = filteredMembers.filter(m => m.card_status === 'expired').length;
       
       setStatistics({
-        totalCompanies: companies.length,
+        totalCompanies: filteredCompanies.length, // 使用已過濾的公司數量
         activePlans,
-        totalMembers: memberStats.totalMembers,
-        inactiveMembers: memberStats.inactiveMembers,
-        activatedMembers: memberStats.activatedMembers,
-        expiredMembers: memberStats.expiredMembers,
+        totalMembers: filteredMembers.length,
+        inactiveMembers,
+        activatedMembers,
+        expiredMembers,
         cancelledMembers,
         testMembers
       });
@@ -315,7 +360,7 @@ const CorporateMemberManagement = () => {
         subscription_id: selectedSubscriptionId,
         user_name: newMember.user_name,
         user_email: newMember.user_email,
-        company_id: subscription.company_id,
+        corp_id: subscription.corp_id,
         company_name: subscription.company_name || '',
         plan_title: subscription.plan_title || '',
         duration_type: subscription.duration_type || 'annual',
@@ -514,7 +559,7 @@ const CorporateMemberManagement = () => {
   const handleCreateSubscription = async () => {
     try {
       // 驗證必填欄位
-      if (!newSubscription.company_id || !newSubscription.plan_id || newSubscription.seats_total <= 0) {
+      if (!newSubscription.corp_id || !newSubscription.plan_id || newSubscription.seats_total <= 0) {
         alert('請選擇企業、方案並設定席次數');
         return;
       }
@@ -525,7 +570,7 @@ const CorporateMemberManagement = () => {
       }
 
       await corporateSubscriptionStore.createSubscription({
-        company_id: newSubscription.company_id,
+        corp_id: newSubscription.corp_id,
         plan_id: newSubscription.plan_id,
         seats_total: newSubscription.seats_total,
         amount_paid: newSubscription.amount_paid,
@@ -537,7 +582,7 @@ const CorporateMemberManagement = () => {
       
       // 重置表單
       setNewSubscription({
-        company_id: '',
+        corp_id: '',
         plan_id: 0,
         seats_total: 10,
         amount_paid: 0,
@@ -624,7 +669,7 @@ const CorporateMemberManagement = () => {
   const handleAddSubscriptionForCompany = (company: Company) => {
     setSelectedCompanyForSubscription(company);
     setNewSubscription({
-      company_id: String(company.id),
+      corp_id: String(company.id),
       plan_id: 0,
       seats_total: 10,
       amount_paid: 0,
@@ -1180,6 +1225,18 @@ const CorporateMemberManagement = () => {
                                       `${editingSubscription.seats_used}/${editingSubscription.seats_total}` : 
                                       `${subscription.seats_used}/${subscription.seats_total}`}
                                   </span>
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedSubscriptionId(subscription.id);
+                                      setShowAddMemberModal(true);
+                                    }}
+                                    className="flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-xs"
+                                    title="為此訂閱新增會員"
+                                  >
+                                    <SafeIcon icon={FiUserPlus} className="text-xs" />
+                                    <span>新增會員</span>
+                                  </button>
                                   {editingSubscriptionId === subscription.id ? (
                                     <div className="flex space-x-1">
                                       <button
@@ -1234,18 +1291,6 @@ const CorporateMemberManagement = () => {
                                         className="p-1 text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 rounded"
                                       >
                                         <SafeIcon icon={FiTrash2} className="text-xs" />
-                                      </button>
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setSelectedSubscriptionId(subscription.id);
-                                          setShowAddMemberModal(true);
-                                        }}
-                                        className="flex items-center space-x-1 px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors text-xs"
-                                        title="為此訂閱新增會員"
-                                      >
-                                        <SafeIcon icon={FiUserPlus} className="text-xs" />
-                                        <span>新增會員</span>
                                       </button>
                                     </div>
                                   )}

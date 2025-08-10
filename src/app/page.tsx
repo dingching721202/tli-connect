@@ -207,7 +207,7 @@ export default function Home() {
         @media (max-width:1200px){.hero-grid{grid-template-columns:1fr; gap:32px}}
 
         /* Form */
-        .card-form{background:var(--paper); border:1px solid var(--divider); border-radius: 24px; box-shadow:0 10px 30px rgba(16,58,99,.06); padding:32px}
+        .card-form{background:#FFFFFF; border:1px solid #DCE3ED; border-radius: 24px; box-shadow:0 10px 30px rgba(16,58,99,.06); padding:32px}
         .form-grid{display:grid; grid-template-columns:1fr; gap:16px}
         
         /* Footer specific form styling */
@@ -218,18 +218,18 @@ export default function Home() {
         .footer-card .form-grid button{grid-column:3; justify-self:end; height:52px; padding:0 24px; line-height:1; white-space:nowrap}
         @media (max-width:1024px){.footer-card .form-grid{grid-template-columns:repeat(2, minmax(0,1fr))} .footer-card .form-grid button{grid-column:1 / -1; justify-self:stretch}}
         @media (max-width:768px){.footer-card .form-grid{grid-template-columns:1fr} .footer-card .form-grid button{grid-column:1 / -1; width:100%}}
-        input[type="text"],input[type="email"],input[type="tel"]{height:52px; border:1px solid var(--divider); border-radius:12px; padding:0 16px; font-size:16px; color:var(--ink); background:#FFFFFF; outline:none}
+        input[type="text"],input[type="email"],input[type="tel"]{height:52px; border:1px solid #DCE3ED; border-radius:12px; padding:0 16px; font-size:16px; color:#333333; background:#FFFFFF; outline:none}
         input::placeholder{color:#98A6B3}
-        input:focus{border-color:var(--blue-500); box-shadow:0 0 0 3px rgba(46,110,182,.18)}
+        input:focus{border-color:#2E6EB6; box-shadow:0 0 0 3px rgba(46,110,182,.18)}
         .btn{height:56px; border:none; border-radius:999px; background:linear-gradient(90deg, #009FB6, #027AB9); color:#FFFFFF; font-size:16px; font-weight:700; cursor:pointer; box-shadow:0 10px 24px rgba(242,193,78,.22)}
         .btn:hover{background:linear-gradient(90deg, #009FB6, #026AA7)}
-        .error-msg{display:none; color:var(--error); font-size:12px; margin-top:6px}
-        .success{display:none; border-left:4px solid var(--success); background:rgba(28,168,122,.08); color:#0F7F5F; padding:12px 16px; border-radius:12px; margin-top:16px; font-size:14px}
-        .fail{display:none; border-left:4px solid var(--error); background:rgba(213,72,72,.08); color:#B04343; padding:12px 16px; border-radius:12px; margin-top:16px; font-size:14px}
+        .error-msg{display:none; color:#D54848; font-size:12px; margin-top:6px}
+        .success{display:none; border-left:4px solid #1CA87A; background:rgba(28,168,122,.08); color:#0F7F5F; padding:12px 16px; border-radius:12px; margin-top:16px; font-size:14px}
+        .fail{display:none; border-left:4px solid #D54848; background:rgba(213,72,72,.08); color:#B04343; padding:12px 16px; border-radius:12px; margin-top:16px; font-size:14px}
 
         /* Hero specific background styles */
         .hero-bg{position:absolute; inset:0; z-index:0; background:url('https://drive.google.com/thumbnail?id=1dqPrlDGVMgKHbwcRm2Ww8TcuSjkoJF-F&sz=w3200'); background-size:cover; background-position:70% 60%; pointer-events:none; transition:background 0.5s}
-        .hero-grid{max-width:var(--container); margin:0 auto; padding:0 24px; position:relative; z-index:2}
+        .hero-grid{max-width:1200px; margin:0 auto; padding:0 24px; position:relative; z-index:2}
         .hero-content{display:flex; flex-direction:column; align-items:flex-start; gap:12px; padding-top:1px; position:relative; z-index:2}
         .hero-text-box{background:rgba(255,255,255,0.7); border:1px solid rgba(255,255,255,0.7); padding:28px 24px; border-radius:16px; text-align:left; box-shadow:0 4px 12px rgba(0,0,0,0.12); margin-left:0; margin-right:auto; max-width:680px}
         .hero-form-row{width:100%; display:flex; justify-content:center; margin-top:20px; z-index:2; position:relative}
@@ -335,10 +335,10 @@ export default function Home() {
         @media (max-width:768px){.redirect .container{flex-direction:column; align-items:flex-start; gap:20px; padding:28px 24px} .redirect h3{font-size:24px; line-height:30px}}
 
         /* Footer */
-        .footer-cta-section{background:#F7FAFE; padding:72px 0; border-top:1px solid var(--divider)}
+        .footer-cta-section{background:#F7FAFE; padding:72px 0; border-top:1px solid #DCE3ED}
         .footer-cta{display:block}
         .footer-copy{margin-bottom:32px}
-        .footer-card{background:var(--paper); border:1px solid var(--divider); border-radius:24px; box-shadow:0 10px 30px rgba(16,58,99,.06); padding:32px}
+        .footer-card{background:#FFFFFF; border:1px solid #DCE3ED; border-radius:24px; box-shadow:0 10px 30px rgba(16,58,99,.06); padding:32px}
         .footer-info-section{background:#DFDFDF; padding-top:24px; padding-bottom:16px; border-top:1px solid #DCE3ED}
         .footer-bottom{text-align:center; font-size:14px; color:#5F7180}
         .footer-bottom .footer-info{display:flex; justify-content:center; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px}
@@ -347,6 +347,43 @@ export default function Home() {
 
         html{overflow-x:hidden}
         body{overflow-x:hidden; position:relative}
+        
+        /* Header responsive padding */
+        .page-header { padding: 0 100px !important; }
+        @media (max-width:960px) { .page-header { padding: 0 24px !important; } }
+        @media (max-width:600px) { .page-header { padding: 0 16px !important; } }
+        
+        /* Fixed consultation button responsive styles */
+        .consultation-btn:hover { 
+          background: linear-gradient(90deg, #00BEE3, #0286C9) !important; 
+          transform: scale(1.02) !important;
+          box-shadow: 0 8px 18px rgba(2,122,185,.24) !important;
+        }
+        @media (max-width:768px) {
+          .consultation-btn { 
+            padding: 8px 14px !important; 
+            font-size: 13px !important; 
+          }
+        }
+        
+        /* Footer stability fixes */
+        .footer-cta-section { 
+          min-height: 400px; 
+          padding: 72px 100px !important; 
+        }
+        .footer-info-section { 
+          min-height: 120px; 
+          padding: 24px 100px 16px !important; 
+        }
+        @media (max-width:960px) { 
+          .footer-cta-section { padding: 72px 24px !important; }
+          .footer-info-section { padding: 24px 24px 16px !important; }
+        }
+        @media (max-width:600px) { 
+          .footer-cta-section { padding: 72px 16px !important; }
+          .footer-info-section { padding: 24px 16px 16px !important; }
+        }
+        
         @media (max-width:360px){.h1, .h2{overflow-wrap:anywhere; word-break:break-word}}
       `}</style>
       
@@ -362,11 +399,14 @@ export default function Home() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 var(--page-padding)'
-      }}>
+        padding: '0 100px'
+      }} className="page-header">
         <a href="#hero" aria-label="Taipei Language Institute Logo" style={{
           display: 'inline-block',
-          width: '200px'
+          width: '200px',
+          backgroundColor: '#ffffff',
+          borderRadius: '4px',
+          padding: '4px'
         }}>
           <Image 
             src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
@@ -375,12 +415,25 @@ export default function Home() {
             height={120}
             priority
             placeholder="blur"
-            blurDataURL={LOGO_BLUR_DATA_URL}
-            style={{width: '100%', height: 'auto'}}
+            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjEyMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZmZmZmZmIi8+PC9zdmc+"
+            style={{width: '100%', height: 'auto', backgroundColor: '#ffffff', borderRadius: '4px', display: 'block'}}
           />
         </a>
         <div style={{display: 'flex', alignItems: 'center', gap: '16px'}}>
-          <a href="#contact" className="cta-btn cta-btn--sm" aria-label="Free Consultation">
+          <a href="#contact" aria-label="Free Consultation" className="consultation-btn" style={{
+            display: 'inline-block',
+            background: 'linear-gradient(90deg, #009FB6, #027AB9)',
+            color: '#FFFFFF',
+            border: 'none',
+            padding: '10px 18px',
+            borderRadius: '999px',
+            fontSize: '14px',
+            fontWeight: 700,
+            textDecoration: 'none',
+            cursor: 'pointer',
+            boxShadow: '0 6px 14px rgba(2,122,185,.18)',
+            transition: 'all 0.25s ease-in-out'
+          }}>
             Free Consultation
           </a>
           <a 

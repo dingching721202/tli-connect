@@ -119,8 +119,8 @@ class CorporateMemberStore {
   }
 
   // 根據企業獲取會員
-  async getMembersByCompany(companyId: string | number): Promise<CorporateMember[]> {
-    return this.members.filter(member => member.company_id === companyId);
+  async getMembersByCompany(companyId: string): Promise<CorporateMember[]> {
+    return this.members.filter(member => member.corp_id === companyId);
   }
 
   // 獲取單個企業會員
@@ -133,7 +133,7 @@ class CorporateMemberStore {
     subscription_id: number;
     user_name: string;
     user_email: string;
-    company_id: string | number;
+    corp_id: string;
     company_name: string;
     plan_title: string;
     duration_type: 'season' | 'annual';
@@ -169,7 +169,7 @@ class CorporateMemberStore {
       card_status: data.card_status || 'inactive',
       created_at: now,
       updated_at: now,
-      company_id: data.company_id,
+      corp_id: data.corp_id,
       company_name: data.company_name,
       plan_title: data.plan_title,
       duration_type: data.duration_type,

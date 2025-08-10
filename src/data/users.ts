@@ -10,6 +10,7 @@ export interface User {
   campus: '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部';
   created_at: string;
   updated_at?: string;
+  corp_id?: string;
 }
 
 export const users: User[] = [
@@ -95,7 +96,8 @@ export const users: User[] = [
     account_status: "ACTIVE",
     campus: "羅斯福校",
     id: 7,
-    created_at: "2025-07-14T12:00:00+00:00"
+    created_at: "2025-07-14T12:00:00+00:00",
+    corp_id: "1"
   },
   {
     name: "David Wilson",

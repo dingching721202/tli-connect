@@ -28,7 +28,7 @@ export interface User {
   avatar?: string;
   membership?: Record<string, unknown>; // 會員資格詳情
   agentData?: Record<string, unknown>; // 代理數據
-  company_id?: string | number; // 企業窗口用戶的公司ID
+  corp_id?: string; // 企業窗口用戶的公司ID
 }
 
 // 後端用戶界面（包含敏感資訊，僅用於API和資料庫）

@@ -156,11 +156,11 @@ const Dashboard = () => {
           const data = await dashboardService.getDashboardData(user.id, 'TEACHER');
           setDashboardData(data as { membership: Membership | null; upcomingClasses: BookedCourse[] });
         } else if (user.roles.includes('CORPORATE_CONTACT')) {
-          // 載入當前企業的會員統計數據（假設企業窗口用戶有company_id）
-          const userCompanyId = user.company_id || 'corp_001'; // 假設默認為corp_001
+          // 載入當前企業的會員統計數據（假設企業窗口用戶有corp_id）
+          const userCorpId = user.corp_id || '1'; // 假設默認為台積電
           
           // 只獲取當前企業的會員數據
-          const companyMembers = await corporateMemberStore.getMembersByCompany(userCompanyId);
+          const companyMembers = await corporateMemberStore.getMembersByCompany(userCorpId);
           
           // 計算各狀態的會員數量
           const activeMembers = companyMembers.filter(m => m.card_status === 'activated').length;
@@ -607,68 +607,122 @@ const Dashboard = () => {
     // 🔧 使用教師管理系統獲取教師資料
     const teachers = teacherDataService.getAllTeachers();
     
-    return [
-      {
-        id: 'corporate-1',
-        studentName: '張小明',
-        studentEmail: 'zhang@taiwantech.com',
-        courseName: '商務華語會話',
-        teacher: teachers[0]?.name || '王老師',
-        date: '2025-01-15',
-        time: '14:00-15:30',
-        status: 'upcoming' as const,
-        classroom: '教室A',
-        materials: '商務會話教材',
-        daysFromNow: 3,
-        membershipType: 'corporate' as const,
-        companyName: '台灣科技股份有限公司'
-      },
-      {
-        id: 'corporate-2',
-        studentName: '李小華',
-        studentEmail: 'li@taiwantech.com',
-        courseName: '華語文法精修',
-        teacher: teachers[1]?.name || '李老師',
-        date: '2025-01-16',
-        time: '10:00-11:30',
-        status: 'upcoming' as const,
-        classroom: '教室B',
-        materials: '文法練習本',
-        daysFromNow: 4,
-        membershipType: 'corporate' as const,
-        companyName: '台灣科技股份有限公司'
-      },
-      {
-        id: 'corporate-3',
-        studentName: '王小美',
-        studentEmail: 'wang@taiwantech.com',
-        courseName: '華語聽力強化',
-        teacher: teachers[2]?.name || '張老師',
-        date: '2025-01-17',
-        time: '16:00-17:30',
-        status: 'upcoming' as const,
-        classroom: '教室C',
-        materials: '聽力訓練CD',
-        daysFromNow: 5,
-        membershipType: 'corporate' as const,
-        companyName: '台灣科技股份有限公司'
-      },
-      {
-        id: 'corporate-4',
-        studentName: '林設計師',
-        studentEmail: 'lin@taiwantech.com',
-        courseName: '商務華語會話',
-        teacher: teachers[0]?.name || '王老師',
-        date: '2025-01-10',
-        time: '14:00-15:30',
-        status: 'completed' as const,
-        classroom: '教室A',
-        materials: '商務會話教材',
-        daysFromNow: -2,
-        membershipType: 'corporate' as const,
-        companyName: '台灣科技股份有限公司'
-      }
-    ];
+    // 只有當前企業窗口用戶所屬公司的課程資料
+    if (!user?.corp_id) {
+      return []; // 如果沒有公司ID，返回空數組
+    }
+    
+    // 根據公司ID獲取公司資料
+    const corpId = user.corp_id;
+    let companyName = '';
+    let courseData: Course[] = [];
+    
+    // 根據公司ID設定對應的課程資料
+    if (corpId === '1') {
+      companyName = '台積電股份有限公司';
+      courseData = [
+        {
+          id: 'tsmc-1',
+          studentName: '張工程師',
+          studentEmail: 'zhang.engineer@tsmc.com',
+          courseName: '商務華語會話',
+          teacher: teachers[0]?.name || '王老師',
+          date: '2025-01-15',
+          time: '14:00-15:30',
+          status: 'upcoming' as const,
+          classroom: '教室A',
+          materials: '商務會話教材',
+          daysFromNow: 3,
+          membershipType: 'corporate' as const,
+          companyName
+        },
+        {
+          id: 'tsmc-2',
+          studentName: '李主任',
+          studentEmail: 'li.director@tsmc.com',
+          courseName: '華語文法精修',
+          teacher: teachers[1]?.name || '李老師',
+          date: '2025-01-16',
+          time: '10:00-11:30',
+          status: 'upcoming' as const,
+          classroom: '教室B',
+          materials: '文法練習本',
+          daysFromNow: 4,
+          membershipType: 'corporate' as const,
+          companyName
+        },
+        {
+          id: 'tsmc-3',
+          studentName: '王協理',
+          studentEmail: 'wang.manager@tsmc.com',
+          courseName: '華語聽力強化',
+          teacher: teachers[2]?.name || '張老師',
+          date: '2025-01-17',
+          time: '16:00-17:30',
+          status: 'upcoming' as const,
+          classroom: '教室C',
+          materials: '聽力訓練CD',
+          daysFromNow: 5,
+          membershipType: 'corporate' as const,
+          companyName
+        },
+        {
+          id: 'tsmc-4',
+          studentName: '林經理',
+          studentEmail: 'lin.manager@tsmc.com',
+          courseName: '商務華語會話',
+          teacher: teachers[0]?.name || '王老師',
+          date: '2025-01-10',
+          time: '14:00-15:30',
+          status: 'completed' as const,
+          classroom: '教室A',
+          materials: '商務會話教材',
+          daysFromNow: -2,
+          membershipType: 'corporate' as const,
+          companyName
+        }
+      ];
+    } else if (corpId === '2') {
+      companyName = '富邦金融控股股份有限公司';
+      courseData = [
+        {
+          id: 'fubon-1',
+          studentName: '陳襄理',
+          studentEmail: 'chen.assistant@fubon.com',
+          courseName: '金融華語專班',
+          teacher: teachers[0]?.name || '王老師',
+          date: '2025-01-18',
+          time: '09:00-10:30',
+          status: 'upcoming' as const,
+          classroom: '教室D',
+          materials: '金融華語教材',
+          daysFromNow: 6,
+          membershipType: 'corporate' as const,
+          companyName
+        }
+      ];
+    } else if (corpId === '3') {
+      companyName = '中華電信股份有限公司';
+      courseData = [
+        {
+          id: 'cht-1',
+          studentName: '黃專員',
+          studentEmail: 'huang.specialist@cht.com.tw',
+          courseName: '電信華語課程',
+          teacher: teachers[1]?.name || '李老師',
+          date: '2025-01-19',
+          time: '15:00-16:30',
+          status: 'upcoming' as const,
+          classroom: '教室E',
+          materials: '電信專業華語',
+          daysFromNow: 7,
+          membershipType: 'corporate' as const,
+          companyName
+        }
+      ];
+    }
+    
+    return courseData;
   };
 
   // 管理員專用：全體會員預約數據

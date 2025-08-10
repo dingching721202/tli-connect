@@ -65,7 +65,7 @@ export interface Membership {
   order_id?: number;
   
   // 企業會員字段
-  company_id?: string | number;
+  corp_id?: string;
   corporate_subscription_id?: number;
   assigned_date?: string;
   

@@ -16,7 +16,7 @@ export interface CorporateClient {
 }
 
 export interface Company {
-  id: string | number;
+  id: string;
   name: string;
   contactName: string;
   contactEmail: string;
@@ -65,7 +65,7 @@ export interface CorporatePackage {
 // Mock corporate clients data
 const corporateClients: CorporateClient[] = [
   {
-    id: 'corp_001',
+    id: '1',
     companyName: '台積電股份有限公司',
     contactName: '張經理',
     contactEmail: 'manager.zhang@tsmc.com',
@@ -81,7 +81,7 @@ const corporateClients: CorporateClient[] = [
     updatedAt: '2024-07-20T00:00:00Z'
   },
   {
-    id: 'corp_002',
+    id: '2',
     companyName: '富邦金融控股股份有限公司',
     contactName: '李主管',
     contactEmail: 'supervisor.li@fubon.com',
@@ -97,7 +97,7 @@ const corporateClients: CorporateClient[] = [
     updatedAt: '2024-07-20T00:00:00Z'
   },
   {
-    id: 'corp_003',
+    id: '3',
     companyName: '中華電信股份有限公司',
     contactName: '王協理',
     contactEmail: 'director.wang@cht.com.tw',

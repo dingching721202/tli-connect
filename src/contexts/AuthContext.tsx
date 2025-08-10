@@ -18,7 +18,7 @@ interface User {
   membership?: Membership | null;
   avatar?: string;
   agentData?: Agent | null; // 代理專用資料
-  company_id?: string | number; // 企業窗口用戶的公司ID
+  corp_id?: string; // 企業窗口用戶的公司ID
 }
 
 interface AuthContextType {
@@ -141,6 +141,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       campus: userData.campus,
       membership,
       agentData,
+      corp_id: userData.corp_id,
       avatar: `https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face`
     };
   };
@@ -267,15 +268,31 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => {
+    // 重置所有狀態
     setUser(null);
     setCurrentRole(null);
     setIsRoleLocked(false);
     setLockedRole(null);
+    
+    // 清除所有localStorage數據
     localStorage.removeItem('userId');
     localStorage.removeItem('jwt');
     localStorage.removeItem('currentRole');
     localStorage.removeItem('lockedRole');
     localStorage.removeItem('isRoleLocked');
+    localStorage.removeItem('users');
+    localStorage.removeItem('userRoles');
+    localStorage.removeItem('userMemberCards');
+    localStorage.removeItem('classAppointments');
+    // 清除企業相關數據
+    localStorage.removeItem('companies');
+    localStorage.removeItem('corporateSubscriptions');
+    localStorage.removeItem('corporateMembers');
+    
+    // 強制重新載入頁面以確保完全清理狀態
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 100);
   };
 
   const updateProfile = (updates: Partial<User>) => {

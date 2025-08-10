@@ -745,7 +745,7 @@ export default function TeacherMyBookingsPage() {
 
   return (
     <RoleEntry requiredRole="TEACHER">
-      <div className="container mx-auto px-4 py-8">
+      <div className="px-4 py-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}

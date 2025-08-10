@@ -4,7 +4,7 @@ export type CorporateSubscriptionStatus = 'inactive' | 'activated' | 'expired' |
 
 export interface CorporateSubscription {
   id: number;
-  company_id: string | number;
+  corp_id: string;
   plan_id: number;
   order_id?: number;
   
@@ -59,7 +59,7 @@ export interface CorporateMember {
   updated_at: string;
   
   // 快取字段
-  company_id?: string | number;
+  corp_id?: string | number;
   company_name?: string;
   plan_title?: string;
   duration_type?: 'season' | 'annual';
@@ -96,7 +96,7 @@ export interface ReservationRecord {
 
 // 創建企業訂閱請求
 export interface CreateCorporateSubscriptionRequest {
-  company_id: string | number;
+  corp_id: string;
   plan_id: number;
   seats_total: number;
   amount_paid: number;

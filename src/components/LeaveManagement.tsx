@@ -146,8 +146,8 @@ export default function LeaveManagement() {
     loadLeaveData();
   }, []);
 
-  // Check if user has admin permission
-  if (!user || !isAdmin) {
+  // Check if user has admin or staff permission
+  if (!user || (!isAdmin && !user.roles.includes('STAFF'))) {
     return (
       <div className="text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">存取被拒</h1>
