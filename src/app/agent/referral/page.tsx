@@ -1,10 +1,13 @@
+'use client';
+
+import { useState } from 'react';
 import RoleEntry from '@/components/RoleEntry';
-import ReferralSystemPage from '@/components/ReferralSystemPage';
+import ReferralSystem from '@/components/ReferralSystem';
 
 export default function AgentReferralPage() {
   return (
     <RoleEntry requiredRole="AGENT">
-      <ReferralSystemPage />
+      <ReferralSystem isOpen={true} onClose={() => {}} />
     </RoleEntry>
   );
 }

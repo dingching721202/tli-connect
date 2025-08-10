@@ -15,7 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const StudentMembershipPage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const [plans, setPlans] = useState<MemberCardPlan[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<'individual' | 'corporate'>('individual');
   const [selectedPlan, setSelectedPlan] = useState<MemberCardPlan | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -29,7 +29,6 @@ const StudentMembershipPage: React.FC = () => {
 
   const loadPlans = async () => {
     try {
-      setLoading(true);
       const response = await fetch('/api/member-card-plans', {
         method: 'GET',
         headers: {
@@ -43,8 +42,6 @@ const StudentMembershipPage: React.FC = () => {
       }
     } catch (error) {
       console.error('載入會員方案失敗:', error);
-    } finally {
-      setLoading(false);
     }
   };
 

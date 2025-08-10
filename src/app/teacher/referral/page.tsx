@@ -1,10 +1,19 @@
+'use client';
+
+import { useRouter } from 'next/navigation';
 import RoleEntry from '@/components/RoleEntry';
-import ReferralSystemPage from '@/components/ReferralSystemPage';
+import ReferralSystem from '@/components/ReferralSystem';
 
 export default function TeacherReferralPage() {
+  const router = useRouter();
+  
+  const handleClose = () => {
+    router.push('/teacher');
+  };
+
   return (
     <RoleEntry requiredRole="TEACHER">
-      <ReferralSystemPage />
+      <ReferralSystem isOpen={true} onClose={handleClose} />
     </RoleEntry>
   );
 }

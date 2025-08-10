@@ -57,6 +57,7 @@ const StudentDashboard = () => {
 
   return (
     <RoleEntry requiredRole="STUDENT">
+      <div className="px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             學生專區
@@ -101,6 +102,7 @@ const StudentDashboard = () => {
             您正在使用學生專用介面。所有功能都已針對學習體驗進行優化。
           </p>
         </div>
+      </div>
     </RoleEntry>
   );
 };

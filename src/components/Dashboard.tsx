@@ -1135,12 +1135,12 @@ const Dashboard = () => {
           {/* Membership Status for Students - 手機優化 (US09) */}
           {user?.roles.includes('STUDENT') && dashboardData?.membership && (
             <div className="w-full sm:w-auto text-left sm:text-right bg-green-50 border border-green-200 rounded-lg p-3 sm:p-0 sm:bg-transparent sm:border-none">
-              <div className="text-sm text-gray-600">會員到期日</div>
+              <div className="text-sm text-gray-600">結束日期</div>
               <div className="text-base sm:text-lg font-bold text-green-600">
-                {dashboardData.membership.expiry_date ? new Date(dashboardData.membership.expiry_date).toLocaleDateString('zh-TW') : 'N/A'}
+                {(dashboardData.membership.expiry_date || dashboardData.membership.expire_time) ? new Date(dashboardData.membership.expiry_date || dashboardData.membership.expire_time).toLocaleDateString('zh-TW') : 'N/A'}
               </div>
               <div className="text-xs sm:text-sm text-gray-600">
-                狀態：{dashboardData.membership.status === 'activated' ? '已啟用' : '未啟用'}
+                狀態：{(dashboardData.membership.status === 'activated' || dashboardData.membership.status === 'ACTIVE') ? '已啟用' : '未啟用'}
               </div>
             </div>
           )}

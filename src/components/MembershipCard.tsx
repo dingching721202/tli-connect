@@ -76,9 +76,9 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
   }
 
   const membership = dashboardData.membership;
-  const isActive = membership.status === 'activated';
-  const isInactive = membership.status === 'inactive';
-  const isExpired = membership.status === 'expired';
+  const isActive = membership.status === 'activated' || membership.status === 'ACTIVE';
+  const isInactive = membership.status === 'inactive' || membership.status === 'INACTIVE';
+  const isExpired = membership.status === 'expired' || membership.status === 'EXPIRED';
 
   // 根據 member_card_id 獲取會員卡名稱
   const memberCard = memberCards.find(card => card.id === membership.member_card_id);
@@ -115,9 +115,10 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
   };
 
   const getDaysRemaining = () => {
-    if (!membership.expiry_date) return null;
+    const expiryDate = membership.expiry_date || membership.expire_time;
+    if (!expiryDate) return null;
     const now = new Date();
-    const expireDate = new Date(membership.expiry_date);
+    const expireDate = new Date(expiryDate);
     const diffTime = expireDate.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
@@ -134,18 +135,22 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
     >
       {/* 卡片標題 */}
       <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-4">
-        <div className="flex items-center justify-between text-white">
+        <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <SafeIcon icon={FiCreditCard} className="w-6 h-6" />
+            <SafeIcon icon={FiCreditCard} className="w-6 h-6 text-white" />
             <div>
-              <h3 className="text-lg font-semibold">會員資格</h3>
-              <p className="text-sm opacity-90">{memberCardName}</p>
+              <h3 className="text-lg font-semibold text-white mb-0.5">會員資格</h3>
+              <p className="text-sm text-white/90 -mt-0.5">{memberCardName}</p>
             </div>
           </div>
-          <div className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor()}`}>
+          <div className={`px-3 py-1 rounded-full text-sm font-medium border ${
+            isActive 
+              ? 'bg-green-500/90 text-white border-green-400/50' 
+              : 'bg-white/20 backdrop-blur-sm text-white border-white/30'
+          }`}>
             <div className="flex items-center space-x-1">
-              <SafeIcon icon={getStatusIcon()} className="w-4 h-4" />
-              <span>{getStatusText()}</span>
+              <SafeIcon icon={getStatusIcon()} className={`w-4 h-4 ${isActive ? 'text-white' : 'text-white'}`} />
+              <span className={isActive ? 'text-white' : 'text-white'}>{getStatusText()}</span>
             </div>
           </div>
         </div>
@@ -153,67 +158,78 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
 
       {/* 卡片內容 */}
       <div className="p-6">
-        {/* 時間資訊 - 只有已啟用的會員卡才顯示 */}
+        {/* 購買資訊 - 所有狀態都顯示 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* 購買日期 */}
+          <div className="flex items-center space-x-3">
+            <SafeIcon icon={FiCalendar} className="w-5 h-5 text-gray-400" />
+            <div>
+              <p className="text-sm text-gray-500">購買日期</p>
+              <p className="font-medium">{(membership.purchase_date || membership.created_at) ? formatDate(membership.purchase_date || membership.created_at) : 'N/A'}</p>
+            </div>
+          </div>
+
+          {/* 兌換期限 */}
+          <div className="flex items-center space-x-3">
+            <SafeIcon icon={FiClock} className="w-5 h-5 text-yellow-400" />
+            <div>
+              <p className="text-sm text-gray-500">兌換期限</p>
+              <p className="font-medium">
+                {(membership.activation_deadline || membership.activate_expire_time) ? formatDate(membership.activation_deadline || membership.activate_expire_time) : 'N/A'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 會員期間資訊 - 只有已啟用的會員卡才顯示 */}
         {isActive && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            {/* 啟用日期 */}
+            {/* 開始日期 */}
             <div className="flex items-center space-x-3">
-              <SafeIcon icon={FiCalendar} className="w-5 h-5 text-gray-400" />
+              <SafeIcon icon={FiCheckCircle} className="w-5 h-5 text-green-400" />
               <div>
-                <p className="text-sm text-gray-500">啟用日期</p>
-                <p className="font-medium">{membership.activation_date ? formatDate(membership.activation_date) : 'N/A'}</p>
+                <p className="text-sm text-gray-500">開始日期</p>
+                <p className="font-medium">{(membership.activation_date || membership.start_time) ? formatDate(membership.activation_date || membership.start_time) : 'N/A'}</p>
               </div>
             </div>
 
-            {/* 到期日期 */}
+            {/* 結束日期與剩餘天數 */}
             <div className="flex items-center space-x-3">
-              <SafeIcon icon={FiClock} className="w-5 h-5 text-gray-400" />
+              <SafeIcon icon={FiClock} className="w-5 h-5 text-red-400" />
               <div>
-                <p className="text-sm text-gray-500">到期日期</p>
-                <p className="font-medium">{membership.expiry_date ? formatDate(membership.expiry_date) : 'N/A'}</p>
+                <p className="text-sm text-gray-500">結束日期</p>
+                <div className="flex items-center space-x-2">
+                  <p className="font-medium">{(membership.expiry_date || membership.expire_time) ? formatDate(membership.expiry_date || membership.expire_time) : 'N/A'}</p>
+                  {daysRemaining !== null && (
+                    <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                      daysRemaining > 30 ? 'text-blue-600 bg-blue-50' : 
+                      daysRemaining > 7 ? 'text-yellow-600 bg-yellow-50' : 
+                      'text-red-600 bg-red-50'
+                    }`}>
+                      {daysRemaining > 0 ? `剩餘 ${daysRemaining} 天` : '已過期'}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>
         )}
 
-        {/* 剩餘天數 */}
-        {isActive && daysRemaining !== null && (
-          <div className="bg-blue-50 rounded-lg p-4 mb-4">
-            <div className="flex items-center justify-between">
-              <span className="text-blue-700 font-medium">剩餘天數</span>
-              <span className={`text-lg font-bold ${daysRemaining > 30 ? 'text-blue-600' : daysRemaining > 7 ? 'text-yellow-600' : 'text-red-600'}`}>
-                {daysRemaining > 0 ? `${daysRemaining} 天` : '已過期'}
-              </span>
-            </div>
-            {daysRemaining <= 7 && daysRemaining > 0 && (
-              <p className="text-sm text-yellow-600 mt-1">⚠️ 會員即將到期，請及時續費</p>
-            )}
+
+        {/* 到期提醒 */}
+        {isActive && daysRemaining !== null && daysRemaining <= 7 && daysRemaining > 0 && (
+          <div className="bg-yellow-50 rounded-lg p-4 mb-4">
+            <p className="text-sm text-yellow-600">⚠️ 會員即將到期，請及時續費</p>
           </div>
         )}
 
-        {/* 啟用按鈕與購買資訊 */}
+        {/* 啟用按鈕 */}
         {isInactive && (
-          <div className="bg-yellow-50 rounded-lg p-4">
-            {/* 購買資訊 */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <p className="text-xs text-yellow-600 mb-1">購買日期</p>
-                <p className="text-sm font-medium text-yellow-800">
-                  {formatDate(membership.created_at)}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-yellow-600 mb-1">啟用期限</p>
-                <p className="text-sm font-medium text-yellow-800">
-                  {formatDate(membership.activation_deadline || '')}
-                </p>
-              </div>
-            </div>
-            
-            {/* 啟用說明與按鈕 */}
+          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-yellow-800">會員卡待啟用</p>
+                <p className="font-medium text-yellow-800 mb-1">會員卡待啟用</p>
+                <p className="text-sm text-yellow-600">請在兌換期限前完成啟用</p>
               </div>
               <motion.button
                 onClick={() => handleActivate(membership.id)}

@@ -29,28 +29,28 @@ export const memberships: Membership[] = [
   {
     id: 1,
     user_id: 1,
-    user_name: "張小明",
-    user_email: "ming.zhang@example.com",
+    user_name: "Alice Wang",
+    user_email: "alice@example.com",
     membership_type: 'individual',
     plan_id: 1,
     member_card_id: 1,
-    order_id: 1,
+    order_id: 1001,
     status: 'activated',
-    purchase_date: '2024-12-01T09:00:00Z',
-    activation_date: '2024-12-02T10:00:00Z',
-    expiry_date: '2025-03-02T23:59:59Z',
-    activation_deadline: '2024-12-31T23:59:59Z',
+    purchase_date: '2024-11-01T09:00:00Z',
+    activation_date: '2024-11-02T10:00:00Z',
+    expiry_date: '2025-09-30T23:59:59Z', // 到期日設定為9月30日
+    activation_deadline: '2024-12-01T23:59:59Z',
     amount_paid: 3000,
     auto_renewal: false,
-    created_at: '2024-12-01T09:00:00Z',
-    updated_at: '2024-12-02T10:00:00Z',
+    created_at: '2024-11-01T09:00:00Z',
+    updated_at: '2024-11-02T10:00:00Z',
     plan_title: '個人季度方案',
     plan_type: 'individual',
     duration_type: 'season',
     duration_days: 90
   },
   {
-    id: 2,
+    id: 3,
     user_id: 2,
     user_name: "李美華",
     user_email: "meihua.li@example.com",
@@ -71,7 +71,7 @@ export const memberships: Membership[] = [
     duration_days: 365
   },
   {
-    id: 3,
+    id: 4,
     user_id: 3,
     user_name: "王大強",
     user_email: "daqiang.wang@company.com",
@@ -95,7 +95,7 @@ export const memberships: Membership[] = [
     duration_days: 365
   },
   {
-    id: 4,
+    id: 5,
     user_id: 4,
     user_name: "陳小芳",
     user_email: "xiaofang.chen@example.com",
@@ -118,7 +118,7 @@ export const memberships: Membership[] = [
     duration_days: 90
   },
   {
-    id: 5,
+    id: 6,
     user_id: 5,
     user_name: "林企業代表",
     user_email: "representative@innovatetech.com",
