@@ -338,7 +338,7 @@ const Calendar: React.FC<CalendarProps> = ({
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h2 className="text-xl sm:text-2xl font-bold">
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
               {monthNames[currentMonth]} {currentYear}
             </h2>
             <div className="flex items-center justify-center mt-1 text-blue-100">
@@ -374,7 +374,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
       {/* Legend (US05, US06) */}
       <div className="p-4 bg-gray-50 border-t border-gray-200">
-        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-600">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-white">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
             <span>今日</span>

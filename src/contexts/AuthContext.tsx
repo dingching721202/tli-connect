@@ -302,9 +302,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return user.agentData?.status === 'ACTIVE';
     }
     
-    // 會員狀態或有 STUDENT 角色
-    if (user.membership_status === 'activated' || user.roles.includes('STUDENT')) {
-      return user.membership?.status === 'activated' || user.membership?.status === 'inactive';
+    // 學生角色：檢查會員狀態
+    if (user.roles.includes('STUDENT')) {
+      // 如果用戶層級的會員狀態是 activated，就是有效會員
+      if (user.membership_status === 'activated') {
+        return true;
+      }
+      
+      // 如果有 membership 物件，檢查其狀態
+      if (user.membership) {
+        return user.membership.status === 'activated' || user.membership.status === 'inactive';
+      }
+      
+      // 如果沒有 membership 物件但用戶狀態是 activated，仍視為有效
+      return user.membership_status === 'activated';
     }
     
     return false;

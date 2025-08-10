@@ -525,7 +525,7 @@ const BookingSystem: React.FC = () => {
           >
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium text-gray-700">已選擇 {selectedCourses.length} 門課程</span>
+              <span className="text-sm font-medium text-gray-800">已選擇 {selectedCourses.length} 門課程</span>
             </div>
             {user && hasActiveMembership() && (
               <div className="text-sm font-bold text-emerald-600">
