@@ -332,7 +332,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
       
       // 如果沒有 membership 物件但用戶狀態是 activated，仍視為有效
-      return user.membership_status === 'activated';
+      return (user.membership_status as MembershipStatus) === 'activated';
     }
     
     return false;

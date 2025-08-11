@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FiUser, FiLock, FiEye, FiEyeOff, FiLoader, FiBookOpen, FiUsers, FiBriefcase, FiTrendingUp, FiSettings, FiShield } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
+import { UserRole } from '@/types/user';
 
 type LoginMode = 'selection' | 'student' | 'teacher' | 'corporate' | 'agent' | 'staff' | 'admin' | 'general';
 
@@ -198,7 +199,7 @@ const Login: React.FC = () => {
           };
           
           const roleConfig = rolePathMap[loginMode as keyof typeof rolePathMap];
-          if (roleConfig && result.user.roles.includes(roleConfig.role)) {
+          if (roleConfig && result.user.roles.includes(roleConfig.role as UserRole)) {
             // 先切換到正確的角色，然後設置角色鎖定並導向角色專區
             switchRole(roleConfig.role);
             setRoleLock(roleConfig.role);

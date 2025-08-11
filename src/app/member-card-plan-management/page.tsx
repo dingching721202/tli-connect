@@ -65,7 +65,6 @@ const MemberCardPlanManagement: React.FC = () => {
   const [plans, setPlans] = useState<MemberCardPlan[]>([]);
   const [memberCardsData, setMemberCardsData] = useState<MemberCard[]>([]);
   const [courses, setCourses] = useState<CourseData[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [showMemberCardModal, setShowMemberCardModal] = useState(false);
   const [editingPlan, setEditingPlan] = useState<MemberCardPlan | null>(null);
@@ -111,7 +110,6 @@ const MemberCardPlanManagement: React.FC = () => {
 
   const loadPlans = useCallback(async () => {
     try {
-      setLoading(true);
       const response = await fetch('/api/member-card-plans/admin');
       if (response.ok) {
         const data = await response.json();
@@ -120,7 +118,6 @@ const MemberCardPlanManagement: React.FC = () => {
     } catch (error) {
       console.error('載入會員卡方案失敗:', error);
     } finally {
-      setLoading(false);
     }
   }, []);
 

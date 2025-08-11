@@ -17,7 +17,7 @@ import {
 
 const {
   FiUsers, FiBriefcase, FiTrash2, FiSearch, FiDownload, FiEdit,
-  FiCheck, FiClock, FiX, FiUser,
+  FiClock, FiX, FiUser,
   FiPhone, FiFileText, FiMessageCircle, FiCheckCircle,
   FiXCircle, FiChevronDown
 } = FiIcons;
@@ -30,16 +30,8 @@ const ConsultationManagementPage: React.FC = () => {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [filteredConsultations, setFilteredConsultations] = useState<Consultation[]>([]);
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showStatusModal, setShowStatusModal] = useState(false);
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set());
-  const [editingConsultation, setEditingConsultation] = useState<Consultation | null>(null);
 
-  // 更新編輯中的諮詢欄位
-  const updateEditingField = (field: keyof Consultation, value: Consultation[keyof Consultation]) => {
-    if (!editingConsultation) return;
-    setEditingConsultation(prev => prev ? { ...prev, [field]: value } : null);
-  };
 
   // 模擬職員人員列表
   const opsPersonnel = [
@@ -50,17 +42,6 @@ const ConsultationManagementPage: React.FC = () => {
     { id: 'ops_005', name: '林淑芬' }
   ];
 
-  // 處理指派
-  const handleAssignment = (assignedTo: string) => {
-    if (!editingConsultation || !user) return;
-    
-    setEditingConsultation(prev => prev ? {
-      ...prev,
-      assignedTo,
-      assignedBy: user.name,
-      assignedAt: new Date().toISOString()
-    } : null);
-  };
   const [loading, setLoading] = useState(true);
   const [filterLoading, setFilterLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'all' | 'individual' | 'corporate'>('all');
@@ -296,67 +277,12 @@ const ConsultationManagementPage: React.FC = () => {
 
   // 開始編輯諮詢
   const handleEditConsultation = (consultation: Consultation) => {
-    setEditingConsultation({ ...consultation });
+    // setEditingConsultation({ ...consultation });
     setSelectedConsultation(consultation);
-    setShowDetailModal(true);
+    // setShowDetailModal(true);
   };
 
   // 取消編輯
-  const handleCancelEdit = () => {
-    setEditingConsultation(null);
-    setShowDetailModal(false);
-    setSelectedConsultation(null);
-  };
-
-  // 保存編輯
-  const handleSaveEdit = async () => {
-    if (!editingConsultation || !user) return;
-
-    try {
-      // 添加最後更新者資訊
-      const updatedConsultation = {
-        ...editingConsultation,
-        lastUpdatedBy: user.name,
-        updatedAt: new Date().toISOString()
-      };
-
-      const response = await fetch('/api/consultations', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updatedConsultation),
-      });
-
-      if (!response.ok) {
-        throw new Error('更新諮詢失敗');
-      }
-
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.message || '更新諮詢失敗');
-      }
-
-      // 更新本地狀態
-      const updateConsultation = (consultations: Consultation[]) => 
-        consultations.map(consultation => 
-          consultation.id === editingConsultation.id
-            ? updatedConsultation
-            : consultation
-        );
-
-      setConsultations(prev => updateConsultation(prev));
-      setFilteredConsultations(prev => updateConsultation(prev));
-      setSelectedConsultation(updatedConsultation);
-      
-      setEditingConsultation(null);
-      setShowDetailModal(false);
-
-    } catch (error) {
-      console.error('更新諮詢失敗:', error);
-      alert('更新諮詢失敗，請稍後再試');
-    }
-  };
 
   // 狀態更新
   const handleStatusUpdate = async (consultationId: string, newStatus: ConsultationStatus) => {
@@ -378,7 +304,7 @@ const ConsultationManagementPage: React.FC = () => {
       }
 
       closeAllDropdowns();
-      setShowStatusModal(false);
+      // setShowStatusModal(false);
 
       // 發送 API 請求
       const response = await fetch('/api/consultations', {
@@ -428,7 +354,7 @@ const ConsultationManagementPage: React.FC = () => {
             
             // 如果刪除的是當前選中的諮詢，關閉模態框
             if (selectedConsultation?.id === consultationId) {
-              setShowDetailModal(false);
+              // setShowDetailModal(false);
               setSelectedConsultation(null);
             }
           } else {

@@ -76,20 +76,14 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
   }
 
   const membership = dashboardData.membership;
-  const isActive = membership.status === 'activated' || membership.status === 'ACTIVE';
-  const isInactive = membership.status === 'inactive' || membership.status === 'INACTIVE';
-  const isExpired = membership.status === 'expired' || membership.status === 'EXPIRED';
+  const isActive = membership.status === 'activated';
+  const isInactive = membership.status === 'inactive';
+  const isExpired = membership.status === 'expired';
 
   // 根據 member_card_id 獲取會員卡名稱
   const memberCard = memberCards.find(card => card.id === membership.member_card_id);
   const memberCardName = memberCard?.name || '未知會員卡';
 
-  const getStatusColor = () => {
-    if (isActive) return 'text-green-600 bg-green-50';
-    if (isInactive) return 'text-yellow-600 bg-yellow-50';
-    if (isExpired) return 'text-red-600 bg-red-50';
-    return 'text-gray-600 bg-gray-50';
-  };
 
   const getStatusText = () => {
     if (isActive) return '已啟用';
@@ -115,7 +109,7 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
   };
 
   const getDaysRemaining = () => {
-    const expiryDate = membership.expiry_date || membership.expire_time;
+    const expiryDate = membership.expiry_date;
     if (!expiryDate) return null;
     const now = new Date();
     const expireDate = new Date(expiryDate);
@@ -175,7 +169,7 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
             <div>
               <p className="text-sm text-gray-500">兌換期限</p>
               <p className="font-medium">
-                {(membership.activation_deadline || membership.activate_expire_time) ? formatDate(membership.activation_deadline || membership.activate_expire_time) : 'N/A'}
+                {membership.activation_deadline ? formatDate(membership.activation_deadline) : 'N/A'}
               </p>
             </div>
           </div>
@@ -189,7 +183,7 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
               <SafeIcon icon={FiCheckCircle} className="w-5 h-5 text-green-400" />
               <div>
                 <p className="text-sm text-gray-500">開始日期</p>
-                <p className="font-medium">{(membership.activation_date || membership.start_time) ? formatDate(membership.activation_date || membership.start_time) : 'N/A'}</p>
+                <p className="font-medium">{membership.activation_date ? formatDate(membership.activation_date) : 'N/A'}</p>
               </div>
             </div>
 
@@ -199,7 +193,7 @@ const MembershipCard: React.FC<MembershipCardProps> = ({ dashboardData, onActiva
               <div>
                 <p className="text-sm text-gray-500">結束日期</p>
                 <div className="flex items-center space-x-2">
-                  <p className="font-medium">{(membership.expiry_date || membership.expire_time) ? formatDate(membership.expiry_date || membership.expire_time) : 'N/A'}</p>
+                  <p className="font-medium">{membership.expiry_date ? formatDate(membership.expiry_date) : 'N/A'}</p>
                   {daysRemaining !== null && (
                     <span className={`text-sm font-medium px-2 py-1 rounded-full ${
                       daysRemaining > 30 ? 'text-blue-600 bg-blue-50' : 

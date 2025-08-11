@@ -64,10 +64,7 @@ const MemberCardPlanManagement: React.FC = () => {
   const [plans, setPlans] = useState<MemberCardPlan[]>([]);
   const [memberCardsData, setMemberCardsData] = useState<MemberCard[]>([]);
   const [courses, setCourses] = useState<CourseData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showModal, setShowModal] = useState(false);
   const [showMemberCardModal, setShowMemberCardModal] = useState(false);
-  const [editingPlan, setEditingPlan] = useState<MemberCardPlan | null>(null);
   const [editingMemberCard, setEditingMemberCard] = useState<MemberCard | null>(null);
   const [activeTab, setActiveTab] = useState<'member-cards' | 'plans'>('member-cards');
   const [formData, setFormData] = useState<FormData>({
@@ -110,7 +107,7 @@ const MemberCardPlanManagement: React.FC = () => {
 
   const loadPlans = useCallback(async () => {
     try {
-      setLoading(true);
+      // setLoading(true);
       const response = await fetch('/api/member-card-plans/admin');
       if (response.ok) {
         const data = await response.json();
@@ -119,7 +116,7 @@ const MemberCardPlanManagement: React.FC = () => {
     } catch (error) {
       console.error('載入會員卡方案失敗:', error);
     } finally {
-      setLoading(false);
+      // setLoading(false);
     }
   }, []);
 
@@ -220,7 +217,7 @@ const MemberCardPlanManagement: React.FC = () => {
         cta_options: plan.cta_options
       });
       
-      setEditingPlan(plan);
+      // setEditingPlan(plan);
       setFormData({
         title: plan.title,
         user_type: plan.user_type,
@@ -241,7 +238,7 @@ const MemberCardPlanManagement: React.FC = () => {
         }
       });
     } else {
-      setEditingPlan(null);
+      // setEditingPlan(null);
       setFormData({
         title: '',
         user_type: 'individual',
@@ -262,73 +259,10 @@ const MemberCardPlanManagement: React.FC = () => {
         }
       });
     }
-    setShowModal(true);
+    // setShowModal(true);
   };
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setEditingPlan(null);
-  };
 
-  const handleSave = async () => {
-    try {
-      const planData = {
-        ...formData,
-        original_price: formData.original_price.toString(),
-        sale_price: formData.sale_price.toString(),
-        features: formData.features.filter(f => f.trim() !== ''),
-        cta_options: formData.cta_options
-      };
-
-      console.log('📤 準備儲存方案資料:', {
-        isEditing: !!editingPlan,
-        editingPlanId: editingPlan?.id,
-        planData,
-        formData: {
-          hide_price: formData.hide_price,
-          popular: formData.popular,
-          cta_options: formData.cta_options
-        }
-      });
-
-      let response;
-      if (editingPlan) {
-        console.log(`🔄 更新方案 ID: ${editingPlan.id}`);
-        response = await fetch(`/api/member-card-plans/admin/${editingPlan.id}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(planData)
-        });
-      } else {
-        console.log('✨ 創建新方案');
-        response = await fetch('/api/member-card-plans/admin', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(planData)
-        });
-      }
-
-      console.log('📥 API 回應狀態:', response.status);
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('✅ 儲存成功:', result);
-        
-        await loadPlans();
-        handleCloseModal();
-        
-        const action = editingPlan ? '更新' : '創建';
-        alert(`方案「${planData.title}」已成功${action}！`);
-      } else {
-        const errorData = await response.json();
-        console.error('❌ API 錯誤:', errorData);
-        alert(`儲存失敗: ${errorData.error || '未知錯誤'}`);
-      }
-    } catch (error) {
-      console.error('❌ 儲存方案失敗:', error);
-      alert('儲存失敗，請檢查網路連線後重試。');
-    }
-  };
 
   const handleDelete = async (planId: number) => {
     if (!confirm('確定要刪除此會員卡方案嗎？')) return;
@@ -378,23 +312,6 @@ const MemberCardPlanManagement: React.FC = () => {
     }
   };
 
-  const handleFeatureChange = (index: number, value: string) => {
-    const newFeatures = [...formData.features];
-    newFeatures[index] = value;
-    setFormData({ ...formData, features: newFeatures });
-  };
-
-  const handleAddFeature = () => {
-    setFormData({ 
-      ...formData, 
-      features: [...formData.features, ''] 
-    });
-  };
-
-  const handleRemoveFeature = (index: number) => {
-    const newFeatures = formData.features.filter((_, i) => i !== index);
-    setFormData({ ...formData, features: newFeatures });
-  };
 
   // 會員卡管理相關函式
   const handleOpenMemberCardModal = (card?: MemberCard) => {

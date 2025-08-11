@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { useState, useEffect } from "react";
-import { LOGO_BLUR_DATA_URL, COURSE_IMAGE_BLUR_DATA_URL } from '../utils/blurPlaceholder';
+import { COURSE_IMAGE_BLUR_DATA_URL } from '../utils/blurPlaceholder';
 
 export default function Home() {
   const [heroForm, setHeroForm] = useState({

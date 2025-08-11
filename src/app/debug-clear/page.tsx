@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { memberCardStore } from '@/lib/memberCardStore';
+import { useState } from 'react';
 
 export default function DebugClearPage() {
   const [message, setMessage] = useState('');

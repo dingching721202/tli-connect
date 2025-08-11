@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
@@ -99,28 +99,27 @@ const CorporateMemberManagement = () => {
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
 
   // 載入企業會員數據
-  const loadCorporateData = async () => {
+  const loadCorporateData = useCallback(async () => {
     try {
       setLoading(true);
       const companies = await corporateStore.getAllCompanies();
       const subscriptions = await corporateSubscriptionStore.getAllSubscriptions();
       const members = await corporateMemberStore.getAllMembers();
-      const memberStats = await corporateMemberStore.getMemberStatistics();
       
       // 過濾企業數據 - 企業聯絡人只能看到自己所屬的企業
       let filteredCompanies = companies;
       console.log('Current user:', user);
       console.log('User roles:', user?.roles);
       console.log('User corp_id:', user?.corp_id);
-      if (user?.roles.includes('CORPORATE_CONTACT') && (user as any).corp_id) {
+      if (user?.roles.includes('CORPORATE_CONTACT') && (user as { corp_id?: string | number }).corp_id) {
         console.log('Filtering companies for CORPORATE_CONTACT user');
         console.log('🔍 CORPORATE DEBUG:');
-        console.log('- User corp_id:', (user as any).corp_id, '(type:', typeof (user as any).corp_id, ')');
+        console.log('- User corp_id:', (user as { corp_id?: string | number }).corp_id, '(type:', typeof (user as { corp_id?: string | number }).corp_id, ')');
         console.log('- Available companies:', companies.map(c => ({ id: c.id, name: c.name, type: typeof c.id })));
         
         filteredCompanies = companies.filter(company => {
-          const match = company.id === (user as any).corp_id;
-          console.log(`- Match check: "${company.id}" === "${(user as any).corp_id}" = ${match}`);
+          const match = company.id === (user as { corp_id?: string | number }).corp_id;
+          console.log(`- Match check: "${company.id}" === "${(user as { corp_id?: string | number }).corp_id}" = ${match}`);
           return match;
         });
         
@@ -128,7 +127,7 @@ const CorporateMemberManagement = () => {
         if (filteredCompanies.length > 0) {
           console.log('- Company found:', filteredCompanies[0].name);
         } else {
-          console.log('❌ No companies found for corp_id:', (user as any).corp_id);
+          console.log('❌ No companies found for corp_id:', (user as { corp_id?: string | number }).corp_id);
         }
       } else if (user?.roles.includes('CORPORATE_CONTACT')) {
         console.log('CORPORATE_CONTACT user but no corp_id found');
@@ -152,9 +151,9 @@ const CorporateMemberManagement = () => {
       let filteredSubscriptions = subscriptions;
       let filteredMembers = members;
       
-      if (user?.roles.includes('CORPORATE_CONTACT') && (user as any).corp_id) {
+      if (user?.roles.includes('CORPORATE_CONTACT') && (user as { corp_id?: string | number }).corp_id) {
         // 企業聯絡人只看自己公司的訂閱和會員
-        const userCorpId = (user as any).corp_id;
+        const userCorpId = (user as { corp_id?: string | number }).corp_id;
         filteredSubscriptions = subscriptions.filter(sub => sub.corp_id === userCorpId);
         filteredMembers = members.filter(member => member.corp_id === userCorpId);
         console.log('🔍 STATS DEBUG: Filtered for corp_id', userCorpId);
@@ -185,11 +184,11 @@ const CorporateMemberManagement = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     loadCorporateData();
-  }, []);
+  }, [loadCorporateData]);
 
   // 獲取企業方案列表
   const getCorporatePlans = () => {

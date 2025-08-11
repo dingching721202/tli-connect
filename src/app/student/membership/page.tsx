@@ -15,7 +15,7 @@ import { useAuth } from '@/contexts/AuthContext';
 const StudentMembershipPage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const [plans, setPlans] = useState<MemberCardPlan[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState<'individual' | 'corporate'>('individual');
   const [selectedPlan, setSelectedPlan] = useState<MemberCardPlan | null>(null);
   const [showContactModal, setShowContactModal] = useState(false);

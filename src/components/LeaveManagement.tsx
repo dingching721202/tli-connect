@@ -10,8 +10,7 @@ import { getActiveTeachers, Teacher as TeacherData } from '@/data/teachers';
 
 const {
   FiClock, FiCalendar, FiUser, FiCheck, FiX, FiUserCheck,
-  FiMessageSquare, FiUsers, FiBriefcase, FiEdit, FiRefreshCw,
-  FiUserPlus, FiInfo, FiAlertTriangle, FiAlertCircle, FiTrash2
+  FiMessageSquare, FiUsers, FiBriefcase
 } = FiIcons;
 
 interface LeaveRequest {
@@ -52,7 +51,6 @@ export default function LeaveManagement() {
   const { user, isAdmin } = useAuth();
   const [selectedTab, setSelectedTab] = useState<'pending' | 'approved' | 'cancelled' | 'all'>('pending');
   const [selectedLeaveRequest, setSelectedLeaveRequest] = useState<LeaveRequest | null>(null);
-  const [selectedTeacher, setSelectedTeacher] = useState<TeacherData | null>(null);
   const [editingTeacherForRequest, setEditingTeacherForRequest] = useState<string | null>(null);
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
@@ -97,12 +95,9 @@ export default function LeaveManagement() {
   };
 
   // Get available teachers (without time conflicts)
-  const [availableTeachersForSlot, setAvailableTeachersForSlot] = useState<TeacherData[]>([]);
-  const [checkingAvailability, setCheckingAvailability] = useState(false);
 
   // Check teacher availability when editing starts
   const checkTeacherAvailability = async (courseName: string, courseDate: string, courseTime: string) => {
-    setCheckingAvailability(true);
     const suitableTeachers = getSuitableTeachers(courseName);
     const availableTeachers: TeacherData[] = [];
 
@@ -113,8 +108,7 @@ export default function LeaveManagement() {
       }
     }
 
-    setAvailableTeachersForSlot(availableTeachers);
-    setCheckingAvailability(false);
+    // setAvailableTeachersForSlot(availableTeachers);
   };
 
   // 加載真實的請假申請數據
@@ -233,116 +227,9 @@ export default function LeaveManagement() {
     }
   };
 
-  const handleCancelCourse = (_leaveId: string, courseName: string) => {
-    if (confirm(`確定要取消課程「${courseName}」嗎？`)) {
-      alert('✅ 課程已取消，系統將自動通知所有學生');
-      // Here you would cancel the course
-    }
-  };
 
-  const handleUpdateSubstituteTeacher = async (leaveId: string) => {
-    if (!selectedTeacher) {
-      alert('請先選擇代課老師');
-      return;
-    }
 
-    // Validate that the selected teacher is in the available list
-    if (!availableTeachersForSlot.some(teacher => teacher.id === selectedTeacher.id)) {
-      alert('⚠️ 所選教師在該時段不可用，請重新選擇');
-      return;
-    }
 
-    try {
-      const result = await leaveService.reviewLeaveRequest(
-        leaveId,
-        'approved',
-        `管理員變更代課老師為：${selectedTeacher.name}`,
-        user?.name || '管理員',
-        { name: selectedTeacher.name, email: selectedTeacher.email }
-      );
-
-      if (result.success) {
-        await loadLeaveData();
-        setEditingTeacherForRequest(null);
-        setSelectedTeacher(null);
-        setAvailableTeachersForSlot([]);
-        alert(`✅ 代課老師已變更為：${selectedTeacher.name}`);
-      } else {
-        alert('❌ 變更代課老師失敗');
-      }
-    } catch (error) {
-      console.error('變更代課老師失敗:', error);
-      alert('❌ 變更代課老師失敗');
-    }
-  };
-
-  const handleCancelApprovedLeave = async (leaveId: string) => {
-    const request = leaveRequests.find(req => req.id === leaveId);
-    if (request && confirm(`確定要取消「${request.courseName}」的已批准請假嗎？\n\n這會將請假狀態恢復為未申請狀態。`)) {
-      try {
-        // 直接刪除已批准的請假申請
-        // Get teacher ID from teacher email
-        const teacher = availableTeachers.find(t => t.email === request.teacherEmail);
-        const teacherId = teacher?.id || 0;
-        const deleteResult = await leaveService.cancelLeaveRequest(leaveId, teacherId, true);
-        
-        if (deleteResult.success) {
-          alert('✅ 已批准的請假已取消，課程恢復正常');
-          // 重新加載數據
-          await loadLeaveData();
-        } else {
-          alert('❌ 取消請假失敗');
-        }
-      } catch (error) {
-        console.error('取消已批准請假失敗:', error);
-        alert('❌ 取消請假失敗');
-      }
-    }
-  };
-
-  const handleAssignSubstitute = async (requestId: string) => {
-    if (selectedTeacher && editingTeacherForRequest) {
-      const request = leaveRequests.find(req => req.id === requestId);
-      if (!request) return;
-
-      // Validate that the selected teacher is in the available list
-      if (!availableTeachersForSlot.some(teacher => teacher.id === selectedTeacher.id)) {
-        alert('⚠️ 所選教師在該時段不可用，請重新選擇');
-        return;
-      }
-      
-      try {
-        const result = await leaveService.reviewLeaveRequest(
-          requestId, 
-          'approved', 
-          `已指派 ${selectedTeacher.name} 為代課老師`,
-          user?.name || '管理員',
-          { name: selectedTeacher.name, email: selectedTeacher.email }
-        );
-        
-        if (result.success) {
-          const actionText = request.status === 'approved' ? '已變更' : '已指派';
-          alert(`✅ ${actionText} ${selectedTeacher.name} 為代課老師\n\n課程：${request.courseName}\n時間：${request.courseDate} ${request.courseTime}\n\n系統將自動發送通知給所有學生。`);
-          
-          // 重新加載數據
-          const leaveResult = await leaveService.getAllLeaveRequests();
-          if (leaveResult.success && leaveResult.data) {
-            setLeaveRequests(leaveResult.data);
-          }
-          
-          // 關閉編輯模式
-          setEditingTeacherForRequest(null);
-          setSelectedTeacher(null);
-          setAvailableTeachersForSlot([]);
-        } else {
-          alert('❌ 指派代課老師失敗');
-        }
-      } catch (error) {
-        console.error('指派代課老師失敗:', error);
-        alert('❌ 指派代課老師失敗');
-      }
-    }
-  };
 
   const ReasonModal = () => (
     <motion.div
