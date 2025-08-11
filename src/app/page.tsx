@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function Home() {
   const [heroForm, setHeroForm] = useState({
@@ -1085,7 +1086,7 @@ export default function Home() {
 
       {/* ===== Sticky Top Bar ===== */}
       <header className="site-header">
-        <a href="/" className="brand-logo" aria-label="Taipei Language Institute Logo">
+        <Link href="/" className="brand-logo" aria-label="Taipei Language Institute Logo">
           <Image 
             src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
             alt="Taipei Language Institute logo"
@@ -1105,7 +1106,7 @@ export default function Home() {
             priority
             unoptimized={false}
           />
-        </a>
+        </Link>
         
         {/* Header Buttons - Clean Implementation */}
         <div style={{
@@ -1151,7 +1152,7 @@ export default function Home() {
           >
             Free Consultation
           </a>
-          <a 
+          <Link 
             href="/student/login" 
             aria-label="Login"
             style={{
@@ -1183,7 +1184,7 @@ export default function Home() {
             }}
           >
             Login
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -1514,12 +1515,12 @@ export default function Home() {
             <h3>Need a Customized Corporate Training Solution?</h3>
             <p>Tailored team training programs with management tools and performance tracking.</p>
           </div>
-          <a className="redirect-cta secondary" href="/business" aria-label="Explore Corporate Plans">
+          <Link className="redirect-cta secondary" href="/business" aria-label="Explore Corporate Plans">
             <span>Explore Corporate Plans</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <path d="M5 12h14M13 5l7 7-7 7" stroke="#1E2328" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-          </a>
+          </Link>
         </div>
       </section>
 
@@ -1616,7 +1617,7 @@ export default function Home() {
         
         {/* Footer Login Button - Clean Implementation */}
         <div className="footer-login-container">
-          <a 
+          <Link 
             href="/login" 
             aria-label="Login for all roles"
             style={{
@@ -1648,7 +1649,7 @@ export default function Home() {
             }}
           >
             Login
-          </a>
+          </Link>
         </div>
       </footer>
     </>

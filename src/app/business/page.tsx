@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
+import Link from 'next/link';
 
 export default function BusinessPage() {
   const [formData, setFormData] = useState({
@@ -664,7 +665,7 @@ export default function BusinessPage() {
 
       {/* Header */}
       <header className="site-header">
-        <a href="/business" className="brand-logo" aria-label="Taipei Language Institute Logo">
+        <Link href="/business" className="brand-logo" aria-label="Taipei Language Institute Logo">
           <Image
             src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
             alt="Taipei Language Institute logo"
@@ -684,7 +685,7 @@ export default function BusinessPage() {
             priority
             unoptimized={false}
           />
-        </a>
+        </Link>
         
         {/* Header Buttons - Clean Implementation */}
         <div style={{
@@ -730,7 +731,7 @@ export default function BusinessPage() {
           >
             Free Consultation
           </button>
-          <a 
+          <Link 
             href="/student/login" 
             aria-label="Login"
             style={{
@@ -762,7 +763,7 @@ export default function BusinessPage() {
             }}
           >
             Login
-          </a>
+          </Link>
         </div>
       </header>
 
@@ -1018,7 +1019,7 @@ export default function BusinessPage() {
             </p>
           </div>
           <div className="membership-cta">
-            <a href="/" className="secondary-btn" aria-label="View Individual Plans">View Individual Plans</a>
+            <Link href="/" className="secondary-btn" aria-label="View Individual Plans">View Individual Plans</Link>
           </div>
         </div>
       </section>
@@ -1181,7 +1182,7 @@ export default function BusinessPage() {
         
         {/* Footer Login Button - Clean Implementation */}
         <div className="footer-login-container">
-          <a 
+          <Link 
             href="/login" 
             aria-label="Login for all roles"
             style={{
@@ -1213,7 +1214,7 @@ export default function BusinessPage() {
             }}
           >
             Login
-          </a>
+          </Link>
         </div>
       </footer>
     </>
