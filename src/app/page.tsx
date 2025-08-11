@@ -44,6 +44,11 @@ export default function Home() {
   // Validation functions
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+  // Scroll to footer form function
+  const scrollToFooterForm = () => {
+    document.querySelector('#footerForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
   // Form submission handler
   const handleSubmit = (formType: 'hero' | 'footer') => async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1119,8 +1124,8 @@ export default function Home() {
           gap: '12px',
           zIndex: 10
         }}>
-          <a 
-            href="#footerForm" 
+          <button 
+            onClick={scrollToFooterForm}
             aria-label="Free Consultation"
             style={{
               background: 'linear-gradient(90deg, #009FB6, #027AB9)',
@@ -1130,7 +1135,6 @@ export default function Home() {
               padding: '10px 18px',
               fontSize: '14px',
               fontWeight: '700',
-              textDecoration: 'none',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -1139,7 +1143,8 @@ export default function Home() {
               whiteSpace: 'nowrap',
               boxShadow: '0 6px 14px rgba(2,122,185,.18)',
               transition: 'all 0.25s ease-in-out',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
+              cursor: 'pointer'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.02)';
@@ -1151,7 +1156,7 @@ export default function Home() {
             }}
           >
             Free Consultation
-          </a>
+          </button>
           <Link 
             href="/student/login" 
             aria-label="Login"
