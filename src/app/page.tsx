@@ -981,7 +981,7 @@ export default function Home() {
         .footer-login-btn {
           position: absolute;
           bottom: 16px;
-          right: 24px;
+          right: var(--header-padding);
           background: linear-gradient(90deg,#009FB6,#027AB9);
           color: #fff;
           border: none;
@@ -1003,7 +1003,6 @@ export default function Home() {
         }
         @media (max-width: 768px) {
           .footer-login-btn {
-            right: 16px;
             bottom: 12px;
             padding: 8px 14px;
             font-size: 13px;
