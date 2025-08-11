@@ -35,7 +35,7 @@ export default function Home() {
   // API endpoint from the original HTML
   const API_ENDPOINT = 'https://n8n-gphufbto.ap-southeast-1.clawcloudrun.com/webhook/to_c_leads';
 
-  // Add hydrated class to body on mount to show hidden content
+  // Add hydrated class to body on mount
   useEffect(() => {
     document.body.classList.add('hydrated');
   }, []);
@@ -109,6 +109,112 @@ export default function Home() {
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet" />
       </Head>
 
+      {/* Critical Header CSS - Prevent Layout Shift */}
+      <style jsx>{`
+        /* Ensure header starts with correct positioning immediately */
+        :global(.site-header) {
+          position: fixed !important;
+          top: 0 !important;
+          left: 0 !important;
+          right: 0 !important;
+          width: 100% !important;
+          height: 72px !important;
+          background: #fff !important;
+          z-index: 9998 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-between !important;
+          padding: 0 100px !important;
+          box-sizing: border-box !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+        
+        :global(.brand-logo) {
+          display: inline-block !important;
+          width: 200px !important;
+          height: 36px !important;
+          min-width: 200px !important;
+          max-width: 200px !important;
+          min-height: 36px !important;
+          max-height: 36px !important;
+          flex-shrink: 0 !important;
+          flex-grow: 0 !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          vertical-align: middle !important;
+        }
+        
+        :global(.brand-logo img) {
+          width: 200px !important;
+          height: 36px !important;
+          min-width: 200px !important;
+          max-width: 200px !important;
+          min-height: 36px !important;
+          max-height: 36px !important;
+          display: block !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
+          vertical-align: top !important;
+          object-fit: contain !important;
+        }
+        
+        
+        
+        /* Next.js Image component specific fixes */
+        :global(.brand-logo span) {
+          display: block !important;
+          width: 200px !important;
+          height: 36px !important;
+          min-width: 200px !important;
+          max-width: 200px !important;
+          min-height: 36px !important;
+          max-height: 36px !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
+          position: relative !important;
+        }
+        
+        :global(.brand-logo span img) {
+          width: 200px !important;
+          height: 36px !important;
+          min-width: 200px !important;
+          max-width: 200px !important;
+          min-height: 36px !important;
+          max-height: 36px !important;
+          position: relative !important;
+          display: block !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          border: none !important;
+          object-fit: contain !important;
+          vertical-align: top !important;
+        }
+        
+        
+        /* Footer Login Button responsive positioning */
+        :global(.footer-login-container) {
+          position: absolute !important;
+          bottom: 16px !important;
+          right: 100px !important;
+          z-index: 10 !important;
+        }
+        
+        /* Responsive positioning */
+        @media (max-width: 960px) {
+          :global(.site-header) { padding: 0 24px !important; }
+          :global(.footer-login-container) { right: 24px !important; }
+        }
+        @media (max-width: 600px) {
+          :global(.site-header) { padding: 0 16px !important; }
+          :global(.footer-login-container) { right: 16px !important; }
+        }
+      `}</style>
+
       <style jsx global>{`
         :root{
           /* Layout */
@@ -179,9 +285,6 @@ export default function Home() {
         
         /* Header actions */
         .header-actions{display:flex; align-items:center; gap:12px}
-        .login-btn{background:linear-gradient(90deg,#009FB6,#027AB9);color:#fff;border:none;padding:10px 18px;border-radius:999px;font-size:14px;font-weight:700;cursor:pointer;transition:all 0.25s ease-in-out;box-shadow:0 6px 14px rgba(2,122,185,.18);text-decoration:none;display:inline-block}
-        .login-btn:hover{background:linear-gradient(90deg,#00BEE3,#0286C9);transform:scale(1.02);box-shadow:0 8px 18px rgba(2,122,185,.24)}
-        @media (max-width:768px){.login-btn{padding:8px 14px;font-size:13px}}
         @media (max-width:600px){.header-actions{gap:8px}}
 
         /* HERO：標題左、表單右 */
@@ -974,56 +1077,113 @@ export default function Home() {
         .redirect p  { color: #49647B; }
         @media (max-width: 768px) { .redirect .container { padding: 28px 24px; } }
 
-        /* Footer login button styles */
+        /* Footer styles */
         .footer-info-section {
           position: relative;
-        }
-        .footer-login-btn {
-          position: absolute;
-          bottom: 16px;
-          right: var(--header-padding);
-          background: linear-gradient(90deg,#009FB6,#027AB9);
-          color: #fff;
-          border: none;
-          padding: 10px 18px;
-          border-radius: 999px;
-          font-size: 14px;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.25s ease-in-out;
-          box-shadow: 0 6px 14px rgba(2,122,185,.18);
-          text-decoration: none;
-          display: inline-block;
-        }
-        .footer-login-btn:hover {
-          background: linear-gradient(90deg,#00BEE3,#0286C9);
-          transform: scale(1.02);
-          box-shadow: 0 8px 18px rgba(2,122,185,.24);
-          color: #fff;
-        }
-        @media (max-width: 768px) {
-          .footer-login-btn {
-            bottom: 12px;
-            padding: 8px 14px;
-            font-size: 13px;
-          }
         }
       `}</style>
 
       {/* ===== Sticky Top Bar ===== */}
       <header className="site-header">
-        <a href="https://connect.tli1956.com/" className="brand-logo" aria-label="Taipei Language Institute Logo">
+        <a href="/" className="brand-logo" aria-label="Taipei Language Institute Logo">
           <Image 
             src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
             alt="Taipei Language Institute logo"
             width={200}
             height={36}
-            style={{width: 'auto', height: 'auto'}}
+            style={{
+              width: '100%',
+              height: 'auto', 
+              display: 'block',
+              maxWidth: '200px',
+              position: 'relative',
+              margin: 0,
+              padding: 0,
+              border: 'none'
+            }}
+            sizes="200px"
+            priority
+            unoptimized={false}
           />
         </a>
-        <div className="header-actions">
-          <a href="#footerForm" className="cta-btn cta-btn--sm" aria-label="Free Consultation">Free Consultation</a>
-          <a href="/student/login" className="login-btn" aria-label="Login">Login</a>
+        
+        {/* Header Buttons - Clean Implementation */}
+        <div style={{
+          position: 'absolute',
+          right: '100px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          zIndex: 10
+        }}>
+          <a 
+            href="#footerForm" 
+            aria-label="Free Consultation"
+            style={{
+              background: 'linear-gradient(90deg, #009FB6, #027AB9)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '999px',
+              padding: '10px 18px',
+              fontSize: '14px',
+              fontWeight: '700',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '36px',
+              minWidth: '80px',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 6px 14px rgba(2,122,185,.18)',
+              transition: 'all 0.25s ease-in-out',
+              boxSizing: 'border-box'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 8px 18px rgba(2,122,185,.24)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 6px 14px rgba(2,122,185,.18)';
+            }}
+          >
+            Free Consultation
+          </a>
+          <a 
+            href="/student/login" 
+            aria-label="Login"
+            style={{
+              background: 'linear-gradient(90deg, #009FB6, #027AB9)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '999px',
+              padding: '10px 18px',
+              fontSize: '14px',
+              fontWeight: '700',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '36px',
+              minWidth: '80px',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 6px 14px rgba(2,122,185,.18)',
+              transition: 'all 0.25s ease-in-out',
+              boxSizing: 'border-box'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 8px 18px rgba(2,122,185,.24)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 6px 14px rgba(2,122,185,.18)';
+            }}
+          >
+            Login
+          </a>
         </div>
       </header>
 
@@ -1354,7 +1514,7 @@ export default function Home() {
             <h3>Need a Customized Corporate Training Solution?</h3>
             <p>Tailored team training programs with management tools and performance tracking.</p>
           </div>
-          <a className="redirect-cta secondary" href="https://connect.tli1956.com/corporate" aria-label="Explore Corporate Plans">
+          <a className="redirect-cta secondary" href="/business" aria-label="Explore Corporate Plans">
             <span>Explore Corporate Plans</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <path d="M5 12h14M13 5l7 7-7 7" stroke="#1E2328" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1435,7 +1595,7 @@ export default function Home() {
       </section>
 
       {/* Footer Info（最底部資訊）*/}
-      <footer className="footer-info-section" style={{backgroundColor: '#DFDFDF'}}>
+      <footer className="footer-info-section" style={{backgroundColor: '#DFDFDF', position: 'relative', paddingBottom: '60px'}}>
         <div className="container footer-bottom">
           <div className="body-m footer-info">
             <a href="https://tli1956.com/?lang=tc" target="_blank" rel="noopener noreferrer">TLI Taipei Language Institute</a><span> | </span>
@@ -1454,10 +1614,42 @@ export default function Home() {
           <div className="legal">© TLI Taipei Language Institute. All rights reserved.</div>
         </div>
         
-        {/* Footer Login Button */}
-        <a href="/login" className="footer-login-btn" aria-label="Login for all roles">
-          Login
-        </a>
+        {/* Footer Login Button - Clean Implementation */}
+        <div className="footer-login-container">
+          <a 
+            href="/login" 
+            aria-label="Login for all roles"
+            style={{
+              background: 'linear-gradient(90deg, #009FB6, #027AB9)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '999px',
+              padding: '10px 18px',
+              fontSize: '14px',
+              fontWeight: '700',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '36px',
+              minWidth: '80px',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 6px 14px rgba(2,122,185,.18)',
+              transition: 'all 0.25s ease-in-out',
+              boxSizing: 'border-box'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 8px 18px rgba(2,122,185,.24)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 6px 14px rgba(2,122,185,.18)';
+            }}
+          >
+            Login
+          </a>
+        </div>
       </footer>
     </>
   );

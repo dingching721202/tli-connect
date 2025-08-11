@@ -163,12 +163,21 @@
     position: relative;
   }
   
-  /* 防止 FOUC - 在 JS 載入前隱藏內容 */
+  /* Prevent FOUC - but keep header visible always */
   .hero-content, .hero-form-row, .filmstrip, .footer-cta-section {
     visibility: hidden;
   }
   
-  /* React 水化完成後顯示內容 */
+  /* Always keep header elements visible to prevent layout shifts */
+  .site-header,
+  .brand-logo,
+  .header-actions,
+  .cta-btn {
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+  
+  /* React hydration complete - show content */
   body.hydrated .hero-content,
   body.hydrated .hero-form-row,
   body.hydrated .filmstrip,

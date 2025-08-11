@@ -39,7 +39,15 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--page-padding);
+  padding: 0 100px; /* Default desktop padding */
+}
+
+/* Responsive header padding */
+@media (max-width: 960px) {
+  .site-header { padding: 0 24px; }
+}
+@media (max-width: 600px) {
+  .site-header { padding: 0 16px; }
 }
 
 /* Navigation Links */
