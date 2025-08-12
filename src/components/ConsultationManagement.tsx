@@ -17,7 +17,7 @@ import {
 
 const {
   FiUsers, FiBriefcase, FiTrash2, FiSearch, FiDownload, FiEdit,
-  FiClock, FiX, FiUser,
+  FiCheck, FiClock, FiX, FiUser,
   FiPhone, FiFileText, FiMessageCircle, FiCheckCircle,
   FiXCircle, FiChevronDown
 } = FiIcons;
@@ -30,7 +30,16 @@ const ConsultationManagementPage: React.FC = () => {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
   const [filteredConsultations, setFilteredConsultations] = useState<Consultation[]>([]);
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showStatusModal, setShowStatusModal] = useState(false);
   const [openDropdowns, setOpenDropdowns] = useState<Set<string>>(new Set());
+  const [editingConsultation, setEditingConsultation] = useState<Consultation | null>(null);
+
+  // 更新編輯中的諮詢欄位
+  const updateEditingField = (field: keyof Consultation, value: Consultation[keyof Consultation]) => {
+    if (!editingConsultation) return;
+    setEditingConsultation(prev => prev ? { ...prev, [field]: value } : null);
+  };
 
 
   // 模擬職員人員列表
@@ -275,14 +284,81 @@ const ConsultationManagementPage: React.FC = () => {
     setOpenDropdowns(new Set());
   };
 
+  // 處理指派
+  const handleAssignment = (assignedTo: string) => {
+    if (!editingConsultation || !user) return;
+    
+    setEditingConsultation(prev => prev ? {
+      ...prev,
+      assignedTo,
+      assignedBy: user.name,
+      assignedAt: new Date().toISOString()
+    } : null);
+  };
+
   // 開始編輯諮詢
   const handleEditConsultation = (consultation: Consultation) => {
-    // setEditingConsultation({ ...consultation });
+    setEditingConsultation({ ...consultation });
     setSelectedConsultation(consultation);
-    // setShowDetailModal(true);
+    setShowDetailModal(true);
   };
 
   // 取消編輯
+  const handleCancelEdit = () => {
+    setEditingConsultation(null);
+    setShowDetailModal(false);
+    setSelectedConsultation(null);
+  };
+
+  // 保存編輯
+  const handleSaveEdit = async () => {
+    if (!editingConsultation || !user) return;
+
+    try {
+      // 添加最後更新者資訊
+      const updatedConsultation = {
+        ...editingConsultation,
+        lastUpdatedBy: user.name,
+        updatedAt: new Date().toISOString()
+      };
+
+      const response = await fetch('/api/consultations', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedConsultation),
+      });
+
+      if (!response.ok) {
+        throw new Error('更新諮詢失敗');
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.message || '更新諮詢失敗');
+      }
+
+      // 更新本地狀態
+      const updateConsultation = (consultations: Consultation[]) => 
+        consultations.map(consultation => 
+          consultation.id === editingConsultation.id
+            ? updatedConsultation
+            : consultation
+        );
+
+      setConsultations(prev => updateConsultation(prev));
+      setFilteredConsultations(prev => updateConsultation(prev));
+      setSelectedConsultation(updatedConsultation);
+      
+      setEditingConsultation(null);
+      setShowDetailModal(false);
+
+    } catch (error) {
+      console.error('更新諮詢失敗:', error);
+      alert('更新諮詢失敗，請稍後再試');
+    }
+  };
 
   // 狀態更新
   const handleStatusUpdate = async (consultationId: string, newStatus: ConsultationStatus) => {
@@ -304,7 +380,7 @@ const ConsultationManagementPage: React.FC = () => {
       }
 
       closeAllDropdowns();
-      // setShowStatusModal(false);
+      setShowStatusModal(false);
 
       // 發送 API 請求
       const response = await fetch('/api/consultations', {
@@ -354,7 +430,7 @@ const ConsultationManagementPage: React.FC = () => {
             
             // 如果刪除的是當前選中的諮詢，關閉模態框
             if (selectedConsultation?.id === consultationId) {
-              // setShowDetailModal(false);
+              setShowDetailModal(false);
               setSelectedConsultation(null);
             }
           } else {
@@ -954,7 +1030,328 @@ const ConsultationManagementPage: React.FC = () => {
           )}
         </motion.div>
 
-      {/* 這裡可以加上編輯和狀態更新的模態框，但為了簡化先省略 */}
+      {/* Detail Modal */}
+      {showDetailModal && selectedConsultation && editingConsultation && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={handleCancelEdit}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">編輯諮詢</h2>
+              <button
+                onClick={handleCancelEdit}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <SafeIcon icon={FiX} className="text-gray-500" />
+              </button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveEdit(); }} className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+              <div className="space-y-6">
+                {/* 統一表單佈局 */}
+                <div className="bg-gray-50 rounded-lg p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* 第一行：基本資訊 */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">類型 *</label>
+                      <select
+                        value={editingConsultation.type}
+                        onChange={(e) => updateEditingField('type', e.target.value as ConsultationType)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value={ConsultationType.INDIVIDUAL}>個人</option>
+                        <option value={ConsultationType.CORPORATE}>企業</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">姓名 *</label>
+                      <input
+                        type="text"
+                        value={editingConsultation.contactName}
+                        onChange={(e) => updateEditingField('contactName', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+                      <input
+                        type="email"
+                        value={editingConsultation.email}
+                        onChange={(e) => updateEditingField('email', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">電話</label>
+                      <input
+                        type="tel"
+                        value={editingConsultation.phone || ''}
+                        onChange={(e) => updateEditingField('phone', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="請輸入電話號碼"
+                      />
+                    </div>
+
+                    {/* 第二行：企業資訊（所有類型顯示） */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        企業名稱{editingConsultation.type === ConsultationType.CORPORATE ? ' *' : ''}
+                      </label>
+                      <input
+                        type="text"
+                        value={editingConsultation.companyName || ''}
+                        onChange={(e) => updateEditingField('companyName', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        required={editingConsultation.type === ConsultationType.CORPORATE}
+                        placeholder="請輸入企業名稱"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">職稱</label>
+                      <input
+                        type="text"
+                        value={editingConsultation.contactTitle || ''}
+                        onChange={(e) => updateEditingField('contactTitle', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="請輸入職稱"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">培訓人數</label>
+                      <select
+                        value={editingConsultation.trainingSize || ''}
+                        onChange={(e) => updateEditingField('trainingSize', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">請選擇培訓人數</option>
+                        <option value="<50">&lt;50</option>
+                        <option value="50–100">50–100</option>
+                        <option value="100–300">100–300</option>
+                        <option value="300–500">300–500</option>
+                        <option value="500+">500+</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">培訓項目</label>
+                      <div className="grid grid-cols-2 gap-1 text-xs">
+                        {['中文', '英文', '文化', '商業', '師培'].map(option => (
+                          <label key={option} className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={editingConsultation.trainingNeeds?.includes(option) || false}
+                              onChange={(e) => {
+                                const currentNeeds = editingConsultation.trainingNeeds || [];
+                                const newNeeds = e.target.checked
+                                  ? [...currentNeeds, option]
+                                  : currentNeeds.filter(need => need !== option);
+                                updateEditingField('trainingNeeds', newNeeds);
+                              }}
+                              className="w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-1"
+                            />
+                            <span className="text-gray-700">{option}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 第三行：需求說明（所有類型）*/}
+                    <div className="md:col-span-2 lg:col-span-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">需求說明</label>
+                      <textarea
+                        value={editingConsultation.message || ''}
+                        onChange={(e) => updateEditingField('message', e.target.value)}
+                        rows={2}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="請簡述您的培訓需求..."
+                      />
+                    </div>
+
+                    {/* 第四行：狀態管理（所有類型）*/}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">目前狀態</label>
+                      <select
+                        value={editingConsultation.status}
+                        onChange={(e) => updateEditingField('status', e.target.value as ConsultationStatus)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        {Object.values(ConsultationStatus).map((status) => (
+                          <option key={status} value={status}>
+                            {STATUS_CONFIG[status].label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">提交時間</label>
+                      <div className="text-sm text-gray-600 px-3 py-2 bg-white border border-gray-300 rounded-lg">
+                        {new Date(editingConsultation.submittedAt).toLocaleString('zh-TW')}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">更新時間</label>
+                      <div className="text-sm text-gray-600 px-3 py-2 bg-white border border-gray-300 rounded-lg">
+                        {new Date(editingConsultation.updatedAt).toLocaleString('zh-TW')}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">最後更新者</label>
+                      <div className="text-sm text-gray-600 px-3 py-2 bg-white border border-gray-300 rounded-lg">
+                        {editingConsultation.lastUpdatedBy || '系統'}
+                      </div>
+                    </div>
+
+                    {/* 第五行：指派處理者 - 適用於所有類型 */}
+                    <div className="md:col-span-1 lg:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">顧問</label>
+                      <select
+                        value={editingConsultation.assignedTo || ''}
+                        onChange={(e) => {
+                          if (e.target.value) {
+                            handleAssignment(e.target.value);
+                          } else {
+                            updateEditingField('assignedTo', '');
+                            updateEditingField('assignedBy', '');
+                            updateEditingField('assignedAt', '');
+                          }
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">請選擇顧問</option>
+                        {opsPersonnel.map(person => (
+                          <option key={person.id} value={person.name}>
+                            {person.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="md:col-span-1 lg:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">處理資訊</label>
+                      {editingConsultation.assignedTo ? (
+                        <div className="text-xs text-blue-700 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg space-y-1">
+                          <div>✅ 顧問：{editingConsultation.assignedTo}</div>
+                          {editingConsultation.assignedBy && (
+                            <div>👤 派發者：{editingConsultation.assignedBy}</div>
+                          )}
+                          {editingConsultation.assignedAt && (
+                            <div>📅 派發時間：{new Date(editingConsultation.assignedAt).toLocaleDateString('zh-TW')}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-500 px-3 py-2 bg-gray-100 border border-gray-300 rounded-lg">
+                          尚未指派顧問
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 備註 - 全寬度 */}
+                    <div className="md:col-span-2 lg:col-span-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">備註</label>
+                      <textarea
+                        value={editingConsultation.notes || ''}
+                        onChange={(e) => updateEditingField('notes', e.target.value)}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="請輸入備註資訊..."
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+            </form>
+            
+            {/* 按鈕區域 */}
+            <div className="border-t border-gray-200 px-6 py-4 bg-white">
+              <div className="flex justify-end space-x-3">
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleSaveEdit}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  確認保存
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Status Update Modal */}
+      {showStatusModal && selectedConsultation && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowStatusModal(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-2xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-bold text-gray-900">更新狀態</h2>
+              <button
+                onClick={() => setShowStatusModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <SafeIcon icon={FiX} className="text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 gap-3">
+                {Object.values(ConsultationStatus).map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => handleStatusUpdate(selectedConsultation.id, status)}
+                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                      selectedConsultation.status === status
+                        ? 'bg-blue-50 border-blue-200'
+                        : 'bg-white border-gray-200 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <SafeIcon 
+                        icon={getStatusIcon(status)} 
+                        className={STATUS_CONFIG[status].textColor}
+                      />
+                      <div className="text-left">
+                        <div className="font-medium text-gray-900">
+                          {STATUS_CONFIG[status].label}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {STATUS_CONFIG[status].description}
+                        </div>
+                      </div>
+                    </div>
+                    {selectedConsultation.status === status && (
+                      <SafeIcon icon={FiCheck} className="text-blue-600" />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 };
