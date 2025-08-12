@@ -49,6 +49,28 @@ export default function Home() {
     document.querySelector('#footerForm')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
+  // Create consultation record
+  const createConsultationRecord = async (formData: { name: string; email: string; phone: string }) => {
+    try {
+      await fetch('/api/consultations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'individual',
+          contactName: formData.name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim() || '',
+          source: 'individual_form'
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to create consultation record:', error);
+      // Don't fail the main submission if this fails
+    }
+  };
+
   // Form submission handler
   const handleSubmit = (formType: 'hero' | 'footer') => async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,6 +108,9 @@ export default function Home() {
       });
 
       if (response.ok) {
+        // Original API call succeeded, now create consultation record
+        await createConsultationRecord(formData);
+        
         setShowSuccess({...showSuccess, [formType]: true});
         setForm({ name: '', email: '', phone: '' });
         setTimeout(() => {

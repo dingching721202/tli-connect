@@ -32,6 +32,33 @@ export default function BusinessPage() {
   // Validation functions
   const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+  // Create consultation record
+  const createConsultationRecord = async () => {
+    try {
+      await fetch('/api/consultations', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: 'corporate',
+          contactName: formData.name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim() || '',
+          companyName: formData.company.trim(),
+          contactTitle: formData.jobtitle.trim() || '',
+          trainingNeeds: formData.primaryTraining ? [formData.primaryTraining] : [],
+          trainingSize: formData.participants || '',
+          message: formData.requirements.trim() || '',
+          source: 'corporate_form'
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to create consultation record:', error);
+      // Don't fail the main submission if this fails
+    }
+  };
+
   // Form submission handler
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +97,9 @@ export default function BusinessPage() {
       });
 
       if (response.ok) {
+        // Original API call succeeded, now create consultation record
+        await createConsultationRecord();
+        
         setShowSuccess(true);
         setFormData({
           name: '',
