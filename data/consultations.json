@@ -2,31 +2,43 @@
   {
     "id": "cons_individual_1",
     "type": "individual",
-    "status": "lead",
+    "status": "closed_won",
     "contactName": "李小華",
     "email": "li@example.com",
     "phone": "+886 912 345 678",
     "submittedAt": "2025-07-28T14:20:00Z",
-    "updatedAt": "2025-07-28T14:20:00Z",
+    "updatedAt": "2025-08-12T15:13:44.109Z",
     "source": "homepage",
-    "message": "從首頁表單提交"
+    "message": "從首頁表單提交",
+    "statusHistory": [
+      {
+        "status": "closed_won",
+        "timestamp": "2025-08-12T15:13:44.109Z"
+      }
+    ]
   },
   {
     "id": "cons_individual_2",
     "type": "individual",
-    "status": "lead",
+    "status": "closed_lost",
     "contactName": "王小明",
     "email": "wang@example.com",
     "phone": "+886 987 654 321",
     "submittedAt": "2025-07-25T10:15:00Z",
-    "updatedAt": "2025-07-25T10:15:00Z",
+    "updatedAt": "2025-08-12T15:13:47.271Z",
     "source": "membership",
-    "message": "從會員管理提交"
+    "message": "從會員管理提交",
+    "statusHistory": [
+      {
+        "status": "closed_lost",
+        "timestamp": "2025-08-12T15:13:47.271Z"
+      }
+    ]
   },
   {
     "id": "cons_corporate_1",
     "type": "corporate",
-    "status": "lead",
+    "status": "contacted",
     "contactName": "張小明",
     "email": "zhang@example.com",
     "phone": "+886 2 1234 5678",
@@ -38,66 +50,100 @@
     "trainingSize": "50–100",
     "message": "希望為員工提供語言培訓課程",
     "submittedAt": "2025-07-20T09:30:00Z",
-    "updatedAt": "2025-07-20T09:30:00Z",
-    "source": "corporate_form"
+    "updatedAt": "2025-08-12T15:23:46.330Z",
+    "source": "corporate_form",
+    "statusHistory": [
+      {
+        "status": "contacted",
+        "timestamp": "2025-08-12T15:23:46.330Z"
+      }
+    ]
   },
   {
     "id": "cons_individual_1754123006918",
     "type": "individual",
-    "status": "lead",
+    "status": "negotiation",
     "contactName": "hero",
     "email": "hero@gmail.com",
     "phone": "123",
     "submittedAt": "2025-08-02T08:23:26.918Z",
-    "updatedAt": "2025-08-02T08:23:26.918Z",
+    "updatedAt": "2025-08-12T15:13:40.005Z",
     "source": "homepage_hero",
-    "message": "來自首頁主要聯絡表單的諮詢"
+    "message": "來自首頁主要聯絡表單的諮詢",
+    "statusHistory": [
+      {
+        "status": "negotiation",
+        "timestamp": "2025-08-12T15:13:40.005Z"
+      }
+    ]
   },
   {
     "id": "cons_individual_1754123023588",
     "type": "individual",
-    "status": "lead",
+    "status": "proposal",
     "contactName": "foot",
     "email": "foot@gmail.com",
     "phone": "12345",
     "submittedAt": "2025-08-02T08:23:43.588Z",
-    "updatedAt": "2025-08-02T08:23:43.588Z",
+    "updatedAt": "2025-08-12T15:24:00.809Z",
     "source": "homepage_footer",
-    "message": "來自首頁頁尾聯絡表單的諮詢"
+    "message": "來自首頁頁尾聯絡表單的諮詢",
+    "statusHistory": [
+      {
+        "status": "contacted",
+        "timestamp": "2025-08-12T15:11:31.107Z"
+      },
+      {
+        "status": "proposal",
+        "timestamp": "2025-08-12T15:24:00.809Z"
+      }
+    ]
   },
   {
     "id": "cons_individual_1754123065298",
     "type": "individual",
-    "status": "lead",
+    "status": "closed_lost",
     "contactName": "person",
     "email": "person@gmail.com",
     "phone": "5412",
     "submittedAt": "2025-08-02T08:24:25.298Z",
-    "updatedAt": "2025-08-02T08:24:25.298Z",
+    "updatedAt": "2025-08-12T15:11:19.044Z",
     "source": "membership_page",
-    "message": "來自個人方案諮詢表單"
+    "message": "來自個人方案諮詢表單",
+    "statusHistory": [
+      {
+        "status": "closed_lost",
+        "timestamp": "2025-08-12T15:11:19.044Z"
+      }
+    ]
   },
   {
     "id": "cons_individual_1754123080783",
     "type": "individual",
-    "status": "lead",
+    "status": "closed_won",
     "contactName": "person2",
     "email": "person2@gmail.com",
     "phone": "4578",
     "submittedAt": "2025-08-02T08:24:40.783Z",
-    "updatedAt": "2025-08-02T08:24:40.783Z",
+    "updatedAt": "2025-08-12T15:11:16.021Z",
     "source": "membership_page",
-    "message": "來自個人方案諮詢表單"
+    "message": "來自個人方案諮詢表單",
+    "statusHistory": [
+      {
+        "status": "closed_won",
+        "timestamp": "2025-08-12T15:11:16.021Z"
+      }
+    ]
   },
   {
     "id": "cons_corporate_1754123113471",
     "type": "corporate",
-    "status": "lead",
+    "status": "proposal",
     "contactName": "company",
     "email": "company@gmail.com",
     "phone": "",
     "submittedAt": "2025-08-02T08:25:13.471Z",
-    "updatedAt": "2025-08-02T08:25:13.471Z",
+    "updatedAt": "2025-08-12T15:13:35.767Z",
     "source": "corporate_form",
     "message": "沒有",
     "companyName": "company",
@@ -105,19 +151,31 @@
     "trainingNeeds": [
       "Business"
     ],
-    "trainingSize": "<50"
+    "trainingSize": "<50",
+    "statusHistory": [
+      {
+        "status": "proposal",
+        "timestamp": "2025-08-12T15:13:35.767Z"
+      }
+    ]
   },
   {
     "id": "cons_individual_1754127630710",
     "type": "individual",
-    "status": "lead",
+    "status": "negotiation",
     "contactName": "123",
     "email": "123@gmail.com",
     "phone": "123",
     "submittedAt": "2025-08-02T09:40:30.710Z",
-    "updatedAt": "2025-08-02T09:40:30.710Z",
+    "updatedAt": "2025-08-12T15:11:00.416Z",
     "source": "individual_form",
-    "message": "來自個人方案諮詢表單"
+    "message": "來自個人方案諮詢表單",
+    "statusHistory": [
+      {
+        "status": "negotiation",
+        "timestamp": "2025-08-12T15:11:00.416Z"
+      }
+    ]
   },
   {
     "id": "cons_individual_1754127643552",
@@ -150,24 +208,36 @@
   {
     "id": "cons_individual_1754991420293",
     "type": "individual",
-    "status": "lead",
+    "status": "qualification",
     "contactName": "individualA",
     "email": "individualA@gmail.com",
     "phone": "0912345678",
     "submittedAt": "2025-08-12T09:37:00.293Z",
-    "updatedAt": "2025-08-12T09:37:00.293Z",
-    "source": "individual_form"
+    "updatedAt": "2025-08-12T15:10:54.642Z",
+    "source": "individual_form",
+    "statusHistory": [
+      {
+        "status": "qualification",
+        "timestamp": "2025-08-12T15:10:54.642Z"
+      }
+    ]
   },
   {
     "id": "cons_individual_1754991438041",
     "type": "individual",
-    "status": "lead",
+    "status": "contacted",
     "contactName": "individualB",
     "email": "individualB@gmail.com",
     "phone": "0912345678",
     "submittedAt": "2025-08-12T09:37:18.041Z",
-    "updatedAt": "2025-08-12T09:37:18.041Z",
-    "source": "individual_form"
+    "updatedAt": "2025-08-12T15:13:30.372Z",
+    "source": "individual_form",
+    "statusHistory": [
+      {
+        "status": "contacted",
+        "timestamp": "2025-08-12T15:13:30.372Z"
+      }
+    ]
   },
   {
     "id": "cons_corporate_1754991500047",

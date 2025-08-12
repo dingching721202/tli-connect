@@ -1,10 +1,10 @@
 import RoleEntry from '@/components/RoleEntry';
-import ConsultationManagement from '@/components/ConsultationManagement';
+import ConsultationManagementSimple from '@/components/ConsultationManagementSimple';
 
 export default function AdminConsultationManagementPage() {
   return (
     <RoleEntry requiredRole="ADMIN">
-      <ConsultationManagement />
+      <ConsultationManagementSimple />
     </RoleEntry>
   );
 }

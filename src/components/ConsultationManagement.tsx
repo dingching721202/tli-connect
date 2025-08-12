@@ -28,6 +28,7 @@ const ConsultationManagementPage: React.FC = () => {
   
   // 狀態管理
   const [consultations, setConsultations] = useState<Consultation[]>([]);
+  const [originalConsultations, setOriginalConsultations] = useState<Consultation[]>([]);
   const [filteredConsultations, setFilteredConsultations] = useState<Consultation[]>([]);
   const [selectedConsultation, setSelectedConsultation] = useState<Consultation | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -165,10 +166,27 @@ const ConsultationManagementPage: React.FC = () => {
       // 初次載入顯示完整載入畫面，篩選變更只顯示小的載入指示
       setFilterLoading(true);
       
+      
       // 構建查詢參數
       const params = new URLSearchParams();
       if (filters.type !== 'all') params.append('type', filters.type);
-      if (filters.status !== 'all') params.append('status', filters.status);
+      
+      // 處理特殊的 active 狀態篩選
+      if (filters.status === 'active') {
+        // 將 active 轉換為多個狀態
+        const activeStatuses = [
+          ConsultationStatus.CONTACTED,
+          ConsultationStatus.QUALIFICATION,
+          ConsultationStatus.PROPOSAL,
+          ConsultationStatus.NEGOTIATION
+        ];
+        activeStatuses.forEach(status => {
+          params.append('status', status);
+        });
+      } else if (filters.status !== 'all') {
+        params.append('status', filters.status);
+      }
+      
       if (filters.searchTerm) params.append('search', filters.searchTerm);
       if (filters.dateRange) {
         params.append('startDate', filters.dateRange.start);
@@ -204,14 +222,41 @@ const ConsultationManagementPage: React.FC = () => {
     }
   }, [filters]);
 
-  // 權限檢查
+  // 載入完整數據用於統計
+  const loadOriginalData = useCallback(async () => {
+    try {
+      const response = await fetch('/api/consultations', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          setOriginalConsultations(result.data);
+          // 如果是初始載入（無篩選條件），也更新列表數據
+          if (filters.status === 'all' && filters.type === 'all' && !filters.searchTerm && !filters.dateRange && filters.assignedTo === 'all') {
+            setConsultations(result.data);
+            setFilteredConsultations(result.data);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('載入完整數據失敗:', error);
+    }
+  }, [filters]);
+
+  // 權限檢查和初始化
   useEffect(() => {
     if (!user || !user.roles.some(role => ['STAFF', 'ADMIN'].includes(role))) {
       router.push('/dashboard');
       return;
     }
-    loadConsultations()
-  }, [user, router, loadConsultations]);
+    // 初始化時先載入完整數據，然後載入篩選數據
+    loadOriginalData();
+  }, [user, router, loadOriginalData]);
 
   // 點擊外部關閉下拉選單
   useEffect(() => {
@@ -228,25 +273,9 @@ const ConsultationManagementPage: React.FC = () => {
     };
   }, []);
 
-  // 初次載入
+  // 監聽篩選條件變化
   useEffect(() => {
-    if (user) {
-      console.log('當前用戶角色:', user.roles[0]);
-      if (user.roles.some(role => ['STAFF', 'ADMIN'].includes(role))) {
-        loadConsultations();
-      } else {
-        console.log('用戶角色不符合要求，需要 STAFF 或 ADMIN 角色');
-        // 臨時允許所有用戶查看，用於測試
-        console.log('臨時允許查看諮詢數據進行測試...');
-        loadConsultations();
-      }
-    }
-  }, [user, loadConsultations]);
-
-  // 監聽篩選條件變化（不包括初次載入）
-  useEffect(() => {
-    if (user) {
-      // 臨時允許所有用戶使用篩選功能
+    if (user && user.roles.some(role => ['STAFF', 'ADMIN'].includes(role))) {
       loadConsultations();
     }
   }, [filters, user, loadConsultations]);
@@ -349,6 +378,7 @@ const ConsultationManagementPage: React.FC = () => {
 
       setConsultations(prev => updateConsultation(prev));
       setFilteredConsultations(prev => updateConsultation(prev));
+      setOriginalConsultations(prev => updateConsultation(prev));
       setSelectedConsultation(updatedConsultation);
       
       setEditingConsultation(null);
@@ -373,6 +403,7 @@ const ConsultationManagementPage: React.FC = () => {
 
       setConsultations(prev => updateConsultationStatus(prev));
       setFilteredConsultations(prev => updateConsultationStatus(prev));
+      setOriginalConsultations(prev => updateConsultationStatus(prev));
 
       // 更新選中的諮詢
       if (selectedConsultation?.id === consultationId) {
@@ -425,8 +456,13 @@ const ConsultationManagementPage: React.FC = () => {
         if (response.ok) {
           const result = await response.json();
           if (result.success) {
-            // 重新載入數據
-            await loadConsultations();
+            // 更新本地狀態（刪除項目）
+            const removeConsultation = (consultations: Consultation[]) => 
+              consultations.filter(consultation => consultation.id !== consultationId);
+            
+            setConsultations(prev => removeConsultation(prev));
+            setFilteredConsultations(prev => removeConsultation(prev));
+            setOriginalConsultations(prev => removeConsultation(prev));
             
             // 如果刪除的是當前選中的諮詢，關閉模態框
             if (selectedConsultation?.id === consultationId) {
@@ -528,19 +564,19 @@ const ConsultationManagementPage: React.FC = () => {
     document.body.removeChild(link);
   };
 
-  // 統計數據
+  // 統計數據（始終基於完整數據集，不受篩選影響）
+  const activeStatuses = [ConsultationStatus.CONTACTED, ConsultationStatus.QUALIFICATION, ConsultationStatus.PROPOSAL, ConsultationStatus.NEGOTIATION];
+  
   const stats = {
-    total: consultations.length,
-    individual: consultations.filter(c => c.type === ConsultationType.INDIVIDUAL).length,
-    corporate: consultations.filter(c => c.type === ConsultationType.CORPORATE).length,
-    lead: consultations.filter(c => c.status === ConsultationStatus.LEAD).length,
-    active: consultations.filter(c => 
-      [ConsultationStatus.CONTACTED, ConsultationStatus.QUALIFICATION, 
-       ConsultationStatus.PROPOSAL, ConsultationStatus.NEGOTIATION].includes(c.status)
-    ).length,
-    won: consultations.filter(c => c.status === ConsultationStatus.CLOSED_WON).length,
-    lost: consultations.filter(c => c.status === ConsultationStatus.CLOSED_LOST).length
+    total: originalConsultations.length,
+    individual: originalConsultations.filter(c => c.type === ConsultationType.INDIVIDUAL).length,
+    corporate: originalConsultations.filter(c => c.type === ConsultationType.CORPORATE).length,
+    lead: originalConsultations.filter(c => c.status === ConsultationStatus.LEAD).length,
+    active: originalConsultations.filter(c => activeStatuses.includes(c.status)).length,
+    won: originalConsultations.filter(c => c.status === ConsultationStatus.CLOSED_WON).length,
+    lost: originalConsultations.filter(c => c.status === ConsultationStatus.CLOSED_LOST).length
   };
+  
 
   if (!user || !user.roles.some(role => ['STAFF', 'ADMIN'].includes(role))) {
     return null;
@@ -571,33 +607,119 @@ const ConsultationManagementPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Stats Cards */}
+        {/* Filter Cards */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8"
         >
           {[
-            { label: '總諮詢', count: stats.total, color: 'blue', icon: FiBriefcase },
-            { label: '個人', count: stats.individual, color: 'indigo', icon: FiUser },
-            { label: '企業', count: stats.corporate, color: 'purple', icon: FiUsers },
-            { label: '潛在客戶', count: stats.lead, color: 'gray', icon: FiUser },
-            { label: '進行中', count: stats.active, color: 'yellow', icon: FiClock },
-            { label: '成功', count: stats.won, color: 'green', icon: FiCheckCircle },
-            { label: '失敗', count: stats.lost, color: 'red', icon: FiXCircle }
-          ].map((stat) => (
-            <div key={`stat-${stat.label}`} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-gray-600">{stat.label}</p>
-                  <p className="text-2xl font-bold text-gray-900">{stat.count}</p>
+            { 
+              label: '總諮詢', 
+              count: stats.total, 
+              color: 'blue', 
+              icon: FiBriefcase,
+              filterType: 'all' as const
+            },
+            { 
+              label: '個人', 
+              count: stats.individual, 
+              color: 'indigo', 
+              icon: FiUser,
+              filterType: 'individual' as const
+            },
+            { 
+              label: '企業', 
+              count: stats.corporate, 
+              color: 'purple', 
+              icon: FiUsers,
+              filterType: 'corporate' as const
+            },
+            { 
+              label: '潛在客戶', 
+              count: stats.lead, 
+              color: 'gray', 
+              icon: FiUser,
+              filterType: 'lead' as const
+            },
+            { 
+              label: '進行中', 
+              count: stats.active, 
+              color: 'yellow', 
+              icon: FiClock,
+              filterType: 'active' as const
+            },
+            { 
+              label: '成功', 
+              count: stats.won, 
+              color: 'green', 
+              icon: FiCheckCircle,
+              filterType: 'won' as const
+            },
+            { 
+              label: '失敗', 
+              count: stats.lost, 
+              color: 'red', 
+              icon: FiXCircle,
+              filterType: 'lost' as const
+            }
+          ].map((stat) => {
+            const isActive = (
+              (stat.filterType === 'all' && filters.status === 'all' && activeTab === 'all') ||
+              (stat.filterType === 'individual' && activeTab === 'individual') ||
+              (stat.filterType === 'corporate' && activeTab === 'corporate') ||
+              (stat.filterType === 'lead' && filters.status === ConsultationStatus.LEAD) ||
+              (stat.filterType === 'active' && filters.status === 'active') ||
+              (stat.filterType === 'won' && filters.status === ConsultationStatus.CLOSED_WON) ||
+              (stat.filterType === 'lost' && filters.status === ConsultationStatus.CLOSED_LOST)
+            );
+
+            return (
+              <button
+                key={`stat-${stat.label}`}
+                onClick={() => {
+                  if (stat.filterType === 'all') {
+                    setActiveTab('all');
+                    setFilters(prev => ({ ...prev, status: 'all' }));
+                  } else if (stat.filterType === 'individual' || stat.filterType === 'corporate') {
+                    setActiveTab(stat.filterType);
+                    setFilters(prev => ({ ...prev, status: 'all' }));
+                  } else if (stat.filterType === 'lead') {
+                    setActiveTab('all');
+                    setFilters(prev => ({ ...prev, status: ConsultationStatus.LEAD }));
+                  } else if (stat.filterType === 'active') {
+                    setActiveTab('all');
+                    setFilters(prev => ({ ...prev, status: 'active' as any }));
+                  } else if (stat.filterType === 'won') {
+                    setActiveTab('all');
+                    setFilters(prev => ({ ...prev, status: ConsultationStatus.CLOSED_WON }));
+                  } else if (stat.filterType === 'lost') {
+                    setActiveTab('all');
+                    setFilters(prev => ({ ...prev, status: ConsultationStatus.CLOSED_LOST }));
+                  }
+                }}
+                className={`bg-white rounded-xl shadow-sm border p-4 text-left transition-all duration-200 hover:shadow-md ${
+                  isActive 
+                    ? `border-${stat.color}-300 ring-2 ring-${stat.color}-100 bg-${stat.color}-50` 
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className={`text-xs font-medium ${
+                      isActive ? `text-${stat.color}-700` : 'text-gray-600'
+                    }`}>{stat.label}</p>
+                    <p className={`text-2xl font-bold ${
+                      isActive ? `text-${stat.color}-900` : 'text-gray-900'
+                    }`}>{stat.count}</p>
+                  </div>
+                  <div className={`w-8 h-8 bg-${stat.color}-100 rounded-lg flex items-center justify-center`}>
+                    <SafeIcon icon={stat.icon} className={`text-${stat.color}-600 text-sm`} />
+                  </div>
                 </div>
-                <div className={`w-8 h-8 bg-${stat.color}-100 rounded-lg flex items-center justify-center`}>
-                  <SafeIcon icon={stat.icon} className={`text-${stat.color}-600 text-sm`} />
-                </div>
-              </div>
-            </div>
-          ))}
+              </button>
+            );
+          })}
         </motion.div>
 
         {/* Tabs */}
@@ -635,7 +757,7 @@ const ConsultationManagementPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8"
         >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">搜索</label>
               <div className="relative">
@@ -648,25 +770,6 @@ const ConsultationManagementPage: React.FC = () => {
                   onChange={(e) => setFilters(prev => ({ ...prev, searchTerm: e.target.value }))}
                 />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">狀態篩選</label>
-              <select
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                value={filters.status}
-                onChange={(e) => setFilters(prev => ({ 
-                  ...prev, 
-                  status: e.target.value as ConsultationStatus | 'all' 
-                }))}
-              >
-                <option value="all">全部狀態</option>
-                {Object.values(ConsultationStatus).map((status) => (
-                  <option key={status} value={status}>
-                    {STATUS_CONFIG[status].label}
-                  </option>
-                ))}
-              </select>
             </div>
 
             <div>
@@ -692,6 +795,7 @@ const ConsultationManagementPage: React.FC = () => {
               <button
                 onClick={() => {
                   setFilters({ type: 'all', status: 'all', searchTerm: '', dateRange: undefined, assignedTo: 'all' });
+                  setActiveTab('all');
                   setDateFilter({ type: 'all' });
                 }}
                 className="flex items-center px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
