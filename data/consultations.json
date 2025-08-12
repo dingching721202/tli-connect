@@ -138,12 +138,12 @@
   {
     "id": "cons_corporate_1754123113471",
     "type": "corporate",
-    "status": "proposal",
+    "status": "negotiation",
     "contactName": "company",
     "email": "company@gmail.com",
     "phone": "",
     "submittedAt": "2025-08-02T08:25:13.471Z",
-    "updatedAt": "2025-08-12T15:13:35.767Z",
+    "updatedAt": "2025-08-12T16:09:19.930Z",
     "source": "corporate_form",
     "message": "沒有",
     "companyName": "company",
@@ -156,6 +156,10 @@
       {
         "status": "proposal",
         "timestamp": "2025-08-12T15:13:35.767Z"
+      },
+      {
+        "status": "negotiation",
+        "timestamp": "2025-08-12T16:03:05.564Z"
       }
     ]
   },
@@ -213,7 +217,7 @@
     "email": "individualA@gmail.com",
     "phone": "0912345678",
     "submittedAt": "2025-08-12T09:37:00.293Z",
-    "updatedAt": "2025-08-12T15:10:54.642Z",
+    "updatedAt": "2025-08-12T16:09:10.067Z",
     "source": "individual_form",
     "statusHistory": [
       {
@@ -225,17 +229,29 @@
   {
     "id": "cons_individual_1754991438041",
     "type": "individual",
-    "status": "contacted",
+    "status": "lead",
     "contactName": "individualB",
     "email": "individualB@gmail.com",
     "phone": "0912345678",
     "submittedAt": "2025-08-12T09:37:18.041Z",
-    "updatedAt": "2025-08-12T15:13:30.372Z",
+    "updatedAt": "2025-08-12T16:05:45.440Z",
     "source": "individual_form",
     "statusHistory": [
       {
         "status": "contacted",
         "timestamp": "2025-08-12T15:13:30.372Z"
+      },
+      {
+        "status": "lead",
+        "timestamp": "2025-08-12T16:05:41.363Z"
+      },
+      {
+        "status": "qualification",
+        "timestamp": "2025-08-12T16:05:43.850Z"
+      },
+      {
+        "status": "lead",
+        "timestamp": "2025-08-12T16:05:45.440Z"
       }
     ]
   },
@@ -247,7 +263,7 @@
     "email": "corporate@example.com",
     "phone": "Phone",
     "submittedAt": "2025-08-12T09:38:20.047Z",
-    "updatedAt": "2025-08-12T09:38:20.047Z",
+    "updatedAt": "2025-08-12T16:11:50.732Z",
     "source": "corporate_form",
     "message": "Brief Description of Your Requirements",
     "companyName": "Company",

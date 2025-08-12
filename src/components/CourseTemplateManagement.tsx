@@ -347,13 +347,13 @@ const CourseTemplateManagement = () => {
       {/* Filters */}
       <div className="flex flex-wrap gap-4 mb-6">
         <div className="relative flex-1 min-w-64">
-          <SafeIcon icon={FiSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <SafeIcon icon={FiSearch} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" size={16} />
           <input
             type="text"
             placeholder="搜尋單元名稱、描述或分類..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-11 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         <div className="flex items-center space-x-2">
