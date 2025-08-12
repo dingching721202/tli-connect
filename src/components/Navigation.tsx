@@ -157,7 +157,7 @@ const Navigation: React.FC = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex flex-1 justify-between px-4 xl:px-8">
-            <div className="flex items-center space-x-1 xl:space-x-2">
+            <div className="flex items-center space-x-0.5 xl:space-x-1">
               {/* Video Courses Dropdown - Only for STUDENT */}
               {canAccess(['STUDENT']) && (
                 <div className="relative"
@@ -166,7 +166,7 @@ const Navigation: React.FC = () => {
                 >
                   <motion.button
                     className={`
-                      flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
+                      flex items-center space-x-1 px-2.5 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
                       ${pathname.startsWith('/video-courses')
                         ? 'text-blue-600 bg-blue-50'
                         : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
@@ -227,7 +227,7 @@ const Navigation: React.FC = () => {
                 >
                   <motion.button
                     className={`
-                      flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
+                      flex items-center space-x-1 px-2.5 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
                       ${pathname.startsWith('/online-group-classes')
                         ? 'text-green-600 bg-green-50'
                         : 'text-gray-700 hover:text-green-600 hover:bg-gray-50'
@@ -288,7 +288,7 @@ const Navigation: React.FC = () => {
                 >
                   <motion.button
                     className={`
-                      flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
+                      flex items-center space-x-1 px-2.5 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
                       ${pathname.startsWith('/events')
                         ? 'text-orange-600 bg-orange-50'
                         : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50'
@@ -346,7 +346,7 @@ const Navigation: React.FC = () => {
                   key={item.name}
                   onClick={() => handleNavigation(item.href)}
                   className={`
-                    flex items-center space-x-1.5 px-3 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
+                    flex items-center space-x-1 px-2.5 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
                     ${isActive(item.href)
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
@@ -363,13 +363,13 @@ const Navigation: React.FC = () => {
             </div>
 
             {/* Right Side Menu - 推薦 + 用戶菜單 */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
               {isAuthenticated ? (
                 <>
                 {/* 推薦系統按鈕 - 響應式設計 */}
                 <motion.button
                   onClick={() => handleNavigation('/referral')}
-                  className={`flex-shrink-0 flex items-center justify-center px-3 py-2 xl:space-x-1.5 text-sm font-medium rounded transition-colors ${
+                  className={`flex-shrink-0 flex items-center justify-center px-2.5 py-2 xl:space-x-1 text-sm font-medium rounded transition-colors ${
                     isActive('/referral')
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
