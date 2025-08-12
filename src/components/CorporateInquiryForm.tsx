@@ -48,11 +48,10 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
 
   // 主要培訓需求選項
   const trainingOptions = [
-    '中文',
-    '英文',
-    '文化',
-    '商業',
-    '師培'
+    'Language',
+    'Culture',
+    'Business',
+    'Instructor Training'
   ];
 
   // 預計培訓人數選項
@@ -73,12 +72,10 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
     }
   };
 
-  const handleTrainingNeedsChange = (option: string, checked: boolean) => {
+  const handleTrainingNeedsChange = (value: string) => {
     setFormData(prev => ({
       ...prev,
-      trainingNeeds: checked
-        ? [...prev.trainingNeeds, option]
-        : prev.trainingNeeds.filter(need => need !== option)
+      trainingNeeds: value ? [value] : []
     }));
   };
 
@@ -327,22 +324,19 @@ const CorporateInquiryForm: React.FC<CorporateInquiryFormProps> = ({
               </h3>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  主要培訓需求（可多選）
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  主要培訓需求
                 </label>
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
+                <select
+                  value={formData.trainingNeeds[0] || ''}
+                  onChange={(e) => handleTrainingNeedsChange(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="">請選擇主要培訓需求</option>
                   {trainingOptions.map(option => (
-                    <label key={option} className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={formData.trainingNeeds.includes(option)}
-                        onChange={(e) => handleTrainingNeedsChange(option, e.target.checked)}
-                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">{option}</span>
-                    </label>
+                    <option key={option} value={option}>{option}</option>
                   ))}
-                </div>
+                </select>
               </div>
 
               <div>

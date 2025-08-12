@@ -1142,26 +1142,21 @@ const ConsultationManagementPage: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">培訓項目</label>
-                      <div className="grid grid-cols-2 gap-1 text-xs">
-                        {['中文', '英文', '文化', '商業', '師培'].map(option => (
-                          <label key={option} className="flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={editingConsultation.trainingNeeds?.includes(option) || false}
-                              onChange={(e) => {
-                                const currentNeeds = editingConsultation.trainingNeeds || [];
-                                const newNeeds = e.target.checked
-                                  ? [...currentNeeds, option]
-                                  : currentNeeds.filter(need => need !== option);
-                                updateEditingField('trainingNeeds', newNeeds);
-                              }}
-                              className="w-3 h-3 text-blue-600 border-gray-300 rounded focus:ring-blue-500 mr-1"
-                            />
-                            <span className="text-gray-700">{option}</span>
-                          </label>
-                        ))}
-                      </div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">主要培訓需求</label>
+                      <select
+                        value={editingConsultation.trainingNeeds?.[0] || ''}
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          updateEditingField('trainingNeeds', newValue ? [newValue] : []);
+                        }}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">請選擇主要培訓需求</option>
+                        <option value="Language">Language</option>
+                        <option value="Culture">Culture</option>
+                        <option value="Business">Business</option>
+                        <option value="Instructor Training">Instructor Training</option>
+                      </select>
                     </div>
 
                     {/* 第三行：需求說明（所有類型）*/}

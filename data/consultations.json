@@ -33,8 +33,7 @@
     "companyName": "ABC科技股份有限公司",
     "contactTitle": "人資經理",
     "trainingNeeds": [
-      "中文",
-      "英文"
+      "Language"
     ],
     "trainingSize": "50–100",
     "message": "希望為員工提供語言培訓課程",
@@ -104,9 +103,7 @@
     "companyName": "company",
     "contactTitle": "",
     "trainingNeeds": [
-      "英文",
-      "中文",
-      "文化"
+      "Business"
     ],
     "trainingSize": "<50"
   },
@@ -130,7 +127,7 @@
     "email": "1234@gmail.com",
     "phone": "",
     "submittedAt": "2025-08-02T09:40:43.552Z",
-    "updatedAt": "2025-08-02T09:53:11.621Z",
+    "updatedAt": "2025-08-12T07:17:45.020Z",
     "source": "individual_form",
     "message": "來自個人方案諮詢表單",
     "assignedTo": "張雅婷",
@@ -147,6 +144,7 @@
         "status": "lead",
         "timestamp": "2025-08-02T09:53:11.621Z"
       }
-    ]
+    ],
+    "trainingNeeds": []
   }
 ]
