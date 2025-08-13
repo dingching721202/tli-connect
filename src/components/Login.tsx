@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { FiUser, FiLock, FiEye, FiEyeOff, FiLoader, FiBookOpen, FiUsers, FiBriefcase, FiTrendingUp, FiSettings, FiShield } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
@@ -23,7 +23,6 @@ const Login: React.FC = () => {
   
   const { register, login, setRoleLock, switchRole } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
   
 
   // 角色配置

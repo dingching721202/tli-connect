@@ -689,7 +689,7 @@ const ConsultationManagementPage: React.FC = () => {
                     setFilters(prev => ({ ...prev, status: ConsultationStatus.LEAD }));
                   } else if (stat.filterType === 'active') {
                     setActiveTab('all');
-                    setFilters(prev => ({ ...prev, status: 'active' as any }));
+                    setFilters(prev => ({ ...prev, status: 'active' }));
                   } else if (stat.filterType === 'won') {
                     setActiveTab('all');
                     setFilters(prev => ({ ...prev, status: ConsultationStatus.CLOSED_WON }));

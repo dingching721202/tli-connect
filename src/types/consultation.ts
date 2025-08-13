@@ -134,7 +134,7 @@ export const STATUS_CONFIG: Record<ConsultationStatus, StatusConfig> = {
 // 篩選狀態
 export interface FilterState {
   type: ConsultationType | 'all';
-  status: ConsultationStatus | 'all';
+  status: ConsultationStatus | 'all' | 'active';
   searchTerm: string;
   dateRange?: {
     start: string;
