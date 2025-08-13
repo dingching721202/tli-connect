@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { FiUser, FiLock, FiEye, FiEyeOff, FiLoader } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
@@ -28,6 +28,7 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
   
   const { login, isAuthenticated, hasRole, loading, setRoleLock, switchRole, user } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
 
   // 如果已登入且有權限，切換角色並跳轉
   useEffect(() => {
@@ -37,10 +38,8 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
       if (user && user.roles.length === 1) {
         setRoleLock(requiredRole);
       }
-      // 添加小延遲讓AuthContext同步狀態
-      setTimeout(() => {
-        router.push(redirectPath);
-      }, 200);
+      // 直接跳轉，不需要延遲
+      router.push(redirectPath);
     }
   }, [isAuthenticated, hasRole, requiredRole, redirectPath, router, loading, setRoleLock, switchRole, user]);
 
@@ -53,6 +52,9 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
       const result = await login(email, password);
       
       if (result.success && result.user) {
+        // 保存登入來源頁面
+        localStorage.setItem('loginSource', pathname);
+        
         // 檢查是否有所需角色
         if (result.user.roles.includes(requiredRole)) {
           // 登入成功且有權限，先切換角色
@@ -61,10 +63,8 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
           if (result.user.roles.length === 1) {
             setRoleLock(requiredRole);
           }
-          // 添加小延遲讓AuthContext同步狀態
-          setTimeout(() => {
-            router.push(redirectPath);
-          }, 200);
+          // 直接跳轉，不需要延遲
+          router.push(redirectPath);
         } else {
           // 沒有該角色權限，跳轉到通用登入頁面
           alert(`您的帳號沒有${roleDisplayName}權限，將跳轉到通用登入頁面`);

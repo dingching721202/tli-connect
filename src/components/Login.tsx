@@ -136,6 +136,13 @@ const Login: React.FC = () => {
       }
       
       if (result.success && result.user) {
+        // 保存登入來源頁面
+        if (loginMode !== 'selection') {
+          localStorage.setItem('loginSource', `/${loginMode}/login`);
+        } else {
+          localStorage.setItem('loginSource', '/login');
+        }
+        
         // 登入成功後，根據選擇的角色導向正確的路徑
         if (loginMode !== 'selection') {
           // 從角色入口登入 - 設置角色鎖定並導向角色專區
@@ -153,10 +160,8 @@ const Login: React.FC = () => {
             // 先切換到正確的角色，然後設置角色鎖定並導向角色專區
             switchRole(roleConfig.role);
             setRoleLock(roleConfig.role);
-            // 添加小延遲讓AuthContext同步狀態
-            setTimeout(() => {
-              router.push(roleConfig.path);
-            }, 200);
+            // 直接跳轉，不需要延遲
+            router.push(roleConfig.path);
           } else if (roleConfig) {
             // 沒有該角色權限
             setError(`您的帳號沒有${roleConfigs.find(r => r.id === loginMode)?.title}權限`);

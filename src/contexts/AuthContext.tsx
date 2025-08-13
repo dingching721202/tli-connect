@@ -287,6 +287,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   const logout = () => {
+    // 取得登入來源頁面
+    const loginSource = localStorage.getItem('loginSource') || '/login';
+    
     // 重置所有狀態
     setUser(null);
     setCurrentRole(null);
@@ -307,10 +310,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem('companies');
     localStorage.removeItem('corporateSubscriptions');
     localStorage.removeItem('corporateMembers');
+    // 清除登入來源記錄
+    localStorage.removeItem('loginSource');
     
-    // 強制重新載入頁面以確保完全清理狀態
+    // 強制重新載入頁面並回到原始登入頁面
     setTimeout(() => {
-      window.location.href = '/';
+      window.location.href = loginSource;
     }, 100);
   };
 

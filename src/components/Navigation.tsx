@@ -179,7 +179,6 @@ const Navigation: React.FC = () => {
   const handleLogout = () => {
     logout();
     setIsMenuOpen(false);
-    router.push('/');
   };
 
   const isActive = (href: string) => pathname === href;
