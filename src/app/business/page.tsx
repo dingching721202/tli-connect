@@ -762,7 +762,7 @@ export default function BusinessPage() {
             Free Consultation
           </button>
           <Link 
-            href="/student/login" 
+            href="/corporate/login" 
             aria-label="Login"
             style={{
               background: 'linear-gradient(90deg, #009FB6, #027AB9)',

@@ -36,6 +36,29 @@ const Navigation: React.FC = () => {
   const router = useRouter();
   const pathname = usePathname();
 
+  // 處理角色切換和路由跳轉
+  const handleRoleSwitch = (role: string) => {
+    if (!availableRoles.includes(role) || isRoleLocked) return;
+    
+    // 切換角色
+    switchRole(role);
+    
+    // 根據角色跳轉到對應的儀表板頁面
+    const rolePathMap: Record<string, string> = {
+      'STUDENT': '/student',
+      'TEACHER': '/teacher',
+      'CORPORATE_CONTACT': '/corporate',
+      'AGENT': '/agent',
+      'STAFF': '/staff',
+      'ADMIN': '/admin'
+    };
+    
+    const targetPath = rolePathMap[role];
+    if (targetPath) {
+      router.push(targetPath);
+    }
+  };
+
   const videoCourseCategories = [
     { name: '中文', href: '/video-courses/chinese' },
     { name: '外文', href: '/video-courses/foreign-language' },
@@ -443,7 +466,7 @@ const Navigation: React.FC = () => {
                             <motion.button
                               key={role}
                               onClick={() => {
-                                switchRole(role);
+                                handleRoleSwitch(role);
                                 setIsRoleSelectorOpen(false);
                               }}
                               className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition-colors truncate ${
@@ -709,7 +732,7 @@ const Navigation: React.FC = () => {
                             key={role}
                             onClick={() => {
                               if (availableRoles.length > 1 && !isRoleLocked) {
-                                switchRole(role);
+                                handleRoleSwitch(role);
                               }
                             }}
                             className={`px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-center h-10 ${

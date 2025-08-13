@@ -142,12 +142,15 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
                   電子信箱
                 </label>
                 <div className="relative">
-                  <SafeIcon icon={FiUser} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <SafeIcon icon={FiUser} size={20} className="text-gray-400" />
+                  </div>
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="block w-full py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    style={{ paddingLeft: '2.5rem', paddingRight: '0.75rem', height: '52px' }}
                     placeholder="請輸入電子信箱"
                     required
                   />
@@ -160,21 +163,28 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
                   密碼
                 </label>
                 <div className="relative">
-                  <SafeIcon icon={FiLock} className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <SafeIcon icon={FiLock} size={20} className="text-gray-400" />
+                  </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors"
+                    className="block w-full py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    style={{ paddingLeft: '2.5rem', paddingRight: '3rem', height: '52px' }}
                     placeholder="請輸入密碼"
                     required
                   />
                   <button
                     type="button"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    <SafeIcon icon={showPassword ? FiEyeOff : FiEye} className="h-5 w-5" />
+                    <SafeIcon 
+                      icon={showPassword ? FiEyeOff : FiEye} 
+                      size={20} 
+                      className="text-gray-400 hover:text-gray-600 transition-colors" 
+                    />
                   </button>
                 </div>
               </div>
