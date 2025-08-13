@@ -251,7 +251,8 @@ export const authService = {
         
         return {
           ...user,
-          roles: activeRoles
+          // 如果 localStorage 中有角色設置就使用，否則使用用戶數據中的默認角色
+          roles: activeRoles.length > 0 ? activeRoles : user.roles
         };
       });
       

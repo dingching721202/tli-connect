@@ -55,7 +55,18 @@ const AccountManagement = () => {
         
         // 初始化 localStorage 中的 userRoles（如果不存在）
         if (!localStorage.getItem('userRoles')) {
-          localStorage.setItem('userRoles', JSON.stringify([]));
+          // 為每個用戶創建默認的角色分配
+          const defaultUserRoles = users.flatMap(user => 
+            user.roles.map(role => ({
+              id: Math.random(),
+              user_id: user.id,
+              role: role,
+              is_active: true,
+              assigned_at: new Date().toISOString(),
+              assigned_by: 'system'
+            }))
+          );
+          localStorage.setItem('userRoles', JSON.stringify(defaultUserRoles));
         }
         
         const response = await authService.getAllUsersWithRoles();
