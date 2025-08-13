@@ -17,6 +17,19 @@ const Navigation: React.FC = () => {
   const roleSelectorRef = useRef<HTMLDivElement>(null);
   const { user, logout, isAuthenticated, currentRole, switchRole, availableRoles, isRoleLocked, lockedRole } = useAuth();
 
+  // 調試角色選擇器狀態
+  useEffect(() => {
+    if (user) {
+      console.log('Navigation 角色選擇器狀態:', {
+        availableRoles,
+        availableRolesLength: availableRoles?.length,
+        isRoleLocked,
+        currentRole,
+        shouldShowSelector: (availableRoles?.length || 0) > 1 && !isRoleLocked
+      });
+    }
+  }, [user, availableRoles, isRoleLocked, currentRole]);
+
   // 點擊外部關閉角色選擇器
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -43,7 +56,7 @@ const Navigation: React.FC = () => {
     // 切換角色
     switchRole(role);
     
-    // 根據角色跳轉到對應的儀表板頁面
+    // 根據角色跳轉到對應的首頁
     const rolePathMap: Record<string, string> = {
       'STUDENT': '/student',
       'TEACHER': '/teacher',
@@ -101,6 +114,25 @@ const Navigation: React.FC = () => {
   ];
 
   const handleNavigation = (href: string) => {
+    // 特殊處理：儀表板導向當前角色的首頁
+    if (href === '/dashboard' && currentRole) {
+      const rolePathMap = {
+        'STUDENT': '/student',
+        'TEACHER': '/teacher',
+        'STAFF': '/staff',
+        'ADMIN': '/admin',
+        'AGENT': '/agent',
+        'CORPORATE_CONTACT': '/corporate'
+      };
+      
+      const rolePath = rolePathMap[currentRole as keyof typeof rolePathMap];
+      if (rolePath) {
+        router.push(rolePath);
+        setIsMenuOpen(false);
+        return;
+      }
+    }
+
     // 如果角色被鎖定，將功能頁面導向對應角色的子頁面
     if (isRoleLocked && lockedRole) {
       const rolePathMap = {

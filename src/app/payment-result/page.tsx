@@ -60,7 +60,7 @@ const PaymentResultContent = () => {
   }, [searchParams]);
 
   const handleBackToDashboard = () => {
-    router.push('/dashboard');
+    router.push('/');
   };
 
   const handleRetryPayment = () => {

@@ -11,7 +11,7 @@ interface RoleEntryProps {
 }
 
 const RoleEntry: React.FC<RoleEntryProps> = ({ requiredRole, children }) => {
-  const { isAuthenticated, loading, setRoleLock, hasRole } = useAuth();
+  const { isAuthenticated, loading, setRoleLock, hasRole, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -25,14 +25,19 @@ const RoleEntry: React.FC<RoleEntryProps> = ({ requiredRole, children }) => {
     }
 
     if (!hasRole(requiredRole)) {
-      // 用戶沒有此角色權限，導向一般儀表板
-      router.push('/dashboard');
+      // 用戶沒有此角色權限，導向首頁
+      router.push('/');
       return;
     }
 
-    // 用戶有此角色權限，鎖定到此角色
-    setRoleLock(requiredRole);
-  }, [isAuthenticated, loading, hasRole, requiredRole, router, setRoleLock]);
+    // 用戶有此角色權限，只有單一角色用戶才鎖定到此角色
+    if (user && user.roles.length === 1) {
+      setRoleLock(requiredRole);
+      console.log('RoleEntry 設置角色鎖定 - 單一角色用戶:', requiredRole);
+    } else {
+      console.log('RoleEntry 跳過角色鎖定 - 多角色用戶，角色數量:', user?.roles.length);
+    }
+  }, [isAuthenticated, loading, hasRole, requiredRole, router, setRoleLock, user]);
 
   const getRoleLoginPath = (role: string) => {
     const rolePathMap = {

@@ -26,20 +26,23 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login, isAuthenticated, hasRole, loading, setRoleLock, switchRole } = useAuth();
+  const { login, isAuthenticated, hasRole, loading, setRoleLock, switchRole, user } = useAuth();
   const router = useRouter();
 
-  // 如果已登入且有權限，設置角色鎖定並直接跳轉
+  // 如果已登入且有權限，切換角色並跳轉
   useEffect(() => {
     if (!loading && isAuthenticated && hasRole(requiredRole)) {
       switchRole(requiredRole);
-      setRoleLock(requiredRole);
+      // 只有單一角色的用戶才設置角色鎖定，多角色用戶保持可切換
+      if (user && user.roles.length === 1) {
+        setRoleLock(requiredRole);
+      }
       // 添加小延遲讓AuthContext同步狀態
       setTimeout(() => {
         router.push(redirectPath);
       }, 200);
     }
-  }, [isAuthenticated, hasRole, requiredRole, redirectPath, router, loading, setRoleLock, switchRole]);
+  }, [isAuthenticated, hasRole, requiredRole, redirectPath, router, loading, setRoleLock, switchRole, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,9 +55,12 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
       if (result.success && result.user) {
         // 檢查是否有所需角色
         if (result.user.roles.includes(requiredRole)) {
-          // 登入成功且有權限，先切換角色，然後設置角色鎖定並跳轉到角色專區
+          // 登入成功且有權限，先切換角色
           switchRole(requiredRole);
-          setRoleLock(requiredRole);
+          // 只有單一角色的用戶才設置角色鎖定，多角色用戶保持可切換
+          if (result.user.roles.length === 1) {
+            setRoleLock(requiredRole);
+          }
           // 添加小延遲讓AuthContext同步狀態
           setTimeout(() => {
             router.push(redirectPath);
