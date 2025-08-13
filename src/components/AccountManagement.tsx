@@ -475,7 +475,8 @@ const AccountManagement = () => {
               placeholder="搜尋用戶名稱或信箱..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-11 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              style={{ paddingLeft: '2.75rem', paddingRight: '1rem', paddingTop: '0.5rem', paddingBottom: '0.5rem' }}
             />
           </div>
           <button
@@ -617,7 +618,8 @@ const AccountManagement = () => {
                     type="text"
                     value={newUser.name}
                     onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    style={{ padding: '0.5rem 0.75rem' }}
                     placeholder="請輸入姓名"
                   />
                 </div>
@@ -628,7 +630,8 @@ const AccountManagement = () => {
                     type="email"
                     value={newUser.email}
                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    style={{ padding: '0.5rem 0.75rem' }}
                     placeholder="請輸入電子信箱"
                   />
                 </div>
@@ -639,7 +642,8 @@ const AccountManagement = () => {
                     type="tel"
                     value={newUser.phone}
                     onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    style={{ padding: '0.5rem 0.75rem' }}
                     placeholder="請輸入電話"
                   />
                 </div>
@@ -769,7 +773,8 @@ const AccountManagement = () => {
                       type="text"
                       value={selectedUser.name}
                       onChange={(e) => setSelectedUser({ ...selectedUser, name: e.target.value })}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      style={{ padding: '0.75rem 1rem' }}
                       placeholder="請輸入姓名"
                     />
                   </div>
