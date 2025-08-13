@@ -56,7 +56,7 @@ const RoleSelectPage = () => {
       description: '管理企業合作事務',
       icon: FiBriefcase,
       color: 'from-cyan-600 to-teal-600',
-      path: '/corporate/login'
+      path: '/corporate_contact/login'
     }
   ];
 

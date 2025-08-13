@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
 import { UserRole } from '@/types/user';
 
-type LoginMode = 'selection' | 'student' | 'teacher' | 'corporate' | 'agent' | 'staff' | 'admin';
+type LoginMode = 'selection' | 'student' | 'teacher' | 'corporate_contact' | 'agent' | 'staff' | 'admin';
 
 const Login: React.FC = () => {
   const [loginMode, setLoginMode] = useState<LoginMode>('selection');
@@ -56,7 +56,7 @@ const Login: React.FC = () => {
       ]
     },
     {
-      id: 'corporate',
+      id: 'corporate_contact',
       title: '企業窗口',
       subtitle: '企業聯絡人',
       description: '管理企業會員、查看企業訂閱',
@@ -142,7 +142,7 @@ const Login: React.FC = () => {
           const rolePathMap = {
             'student': { role: 'STUDENT', path: '/student' },
             'teacher': { role: 'TEACHER', path: '/teacher' },
-            'corporate': { role: 'CORPORATE_CONTACT', path: '/corporate' },
+            'corporate_contact': { role: 'CORPORATE_CONTACT', path: '/corporate_contact' },
             'agent': { role: 'AGENT', path: '/agent' },
             'staff': { role: 'STAFF', path: '/staff' },
             'admin': { role: 'ADMIN', path: '/admin' }

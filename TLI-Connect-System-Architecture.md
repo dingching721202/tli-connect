@@ -1632,11 +1632,11 @@ interface CorporatePurchase {
 - `PUT /api/v1/admin/corporate/inquiries/:id/status`：更新諮詢狀態（管理員）
 
 **企業窗口管理相關**
-- `GET /api/v1/corporate/my-subscription`：取得我的企業訂閱資訊（企業窗口）
-- `GET /api/v1/corporate/seat-usage`：取得席次使用狀況（企業窗口）
-- `POST /api/v1/corporate/employees`：為員工分配學習席次（企業窗口）
-- `GET /api/v1/corporate/employees`：取得員工清單和狀態（企業窗口）
-- `PUT /api/v1/corporate/employees/:id/suspend`：暫停員工會員資格（企業窗口）
+- `GET /api/v1/corporate_contact/my-subscription`：取得我的企業訂閱資訊（企業窗口）
+- `GET /api/v1/corporate_contact/seat-usage`：取得席次使用狀況（企業窗口）
+- `POST /api/v1/corporate_contact/employees`：為員工分配學習席次（企業窗口）
+- `GET /api/v1/corporate_contact/employees`：取得員工清單和狀態（企業窗口）
+- `PUT /api/v1/corporate_contact/employees/:id/suspend`：暫停員工會員資格（企業窗口）
 
 **學員相關**
 - `GET /api/v1/memberships/corporate`：取得企業分配的會員卡（學員）

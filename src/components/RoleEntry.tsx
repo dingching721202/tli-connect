@@ -46,7 +46,7 @@ const RoleEntry: React.FC<RoleEntryProps> = ({ requiredRole, children }) => {
       'STAFF': '/staff/login',
       'ADMIN': '/admin/login',
       'AGENT': '/agent/login',
-      'CORPORATE_CONTACT': '/corporate/login'
+      'CORPORATE_CONTACT': '/corporate_contact/login'
     };
     return rolePathMap[role as keyof typeof rolePathMap] || '/login';
   };

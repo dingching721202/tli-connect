@@ -1545,7 +1545,7 @@ export default function Home() {
             <h3>Need a Customized Corporate Training Solution?</h3>
             <p>Tailored team training programs with management tools and performance tracking.</p>
           </div>
-          <Link className="redirect-cta secondary" href="/business" aria-label="Explore Corporate Plans">
+          <Link className="redirect-cta secondary" href="/corporate" aria-label="Explore Corporate Plans">
             <span>Explore Corporate Plans</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <path d="M5 12h14M13 5l7 7-7 7" stroke="#1E2328" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

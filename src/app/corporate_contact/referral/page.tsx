@@ -8,7 +8,7 @@ export default function CorporateReferralPage() {
   const router = useRouter();
   
   const handleClose = () => {
-    router.push('/corporate');
+    router.push('/corporate_contact');
   };
 
   return (

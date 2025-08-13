@@ -60,7 +60,7 @@ const Navigation: React.FC = () => {
     const rolePathMap: Record<string, string> = {
       'STUDENT': '/student',
       'TEACHER': '/teacher',
-      'CORPORATE_CONTACT': '/corporate',
+      'CORPORATE_CONTACT': '/corporate_contact',
       'AGENT': '/agent',
       'STAFF': '/staff',
       'ADMIN': '/admin'
@@ -122,7 +122,7 @@ const Navigation: React.FC = () => {
         'STAFF': '/staff',
         'ADMIN': '/admin',
         'AGENT': '/agent',
-        'CORPORATE_CONTACT': '/corporate'
+        'CORPORATE_CONTACT': '/corporate_contact'
       };
       
       const rolePath = rolePathMap[currentRole as keyof typeof rolePathMap];
@@ -141,7 +141,7 @@ const Navigation: React.FC = () => {
         'STAFF': 'staff',
         'ADMIN': 'admin',
         'AGENT': 'agent',
-        'CORPORATE_CONTACT': 'corporate'
+        'CORPORATE_CONTACT': 'corporate_contact'
       };
       
       const rolePath = rolePathMap[lockedRole as keyof typeof rolePathMap];

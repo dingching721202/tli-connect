@@ -8,7 +8,7 @@ export default function CorporateLoginPage() {
       requiredRole="CORPORATE_CONTACT"
       roleDisplayName="企業窗口"
       roleColor="from-cyan-600 to-teal-600"
-      redirectPath="/corporate"
+      redirectPath="/corporate_contact"
     />
   );
 }
