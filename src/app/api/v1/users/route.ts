@@ -1,39 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ApiResponse, GetUsersRequest, GetUsersResponse, CreateUserRequest, CreateUserResponse } from '@/types/unified'
+import { usersService } from '@/lib/supabase/services/users'
+import { ApiResponse, Role, Campus } from '@/lib/supabase/types'
+
+interface GetUsersRequest {
+  page: number
+  limit: number
+  campus?: Campus
+  role?: Role
+  is_active?: boolean
+  search?: string
+  sort_by?: string
+  sort_order?: 'asc' | 'desc'
+}
+
+interface CreateUserRequest {
+  email: string
+  password: string
+  full_name: string
+  phone?: string
+  campus: Campus
+  avatar_url?: string
+}
 
 // GET /api/v1/users - List users with filtering and pagination
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     
-    const filters: GetUsersRequest = {
-      page: parseInt(searchParams.get('page') || '1'),
-      limit: parseInt(searchParams.get('limit') || '20'),
-      campus: searchParams.get('campus') as any,
-      role: searchParams.get('role') as any,
-      is_active: searchParams.get('is_active') === 'true',
-      search: searchParams.get('search') || undefined,
-      sort_by: searchParams.get('sort_by') as any || 'created_at',
-      sort_order: searchParams.get('sort_order') as any || 'desc'
+    const filters = {
+      campus: searchParams.get('campus') as Campus,
+      role: searchParams.get('role') as Role,
+      is_active: searchParams.get('is_active') === 'true' ? true : undefined,
+      search: searchParams.get('search') || undefined
     }
     
-    // TODO: Implement user listing with Supabase
-    // - Apply filters
-    // - Handle pagination
-    // - Include role information
-    // - Apply RLS policies
+    const pagination = {
+      page: parseInt(searchParams.get('page') || '1'),
+      limit: parseInt(searchParams.get('limit') || '20'),
+      orderBy: searchParams.get('sort_by') || 'created_at',
+      ascending: searchParams.get('sort_order') === 'asc'
+    }
     
-    const response: ApiResponse<GetUsersResponse> = {
+    const result = await usersService.getUsers(filters, pagination)
+    
+    const response: ApiResponse<typeof result> = {
       success: true,
-      data: {
-        users: [],
-        pagination: {
-          page: filters.page,
-          limit: filters.limit,
-          total: 0,
-          total_pages: 0
-        }
-      },
+      data: result,
       message: 'Users retrieved successfully'
     }
     
@@ -58,28 +70,53 @@ export async function POST(request: NextRequest) {
   try {
     const body: CreateUserRequest = await request.json()
     
-    // TODO: Implement user creation with Supabase
-    // - Create user in auth
-    // - Create profile in core_users
-    // - Assign default roles
-    // - Send verification email
-    // - Log activity
-    
-    const response: ApiResponse<CreateUserResponse> = {
+    // Validate required fields
+    if (!body.email || !body.password || !body.full_name || !body.campus) {
+      const errorResponse: ApiResponse<null> = {
+        success: false,
+        data: null,
+        error: {
+          code: 'USER_002',
+          message: 'Missing required fields',
+          details: 'email, password, full_name, and campus are required'
+        }
+      }
+      return NextResponse.json(errorResponse, { status: 400 })
+    }
+
+    const { data: user, error } = await usersService.createUser({
+      email: body.email,
+      password: body.password,
+      full_name: body.full_name,
+      phone: body.phone,
+      campus: body.campus,
+      avatar_url: body.avatar_url
+    })
+
+    if (error || !user) {
+      const errorResponse: ApiResponse<null> = {
+        success: false,
+        data: null,
+        error: {
+          code: 'USER_003',
+          message: 'Failed to create user',
+          details: error?.message || 'User creation failed'
+        }
+      }
+      return NextResponse.json(errorResponse, { status: 400 })
+    }
+
+    // Get roles for the created user
+    const { data: roles } = await usersService.getUserRoles(user.id)
+
+    const response: ApiResponse<{
+      user: typeof user & { roles: Role[] }
+    }> = {
       success: true,
       data: {
         user: {
-          id: '',
-          email: body.email,
-          full_name: body.full_name,
-          avatar_url: body.avatar_url || null,
-          phone: body.phone || null,
-          campus: body.campus,
-          is_active: true,
-          email_verified: false,
-          roles: [],
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          ...user,
+          roles: roles || []
         }
       },
       message: 'User created successfully'
@@ -91,12 +128,12 @@ export async function POST(request: NextRequest) {
       success: false,
       data: null,
       error: {
-        code: 'USER_002',
+        code: 'USER_003',
         message: 'Failed to create user',
         details: error instanceof Error ? error.message : 'Unknown error'
       }
     }
     
-    return NextResponse.json(errorResponse, { status: 400 })
+    return NextResponse.json(errorResponse, { status: 500 })
   }
 }
