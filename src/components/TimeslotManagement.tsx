@@ -6,7 +6,7 @@ import { FiCalendar, FiClock, FiUser, FiAlertTriangle, FiX, FiEye, FiSearch, FiF
 import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { getActiveTeachers, Teacher as TeacherData } from '@/data/teachers';
-import { getAllTimeslotsWithBookings, TimeslotWithBookings, cancelTimeslot, restoreTimeslot } from '@/services/timeslotService';
+import { timeslotService, TimeslotWithBookings } from '@/services/unified';
 
 // 使用統一的 TimeslotWithBookings 接口
 type TimeslotWithDetails = TimeslotWithBookings;
@@ -155,7 +155,7 @@ const TimeslotManagement: React.FC = () => {
         console.log('🔍 開始載入時段預約數據...');
         
         // 使用統一的時段服務獲取所有時段預約數據
-        const timelsotsWithBookings = getAllTimeslotsWithBookings();
+        const timelsotsWithBookings = timeslotService.getAllTimeslotsWithBookings();
         console.log('✅ 時段預約數據載入完成，總共:', timelsotsWithBookings.length, '個時段');
         
         setTimeslots(timelsotsWithBookings);
@@ -256,7 +256,7 @@ const TimeslotManagement: React.FC = () => {
       setCancelling(true);
       
       // 調用取消時段服務
-      const success = cancelTimeslot(selectedTimeslot.id);
+      const success = await timeslotService.cancelTimeslot(selectedTimeslot.id);
       
       if (success) {
         alert(`✅ 課程時段已成功取消！
@@ -287,7 +287,7 @@ const TimeslotManagement: React.FC = () => {
   // 處理恢復時段
   const handleRestoreTimeslot = async (timeslot: TimeslotWithDetails) => {
     try {
-      const success = restoreTimeslot(timeslot.id);
+      const success = await timeslotService.restoreTimeslot(timeslot.id);
       
       if (success) {
         alert(`✅ 課程時段已成功恢復！

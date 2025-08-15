@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
+import { agentService } from '@/services/unified';
 
 const {
   FiUsers, FiSettings, FiUserPlus, FiEdit2, FiTrash2, FiSearch, 
@@ -178,13 +179,45 @@ const AgentManagement: React.FC = () => {
     description: ''
   });
 
-  // Mock 代理數據
-  const [mockAgents, setMockAgents] = useState<Agent[]>([
-    {
-      id: 1,
-      name: '張老師',
-      email: 'zhang.teacher@example.com',
-      phone: '0912-345-678',
+  // 代理數據 - 從統一服務動態加載
+  const [agents, setAgents] = useState<Agent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 加載代理數據
+  const loadAgents = async () => {
+    try {
+      setLoading(true);
+      const agentsData = await agentService.getAllAgents();
+      setAgents(agentsData);
+    } catch (error) {
+      console.error('載入代理數據失敗:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 組件載入時獲取數據
+  React.useEffect(() => {
+    loadAgents();
+  }, []);
+
+  // 銷售記錄數據 - 從統一服務加載
+  const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
+
+  // 加載銷售記錄
+  const loadSalesRecords = async () => {
+    try {
+      // TODO: 使用 agentService 加載銷售記錄
+      // const records = await agentService.getAllSalesRecords();
+      // setSalesRecords(records);
+      setSalesRecords([]); // 暫時為空
+    } catch (error) {
+      console.error('載入銷售記錄失敗:', error);
+    }
+  };
+
+  // Mock sales records - 從統一服務加載
+  const [mockSalesRecords] = useState<SalesRecord[]>([]);
       agentType: 'teacher',
       roleId: 'teacher-1',
       roleName: '資深代理',
@@ -557,7 +590,7 @@ const AgentManagement: React.FC = () => {
 
   // Filter functions
   const getFilteredAgents = (): Agent[] => {
-    const filtered = mockAgents.filter(agent => {
+    const filtered = agents.filter(agent => {
       const matchesSearch = agent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           agent.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           agent.agentCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -647,7 +680,7 @@ const AgentManagement: React.FC = () => {
     
     const agentCode = generateAgentCode('agent');
     const agentData: Agent = {
-      id: Math.max(...mockAgents.map(a => a.id), 0) + 1,
+      id: Math.max(...agents.map(a => a.id), 0) + 1,
       ...newAgent,
       agentType: 'agent',
       roleId: newAgent.roleId,
@@ -694,7 +727,7 @@ const AgentManagement: React.FC = () => {
       'student': 'STU'
     };
     const prefix = prefixMap[agentType];
-    const existingCodes = mockAgents
+    const existingCodes = agents
       .filter(agent => agent.agentType === agentType)
       .map(agent => agent.agentCode);
     
@@ -719,7 +752,7 @@ const AgentManagement: React.FC = () => {
       errors.push('電子郵件格式不正確');
     }
 
-    const emailExists = mockAgents.some(agent => agent.email === newAgent.email);
+    const emailExists = agents.some(agent => agent.email === newAgent.email);
     if (emailExists) {
       errors.push('此電子郵件已被使用');
     }
@@ -869,11 +902,11 @@ const AgentManagement: React.FC = () => {
 
   // Tab configuration
   const tabs = [
-    { id: 'all' as const, name: '全部', icon: FiUsers, count: mockAgents.length },
-    { id: 'agent' as const, name: '代理', icon: FiUserCheck, count: mockAgents.filter(a => a.agentType === 'agent').length },
-    { id: 'consultant' as const, name: '顧問', icon: FiBriefcase, count: mockAgents.filter(a => a.agentType === 'consultant').length },
-    { id: 'teacher' as const, name: '老師', icon: FiUser, count: mockAgents.filter(a => a.agentType === 'teacher' && a.hasSuccessfulReferral).length },
-    { id: 'student' as const, name: '學生', icon: FiUsers, count: mockAgents.filter(a => a.agentType === 'student' && a.hasSuccessfulReferral).length },
+    { id: 'all' as const, name: '全部', icon: FiUsers, count: agents.length },
+    { id: 'agent' as const, name: '代理', icon: FiUserCheck, count: agents.filter(a => a.agentType === 'agent').length },
+    { id: 'consultant' as const, name: '顧問', icon: FiBriefcase, count: agents.filter(a => a.agentType === 'consultant').length },
+    { id: 'teacher' as const, name: '老師', icon: FiUser, count: agents.filter(a => a.agentType === 'teacher' && a.hasSuccessfulReferral).length },
+    { id: 'student' as const, name: '學生', icon: FiUsers, count: agents.filter(a => a.agentType === 'student' && a.hasSuccessfulReferral).length },
     { id: 'settings' as const, name: '代理設定', icon: FiSettings, count: null }
   ];
 

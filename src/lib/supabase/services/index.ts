@@ -1,4 +1,5 @@
 // Service exports for easy importing
+export { authService } from './auth'
 export { usersService, type UserFilters, type CreateUserData, type UpdateUserData } from './users'
 export { membershipsService, type MembershipFilters, type CreateMembershipData, type UpdateMembershipData } from './memberships'
 export { 
