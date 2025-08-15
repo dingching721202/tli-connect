@@ -12,8 +12,7 @@ export async function POST() {
       success: true,
       data: {
         message: 'Logout successful'
-      },
-      message: 'User logged out successfully'
+      }
     }
     
     return NextResponse.json(response)

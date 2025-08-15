@@ -158,8 +158,8 @@ async function migrateOrganizations() {
           contact_email: member.user_email,
           contact_phone: null,
           address: null,
-          industry: member.company_name.includes('台積電') ? '半導體' : 
-                   member.company_name.includes('鴻海') ? '電子製造' : '其他',
+          industry: member.company_name?.includes('台積電') ? '半導體' : 
+                   member.company_name?.includes('鴻海') ? '電子製造' : '其他',
           employee_count: '1000+',
           status: 'active',
           created_at: member.created_at,

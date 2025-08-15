@@ -293,7 +293,7 @@ export async function validateMigration() {
 
   } catch (error) {
     console.error('❌ 驗證過程中發生錯誤:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
   }
 }
 

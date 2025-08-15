@@ -34,8 +34,7 @@ export async function GET(request: NextRequest) {
           total: 0,
           total_pages: 0
         }
-      },
-      message: 'Course templates retrieved successfully'
+      }
     }
     
     return NextResponse.json(response)

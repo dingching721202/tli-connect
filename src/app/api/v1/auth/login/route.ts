@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase/client'
 import { usersService } from '@/lib/supabase/services/users'
-import { ApiResponse } from '@/lib/supabase/types'
+import { ApiResponse } from '@/types'
 
 interface LoginRequest {
   email: string
@@ -39,11 +39,7 @@ export async function POST(request: NextRequest) {
       const errorResponse: ApiResponse<null> = {
         success: false,
         data: null,
-        error: {
-          code: 'AUTH_001',
-          message: 'Invalid credentials',
-          details: authError.message
-        }
+        error: 'Invalid credentials'
       }
       return NextResponse.json(errorResponse, { status: 401 })
     }
@@ -52,11 +48,7 @@ export async function POST(request: NextRequest) {
       const errorResponse: ApiResponse<null> = {
         success: false,
         data: null,
-        error: {
-          code: 'AUTH_002',
-          message: 'Authentication failed',
-          details: 'No user or session returned'
-        }
+        error: 'Authentication failed'
       }
       return NextResponse.json(errorResponse, { status: 401 })
     }
@@ -69,11 +61,7 @@ export async function POST(request: NextRequest) {
       const errorResponse: ApiResponse<null> = {
         success: false,
         data: null,
-        error: {
-          code: 'AUTH_003',
-          message: 'Failed to load user profile',
-          details: profileError?.message
-        }
+        error: 'Failed to load user profile'
       }
       return NextResponse.json(errorResponse, { status: 500 })
     }
@@ -88,7 +76,7 @@ export async function POST(request: NextRequest) {
           id: userProfile.id,
           email: userProfile.email,
           full_name: userProfile.full_name,
-          avatar_url: userProfile.avatar_url,
+          avatar_url: userProfile.avatar_url || null,
           campus: userProfile.campus,
           roles: roles || [],
           permissions: [] // TODO: Implement permissions logic
@@ -106,11 +94,7 @@ export async function POST(request: NextRequest) {
     const errorResponse: ApiResponse<null> = {
       success: false,
       data: null,
-      error: {
-        code: 'AUTH_001',
-        message: 'Authentication failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }
+      error: error instanceof Error ? error.message : 'Authentication failed'
     }
     
     return NextResponse.json(errorResponse, { status: 500 })

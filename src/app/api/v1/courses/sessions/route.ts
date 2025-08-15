@@ -37,8 +37,7 @@ export async function GET(request: NextRequest) {
           total: 0,
           total_pages: 0
         }
-      },
-      message: 'Course sessions retrieved successfully'
+      }
     }
     
     return NextResponse.json(response)
@@ -87,8 +86,7 @@ export async function POST(request: NextRequest) {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
-      },
-      message: 'Course session created successfully'
+      }
     }
     
     return NextResponse.json(response, { status: 201 })
