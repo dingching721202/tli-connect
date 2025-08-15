@@ -1,14 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { ApiResponse, ActivateMembershipRequest, ActivateMembershipResponse } from '@/types/unified'
+import { NextResponse } from 'next/server'
+import { ApiResponse, ActivateMembershipResponse } from '@/types/unified'
 
 // POST /api/v1/memberships/[id]/activate - Activate membership
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function POST() {
   try {
-    const _membershipId = params.id
-    const _body: ActivateMembershipRequest = await request.json()
+    // const membershipId = params.id
+    // const body: ActivateMembershipRequest = await request.json()
     
     // TODO: Implement membership activation with Supabase
     // - Verify membership exists and is in PURCHASED status

@@ -265,7 +265,7 @@ class UnifiedMemberCardPlanService {
       const templates = getCourseTemplates();
       const schedules = getPublishedCourseSchedules();
       
-      const coursesData: any[] = [];
+      const coursesData: unknown[] = [];
       
       // 1. Process templates with schedules
       schedules.forEach(schedule => {

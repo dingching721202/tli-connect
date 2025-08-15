@@ -175,7 +175,7 @@ export class MembershipsService extends BaseSupabaseService {
       )
 
       return { data, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }
@@ -208,7 +208,7 @@ export class MembershipsService extends BaseSupabaseService {
       // Calculate expiration date
       const activatedAt = new Date()
       const expiresAt = new Date(activatedAt)
-      expiresAt.setMonth(expiresAt.getMonth() + (membership as any).membership_plans.duration_months)
+      expiresAt.setMonth(expiresAt.getMonth() + (membership as Record<string, Record<string, number>>).membership_plans.duration_months)
 
       // Update membership status
       const { data, error } = await this.client
@@ -241,7 +241,7 @@ export class MembershipsService extends BaseSupabaseService {
       )
 
       return { data, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }
@@ -277,7 +277,7 @@ export class MembershipsService extends BaseSupabaseService {
       )
 
       return { data, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }
@@ -324,7 +324,7 @@ export class MembershipsService extends BaseSupabaseService {
       )
 
       return { data, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }
@@ -419,13 +419,13 @@ export class MembershipsService extends BaseSupabaseService {
         total_memberships: memberships?.length || 0,
         active_memberships: memberships?.filter(m => m.status === 'ACTIVATED').length || 0,
         expired_memberships: memberships?.filter(m => m.status === 'EXPIRED').length || 0,
-        total_spent: memberships?.reduce((sum, m: any) => {
+        total_spent: memberships?.reduce((sum, m: { orders?: { total_amount?: number }[] }) => {
           return sum + (m.orders?.[0]?.total_amount || 0)
         }, 0) || 0
       }
 
       return { data: stats, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }

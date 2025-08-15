@@ -310,7 +310,7 @@ class UnifiedBookingService {
     return hashString(sessionId)
   }
 
-  private findSessionByTimeslotId(timeslotId: number, availableSessions: any[]): any | null {
+  private findSessionByTimeslotId(timeslotId: number, availableSessions: unknown[]): unknown | null {
     // Find session by matching the hashed ID
     const allSessions = generateBookingSessions()
     const session = allSessions.find(s => {

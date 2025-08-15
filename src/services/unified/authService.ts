@@ -8,7 +8,7 @@
  */
 
 import { authService as supabaseAuthService } from '@/lib/supabase/services'
-import { User, UserWithPassword, LoginResponse, ApiResponse, UserRoleAssignment } from '@/types'
+import { User, UserWithPassword, LoginResponse, UserRoleAssignment } from '@/types'
 import { jwtUtils } from '@/lib/jwt'
 
 // Legacy data imports for migration period
@@ -154,7 +154,7 @@ class UnifiedAuthService {
         
         const result = await supabaseAuthService.updateUserRoles(
           userIdStr, 
-          roles as any[], 
+          roles as UserRole[], 
           adminIdStr
         )
         
@@ -257,7 +257,7 @@ class UnifiedAuthService {
           email: userData.email,
           name: userData.name,
           phone: userData.phone,
-          roles: userData.roles as any[],
+          roles: userData.roles as UserRole[],
           membership_status: userData.membership_status,
           campus: userData.campus
         }, adminIdStr)
@@ -286,7 +286,7 @@ class UnifiedAuthService {
   /**
    * Update user profile
    */
-  async updateUser(userData: any, adminId: number | string) {
+  async updateUser(userData: UpdateUserRequest, adminId: number | string) {
     if (!this.useLegacyMode) {
       try {
         const userIdStr = typeof userData.id === 'number' ? userData.id.toString() : userData.id
@@ -509,14 +509,14 @@ class UnifiedAuthService {
       
       const userIndex = users.findIndex(u => u.id === userId)
       if (userIndex !== -1) {
-        users[userIndex].roles = roles as any[]
+        users[userIndex].roles = roles as UserRole[]
         users[userIndex].updated_at = timestamp
         
         if (typeof localStorage !== 'undefined') {
           const localUsers = JSON.parse(localStorage.getItem('users') || '[]') as User[]
           const localUserIndex = localUsers.findIndex((u: User) => u.id === userId)
           if (localUserIndex !== -1) {
-            localUsers[localUserIndex].roles = roles as any[]
+            localUsers[localUserIndex].roles = roles as UserRole[]
             localUsers[localUserIndex].updated_at = timestamp
             localStorage.setItem('users', JSON.stringify(localUsers))
           }
@@ -645,10 +645,10 @@ class UnifiedAuthService {
         email: userData.email,
         phone: userData.phone || '',
         password: userData.password,
-        roles: userData.roles as any[],
-        membership_status: userData.membership_status as any || 'non_member',
+        roles: userData.roles as UserRole[],
+        membership_status: (userData.membership_status as 'non_member' | 'activated' | 'expired' | 'test') || 'non_member',
         account_status: 'ACTIVE',
-        campus: userData.campus as any || '羅斯福校',
+        campus: (userData.campus as Campus) || '羅斯福校',
         created_at: timestamp,
         updated_at: timestamp
       }
@@ -668,7 +668,7 @@ class UnifiedAuthService {
     }
   }
 
-  private async legacyUpdateUser(userData: any, adminId: number) {
+  private async legacyUpdateUser(userData: UpdateUserRequest, adminId: number) {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(300)
     

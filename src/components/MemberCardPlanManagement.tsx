@@ -91,17 +91,17 @@ const MemberCardPlanManagement: React.FC = () => {
   });
 
   // 根據分類映射語言
-  const getLanguageFromCategory = (category: string): string => {
-    const languageMap: { [key: string]: string } = {
-      '中文': 'chinese',
-      '英文': 'english',
-      '文化': 'chinese',
-      '商業': 'english',
-      '師資': 'chinese',
-      '其它': 'chinese'
-    };
-    return languageMap[category] || 'chinese';
-  };
+  // const getLanguageFromCategory = (category: string): string => {
+  //   const languageMap: { [key: string]: string } = {
+  //     '中文': 'chinese',
+  //     '英文': 'english',
+  //     '文化': 'chinese',
+  //     '商業': 'english',
+  //     '師資': 'chinese',
+  //     '其它': 'chinese'
+  //   };
+  //   return languageMap[category] || 'chinese';
+  // };
 
   const loadPlans = useCallback(async () => {
     try {

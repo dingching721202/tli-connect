@@ -201,7 +201,7 @@ class UnifiedCorporateService {
   /**
    * Create corporate subscription
    */
-  async createCorporateSubscription(subscriptionData: any): Promise<CorporateSubscription> {
+  async createCorporateSubscription(subscriptionData: Partial<CorporateSubscription>): Promise<CorporateSubscription> {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase corporate subscription creation
@@ -312,7 +312,7 @@ class UnifiedCorporateService {
   /**
    * Create corporate member
    */
-  async createMember(memberData: any) {
+  async createMember(memberData: Partial<CorporateMember>) {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase member creation
@@ -346,7 +346,7 @@ class UnifiedCorporateService {
   /**
    * Update corporate member
    */
-  async updateMember(memberId: number, updates: any) {
+  async updateMember(memberId: number, updates: Partial<CorporateMember>) {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase member update
@@ -487,7 +487,7 @@ class UnifiedCorporateService {
     return corporateSubscriptionStore.getSubscriptionsByCompanyId(companyId)
   }
 
-  private async legacyCreateCorporateSubscription(subscriptionData: any): Promise<CorporateSubscription> {
+  private async legacyCreateCorporateSubscription(subscriptionData: Partial<CorporateSubscription>): Promise<CorporateSubscription> {
     return corporateSubscriptionStore.createSubscription(subscriptionData)
   }
 
@@ -522,7 +522,7 @@ class UnifiedCorporateService {
     return corporateMemberStore.getAllMembers()
   }
 
-  private async legacyCreateMember(memberData: any) {
+  private async legacyCreateMember(memberData: Partial<CorporateMember>) {
     return corporateMemberStore.createMember(memberData)
   }
 
@@ -530,7 +530,7 @@ class UnifiedCorporateService {
     return corporateMemberStore.getMemberById(memberId)
   }
 
-  private async legacyUpdateMember(memberId: number, updates: any) {
+  private async legacyUpdateMember(memberId: number, updates: Partial<CorporateMember>) {
     return corporateMemberStore.updateMember(memberId, updates)
   }
 

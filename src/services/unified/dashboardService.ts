@@ -80,7 +80,7 @@ class UnifiedDashboardService {
       let teacher = teacherDataService.getTeacherById(teacherId)
       
       if (!teacher) {
-        const users: any[] = [...usersData]
+        const users: User[] = [...usersData] as User[]
         const user = users.find(u => u.id === teacherId && u.roles.includes('TEACHER'))
         if (user) {
           const allTeachers = teacherDataService.getAllTeachers()

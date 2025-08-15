@@ -1,5 +1,5 @@
 import { BaseSupabaseService } from './base'
-import { CourseTemplate, CourseSchedule, CourseSession, CourseEnrollment, Campus, SessionStatus, BookingStatus } from '../types'
+import { CourseTemplate, CourseSession, CourseEnrollment, Campus, SessionStatus, BookingStatus } from '../types'
 import { PaginationOptions, PaginatedResponse, QueryResult } from '../types'
 
 export interface CourseFilters {
@@ -45,7 +45,7 @@ export interface CreateScheduleData {
   teacher_id: string
   start_date: string
   end_date: string
-  schedule_pattern?: any
+  schedule_pattern?: Record<string, unknown>
   max_capacity: number
   campus: Campus
 }
@@ -139,7 +139,7 @@ export class CoursesService extends BaseSupabaseService {
       }
 
       return { data, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }
@@ -237,7 +237,7 @@ export class CoursesService extends BaseSupabaseService {
       })) || []
 
       return { data: sessionsWithAvailability, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }
@@ -282,7 +282,7 @@ export class CoursesService extends BaseSupabaseService {
       }
 
       return { data, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }
@@ -341,8 +341,7 @@ export class CoursesService extends BaseSupabaseService {
    */
   async getUserEnrollments(
     userId: string,
-    status?: BookingStatus,
-    dateFrom?: string
+    status?: BookingStatus
   ): Promise<QueryResult<(CourseEnrollment & {
     session_date: string
     start_time: string
@@ -383,7 +382,7 @@ export class CoursesService extends BaseSupabaseService {
       }
 
       // Transform data to flatten nested structure
-      const enrollments = data?.map((enrollment: any) => ({
+      const enrollments = data?.map((enrollment: unknown) => ({
         ...enrollment,
         session_date: enrollment.course_sessions.session_date,
         start_time: enrollment.course_sessions.start_time,
@@ -393,7 +392,7 @@ export class CoursesService extends BaseSupabaseService {
       })) || []
 
       return { data: enrollments, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }
@@ -473,7 +472,7 @@ export class CoursesService extends BaseSupabaseService {
       )
 
       return { data, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }
@@ -540,7 +539,7 @@ export class CoursesService extends BaseSupabaseService {
       )
 
       return { data, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }
@@ -573,7 +572,7 @@ export class CoursesService extends BaseSupabaseService {
       }
 
       return { data, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }
@@ -601,7 +600,7 @@ export class CoursesService extends BaseSupabaseService {
 
       const categories = [...new Set(data?.map(item => item.category).filter(Boolean))] || []
       return { data: categories, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }
@@ -640,11 +639,11 @@ export class CoursesService extends BaseSupabaseService {
       }
 
       const sessions = data || []
-      const totalEnrollments = sessions.reduce((sum: number, session: any) => 
-        sum + (session.course_enrollments?.length || 0), 0)
+      const totalEnrollments = sessions.reduce((sum: number, session: Record<string, unknown>) => 
+        sum + ((session.course_enrollments as unknown[] | undefined)?.length || 0), 0)
       
-      const attendedEnrollments = sessions.reduce((sum: number, session: any) => 
-        sum + (session.course_enrollments?.filter((e: any) => e.attended === true).length || 0), 0)
+      const attendedEnrollments = sessions.reduce((sum: number, session: Record<string, unknown>) => 
+        sum + ((session.course_enrollments as Record<string, unknown>[] | undefined)?.filter((e: Record<string, unknown>) => e.attended === true).length || 0), 0)
 
       const stats = {
         total_sessions: sessions.length,
@@ -656,7 +655,7 @@ export class CoursesService extends BaseSupabaseService {
       }
 
       return { data: stats, error: null }
-    } catch (error: any) {
+    } catch (error: unknown) {
       return { data: null, error: new Error(error.message) }
     }
   }

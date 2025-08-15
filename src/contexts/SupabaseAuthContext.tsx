@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { User as SupabaseUser, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase/client';
 import { usersService } from '@/lib/supabase/services/users';
@@ -117,9 +117,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       mounted = false;
       subscription?.unsubscribe();
     };
-  }, []);
+  }, [loadUserProfile, handleSessionChange]);
 
-  const handleSessionChange = async (session: Session | null) => {
+  const handleSessionChange = useCallback(async (session: Session | null) => {
     setSession(session);
 
     if (session?.user) {
@@ -129,9 +129,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setCurrentRole(null);
       clearRoleState();
     }
-  };
+  }, [loadUserProfile]);
 
-  const loadUserProfile = async (supabaseUser: SupabaseUser) => {
+  const loadUserProfile = useCallback(async (supabaseUser: SupabaseUser) => {
     try {
       // Get user profile with roles from database
       const { data: userProfile, error } = await usersService.getUserById(supabaseUser.id);
@@ -161,9 +161,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error('Error loading user profile:', error);
     }
-  };
+  }, [restoreRoleState]);
 
-  const restoreRoleState = async (authUser: AuthUser) => {
+  const restoreRoleState = useCallback(async (authUser: AuthUser) => {
     try {
       // Check for role lock state (only for single-role users)
       const savedIsRoleLocked = localStorage.getItem('isRoleLocked') === 'true';
@@ -192,7 +192,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       console.error('Error restoring role state:', error);
     }
-  };
+  }, []);
 
   const clearRoleState = () => {
     setIsRoleLocked(false);

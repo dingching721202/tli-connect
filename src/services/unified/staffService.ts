@@ -95,7 +95,7 @@ class UnifiedStaffService {
   /**
    * Get staff operations log
    */
-  async getStaffOperationsLog(staffId?: number, limit?: number): Promise<any[]> {
+  async getStaffOperationsLog(staffId?: number, limit?: number): Promise<unknown[]> {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase staff operations log query
@@ -120,8 +120,8 @@ class UnifiedStaffService {
     operation_type: 'CANCEL_TIMESLOT' | 'RESTORE_TIMESLOT' | 'BATCH_CANCEL' | 'UPDATE_SCHEDULE'
     target_id: string | number
     description: string
-    metadata?: any
-  }): Promise<ApiResponse<any>> {
+    metadata?: Record<string, unknown>
+  }): Promise<ApiResponse<unknown>> {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase staff operation logging
@@ -171,7 +171,7 @@ class UnifiedStaffService {
     try {
       // Get timeslots from localStorage
       const timeslots = JSON.parse(localStorage.getItem('classTimeslots') || '[]')
-      const timeslotIndex = timeslots.findIndex((t: any) => t.id === timeslotId)
+      const timeslotIndex = timeslots.findIndex((t: unknown) => (t as Record<string, unknown>).id === timeslotId)
       
       if (timeslotIndex === -1) {
         return { success: false, error: 'Timeslot not found' }
@@ -184,7 +184,7 @@ class UnifiedStaffService {
 
       // Cancel related appointments
       const appointments = JSON.parse(localStorage.getItem('classAppointments') || '[]')
-      const updatedAppointments = appointments.map((appointment: any) => {
+      const updatedAppointments = appointments.map((appointment: unknown) => {
         if (appointment.class_timeslot_id === timeslotId) {
           return { ...appointment, status: 'CANCELED', updated_at: new Date().toISOString() }
         }
@@ -216,7 +216,7 @@ class UnifiedStaffService {
     try {
       // Get timeslots from localStorage
       const timeslots = JSON.parse(localStorage.getItem('classTimeslots') || '[]')
-      const timeslotIndex = timeslots.findIndex((t: any) => t.id === timeslotId)
+      const timeslotIndex = timeslots.findIndex((t: unknown) => (t as Record<string, unknown>).id === timeslotId)
       
       if (timeslotIndex === -1) {
         return { success: false, error: 'Timeslot not found' }
@@ -272,17 +272,17 @@ class UnifiedStaffService {
     return { success: true, data: results }
   }
 
-  private async legacyGetStaffOperationsLog(staffId?: number, limit = 50): Promise<any[]> {
+  private async legacyGetStaffOperationsLog(staffId?: number, limit = 50): Promise<unknown[]> {
     try {
       const operations = JSON.parse(localStorage.getItem('staffOperations') || '[]')
       let filteredOps = operations
 
       if (staffId) {
-        filteredOps = operations.filter((op: any) => op.staff_id === staffId)
+        filteredOps = operations.filter((op: unknown) => (op as Record<string, unknown>).staff_id === staffId)
       }
 
       return filteredOps
-        .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+        .sort((a: unknown, b: unknown) => new Date((b as Record<string, unknown>).created_at as string).getTime() - new Date((a as Record<string, unknown>).created_at as string).getTime())
         .slice(0, limit)
     } catch (error) {
       console.error('獲取課務操作記錄失敗:', error)
@@ -295,8 +295,8 @@ class UnifiedStaffService {
     operation_type: 'CANCEL_TIMESLOT' | 'RESTORE_TIMESLOT' | 'BATCH_CANCEL' | 'UPDATE_SCHEDULE'
     target_id: string | number
     description: string
-    metadata?: any
-  }): Promise<ApiResponse<any>> {
+    metadata?: Record<string, unknown>
+  }): Promise<ApiResponse<unknown>> {
     try {
       const operations = JSON.parse(localStorage.getItem('staffOperations') || '[]')
       const generateId = (array: { id: number }[]): number => {
@@ -334,21 +334,21 @@ class UnifiedStaffService {
       return {
         timeslots: {
           total: timeslots.length,
-          active: timeslots.filter((t: any) => t.status === 'SCHEDULED').length,
-          canceled: timeslots.filter((t: any) => t.status === 'CANCELED').length
+          active: timeslots.filter((t: unknown) => (t as Record<string, unknown>).status === 'SCHEDULED').length,
+          canceled: timeslots.filter((t: unknown) => (t as Record<string, unknown>).status === 'CANCELED').length
         },
         bookings: {
           total: appointments.length,
-          active: appointments.filter((a: any) => a.status === 'CONFIRMED').length,
-          canceled: appointments.filter((a: any) => a.status === 'CANCELED').length
+          active: appointments.filter((a: unknown) => (a as Record<string, unknown>).status === 'CONFIRMED').length,
+          canceled: appointments.filter((a: unknown) => (a as Record<string, unknown>).status === 'CANCELED').length
         },
         teachers: {
-          total: users.filter((u: any) => u.roles.includes('TEACHER')).length,
-          active: users.filter((u: any) => u.roles.includes('TEACHER') && u.account_status === 'ACTIVE').length
+          total: users.filter((u: unknown) => ((u as Record<string, unknown>).roles as string[]).includes('TEACHER')).length,
+          active: users.filter((u: unknown) => ((u as Record<string, unknown>).roles as string[]).includes('TEACHER') && (u as Record<string, unknown>).account_status === 'ACTIVE').length
         },
         students: {
-          total: users.filter((u: any) => u.roles.includes('STUDENT')).length,
-          active: users.filter((u: any) => u.roles.includes('STUDENT') && u.account_status === 'ACTIVE').length
+          total: users.filter((u: unknown) => ((u as Record<string, unknown>).roles as string[]).includes('STUDENT')).length,
+          active: users.filter((u: unknown) => ((u as Record<string, unknown>).roles as string[]).includes('STUDENT') && (u as Record<string, unknown>).account_status === 'ACTIVE').length
         }
       }
     } catch (error) {

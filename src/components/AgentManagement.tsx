@@ -202,281 +202,25 @@ const AgentManagement: React.FC = () => {
   }, []);
 
   // 銷售記錄數據 - 從統一服務加載
-  const [, setSalesRecords] = useState<SalesRecord[]>([]);
+  // const [, setSalesRecords] = useState<SalesRecord[]>([]);
 
   // 加載銷售記錄
-  const _loadSalesRecords = async () => {
-    try {
-      // TODO: 使用 agentService 加載銷售記錄
-      // const records = await agentService.getAllSalesRecords();
-      // setSalesRecords(records);
-      setSalesRecords([]); // 暫時為空
-    } catch (error) {
-      console.error('載入銷售記錄失敗:', error);
-    }
-  };
+  // const loadSalesRecords = async () => {
+  //   try {
+  //     // TODO: 使用 agentService 加載銷售記錄
+  //     // const records = await agentService.getAllSalesRecords();
+  //     // setSalesRecords(records);
+  //     setSalesRecords([]); // 暫時為空
+  //   } catch (error) {
+  //     console.error('載入銷售記錄失敗:', error);
+  //   }
+  // };
 
-  // Mock sales records - 將在後面定義
-  const [_mockAgentDetail] = useState({
-      agentType: 'teacher',
-      roleId: 'teacher-1',
-      roleName: '資深代理',
-      rolePercentage: 15,
-      agentCode: 'AGT001',
-      referralLink: 'https://tliconnect.com/ref/AGT001',
-      isCompany: false,
-      companyName: '',
-      contactPerson: '',
-      bankAccount: '123-456-789012',
-      taxId: '',
-      address: '台北市大安區信義路四段1號',
-      joinDate: '2024-01-15',
-      status: 'active',
-      totalSales: 156800,
-      monthSales: 48600,
-      totalCommission: 23520,
-      monthCommission: 7290,
-      salesCount: 12,
-      monthSalesCount: 4,
-      lastSaleDate: '2025-01-18',
-      notes: '表現優異的代理老師',
-      hasSuccessfulReferral: true
-    });
+  // Mock data removed to fix unused variable warnings
   
-  const [_mockAgentList] = useState([
-    {
-      id: 1,
-      name: '張代理',
-      email: 'agent1@example.com',
-      phone: '0912-345-678',
-      agentType: 'teacher',
-      roleId: 'teacher-1',
-      roleName: '資深代理',
-      rolePercentage: 15,
-      agentCode: 'AGT001',
-      referralLink: 'https://tliconnect.com/ref/AGT001',
-      isCompany: false,
-      companyName: '',
-      contactPerson: '',
-      bankAccount: '123-456-789012',
-      taxId: '',
-      address: '台北市大安區信義路四段1號',
-      joinDate: '2024-01-15',
-      status: 'active',
-      totalSales: 156800,
-      monthSales: 48600,
-      totalCommission: 23520,
-      monthCommission: 7290,
-      salesCount: 12,
-      monthSalesCount: 4,
-      lastSaleDate: '2025-01-18',
-      notes: '表現優異的代理老師',
-      hasSuccessfulReferral: true
-    },
-    {
-      id: 2,
-      name: '王小華',
-      email: 'wang.sales@example.com',
-      phone: '0923-456-789',
-      agentType: 'consultant',
-      roleId: 'consultant-1',
-      roleName: '業務經理',
-      rolePercentage: 8,
-      agentCode: 'CON001',
-      referralLink: 'https://tliconnect.com/ref/CON001',
-      isCompany: false,
-      companyName: '',
-      contactPerson: '',
-      bankAccount: '987-654-321098',
-      taxId: '',
-      address: '台北市信義區松仁路100號',
-      joinDate: '2024-02-01',
-      status: 'active',
-      totalSales: 298400,
-      monthSales: 89200,
-      totalCommission: 23872,
-      monthCommission: 7136,
-      salesCount: 18,
-      monthSalesCount: 6,
-      lastSaleDate: '2025-01-19',
-      notes: '業務能力強，客戶關係良好',
-      hasSuccessfulReferral: true
-    },
-    {
-      id: 5,
-      name: '陳老師',
-      email: 'chen.teacher@example.com',
-      phone: '0934-567-890',
-      agentType: 'teacher',
-      roleId: 'teacher-1',
-      roleName: '資深老師',
-      rolePercentage: 12,
-      agentCode: 'TCH001',
-      referralLink: 'https://tli-connect.com/membership?ref=TCH001',
-      isCompany: false,
-      companyName: '',
-      contactPerson: '',
-      bankAccount: '345-678-901234',
-      taxId: '',
-      address: '台北市中山區南京東路三段219號',
-      joinDate: '2024-03-01',
-      status: 'active',
-      totalSales: 120000,
-      monthSales: 36000,
-      totalCommission: 14400,
-      monthCommission: 4320,
-      salesCount: 8,
-      monthSalesCount: 2,
-      lastSaleDate: '2024-12-10',
-      notes: '教學經驗豐富，學生推薦成功',
-      hasSuccessfulReferral: true
-    },
-    {
-      id: 6,
-      name: '林同學',
-      email: 'lin.student@example.com',
-      phone: '0945-678-901',
-      agentType: 'student',
-      roleId: 'student-1',
-      roleName: '優秀學生',
-      rolePercentage: 8,
-      agentCode: 'STU001',
-      referralLink: 'https://tli-connect.com/membership?ref=STU001',
-      isCompany: false,
-      companyName: '',
-      contactPerson: '',
-      bankAccount: '456-789-012345',
-      taxId: '',
-      address: '台北市文山區木柵路四段159號',
-      joinDate: '2024-06-01',
-      status: 'active',
-      totalSales: 54000,
-      monthSales: 18000,
-      totalCommission: 4320,
-      monthCommission: 1440,
-      salesCount: 3,
-      monthSalesCount: 1,
-      lastSaleDate: '2024-12-05',
-      notes: '積極推薦同學，表現優秀',
-      hasSuccessfulReferral: true
-    },
-    {
-      id: 7,
-      name: '黃老師',
-      email: 'huang.teacher@example.com',
-      phone: '0956-789-012',
-      agentType: 'teacher',
-      roleId: '2',
-      roleName: '新進老師',
-      rolePercentage: 8,
-      agentCode: 'TCH002',
-      referralLink: 'https://tli-connect.com/membership?ref=TCH002',
-      isCompany: false,
-      companyName: '',
-      contactPerson: '',
-      bankAccount: '567-890-123456',
-      taxId: '',
-      address: '台北市士林區中正路223號',
-      joinDate: '2024-09-01',
-      status: 'active',
-      totalSales: 0,
-      monthSales: 0,
-      totalCommission: 0,
-      monthCommission: 0,
-      salesCount: 0,
-      monthSalesCount: 0,
-      lastSaleDate: null,
-      notes: '新進老師，尚未有推薦記錄',
-      hasSuccessfulReferral: false
-    },
-    {
-      id: 8,
-      name: '吳同學',
-      email: 'wu.student@example.com',
-      phone: '0967-890-123',
-      agentType: 'student',
-      roleId: '2',
-      roleName: '一般學生',
-      rolePercentage: 5,
-      agentCode: 'STU002',
-      referralLink: 'https://tli-connect.com/membership?ref=STU002',
-      isCompany: false,
-      companyName: '',
-      contactPerson: '',
-      bankAccount: '678-901-234567',
-      taxId: '',
-      address: '台北市內湖區成功路四段61號',
-      joinDate: '2024-10-01',
-      status: 'active',
-      totalSales: 0,
-      monthSales: 0,
-      totalCommission: 0,
-      monthCommission: 0,
-      salesCount: 0,
-      monthSalesCount: 0,
-      lastSaleDate: null,
-      notes: '新加入學生，尚未有推薦記錄',
-      hasSuccessfulReferral: false
-    },
-    {
-      id: 3,
-      name: '創新科技有限公司',
-      email: 'contact@innovation.com',
-      phone: '02-1234-5678',
-      agentType: 'teacher',
-      roleId: '2',
-      roleName: '新手代理',
-      rolePercentage: 10,
-      agentCode: 'AGT002',
-      referralLink: 'https://tliconnect.com/ref/AGT002',
-      isCompany: true,
-      companyName: '創新科技有限公司',
-      contactPerson: '李經理',
-      bankAccount: '555-666-777888',
-      taxId: '12345678',
-      address: '新北市板橋區文化路二段100號',
-      joinDate: '2024-03-10',
-      status: 'active',
-      totalSales: 67200,
-      monthSales: 22400,
-      totalCommission: 6720,
-      monthCommission: 2240,
-      salesCount: 5,
-      monthSalesCount: 2,
-      lastSaleDate: '2025-01-16',
-      notes: '企業代理，主要推廣企業課程',
-      hasSuccessfulReferral: true
-    },
-    {
-      id: 4,
-      name: '陳小美',
-      email: 'chen.marketing@example.com',
-      phone: '0934-567-890',
-      agentType: 'consultant',
-      roleId: '3',
-      roleName: '行銷專員',
-      rolePercentage: 7,
-      agentCode: 'CON002',
-      referralLink: 'https://tliconnect.com/ref/CON002',
-      isCompany: false,
-      companyName: '',
-      contactPerson: '',
-      bankAccount: '111-222-333444',
-      taxId: '',
-      address: '台中市西屯區台灣大道三段200號',
-      joinDate: '2024-04-05',
-      status: 'active',
-      totalSales: 134600,
-      monthSales: 31200,
-      totalCommission: 9422,
-      monthCommission: 2184,
-      salesCount: 9,
-      monthSalesCount: 3,
-      lastSaleDate: '2025-01-17',
-      notes: '擅長線上行銷推廣',
-      hasSuccessfulReferral: true
-    }
-  ]);
+  // Helper functions removed to fix unused variable warnings
+
+  // Filter functions
 
   // Mock 銷售紀錄
   const [mockSalesRecords] = useState<SalesRecord[]>([
@@ -731,7 +475,7 @@ const AgentManagement: React.FC = () => {
       lastSaleDate: null
     };
 
-    setMockAgents(prev => [...prev, agentData]);
+    setAgents(prev => [...prev, agentData]);
     setNewAgent({
       name: '',
       email: '',

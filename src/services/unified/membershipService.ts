@@ -87,11 +87,11 @@ class UnifiedMembershipService {
             await supabaseMembershipsService.activateMembership(result.data.id)
             const activatedResult = await supabaseMembershipsService.getMembershipById(result.data.id)
             if (activatedResult.data) {
-              return this.convertSupabaseToLegacyFormat(activatedResult.data as any)
+              return this.convertSupabaseToLegacyFormat(activatedResult.data as Record<string, unknown>)
             }
           }
 
-          return this.convertSupabaseToLegacyFormat(result.data as any)
+          return this.convertSupabaseToLegacyFormat(result.data as Record<string, unknown>)
         }
       } catch (error) {
         console.error('Supabase createCard failed, falling back to legacy:', error)
@@ -133,7 +133,7 @@ class UnifiedMembershipService {
           if (result.data) {
             return { 
               success: true, 
-              data: this.convertSupabaseToLegacyFormat(result.data as any)
+              data: this.convertSupabaseToLegacyFormat(result.data as Record<string, unknown>)
             }
           }
         }
@@ -158,7 +158,7 @@ class UnifiedMembershipService {
         const result = await supabaseMembershipsService.getUserActiveMembership(userId.toString())
         
         if (result.data) {
-          return this.convertSupabaseToLegacyFormat(result.data as any)
+          return this.convertSupabaseToLegacyFormat(result.data as Record<string, unknown>)
         }
         
         return null
@@ -183,7 +183,7 @@ class UnifiedMembershipService {
         if (result.data) {
           const inactiveMembership = result.data.find(m => m.status === 'PURCHASED')
           if (inactiveMembership) {
-            return this.convertSupabaseToLegacyFormat(inactiveMembership as any)
+            return this.convertSupabaseToLegacyFormat(inactiveMembership as Record<string, unknown>)
           }
         }
         
@@ -207,7 +207,7 @@ class UnifiedMembershipService {
         const result = await supabaseMembershipsService.getUserMemberships(userId.toString())
         
         if (result.data) {
-          return result.data.map(m => this.convertSupabaseToLegacyFormat(m as any))
+          return result.data.map(m => this.convertSupabaseToLegacyFormat(m as Record<string, unknown>))
         }
         
         return []
@@ -244,7 +244,7 @@ class UnifiedMembershipService {
                 status: 'EXPIRED'
               })
               
-              expiredMemberships.push(this.convertSupabaseToLegacyFormat(membership as any))
+              expiredMemberships.push(this.convertSupabaseToLegacyFormat(membership as Record<string, unknown>))
             }
           }
 
@@ -419,7 +419,7 @@ class UnifiedMembershipService {
             return false
           })
 
-          return expiringMemberships.map(m => this.convertSupabaseToLegacyFormat(m as any))
+          return expiringMemberships.map(m => this.convertSupabaseToLegacyFormat(m as Record<string, unknown>))
         }
 
         return []
@@ -436,7 +436,7 @@ class UnifiedMembershipService {
   /**
    * Convert Supabase membership format to legacy format
    */
-  private convertSupabaseToLegacyFormat(membership: any): Membership {
+  private convertSupabaseToLegacyFormat(membership: Record<string, unknown>): Membership {
     return {
       id: parseInt(membership.id),
       created_at: membership.created_at,

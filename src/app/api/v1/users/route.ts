@@ -2,16 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { usersService } from '@/lib/supabase/services/users'
 import { ApiResponse, Role, Campus } from '@/lib/supabase/types'
 
-interface _GetUsersRequest {
-  page: number
-  limit: number
-  campus?: Campus
-  role?: Role
-  is_active?: boolean
-  search?: string
-  sort_by?: string
-  sort_order?: 'asc' | 'desc'
-}
+// interface GetUsersRequest {
+//   page: number
+//   limit: number
+//   campus?: Campus
+//   role?: Role
+//   is_active?: boolean
+//   search?: string
+//   sort_by?: string
+//   sort_order?: 'asc' | 'desc'
+// }
 
 interface CreateUserRequest {
   email: string

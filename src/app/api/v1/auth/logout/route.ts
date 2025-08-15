@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { ApiResponse, LogoutResponse } from '@/types/unified'
 
-export async function POST(_request: NextRequest) {
+export async function POST() {
   try {
     // TODO: Implement logout logic with Supabase
     // - Invalidate session

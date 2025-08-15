@@ -61,7 +61,7 @@ class UnifiedOrderService {
   /**
    * Get order by ID
    */
-  async getOrderById(orderId: number): Promise<any | null> {
+  async getOrderById(orderId: number): Promise<Order | null> {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase order query
@@ -81,7 +81,7 @@ class UnifiedOrderService {
   /**
    * Get user orders
    */
-  async getUserOrders(userId: number): Promise<any[]> {
+  async getUserOrders(userId: number): Promise<Order[]> {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase user orders query
@@ -121,7 +121,7 @@ class UnifiedOrderService {
   /**
    * Get all orders (admin)
    */
-  async getAllOrders(): Promise<any[]> {
+  async getAllOrders(): Promise<Order[]> {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase all orders query
@@ -178,7 +178,7 @@ class UnifiedOrderService {
     }
   }
 
-  private async legacyGetOrderById(orderId: number): Promise<any | null> {
+  private async legacyGetOrderById(orderId: number): Promise<Order | null> {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(200)
 
@@ -191,7 +191,7 @@ class UnifiedOrderService {
     }
   }
 
-  private async legacyGetUserOrders(userId: number): Promise<any[]> {
+  private async legacyGetUserOrders(userId: number): Promise<Order[]> {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(200)
 
@@ -229,7 +229,7 @@ class UnifiedOrderService {
     }
   }
 
-  private async legacyGetAllOrders(): Promise<any[]> {
+  private async legacyGetAllOrders(): Promise<Order[]> {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(200)
 

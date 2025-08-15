@@ -1,13 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { ApiResponse, GetUserResponse, UpdateUserRequest, UpdateUserResponse, DeleteUserResponse } from '@/types/unified'
 
 // GET /api/v1/users/[id] - Get specific user
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET() {
   try {
-    const _userId = params.id
+    // const userId = params.id
     
     // TODO: Implement user retrieval with Supabase
     // - Fetch user from core_users
@@ -52,12 +49,9 @@ export async function GET(
 }
 
 // PUT /api/v1/users/[id] - Update user
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT() {
   try {
-    const _userId = params.id
+    // const userId = params.id
     const body: UpdateUserRequest = await request.json()
     
     // TODO: Implement user update with Supabase
@@ -104,12 +98,9 @@ export async function PUT(
 }
 
 // DELETE /api/v1/users/[id] - Delete user
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE() {
   try {
-    const _userId = params.id
+    // const userId = params.id
     
     // TODO: Implement user deletion with Supabase
     // - Soft delete (set is_active = false) or hard delete

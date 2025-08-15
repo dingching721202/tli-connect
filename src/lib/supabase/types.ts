@@ -50,7 +50,7 @@ export interface MembershipPlan {
   price: number;
   currency: string;
   campus: Campus;
-  features?: any;
+  features?: Record<string, unknown>;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -107,7 +107,7 @@ export interface CourseSchedule {
   teacher_id: string;
   start_date: string;
   end_date: string;
-  schedule_pattern?: any;
+  schedule_pattern?: Record<string, unknown>;
   max_capacity: number;
   campus: Campus;
   is_active: boolean;
@@ -153,7 +153,7 @@ export interface Order {
   payment_method?: PaymentMethod | null;
   payment_status: PaymentStatus;
   payment_reference?: string | null;
-  items: any;
+  items: unknown;
   notes?: string | null;
   processed_at?: string | null;
   created_at: string;
@@ -173,7 +173,7 @@ export interface CorporateSubscription {
   end_date: string;
   auto_renew: boolean;
   campus: Campus;
-  features?: any;
+  features?: Record<string, unknown>;
   created_at: string;
   updated_at: string;
 }
@@ -223,7 +223,7 @@ export interface LeaveRequest {
 export interface SystemSetting {
   id: string;
   key: string;
-  value: any;
+  value: unknown;
   description?: string | null;
   category?: string | null;
   campus?: Campus | null;
@@ -239,7 +239,7 @@ export interface ActivityLog {
   resource_type?: string | null;
   resource_id?: string | null;
   description: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
   ip_address?: string | null;
   user_agent?: string | null;
   campus?: Campus | null;
@@ -253,8 +253,8 @@ export interface SupabaseUser {
   email_confirmed_at?: string
   created_at: string
   updated_at: string
-  user_metadata?: Record<string, any>
-  app_metadata?: Record<string, any>
+  user_metadata?: Record<string, unknown>
+  app_metadata?: Record<string, unknown>
 }
 
 // Database definition for Supabase

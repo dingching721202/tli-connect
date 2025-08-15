@@ -208,7 +208,7 @@ class UnifiedSystemSettingsService {
   /**
    * Get specific setting value
    */
-  async getSetting(category: keyof SystemSettings, key?: string): Promise<any> {
+  async getSetting(category: keyof SystemSettings, key?: string): Promise<unknown> {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase specific setting query
@@ -237,7 +237,7 @@ class UnifiedSystemSettingsService {
     this.settings = {
       ...this.settings,
       [category]: {
-        ...(this.settings[category] as Record<string, any>),
+        ...(this.settings[category] as Record<string, unknown>),
         ...updates
       }
     }
@@ -254,7 +254,7 @@ class UnifiedSystemSettingsService {
       this.settings = {
         ...this.settings,
         [category]: {
-          ...(this.settings[category as keyof SystemSettings] as Record<string, any>),
+          ...(this.settings[category as keyof SystemSettings] as Record<string, unknown>),
           [key]: value
         }
       }
@@ -273,7 +273,7 @@ class UnifiedSystemSettingsService {
     return { ...this.settings }
   }
 
-  private async legacyGetSetting(category: keyof SystemSettings, key?: string): Promise<any> {
+  private async legacyGetSetting(category: keyof SystemSettings, key?: string): Promise<unknown> {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(50)
     
@@ -282,7 +282,7 @@ class UnifiedSystemSettingsService {
       return categorySettings
     }
     
-    return (categorySettings as Record<string, any>)?.[key]
+    return (categorySettings as Record<string, unknown>)?.[key]
   }
 }
 

@@ -8,7 +8,7 @@ export abstract class BaseSupabaseService {
    * Generic method to handle paginated queries
    */
   protected async paginatedQuery<T>(
-    query: any,
+    query: unknown,
     options: PaginationOptions
   ): Promise<PaginatedResponse<T>> {
     const { page, limit, orderBy = 'created_at', ascending = false } = options
@@ -16,11 +16,15 @@ export abstract class BaseSupabaseService {
     const to = from + limit - 1
 
     // Add pagination and ordering
-    let paginatedQuery = query
+    const paginatedQuery = (query as { 
+      range: (from: number, to: number) => unknown; 
+      order: (field: string, options: { ascending: boolean }) => unknown; 
+      select: (fields: string, options?: unknown) => unknown 
+    })
       .range(from, to)
       .order(orderBy, { ascending })
 
-    const [{ data, error, count }, { count: totalCount }] = await Promise.all([
+    const [{ data, error }, { count: totalCount }] = await Promise.all([
       paginatedQuery.select('*', { count: 'exact' }),
       query.select('*', { count: 'exact', head: true })
     ])
@@ -48,7 +52,7 @@ export abstract class BaseSupabaseService {
   /**
    * Generic method to handle single record queries
    */
-  protected async singleQuery<T>(query: any): Promise<QueryResult<T>> {
+  protected async singleQuery<T>(query: unknown): Promise<QueryResult<T>> {
     const { data, error } = await query.single()
     
     return {
@@ -60,7 +64,7 @@ export abstract class BaseSupabaseService {
   /**
    * Generic method to handle list queries
    */
-  protected async listQuery<T>(query: any): Promise<QueryListResult<T>> {
+  protected async listQuery<T>(query: unknown): Promise<QueryListResult<T>> {
     const { data, error, count } = await query
     
     return {
@@ -73,9 +77,10 @@ export abstract class BaseSupabaseService {
   /**
    * Handle database errors consistently
    */
-  protected handleError(error: any, context: string): never {
+  protected handleError(error: unknown, context: string): never {
     console.error(`Database error in ${context}:`, error)
-    throw new Error(`${context} failed: ${error.message || 'Unknown error'}`)
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    throw new Error(`${context} failed: ${message}`)
   }
 
   /**
@@ -87,7 +92,7 @@ export abstract class BaseSupabaseService {
     resourceType: string | null,
     resourceId: string | null,
     description: string,
-    metadata?: Record<string, any>,
+    metadata?: Record<string, unknown>,
     campus?: string
   ) {
     try {
@@ -95,12 +100,12 @@ export abstract class BaseSupabaseService {
         .from('activity_logs')
         .insert({
           user_id: userId,
-          activity_type: activityType as any,
+          activity_type: activityType,
           resource_type: resourceType,
           resource_id: resourceId,
           description,
           metadata,
-          campus: campus as any
+          campus: campus
         })
     } catch (error) {
       // Log activity errors shouldn't break the main operation
