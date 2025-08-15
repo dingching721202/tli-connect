@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { usersService } from '@/lib/supabase/services/users'
 import { ApiResponse, Role, Campus } from '@/lib/supabase/types'
 
-interface GetUsersRequest {
+interface _GetUsersRequest {
   page: number
   limit: number
   campus?: Campus

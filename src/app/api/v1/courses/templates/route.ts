@@ -9,13 +9,13 @@ export async function GET(request: NextRequest) {
     const filters: GetCourseTemplatesRequest = {
       page: parseInt(searchParams.get('page') || '1'),
       limit: parseInt(searchParams.get('limit') || '20'),
-      campus: searchParams.get('campus') as any,
+      campus: searchParams.get('campus') as '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部' | null,
       category: searchParams.get('category') || undefined,
       level: searchParams.get('level') || undefined,
       is_active: searchParams.get('is_active') === 'true',
       search: searchParams.get('search') || undefined,
-      sort_by: searchParams.get('sort_by') as any || 'created_at',
-      sort_order: searchParams.get('sort_order') as any || 'desc'
+      sort_by: (searchParams.get('sort_by') as 'created_at' | 'name' | 'category' | 'level') || 'created_at',
+      sort_order: (searchParams.get('sort_order') as 'asc' | 'desc') || 'desc'
     }
     
     // TODO: Implement course template listing with Supabase

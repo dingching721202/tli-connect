@@ -77,7 +77,6 @@ class MemberCardStore {
     
     try {
       // 使用 eval 避免 webpack 靜態分析
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // 移除 fs 操作，使用 localStorage 持久化
       const path = await eval('import("path")');
       const filePath = path.join(process.cwd(), 'data', this.FILE_NAME);
@@ -99,7 +98,6 @@ class MemberCardStore {
     
     try {
       // 使用 eval 避免 webpack 靜態分析
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // 移除 fs 操作，使用 localStorage 持久化
       const path = await eval('import("path")');
       const filePath = path.join(process.cwd(), 'data', this.FILE_NAME);

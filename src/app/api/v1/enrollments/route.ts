@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ApiResponse, GetEnrollmentsRequest, GetEnrollmentsResponse, CreateEnrollmentRequest, CreateEnrollmentResponse, BatchEnrollRequest, BatchEnrollResponse } from '@/types/unified'
+import { ApiResponse, GetEnrollmentsRequest, GetEnrollmentsResponse, CreateEnrollmentRequest, CreateEnrollmentResponse } from '@/types/unified'
 
 // GET /api/v1/enrollments - List course enrollments
 export async function GET(request: NextRequest) {
@@ -12,12 +12,12 @@ export async function GET(request: NextRequest) {
       user_id: searchParams.get('user_id') || undefined,
       session_id: searchParams.get('session_id') || undefined,
       schedule_id: searchParams.get('schedule_id') || undefined,
-      campus: searchParams.get('campus') as any,
-      status: searchParams.get('status') as any,
+      campus: searchParams.get('campus') as '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部' | null,
+      status: searchParams.get('status') as 'CONFIRMED' | 'WAITLISTED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW' | null,
       date_from: searchParams.get('date_from') || undefined,
       date_to: searchParams.get('date_to') || undefined,
-      sort_by: searchParams.get('sort_by') as any || 'enrollment_date',
-      sort_order: searchParams.get('sort_order') as any || 'desc'
+      sort_by: (searchParams.get('sort_by') as 'enrollment_date' | 'session_date' | 'status') || 'enrollment_date',
+      sort_order: (searchParams.get('sort_order') as 'asc' | 'desc') || 'desc'
     }
     
     // TODO: Implement enrollment listing with Supabase

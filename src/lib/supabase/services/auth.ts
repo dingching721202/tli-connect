@@ -2,8 +2,7 @@ import { BaseSupabaseService } from './base'
 import { User, AuthSession, UserRole } from '@/types'
 import { Database } from '@/types/unified/database'
 
-type SupabaseUser = Database['public']['Tables']['users']['Row']
-type SupabaseUserUpdate = Database['public']['Tables']['users']['Update']
+// type SupabaseUser = Database['public']['Tables']['users']['Row']
 type SupabaseUserInsert = Database['public']['Tables']['users']['Insert']
 
 export class AuthService extends BaseSupabaseService {
@@ -47,7 +46,7 @@ export class AuthService extends BaseSupabaseService {
         phone: phone || null,
         membership_status: 'non_member',
         account_status: 'ACTIVE',
-        campus: campus as any
+        campus: campus as '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部'
       }
 
       const { error: profileError } = await this.client
@@ -81,7 +80,7 @@ export class AuthService extends BaseSupabaseService {
         authData.user.id,
         `User registered: ${name} (${email})`,
         { email, name, campus },
-        campus as any
+        campus as '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部'
       )
 
       return {
@@ -217,9 +216,9 @@ export class AuthService extends BaseSupabaseService {
         email: userData.email,
         phone: userData.phone || undefined,
         roles: roles.length > 0 ? roles : ['STUDENT'],
-        membership_status: userData.membership_status as any,
-        account_status: userData.account_status as any,
-        campus: userData.campus as any,
+        membership_status: userData.membership_status as 'non_member' | 'individual' | 'corporate',
+        account_status: userData.account_status as 'ACTIVE' | 'SUSPENDED' | 'CANCELLED',
+        campus: userData.campus as '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部',
         avatar_url: userData.avatar_url || undefined,
         created_at: userData.created_at,
         updated_at: userData.updated_at || undefined
@@ -238,7 +237,7 @@ export class AuthService extends BaseSupabaseService {
       const userUpdate: SupabaseUserUpdate = {
         name: updates.name,
         phone: updates.phone || null,
-        campus: updates.campus as any,
+        campus: updates.campus as '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部' | undefined,
         avatar_url: updates.avatar_url || null,
         updated_at: new Date().toISOString()
       }
@@ -310,7 +309,7 @@ export class AuthService extends BaseSupabaseService {
       // Add new roles
       const roleInserts = roles.map(role => ({
         user_id: userId,
-        role: role as any,
+        role: role as 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN',
         granted_by: adminId,
         is_active: true
       }))
@@ -441,7 +440,7 @@ export class AuthService extends BaseSupabaseService {
       // Transform data to match expected format
       const usersWithRoles = (users || []).map(user => ({
         ...user,
-        roles: user.user_roles?.map((ur: any) => ur.role) || ['STUDENT']
+        roles: user.user_roles?.map((ur: { role: string }) => ur.role) || ['STUDENT']
       }))
 
       return { success: true, data: usersWithRoles }
@@ -494,9 +493,9 @@ export class AuthService extends BaseSupabaseService {
         email: userData.email,
         name: userData.name,
         phone: userData.phone || null,
-        membership_status: userData.membership_status as any || 'non_member',
+        membership_status: (userData.membership_status as 'non_member' | 'individual' | 'corporate') || 'non_member',
         account_status: 'ACTIVE',
-        campus: userData.campus as any || '羅斯福校'
+        campus: (userData.campus as '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部') || '羅斯福校'
       }
 
       const { error: profileError } = await this.client
@@ -511,7 +510,7 @@ export class AuthService extends BaseSupabaseService {
       // Assign roles
       const roleInserts = userData.roles.map(role => ({
         user_id: authData.user.id,
-        role: role as any,
+        role: role as 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN',
         granted_by: adminId,
         is_active: true
       }))

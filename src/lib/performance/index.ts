@@ -60,7 +60,7 @@ export class PerformanceMonitor {
    * 獲取所有指標統計
    */
   static getAllStats() {
-    const result: Record<string, any> = {};
+    const result: Record<string, ReturnType<typeof PerformanceMonitor.getStats>> = {};
     for (const key of this.metrics.keys()) {
       result[key] = this.getStats(key);
     }
@@ -83,10 +83,10 @@ export class PerformanceMonitor {
  * 效能測量裝飾器
  */
 export function measurePerformance(metricKey: string) {
-  return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
+  return function (target: unknown, propertyName: string, descriptor: PropertyDescriptor) {
     const method = descriptor.value;
 
-    descriptor.value = async function (...args: any[]) {
+    descriptor.value = async function (...args: unknown[]) {
       const startTime = performance.now();
       
       try {

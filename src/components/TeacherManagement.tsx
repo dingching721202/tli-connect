@@ -139,7 +139,7 @@ const TeacherManagement: React.FC = () => {
   };
 
 
-  const handleAddTeacher = () => {
+  const handleAddTeacher = async () => {
     // Validate form
     const errors: string[] = [];
     if (!newTeacher.name.trim()) errors.push('姓名');
@@ -199,7 +199,7 @@ const TeacherManagement: React.FC = () => {
     alert('教師新增成功！');
   };
 
-  const handleDeleteTeacher = (teacherId: number) => {
+  const handleDeleteTeacher = async (teacherId: number) => {
     const teacher = await teacherService.getTeacherById(teacherId);
     if (!teacher) return;
 
@@ -220,7 +220,7 @@ const TeacherManagement: React.FC = () => {
     setIsEditing(true);
   };
 
-  const handleSaveTeacher = () => {
+  const handleSaveTeacher = async () => {
     if (!editingTeacher) return;
 
     const updated = await teacherService.updateTeacher(editingTeacher.id, editingTeacher);

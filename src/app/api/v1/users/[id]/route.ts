@@ -7,7 +7,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const userId = params.id
+    const _userId = params.id
     
     // TODO: Implement user retrieval with Supabase
     // - Fetch user from core_users
@@ -57,7 +57,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const userId = params.id
+    const _userId = params.id
     const body: UpdateUserRequest = await request.json()
     
     // TODO: Implement user update with Supabase
@@ -109,7 +109,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const userId = params.id
+    const _userId = params.id
     
     // TODO: Implement user deletion with Supabase
     // - Soft delete (set is_active = false) or hard delete

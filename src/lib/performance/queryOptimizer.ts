@@ -11,7 +11,7 @@ interface CacheEntry<T> {
 }
 
 class QueryOptimizer {
-  private cache = new Map<string, CacheEntry<any>>();
+  private cache = new Map<string, CacheEntry<unknown>>();
   private readonly DEFAULT_CACHE_TIME = 5 * 60 * 1000; // 5 minutes
 
   /**

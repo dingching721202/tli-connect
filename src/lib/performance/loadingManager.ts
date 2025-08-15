@@ -9,7 +9,7 @@ import { useState, useCallback, useRef } from 'react';
 interface LoadingState {
   isLoading: boolean;
   error: string | null;
-  data: any;
+  data: unknown;
 }
 
 interface LoadingOptions {

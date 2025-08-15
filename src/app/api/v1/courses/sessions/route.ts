@@ -11,12 +11,12 @@ export async function GET(request: NextRequest) {
       limit: parseInt(searchParams.get('limit') || '20'),
       schedule_id: searchParams.get('schedule_id') || undefined,
       teacher_id: searchParams.get('teacher_id') || undefined,
-      campus: searchParams.get('campus') as any,
-      status: searchParams.get('status') as any,
+      campus: searchParams.get('campus') as '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部' | null,
+      status: searchParams.get('status') as 'SCHEDULED' | 'OPEN' | 'FULL' | 'CANCELLED' | 'COMPLETED' | null,
       date_from: searchParams.get('date_from') || undefined,
       date_to: searchParams.get('date_to') || undefined,
-      sort_by: searchParams.get('sort_by') as any || 'session_date',
-      sort_order: searchParams.get('sort_order') as any || 'asc'
+      sort_by: (searchParams.get('sort_by') as 'session_date' | 'start_time' | 'campus' | 'status') || 'session_date',
+      sort_order: (searchParams.get('sort_order') as 'asc' | 'desc') || 'asc'
     }
     
     // TODO: Implement course session listing with Supabase

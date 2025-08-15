@@ -7,8 +7,8 @@ export async function POST(
   { params }: { params: { id: string } }
 ) {
   try {
-    const membershipId = params.id
-    const body: ActivateMembershipRequest = await request.json()
+    const _membershipId = params.id
+    const _body: ActivateMembershipRequest = await request.json()
     
     // TODO: Implement membership activation with Supabase
     // - Verify membership exists and is in PURCHASED status

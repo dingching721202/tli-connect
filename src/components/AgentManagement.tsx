@@ -181,7 +181,7 @@ const AgentManagement: React.FC = () => {
 
   // 代理數據 - 從統一服務動態加載
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   // 加載代理數據
   const loadAgents = async () => {
@@ -202,10 +202,10 @@ const AgentManagement: React.FC = () => {
   }, []);
 
   // 銷售記錄數據 - 從統一服務加載
-  const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
+  const [, setSalesRecords] = useState<SalesRecord[]>([]);
 
   // 加載銷售記錄
-  const loadSalesRecords = async () => {
+  const _loadSalesRecords = async () => {
     try {
       // TODO: 使用 agentService 加載銷售記錄
       // const records = await agentService.getAllSalesRecords();
@@ -216,8 +216,39 @@ const AgentManagement: React.FC = () => {
     }
   };
 
-  // Mock sales records - 從統一服務加載
-  const [mockSalesRecords] = useState<SalesRecord[]>([]);
+  // Mock sales records - 將在後面定義
+  const [_mockAgentDetail] = useState({
+      agentType: 'teacher',
+      roleId: 'teacher-1',
+      roleName: '資深代理',
+      rolePercentage: 15,
+      agentCode: 'AGT001',
+      referralLink: 'https://tliconnect.com/ref/AGT001',
+      isCompany: false,
+      companyName: '',
+      contactPerson: '',
+      bankAccount: '123-456-789012',
+      taxId: '',
+      address: '台北市大安區信義路四段1號',
+      joinDate: '2024-01-15',
+      status: 'active',
+      totalSales: 156800,
+      monthSales: 48600,
+      totalCommission: 23520,
+      monthCommission: 7290,
+      salesCount: 12,
+      monthSalesCount: 4,
+      lastSaleDate: '2025-01-18',
+      notes: '表現優異的代理老師',
+      hasSuccessfulReferral: true
+    });
+  
+  const [_mockAgentList] = useState([
+    {
+      id: 1,
+      name: '張代理',
+      email: 'agent1@example.com',
+      phone: '0912-345-678',
       agentType: 'teacher',
       roleId: 'teacher-1',
       roleName: '資深代理',

@@ -294,7 +294,7 @@ class UnifiedCourseService {
   /**
    * Get filtered bookable sessions
    */
-  async getFilteredBookableSessions(filters: any[]) {
+  async getFilteredBookableSessions(filters: Array<{ key: string; value: unknown; operator?: string }>) {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase filtered bookable sessions query
@@ -311,7 +311,7 @@ class UnifiedCourseService {
   /**
    * Get sessions by date
    */
-  async getSessionsByDate(date: string, filters: any[] = []) {
+  async getSessionsByDate(date: string, filters: Array<{ key: string; value: unknown; operator?: string }> = []) {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase sessions by date query
@@ -462,13 +462,13 @@ class UnifiedCourseService {
     return getAllBookableSessions()
   }
 
-  private async legacyGetFilteredBookableSessions(filters: any[]) {
+  private async legacyGetFilteredBookableSessions(filters: Array<{ key: string; value: unknown; operator?: string }>) {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(150)
     return getFilteredBookableSessions(filters)
   }
 
-  private async legacyGetSessionsByDate(date: string, filters: any[] = []) {
+  private async legacyGetSessionsByDate(date: string, filters: Array<{ key: string; value: unknown; operator?: string }> = []) {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(100)
     return getSessionsByDate(date, filters)

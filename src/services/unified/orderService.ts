@@ -7,7 +7,7 @@
  * - Backwards compatibility with existing API
  */
 
-import { ApiResponse } from '@/types'
+import { ApiResponse, Order } from '@/types'
 
 class UnifiedOrderService {
   private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode for Phase 3.4
@@ -41,7 +41,7 @@ class UnifiedOrderService {
     amount: number
     payment_method?: string
     status?: 'pending' | 'completed' | 'failed'
-  }): Promise<ApiResponse<any>> {
+  }): Promise<ApiResponse<Order>> {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase order creation
@@ -101,7 +101,7 @@ class UnifiedOrderService {
   /**
    * Update order status
    */
-  async updateOrderStatus(orderId: number, status: 'pending' | 'completed' | 'failed'): Promise<ApiResponse<any>> {
+  async updateOrderStatus(orderId: number, status: 'pending' | 'completed' | 'failed'): Promise<ApiResponse<Order>> {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase order status update
@@ -145,7 +145,7 @@ class UnifiedOrderService {
     amount: number
     payment_method?: string
     status?: 'pending' | 'completed' | 'failed'
-  }): Promise<ApiResponse<any>> {
+  }): Promise<ApiResponse<Order>> {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(300)
 
@@ -184,7 +184,7 @@ class UnifiedOrderService {
 
     try {
       const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-      return orders.find((order: any) => order.id === orderId) || null
+      return orders.find((order: Order) => order.id === orderId) || null
     } catch (error) {
       console.error('獲取訂單失敗:', error)
       return null
@@ -197,20 +197,20 @@ class UnifiedOrderService {
 
     try {
       const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-      return orders.filter((order: any) => order.user_id === userId)
+      return orders.filter((order: Order) => order.user_id === userId)
     } catch (error) {
       console.error('獲取用戶訂單失敗:', error)
       return []
     }
   }
 
-  private async legacyUpdateOrderStatus(orderId: number, status: 'pending' | 'completed' | 'failed'): Promise<ApiResponse<any>> {
+  private async legacyUpdateOrderStatus(orderId: number, status: 'pending' | 'completed' | 'failed'): Promise<ApiResponse<Order>> {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(300)
 
     try {
       const orders = JSON.parse(localStorage.getItem('orders') || '[]')
-      const orderIndex = orders.findIndex((order: any) => order.id === orderId)
+      const orderIndex = orders.findIndex((order: Order) => order.id === orderId)
       
       if (orderIndex === -1) {
         return { success: false, error: 'Order not found' }

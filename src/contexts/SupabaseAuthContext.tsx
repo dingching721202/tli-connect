@@ -219,8 +219,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message || 'Login failed' };
+    } catch (error: unknown) {
+      return { success: false, error: error instanceof Error ? error.message : 'Login failed' };
     } finally {
       setLoading(false);
     }
@@ -266,8 +266,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message || 'Registration failed' };
+    } catch (error: unknown) {
+      return { success: false, error: error instanceof Error ? error.message : 'Registration failed' };
     } finally {
       setLoading(false);
     }
@@ -315,8 +315,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setUser(prev => prev ? { ...prev, ...data } : null);
       
       return { success: true };
-    } catch (error: any) {
-      return { success: false, error: error.message || 'Update failed' };
+    } catch (error: unknown) {
+      return { success: false, error: error instanceof Error ? error.message : 'Update failed' };
     }
   };
 
