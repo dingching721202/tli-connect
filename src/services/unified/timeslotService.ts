@@ -239,7 +239,7 @@ class UnifiedTimeslotService {
         } else {
           results.failed.push(timeslotId)
         }
-      } catch (error) {
+      } catch {
         results.failed.push(timeslotId)
       }
     }

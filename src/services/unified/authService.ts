@@ -203,8 +203,7 @@ class UnifiedAuthService {
     // Legacy mode implementation
     return this.legacyUpdateUserStatus(
       typeof userId === 'string' ? parseInt(userId) : userId,
-      status,
-      typeof adminId === 'string' ? parseInt(adminId) : adminId
+      status
     )
   }
 
@@ -280,13 +279,13 @@ class UnifiedAuthService {
     }
 
     // Legacy mode implementation
-    return this.legacyCreateUser(userData, typeof adminId === 'string' ? parseInt(adminId) : adminId)
+    return this.legacyCreateUser(userData)
   }
 
   /**
    * Update user profile
    */
-  async updateUser(userData: UpdateUserRequest, adminId: number | string) {
+  async updateUser(userData: UpdateUserRequest) {
     if (!this.useLegacyMode) {
       try {
         const userIdStr = typeof userData.id === 'number' ? userData.id.toString() : userData.id
@@ -311,7 +310,7 @@ class UnifiedAuthService {
     }
 
     // Legacy mode implementation
-    return this.legacyUpdateUser(userData, typeof adminId === 'string' ? parseInt(adminId) : adminId)
+    return this.legacyUpdateUser(userData)
   }
 
   /**
@@ -552,8 +551,7 @@ class UnifiedAuthService {
 
   private async legacyUpdateUserStatus(
     userId: number, 
-    status: 'non_member' | 'activated' | 'expired' | 'test', 
-    adminId: number
+    status: 'non_member' | 'activated' | 'expired' | 'test'
   ) {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(300)
@@ -622,8 +620,7 @@ class UnifiedAuthService {
       roles: string[]
       membership_status?: string
       campus?: string
-    },
-    adminId: number
+    }
   ) {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(500)
@@ -668,7 +665,7 @@ class UnifiedAuthService {
     }
   }
 
-  private async legacyUpdateUser(userData: UpdateUserRequest, adminId: number) {
+  private async legacyUpdateUser(userData: UpdateUserRequest) {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(300)
     

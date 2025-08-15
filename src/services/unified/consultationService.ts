@@ -368,7 +368,7 @@ class UnifiedConsultationService {
     if (index === -1) return null
 
     const consultation = this.consultations[index]
-    const { id, status, notes, ...updateData } = data
+    const { status, notes, ...updateData } = data
 
     // Update status and add to history
     if (status && status !== consultation.status) {

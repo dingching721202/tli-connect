@@ -11,7 +11,6 @@ import { membershipsService as supabaseMembershipsService } from '@/lib/supabase
 import { Membership, ApiResponse } from '@/types'
 import { memberCardStore } from '@/lib/memberCardStore'
 import { queryOptimizer } from '@/lib/performance/queryOptimizer'
-import { loadingManager } from '@/lib/performance/loadingManager'
 
 class UnifiedMembershipService {
   private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED

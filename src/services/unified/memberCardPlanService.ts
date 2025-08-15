@@ -9,7 +9,7 @@
 
 import { MemberCardPlan, memberCardPlanStore } from '@/lib/memberCardPlanStore'
 import { MemberCard, memberCards } from '@/data/member_cards'
-import { getCourseTemplates, getPublishedCourseTemplates } from '@/data/courseTemplateUtils'
+import { getCourseTemplates } from '@/data/courseTemplateUtils'
 
 class UnifiedMemberCardPlanService {
   private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode

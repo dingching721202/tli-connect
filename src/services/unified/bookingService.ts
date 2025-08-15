@@ -466,15 +466,12 @@ class UnifiedBookingService {
       return Number(a.id) === Number(appointmentId) && Number(a.user_id) === Number(userId)
     })
     
-    let isFromLocalStorage = false
-    
     if (!appointment && typeof localStorage !== 'undefined') {
       try {
         const storedAppointments = JSON.parse(localStorage.getItem('classAppointments') || '[]') as ClassAppointment[]
         appointment = storedAppointments.find((a: ClassAppointment) => {
           return Number(a.id) === Number(appointmentId) && Number(a.user_id) === Number(userId)
         })
-        isFromLocalStorage = true
       } catch (error) {
         console.error('讀取預約資料失敗:', error)
       }

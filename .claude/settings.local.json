@@ -52,7 +52,8 @@
       "Bash(do echo \"=== Fixing $file ===\")",
       "mcp__supabase__get_project",
       "mcp__supabase__search_docs",
-      "WebFetch(domain:supabase.com)"
+      "WebFetch(domain:supabase.com)",
+      "Bash(rg:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"

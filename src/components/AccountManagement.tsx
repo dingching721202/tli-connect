@@ -164,7 +164,7 @@ const AccountManagement = () => {
     
     try {
       // 先更新用戶基本資訊
-      const userResponse = await authService.updateUser(selectedUser, currentUser.id);
+      const userResponse = await authService.updateUser(selectedUser);
       
       if (userResponse.success) {
         // 更新用戶角色

@@ -14,7 +14,6 @@ import {
   getAllReferralCodes,
   getReferralCodeById,
   getReferralCodeByCode,
-  getReferralCodesByReferrer,
   getActiveReferralCodes,
   createReferralCode,
   validateReferralCode,
