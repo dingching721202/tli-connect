@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Noto_Sans_TC, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ClientErrorBoundary } from "@/components/ClientErrorBoundary";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -57,9 +58,11 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${notoSansTC.variable} ${plusJakartaSans.variable} antialiased`}
       >
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <ClientErrorBoundary>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </ClientErrorBoundary>
       </body>
     </html>
   );

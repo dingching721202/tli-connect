@@ -4,9 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiPlus, FiEdit2, FiTrash2, FiEye, FiEyeOff, FiSave, FiX, FiStar, FiUsers, FiCalendar, FiClock, FiUpload, FiDownload, FiBook, FiSettings } from 'react-icons/fi';
 import SafeIcon from '@/components/common/SafeIcon';
-import { MemberCard } from '@/data/member_cards';
-import { getCourseTemplates } from '@/data/courseTemplateUtils';
-import { getPublishedCourseSchedules } from '@/data/courseScheduleUtils';
+import { memberCardPlanService, MemberCard } from '@/services/unified';
 
 interface MemberCardPlan {
   id: number;
@@ -135,47 +133,8 @@ const MemberCardPlanManagement: React.FC = () => {
 
   const loadCourses = useCallback(async () => {
     try {
-      // 從課程模組獲取真實的課程資料
-      const templates = getCourseTemplates();
-      const schedules = getPublishedCourseSchedules();
-      
-      console.log('📚 載入課程模組資料:', { 
-        templates: templates.length, 
-        schedules: schedules.length 
-      });
-      
-      const coursesData: CourseData[] = [];
-      
-      // 1. 優先處理有排程的課程模板（這些是實際可預約的課程）
-      schedules.forEach(schedule => {
-        const template = templates.find(t => t.id === schedule.templateId);
-        if (template && template.status === 'published') {
-          coursesData.push({
-            id: `${template.id}_${schedule.id}`, // 組合ID確保唯一性
-            title: schedule.seriesName ? `${template.title} - ${schedule.seriesName}` : template.title,
-            language: getLanguageFromCategory(template.category),
-            level: template.level,
-            category: template.category,
-            description: template.description
-          });
-        }
-      });
-      
-      // 2. 處理沒有排程但已發布的模板（作為備選課程）
-      const publishedTemplates = templates.filter(t => t.status === 'published');
-      publishedTemplates.forEach(template => {
-        const hasSchedule = schedules.some(s => s.templateId === template.id);
-        if (!hasSchedule) {
-          coursesData.push({
-            id: template.id,
-            title: template.title,
-            language: getLanguageFromCategory(template.category),
-            level: template.level,
-            category: template.category,
-            description: template.description
-          });
-        }
-      });
+      // 從統一課程服務獲取真實的課程資料
+      const coursesData = await memberCardPlanService.getAvailableCourses();
       
       console.log('✅ 成功載入課程資料:', coursesData.length, '個課程');
       setCourses(coursesData);

@@ -108,48 +108,4 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// POST /api/v1/enrollments/batch - Batch enrollment creation
-export async function POST(request: NextRequest) {
-  try {
-    const body: BatchEnrollRequest = await request.json()
-    
-    // TODO: Implement batch enrollment with Supabase
-    // - Validate all users and sessions
-    // - Check capacity constraints
-    // - Check for duplicate enrollments
-    // - Use database transactions for consistency
-    // - Create multiple enrollment records
-    // - Update session capacities
-    // - Log activities
-    // - Apply RLS policies
-    // - Send notifications
-    
-    const response: ApiResponse<BatchEnrollResponse> = {
-      success: true,
-      data: {
-        created_enrollments: [],
-        failed_enrollments: [],
-        summary: {
-          total_requested: body.enrollments.length,
-          successful: 0,
-          failed: 0
-        }
-      },
-      message: 'Batch enrollment processed successfully'
-    }
-    
-    return NextResponse.json(response, { status: 201 })
-  } catch (error) {
-    const errorResponse: ApiResponse<null> = {
-      success: false,
-      data: null,
-      error: {
-        code: 'ENROLLMENT_003',
-        message: 'Failed to process batch enrollment',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }
-    }
-    
-    return NextResponse.json(errorResponse, { status: 400 })
-  }
-}
+// TODO: Batch enrollment endpoint should be moved to /api/v1/enrollments/batch/route.ts

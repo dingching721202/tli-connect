@@ -14,6 +14,7 @@ import {
   STATUS_CONFIG,
   FilterState 
 } from '@/types/consultation';
+import { consultationService } from '@/services/unified';
 
 const {
   FiUsers, FiBriefcase, FiTrash2, FiSearch, FiDownload, FiEdit,

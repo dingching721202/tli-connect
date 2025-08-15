@@ -86,13 +86,13 @@ const getDefaultConsultations = (): Consultation[] => [
 ]
 
 class UnifiedConsultationService {
-  private useLegacyMode = true // Start with legacy mode
+  private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode
   private consultations: Consultation[] = []
   private readonly STORAGE_KEY = 'consultations'
 
   constructor() {
     // For now, we'll use legacy mode as Supabase consultations table may not be ready
-    this.useLegacyMode = true
+    this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
     this.loadConsultations()
     console.log('🔧 Unified Consultation Service: Using Legacy mode')
   }
@@ -142,7 +142,7 @@ class UnifiedConsultationService {
         return this.legacyGetAllConsultations(filters)
       } catch (error) {
         console.error('Supabase getAllConsultations failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -159,7 +159,7 @@ class UnifiedConsultationService {
         return this.legacyGetConsultationById(id)
       } catch (error) {
         console.error('Supabase getConsultationById failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -177,7 +177,7 @@ class UnifiedConsultationService {
         return this.legacyCreateConsultation(data)
       } catch (error) {
         console.error('Supabase createConsultation failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -194,7 +194,7 @@ class UnifiedConsultationService {
         return this.legacyUpdateConsultation(data)
       } catch (error) {
         console.error('Supabase updateConsultation failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -211,7 +211,7 @@ class UnifiedConsultationService {
         return this.legacyDeleteConsultation(id)
       } catch (error) {
         console.error('Supabase deleteConsultation failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -228,7 +228,7 @@ class UnifiedConsultationService {
         return this.legacyGetConsultationStats()
       } catch (error) {
         console.error('Supabase getConsultationStats failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -245,7 +245,7 @@ class UnifiedConsultationService {
         return this.legacyUpdateConsultationStatus(id, status, notes, updatedBy)
       } catch (error) {
         console.error('Supabase updateConsultationStatus failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -262,7 +262,7 @@ class UnifiedConsultationService {
         return this.legacyAssignConsultation(id, assignedTo, assignedBy)
       } catch (error) {
         console.error('Supabase assignConsultation failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 

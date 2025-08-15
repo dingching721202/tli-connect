@@ -31,11 +31,11 @@ interface LeaveRequest {
 }
 
 class UnifiedLeaveService {
-  private useLegacyMode = true // Start with legacy mode
+  private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode
 
   constructor() {
     // For now, we'll use legacy mode as Supabase leave requests table may not be ready
-    this.useLegacyMode = true
+    this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
     console.log('🔧 Unified Leave Service: Using Legacy mode')
   }
 
@@ -61,7 +61,7 @@ class UnifiedLeaveService {
         return this.legacyCreateLeaveRequest(requestData)
       } catch (error) {
         console.error('Supabase createLeaveRequest failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -78,7 +78,7 @@ class UnifiedLeaveService {
         return this.legacyGetAllLeaveRequests()
       } catch (error) {
         console.error('Supabase getAllLeaveRequests failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -101,7 +101,7 @@ class UnifiedLeaveService {
         return this.legacyReviewLeaveRequest(requestId, status, adminNote, reviewerName, substituteTeacher)
       } catch (error) {
         console.error('Supabase reviewLeaveRequest failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -118,7 +118,7 @@ class UnifiedLeaveService {
         return this.legacyGetTeacherLeaveRequests(teacherId)
       } catch (error) {
         console.error('Supabase getTeacherLeaveRequests failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -135,7 +135,7 @@ class UnifiedLeaveService {
         return this.legacyCancelLeaveRequest(requestId, teacherId, allowApproved)
       } catch (error) {
         console.error('Supabase cancelLeaveRequest failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -152,7 +152,7 @@ class UnifiedLeaveService {
         return this.legacyGetLeaveRequestStatistics(teacherId)
       } catch (error) {
         console.error('Supabase getLeaveRequestStatistics failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 

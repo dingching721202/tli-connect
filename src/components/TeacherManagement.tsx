@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import * as FiIcons from 'react-icons/fi';
 import SafeIcon from './common/SafeIcon';
-import { teacherDataService, Teacher } from '@/data/teachers';
+import { teacherService, Teacher } from '@/services/unified';
 
 const {
   FiUsers, FiUserPlus, FiTrash2, FiSearch, FiDownload, FiX, FiEye,
@@ -100,8 +100,13 @@ const TeacherManagement: React.FC = () => {
     };
   }, []);
 
-  const loadTeachers = () => {
-    setTeachers(teacherDataService.getAllTeachers());
+  const loadTeachers = async () => {
+    try {
+      const allTeachers = await teacherService.getAllTeachers();
+      setTeachers(allTeachers);
+    } catch (error) {
+      console.error('載入教師資料失敗:', error);
+    }
   };
 
   const filteredTeachers = teachers.filter(teacher => {
@@ -149,13 +154,14 @@ const TeacherManagement: React.FC = () => {
     }
 
     // Check if email exists
-    if (teacherDataService.getTeacherByEmail(newTeacher.email)) {
+    const existingTeacher = await teacherService.getTeacherByEmail(newTeacher.email);
+    if (existingTeacher) {
       alert('此電子郵件已被使用');
       return;
     }
 
     // Create new teacher using service
-    teacherDataService.addTeacher({
+    await teacherService.addTeacher({
       name: newTeacher.name,
       email: newTeacher.email,
       phone: newTeacher.phone,
@@ -194,11 +200,12 @@ const TeacherManagement: React.FC = () => {
   };
 
   const handleDeleteTeacher = (teacherId: number) => {
-    const teacher = teacherDataService.getTeacherById(teacherId);
+    const teacher = await teacherService.getTeacherById(teacherId);
     if (!teacher) return;
 
     if (confirm(`確定要刪除教師「${teacher.name}」嗎？此操作無法復原。`)) {
-      if (teacherDataService.deleteTeacher(teacherId)) {
+      const success = await teacherService.deleteTeacher(teacherId);
+      if (success) {
         loadTeachers();
         alert('教師已刪除');
       } else {
@@ -216,7 +223,7 @@ const TeacherManagement: React.FC = () => {
   const handleSaveTeacher = () => {
     if (!editingTeacher) return;
 
-    const updated = teacherDataService.updateTeacher(editingTeacher.id, editingTeacher);
+    const updated = await teacherService.updateTeacher(editingTeacher.id, editingTeacher);
     if (updated) {
       setSelectedTeacher(updated);
       setIsEditing(false);

@@ -1,21 +1,18 @@
 import { memberCardPlans, MemberCardPlan } from '@/data/member_card_plans';
-import { promises as fs } from 'fs';
-import path from 'path';
 
 // localStorage 持久化儲存
 class MemberCardPlanStore {
   private static instance: MemberCardPlanStore;
   private plans: MemberCardPlan[] = [];
   private readonly STORAGE_KEY = 'memberCardPlans';
-  private readonly FILE_PATH = path.join(process.cwd(), 'data', 'memberCardPlans.json');
   private isServerSide = typeof window === 'undefined';
 
   private constructor() {
+    // 統一使用記憶體資料，避免 fs 模組問題
+    this.plans = [...memberCardPlans];
+    
     if (!this.isServerSide) {
       this.loadFromStorage();
-    } else {
-      // 服務端使用預設資料，在需要時再從檔案載入
-      this.plans = [...memberCardPlans];
     }
   }
 

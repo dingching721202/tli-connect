@@ -14,12 +14,12 @@ import { SalesRecord } from '@/types/sales'
 import { agents as agentsData } from '@/data/agents'
 
 class UnifiedAgentService {
-  private useLegacyMode = true // Start with legacy mode
+  private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode
   private agents: Agent[] = [...agentsData]
 
   constructor() {
     // For now, we'll use legacy mode as Supabase agents table may not be ready
-    this.useLegacyMode = true
+    this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
     console.log('🔧 Unified Agent Service: Using Legacy mode')
   }
 
@@ -35,7 +35,7 @@ class UnifiedAgentService {
         return this.legacyGetAllAgents()
       } catch (error) {
         console.error('Supabase getAllAgents failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -52,7 +52,7 @@ class UnifiedAgentService {
         return this.legacyGetAgentByUserId(userId)
       } catch (error) {
         console.error('Supabase getAgentByUserId failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -69,7 +69,7 @@ class UnifiedAgentService {
         return this.legacyGetAgentById(agentId)
       } catch (error) {
         console.error('Supabase getAgentById failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -86,7 +86,7 @@ class UnifiedAgentService {
         return this.legacyGetAgentByCode(agentCode)
       } catch (error) {
         console.error('Supabase getAgentByCode failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -103,7 +103,7 @@ class UnifiedAgentService {
         return this.legacyGetAgentSalesRecords(agentUserId)
       } catch (error) {
         console.error('Supabase getAgentSalesRecords failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -120,7 +120,7 @@ class UnifiedAgentService {
         return this.legacyUpdateAgent(agentId, updateData)
       } catch (error) {
         console.error('Supabase updateAgent failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -137,7 +137,7 @@ class UnifiedAgentService {
         return this.legacyIsUserAgent(userId)
       } catch (error) {
         console.error('Supabase isUserAgent failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -154,7 +154,7 @@ class UnifiedAgentService {
         return this.legacyCreateAgent(agentData)
       } catch (error) {
         console.error('Supabase createAgent failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -171,7 +171,7 @@ class UnifiedAgentService {
         return this.legacyGetAgentStatistics(agentId)
       } catch (error) {
         console.error('Supabase getAgentStatistics failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -188,7 +188,7 @@ class UnifiedAgentService {
         return this.legacyGetAgentsByStatus(status)
       } catch (error) {
         console.error('Supabase getAgentsByStatus failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -205,7 +205,7 @@ class UnifiedAgentService {
         return this.legacyUpdateAgentPerformance(agentId, saleAmount)
       } catch (error) {
         console.error('Supabase updateAgentPerformance failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 

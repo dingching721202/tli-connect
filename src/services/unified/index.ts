@@ -28,8 +28,22 @@ export { orderService } from './orderService'
 export { timeslotService } from './timeslotService'
 export { staffService } from './staffService'
 
-// Re-export TimeslotWithBookings type for compatibility
+// Phase 3.5 services - Complete Unification! 🎯
+export { teacherService } from './teacherService'
+export { courseService } from './courseService'
+export { memberCardPlanService } from './memberCardPlanService'
+export { consultationService } from './consultationService'
+export { systemSettingsService } from './systemSettingsService'
+export { referralService } from './referralService'
+
+// Re-export types for compatibility
 export type { TimeslotWithBookings } from './timeslotService'
+export type { Teacher } from './teacherService'
+export type { Course, CourseTemplate, CourseSchedule } from './courseService'
+export type { MemberCardPlan, MemberCard } from './memberCardPlanService'
+export type { Consultation, ConsultationType, ConsultationStatus } from './consultationService'
+export type { SystemSettings } from './systemSettingsService'
+export type { ReferralCode, ReferralUsage, ReferralReward } from './referralService'
 
 /**
  * Service availability status for monitoring migration progress
@@ -101,6 +115,44 @@ export const serviceStatus = {
     supabaseIntegration: false, 
     legacyFallback: true,
     description: 'Unified service with legacy fallback (Supabase integration planned)'
+  },
+  
+  // Phase 3.5 - Complete Unification (🎯 NEW!)
+  teacherService: { 
+    status: 'unified', 
+    supabaseIntegration: false, 
+    legacyFallback: true,
+    description: 'Teacher management with legacy data (Supabase integration planned)'
+  },
+  courseService: { 
+    status: 'unified', 
+    supabaseIntegration: false, 
+    legacyFallback: true,
+    description: 'Course management with legacy utilities (Supabase integration planned)'
+  },
+  memberCardPlanService: { 
+    status: 'unified', 
+    supabaseIntegration: false, 
+    legacyFallback: true,
+    description: 'Member card plans with legacy store (Supabase integration planned)'
+  },
+  consultationService: { 
+    status: 'unified', 
+    supabaseIntegration: false, 
+    legacyFallback: true,
+    description: 'Consultation management with localStorage (Supabase integration planned)'
+  },
+  systemSettingsService: { 
+    status: 'unified', 
+    supabaseIntegration: false, 
+    legacyFallback: true,
+    description: 'System settings with localStorage (Supabase integration planned)'
+  },
+  referralService: { 
+    status: 'unified', 
+    supabaseIntegration: false, 
+    legacyFallback: true,
+    description: 'Referral system with legacy data (Supabase integration planned)'
   }
 } as const
 
@@ -121,7 +173,8 @@ export function getMigrationProgress() {
     phase3_1_complete: true,  // Core services (4/4 completed)
     phase3_2_complete: true,  // Corporate services (1/1 completed)
     phase3_3_complete: true,  // Auxiliary services (2/2 completed)
-    phase3_4_complete: true   // Remaining services (3/3 completed) ✅
+    phase3_4_complete: true,  // Remaining services (3/3 completed) ✅
+    phase3_5_complete: true   // Complete Unification (6/6 completed) 🎯
   }
 }
 
@@ -148,11 +201,12 @@ export function logMigrationStatus() {
 
 // Log current status on import (development only)
 if (process.env.NODE_ENV === 'development') {
-  console.log('🚀 Unified Services Phase 3 COMPLETE! 🎉', {
+  console.log('🎯 Unified Services Phase 3.5 COMPLETE! 100% UNIFIED! 🚀', {
     phase3_1_unified: ['authService', 'memberCardService', 'bookingService', 'dashboardService'],
     phase3_2_unified: ['corporateService'],
     phase3_3_unified: ['agentService', 'leaveService'],
-    phase3_4_unified: ['orderService', 'timeslotService', 'staffService'], // ✅ COMPLETED!
+    phase3_4_unified: ['orderService', 'timeslotService', 'staffService'],
+    phase3_5_unified: ['teacherService', 'courseService', 'memberCardPlanService', 'consultationService', 'systemSettingsService', 'referralService'], // 🎯 NEW!
     progress: getMigrationProgress()
   })
 }

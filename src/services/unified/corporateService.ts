@@ -14,11 +14,11 @@ import { Company } from '@/data/corporateData'
 import { CorporateSubscription } from '@/types/corporateSubscription'
 
 class UnifiedCorporateService {
-  private useLegacyMode = true // Start with legacy mode, will implement Supabase later
+  private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode, will implement Supabase later
 
   constructor() {
     // For now, we'll use legacy mode as Supabase tables may not be ready
-    this.useLegacyMode = true
+    this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
     console.log('🔧 Unified Corporate Service: Using Legacy mode')
   }
 
@@ -36,7 +36,7 @@ class UnifiedCorporateService {
         return this.legacyGetAllCompanies()
       } catch (error) {
         console.error('Supabase getAllCompanies failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -53,7 +53,7 @@ class UnifiedCorporateService {
         return this.legacyGetCompanyById(id)
       } catch (error) {
         console.error('Supabase getCompanyById failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -70,7 +70,7 @@ class UnifiedCorporateService {
         return this.legacyGetCompaniesByStatus(status)
       } catch (error) {
         console.error('Supabase getCompaniesByStatus failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -87,7 +87,7 @@ class UnifiedCorporateService {
         return this.legacyCreateCompany(companyData)
       } catch (error) {
         console.error('Supabase createCompany failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -104,7 +104,7 @@ class UnifiedCorporateService {
         return this.legacyUpdateCompany(id, updates)
       } catch (error) {
         console.error('Supabase updateCompany failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -121,7 +121,7 @@ class UnifiedCorporateService {
         return this.legacyDeleteCompany(id)
       } catch (error) {
         console.error('Supabase deleteCompany failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -138,7 +138,7 @@ class UnifiedCorporateService {
         return this.legacySearchCompanies(searchTerm)
       } catch (error) {
         console.error('Supabase searchCompanies failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -155,7 +155,7 @@ class UnifiedCorporateService {
         return this.legacyGetCompanyStatistics()
       } catch (error) {
         console.error('Supabase getCompanyStatistics failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -174,7 +174,7 @@ class UnifiedCorporateService {
         return this.legacyGetAllCorporateSubscriptions()
       } catch (error) {
         console.error('Supabase getAllCorporateSubscriptions failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -191,7 +191,7 @@ class UnifiedCorporateService {
         return this.legacyGetCorporateSubscriptionsByCompanyId(companyId)
       } catch (error) {
         console.error('Supabase getCorporateSubscriptionsByCompanyId failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -208,7 +208,7 @@ class UnifiedCorporateService {
         return this.legacyCreateCorporateSubscription(subscriptionData)
       } catch (error) {
         console.error('Supabase createCorporateSubscription failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -225,7 +225,7 @@ class UnifiedCorporateService {
         return this.legacyUpdateCorporateSubscription(id, updates)
       } catch (error) {
         console.error('Supabase updateCorporateSubscription failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -242,7 +242,7 @@ class UnifiedCorporateService {
         return this.legacyGetCorporateSubscriptionStatistics(companyId)
       } catch (error) {
         console.error('Supabase getCorporateSubscriptionStatistics failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -261,7 +261,7 @@ class UnifiedCorporateService {
         return this.legacyGetCorporateMembers(companyId)
       } catch (error) {
         console.error('Supabase getCorporateMembers failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -283,7 +283,7 @@ class UnifiedCorporateService {
         return this.legacyIssueCorporateMembership(data)
       } catch (error) {
         console.error('Supabase issueCorporateMembership failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -302,7 +302,7 @@ class UnifiedCorporateService {
         return this.legacyGetAllMembers()
       } catch (error) {
         console.error('Supabase getAllMembers failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -319,7 +319,7 @@ class UnifiedCorporateService {
         return this.legacyCreateMember(memberData)
       } catch (error) {
         console.error('Supabase createMember failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -336,7 +336,7 @@ class UnifiedCorporateService {
         return this.legacyGetMemberById(memberId)
       } catch (error) {
         console.error('Supabase getMemberById failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -353,7 +353,7 @@ class UnifiedCorporateService {
         return this.legacyUpdateMember(memberId, updates)
       } catch (error) {
         console.error('Supabase updateMember failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -370,7 +370,7 @@ class UnifiedCorporateService {
         return this.legacyDeleteMember(memberId)
       } catch (error) {
         console.error('Supabase deleteMember failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -387,7 +387,7 @@ class UnifiedCorporateService {
         return this.legacyActivateMemberCard(memberId)
       } catch (error) {
         console.error('Supabase activateMemberCard failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -404,7 +404,7 @@ class UnifiedCorporateService {
         return this.legacyGetLearningRecords(memberId)
       } catch (error) {
         console.error('Supabase getLearningRecords failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -421,7 +421,7 @@ class UnifiedCorporateService {
         return this.legacyGetReservationRecords(memberId)
       } catch (error) {
         console.error('Supabase getReservationRecords failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -438,7 +438,7 @@ class UnifiedCorporateService {
         return this.legacyRevokeCorporateMembership(companyId, userId)
       } catch (error) {
         console.error('Supabase revokeCorporateMembership failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 

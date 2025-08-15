@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     const pagination = {
       page: parseInt(searchParams.get('page') || '1'),
       limit: parseInt(searchParams.get('limit') || '20'),
-      orderBy: searchParams.get('sort_by') || 'created_at',
+      orderBy: searchParams.get('sort_by') || 'full_name',
       ascending: searchParams.get('sort_order') === 'asc'
     }
     

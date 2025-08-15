@@ -23,8 +23,9 @@ class UnifiedBookingService {
   private classAppointments: ClassAppointment[] = [...classAppointmentsData] as ClassAppointment[]
 
   constructor() {
-    // Check if Supabase is available and properly configured
-    this.checkSupabaseAvailability()
+    // Phase 4.3: Force Supabase mode activation
+    this.useLegacyMode = false
+    console.log('🚀 Unified Booking Service: Phase 4.3 - Supabase integration ACTIVE')
   }
 
   private async checkSupabaseAvailability() {
@@ -35,7 +36,7 @@ class UnifiedBookingService {
       console.log('🔧 Unified Booking Service: Using Supabase mode')
     } catch (error) {
       console.warn('⚠️ Supabase not available, falling back to legacy mode:', error)
-      this.useLegacyMode = true
+      this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
     }
   }
 
@@ -63,7 +64,7 @@ class UnifiedBookingService {
         return false
       } catch (error) {
         console.error('Supabase checkExistingBooking failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -162,7 +163,7 @@ class UnifiedBookingService {
         return { success: successBookings, failed: failedBookings }
       } catch (error) {
         console.error('Supabase batchBooking failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -215,7 +216,7 @@ class UnifiedBookingService {
         return { success: false, error: 'Failed to cancel booking' }
       } catch (error) {
         console.error('Supabase cancelBooking failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -252,7 +253,7 @@ class UnifiedBookingService {
         return { success: true, data: [] }
       } catch (error) {
         console.error('Supabase getAllBookings failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -284,7 +285,7 @@ class UnifiedBookingService {
         return []
       } catch (error) {
         console.error('Supabase getUserAppointments failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 

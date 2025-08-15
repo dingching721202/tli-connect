@@ -39,11 +39,11 @@ import {
 } from '@/data/courseBookingUtils'
 
 class UnifiedCourseService {
-  private useLegacyMode = true // Start with legacy mode
+  private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode
 
   constructor() {
     // For now, we'll use legacy mode as Supabase course tables may not be ready
-    this.useLegacyMode = true
+    this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
     console.log('🔧 Unified Course Service: Using Legacy mode')
   }
 
@@ -59,7 +59,7 @@ class UnifiedCourseService {
         return this.legacyGetCourseTemplates()
       } catch (error) {
         console.error('Supabase getCourseTemplates failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -76,7 +76,7 @@ class UnifiedCourseService {
         return this.legacyGetCourseTemplateById(id)
       } catch (error) {
         console.error('Supabase getCourseTemplateById failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -93,7 +93,7 @@ class UnifiedCourseService {
         return this.legacyCreateCourseTemplate(template)
       } catch (error) {
         console.error('Supabase createCourseTemplate failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -110,7 +110,7 @@ class UnifiedCourseService {
         return this.legacyUpdateCourseTemplate(id, updates)
       } catch (error) {
         console.error('Supabase updateCourseTemplate failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -127,7 +127,7 @@ class UnifiedCourseService {
         return this.legacyDeleteCourseTemplate(id)
       } catch (error) {
         console.error('Supabase deleteCourseTemplate failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -144,7 +144,7 @@ class UnifiedCourseService {
         return this.legacyDuplicateCourseTemplate(id)
       } catch (error) {
         console.error('Supabase duplicateCourseTemplate failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -161,7 +161,7 @@ class UnifiedCourseService {
         return this.legacyGetPublishedCourseTemplates()
       } catch (error) {
         console.error('Supabase getPublishedCourseTemplates failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -180,7 +180,7 @@ class UnifiedCourseService {
         return this.legacyGetCourseSchedules()
       } catch (error) {
         console.error('Supabase getCourseSchedules failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -197,7 +197,7 @@ class UnifiedCourseService {
         return this.legacyGetCourseScheduleById(id)
       } catch (error) {
         console.error('Supabase getCourseScheduleById failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -214,7 +214,7 @@ class UnifiedCourseService {
         return this.legacyCreateCourseSchedule(schedule)
       } catch (error) {
         console.error('Supabase createCourseSchedule failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -231,7 +231,7 @@ class UnifiedCourseService {
         return this.legacyUpdateCourseSchedule(id, updates)
       } catch (error) {
         console.error('Supabase updateCourseSchedule failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -248,7 +248,7 @@ class UnifiedCourseService {
         return this.legacyDeleteCourseSchedule(id)
       } catch (error) {
         console.error('Supabase deleteCourseSchedule failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -265,7 +265,7 @@ class UnifiedCourseService {
         return this.legacyGetPublishedCourseSchedules()
       } catch (error) {
         console.error('Supabase getPublishedCourseSchedules failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -284,7 +284,7 @@ class UnifiedCourseService {
         return this.legacyGetAllBookableSessions()
       } catch (error) {
         console.error('Supabase getAllBookableSessions failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -301,7 +301,7 @@ class UnifiedCourseService {
         return this.legacyGetFilteredBookableSessions(filters)
       } catch (error) {
         console.error('Supabase getFilteredBookableSessions failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -318,7 +318,7 @@ class UnifiedCourseService {
         return this.legacyGetSessionsByDate(date, filters)
       } catch (error) {
         console.error('Supabase getSessionsByDate failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -335,7 +335,7 @@ class UnifiedCourseService {
         return this.legacyBookSession(sessionId, userId)
       } catch (error) {
         console.error('Supabase bookSession failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -352,7 +352,7 @@ class UnifiedCourseService {
         return this.legacyCancelBooking(sessionId, userId)
       } catch (error) {
         console.error('Supabase cancelBooking failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -369,7 +369,7 @@ class UnifiedCourseService {
         return this.legacyGetUserBookings(userId)
       } catch (error) {
         console.error('Supabase getUserBookings failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 

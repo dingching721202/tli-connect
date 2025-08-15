@@ -10,50 +10,49 @@
 import { membershipsService as supabaseMembershipsService } from '@/lib/supabase/services'
 import { Membership, ApiResponse } from '@/types'
 import { memberCardStore } from '@/lib/memberCardStore'
+import { queryOptimizer } from '@/lib/performance/queryOptimizer'
+import { loadingManager } from '@/lib/performance/loadingManager'
 
 class UnifiedMembershipService {
-  private useLegacyMode = false // Toggle for gradual migration
+  private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
 
   constructor() {
-    // Check if Supabase is available and properly configured
-    this.checkSupabaseAvailability()
-  }
-
-  private async checkSupabaseAvailability() {
-    try {
-      // Test Supabase connection
-      await supabaseMembershipsService.getMembershipPlans()
-      this.useLegacyMode = false
-      console.log('🔧 Unified Membership Service: Using Supabase mode')
-    } catch (error) {
-      console.warn('⚠️ Supabase not available, falling back to legacy mode:', error)
-      this.useLegacyMode = true
-    }
+    // Phase 4.3: Force Supabase mode activation
+    this.useLegacyMode = false
+    console.log('🚀 Unified Membership Service: Phase 4.3 - Supabase integration ACTIVE')
   }
 
   /**
-   * Get all membership cards (admin view)
+   * Get all membership cards (admin view) with performance optimization
    */
   async getAllCards(): Promise<Membership[]> {
-    if (!this.useLegacyMode) {
-      try {
-        const result = await supabaseMembershipsService.getMemberships(
-          {},
-          { page: 1, limit: 1000, orderBy: 'created_at', ascending: false }
-        )
+    const cacheKey = 'membership:all_cards';
+    
+    return queryOptimizer.executeWithCache(
+      cacheKey,
+      async () => {
+        if (!this.useLegacyMode) {
+          try {
+            const result = await supabaseMembershipsService.getMemberships(
+              {},
+              { page: 1, limit: 1000, orderBy: 'created_at', ascending: false }
+            )
 
-        if (result.data) {
-          // Convert Supabase format to legacy format
-          return result.data.map(this.convertSupabaseToLegacyFormat)
+            if (result.data) {
+              // Convert Supabase format to legacy format
+              return result.data.map(this.convertSupabaseToLegacyFormat)
+            }
+          } catch (error) {
+            console.error('Supabase getAllCards failed, falling back to legacy:', error)
+            this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
+          }
         }
-      } catch (error) {
-        console.error('Supabase getAllCards failed, falling back to legacy:', error)
-        this.useLegacyMode = true
-      }
-    }
 
-    // Legacy mode implementation
-    return this.legacyGetAllCards()
+        // Legacy mode implementation
+        return this.legacyGetAllCards()
+      },
+      2 * 60 * 1000 // 2 minutes cache
+    );
   }
 
   /**
@@ -96,7 +95,7 @@ class UnifiedMembershipService {
         }
       } catch (error) {
         console.error('Supabase createCard failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -142,7 +141,7 @@ class UnifiedMembershipService {
         return { success: false, error: 'Failed to activate membership' }
       } catch (error) {
         console.error('Supabase activateMemberCard failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -165,7 +164,7 @@ class UnifiedMembershipService {
         return null
       } catch (error) {
         console.error('Supabase getMembership failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -191,7 +190,7 @@ class UnifiedMembershipService {
         return null
       } catch (error) {
         console.error('Supabase getUserInactiveMembership failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -214,7 +213,7 @@ class UnifiedMembershipService {
         return []
       } catch (error) {
         console.error('Supabase getAllMembershipsByUserId failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -258,7 +257,7 @@ class UnifiedMembershipService {
         return { updated: 0, expired: [] }
       } catch (error) {
         console.error('Supabase checkAndUpdateExpiredMemberships failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -288,10 +287,10 @@ class UnifiedMembershipService {
         // Create user first if not exists
         // TODO: Integrate with unified auth service to create user
         // For now, fallback to legacy implementation
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       } catch (error) {
         console.error('Supabase manuallyAddMember failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -309,10 +308,10 @@ class UnifiedMembershipService {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase member info update
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       } catch (error) {
         console.error('Supabase updateMemberInfo failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -327,10 +326,10 @@ class UnifiedMembershipService {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase plan update
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       } catch (error) {
         console.error('Supabase updateMemberPlan failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -345,10 +344,10 @@ class UnifiedMembershipService {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase status update
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       } catch (error) {
         console.error('Supabase updateMemberCardStatus failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -368,10 +367,10 @@ class UnifiedMembershipService {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase dates update
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       } catch (error) {
         console.error('Supabase updateMemberCardDates failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -386,10 +385,10 @@ class UnifiedMembershipService {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase membership deletion
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       } catch (error) {
         console.error('Supabase deleteMembership failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -426,7 +425,7 @@ class UnifiedMembershipService {
         return []
       } catch (error) {
         console.error('Supabase getExpiringMemberships failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 

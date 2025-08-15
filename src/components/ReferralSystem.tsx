@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FiCopy, FiCheck, FiExternalLink, FiTrendingUp, FiUsers, FiDollarSign, FiCalendar, FiX } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
-import { getReferralCodesByUser, ReferralCode } from '@/data/referralData';
+import { referralService, ReferralCode } from '@/services/unified';
 
 interface ReferralSystemProps {
   isOpen: boolean;
@@ -18,11 +18,19 @@ const ReferralSystem: React.FC<ReferralSystemProps> = ({ isOpen, onClose }) => {
   const [activeTab, setActiveTab] = useState<'codes' | 'stats'>('codes');
 
   useEffect(() => {
-    if (user) {
-      // 所有用戶（包括管理員）都只能看到自己的推薦代碼
-      const codes = getReferralCodesByUser(user.id.toString());
-      setReferralCodes(codes);
-    }
+    const loadReferralCodes = async () => {
+      if (user) {
+        try {
+          // 所有用戶（包括管理員）都只能看到自己的推薦代碼
+          const codes = await referralService.getReferralCodesByUser(user.id.toString());
+          setReferralCodes(codes);
+        } catch (error) {
+          console.error('載入推薦代碼失敗:', error);
+        }
+      }
+    };
+    
+    loadReferralCodes();
   }, [user]);
 
   const handleCopyCode = async (code: string) => {

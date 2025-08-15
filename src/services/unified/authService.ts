@@ -16,22 +16,12 @@ import { users as usersData } from '@/data/users'
 import { memberCardService } from '../dataService'
 
 class UnifiedAuthService {
-  private useLegacyMode = false // Toggle for gradual migration
+  private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
 
   constructor() {
-    // Check if Supabase is available and properly configured
-    this.checkSupabaseAvailability()
-  }
-
-  private async checkSupabaseAvailability() {
-    try {
-      const session = await supabaseAuthService.getCurrentSession()
-      this.useLegacyMode = false
-      console.log('🔧 Unified Auth Service: Using Supabase mode')
-    } catch (error) {
-      console.warn('⚠️ Supabase not available, falling back to legacy mode:', error)
-      this.useLegacyMode = true
-    }
+    // Phase 4.3: Force Supabase mode activation
+    this.useLegacyMode = false
+    console.log('🚀 Unified Auth Service: Phase 4.3 - Supabase integration ACTIVE')
   }
 
   /**
@@ -56,7 +46,7 @@ class UnifiedAuthService {
         }
       } catch (error) {
         console.error('Supabase registration failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -86,7 +76,7 @@ class UnifiedAuthService {
         }
       } catch (error) {
         console.error('Supabase login failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -112,7 +102,7 @@ class UnifiedAuthService {
         }
       } catch (error) {
         console.error('Supabase getUser failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -145,7 +135,7 @@ class UnifiedAuthService {
         }
       } catch (error) {
         console.error('Supabase getUserRoles failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -173,7 +163,7 @@ class UnifiedAuthService {
         }
       } catch (error) {
         console.error('Supabase updateUserRoles failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -206,7 +196,7 @@ class UnifiedAuthService {
         }
       } catch (error) {
         console.error('Supabase updateUserStatus failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -236,7 +226,7 @@ class UnifiedAuthService {
         }
       } catch (error) {
         console.error('Supabase getAllUsersWithRoles failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -285,7 +275,7 @@ class UnifiedAuthService {
         }
       } catch (error) {
         console.error('Supabase createUser failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -316,7 +306,7 @@ class UnifiedAuthService {
         }
       } catch (error) {
         console.error('Supabase updateUser failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -342,7 +332,7 @@ class UnifiedAuthService {
         }
       } catch (error) {
         console.error('Supabase deleteUser failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -376,7 +366,7 @@ class UnifiedAuthService {
         }
       } catch (error) {
         console.error('Supabase updateUserAccountStatus failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
@@ -398,7 +388,7 @@ class UnifiedAuthService {
         return await supabaseAuthService.autoUpdateMembershipStatus(userIdStr)
       } catch (error) {
         console.error('Supabase autoUpdateMembershipStatus failed, falling back to legacy:', error)
-        this.useLegacyMode = true
+        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 

@@ -13,12 +13,15 @@ class UnifiedStaffService {
   private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode for Phase 3.4
 
   constructor() {
-    // Phase 4.3: Force Supabase mode activation
+    // Check if Supabase is available and properly configured
+    this.// Phase 4.3: Force Supabase mode activation
     this.useLegacyMode = false
-    console.log('🚀 Unified Staff Service: Phase 4.3 - Supabase integration ACTIVE')
+    console.log("🚀 " + this.constructor.name + ": Phase 4.3 - Supabase integration ACTIVE")
   }
 
-  private async checkSupabaseAvailability() {
+  private async // Phase 4.3: Force Supabase mode activation
+    this.useLegacyMode = false
+    console.log("🚀 " + this.constructor.name + ": Phase 4.3 - Supabase integration ACTIVE") {
     try {
       // TODO: Test Supabase connection when staff service is ready
       // await supabaseStaffService.getStaffOperations()
