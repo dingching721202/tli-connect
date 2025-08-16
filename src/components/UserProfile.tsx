@@ -226,23 +226,23 @@ const UserProfile = () => {
             <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-3 sm:space-y-0 sm:space-x-4 text-center sm:text-left">
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
                 {user?.avatar ? (
-                  <div className="w-14 h-14 rounded-full bg-gray-200 flex items-center justify-center text-gray-500">
-                    用戶
-                  </div>
+                  <img 
+                    src={user.avatar} 
+                    alt={user.name}
+                    className="w-14 h-14 rounded-full object-cover"
+                  />
                 ) : (
-                  <SafeIcon icon={FiUser} className="text-2xl" />
+                  <SafeIcon icon={FiUser} className="text-2xl text-white" />
                 )}
               </div>
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold">{user?.name}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">{user?.name}</h2>
                 <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2 mt-1">
-                  <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getRoleColor(user?.roles?.[0] || '')}`}>
+                  <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white border border-white/30">
                     {getRoleName(user?.roles?.[0] || '')}
                   </span>
                   {displayMembership && (
-                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
-                      displayMembership.type === 'corporate' ? 'bg-purple-100 text-purple-800' : 'bg-emerald-100 text-emerald-800'
-                    }`}>
+                    <span className="inline-block px-3 py-1 rounded-full text-sm font-medium bg-white/20 text-white border border-white/30">
                       {displayMembership.type === 'corporate' ? '企業會員' : '個人會員'}
                     </span>
                   )}
@@ -255,7 +255,7 @@ const UserProfile = () => {
               onClick={() => setIsEditing(!isEditing)}
               className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
             >
-              <SafeIcon icon={isEditing ? FiX : FiEdit2} className="text-lg" />
+              <SafeIcon icon={isEditing ? FiX : FiEdit2} className="text-lg text-white" />
             </motion.button>
           </div>
         </div>

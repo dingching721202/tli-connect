@@ -55,21 +55,17 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
         if (result.user.roles.includes(requiredRole)) {
           console.log('✅ 用戶有所需角色權限:', requiredRole);
           
-          // 登入成功且有權限，先切換角色
+          // 同時設置角色和角色鎖定，然後立即跳轉
           switchRole(requiredRole);
-          console.log('🎭 已切換到角色:', requiredRole);
           
-          // 只有單一角色的用戶才設置角色鎖定，多角色用戶保持可切換
+          // 只有單一角色的用戶才設置角色鎖定
           if (result.user.roles.length === 1) {
             setRoleLock(requiredRole);
-            console.log('🔒 已設置角色鎖定（單一角色用戶）');
-          } else {
-            console.log('🔓 多角色用戶，不設置角色鎖定');
           }
           
-          // 使用 window.location.href 確保完整的頁面重新載入，避免狀態同步問題
+          // 立即跳轉，不等待狀態更新
           console.log('🚀 執行跳轉到:', redirectPath);
-          window.location.href = redirectPath;
+          router.push(redirectPath);
         } else {
           // 沒有該角色權限，跳轉到通用登入頁面
           alert(`您的帳號沒有${roleDisplayName}權限，將跳轉到通用登入頁面`);
@@ -115,7 +111,7 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">載入中...</p>

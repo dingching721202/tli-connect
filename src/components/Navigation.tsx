@@ -8,6 +8,8 @@ import { FiMenu, FiX, FiUser, FiLogOut, FiBook, FiUsers, FiSettings, FiBookOpen,
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
 
+type RoleType = 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN';
+
 const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRoleSelectorOpen, setIsRoleSelectorOpen] = useState(false);
@@ -16,6 +18,28 @@ const Navigation: React.FC = () => {
 
   const router = useRouter();
   const pathname = usePathname();
+
+  // 根據當前路徑自動設置角色（如果用戶已登入但沒有設置當前角色）
+  useEffect(() => {
+    if (isAuthenticated && user && !currentRole && pathname) {
+      // 從路徑中提取角色
+      const pathSegment = pathname.split('/')[1];
+      const roleMap: Record<string, string> = {
+        'student': 'STUDENT',
+        'teacher': 'TEACHER',
+        'staff': 'STAFF', 
+        'admin': 'ADMIN',
+        'agent': 'AGENT',
+        'corporate_contact': 'CORPORATE_CONTACT'
+      };
+      
+      const targetRole = roleMap[pathSegment];
+      if (targetRole && user.roles.includes(targetRole as RoleType)) {
+        console.log('🎯 根據路徑自動設置角色:', targetRole);
+        switchRole(targetRole);
+      }
+    }
+  }, [isAuthenticated, user, currentRole, pathname, switchRole]);
 
   // 處理角色切換和路由跳轉
   const handleRoleSwitch = (role: string) => {
@@ -64,10 +88,10 @@ const Navigation: React.FC = () => {
     { name: '課程管理', href: getRolePath('/course-management'), icon: FiBookOpen, roles: ['STAFF', 'ADMIN'] },
     { name: '會員卡方案管理', href: getRolePath('/member-card-plan-management'), icon: FiSettings, roles: ['STAFF', 'ADMIN'] },
     { name: '諮詢管理', href: getRolePath('/consultation-management'), icon: FiBriefcase, roles: ['STAFF', 'ADMIN'] },
-    { name: '代理管理', href: getRolePath('/agent-management'), icon: FiUserPlus, roles: ['STAFF', 'ADMIN'] },
+    { name: '代理管理', href: getRolePath('/agent-management'), icon: FiUserPlus, roles: ['ADMIN'] },
     { name: '帳號管理', href: getRolePath('/account-management'), icon: FiUsers, roles: ['ADMIN'] },
     { name: '企業管理', href: getRolePath('/corporate-management'), icon: FiBriefcase, roles: ['CORPORATE_CONTACT'] },
-    { name: '系統設定', href: getRolePath('/system-settings'), icon: FiSettings, roles: ['STAFF', 'ADMIN'] },
+    { name: '系統設定', href: getRolePath('/system-settings'), icon: FiSettings, roles: ['ADMIN'] },
   ];
 
   // 右側導航項目 - 推薦及用戶相關
