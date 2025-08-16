@@ -87,7 +87,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setUser(userWithMembership);
             
             // 恢復當前角色
-            if (savedRole && userWithMembership.roles.includes(savedRole as any)) {
+            if (savedRole && userWithMembership.roles.includes(savedRole as RoleType)) {
               setCurrentRole(savedRole);
               console.log('✅ 已恢復用戶會話和角色:', savedRole);
             }
