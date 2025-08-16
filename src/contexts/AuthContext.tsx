@@ -278,7 +278,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     localStorage.removeItem('isRoleLocked');
     localStorage.removeItem('loginSource');
     
-    // 跳轉到登入頁面，不重新載入整個頁面
+    // 跳轉到登入來源頁面
     window.location.href = loginSource;
   };
 

@@ -56,7 +56,7 @@ export default function RootLayout({
   return (
     <html lang="zh-TW">
       <body
-        className={`${inter.variable} ${notoSansTC.variable} ${plusJakartaSans.variable} antialiased`}
+        className={`${inter.variable} ${notoSansTC.variable} ${plusJakartaSans.variable} antialiased bg-white`}
       >
         <ClientErrorBoundary>
           <AuthProvider>
