@@ -7,10 +7,12 @@
 ### 🔑 Supabase 配置
 
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://krkpmnlxklfhcijqpgdo.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtya3Btbmx4a2xmaGNpanFwZ2RvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5NzY4MzEsImV4cCI6MjA3MDU1MjgzMX0.QphJeGfsE6MbYzsKppeuvdtjgVDVS6Wgsvl1Ed0258M
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtya3Btbmx4a2xmaGNpanFwZ2RvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDk3NjgzMSwiZXhwIjoyMDcwNTUyODMxfQ.S0B_7WaI7oMTOx6vfyNgNJOiYV_z7aMJCwNHtCBEi9M
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 ```
+
+**⚠️ 重要：** 請替換為您的實際 Supabase 項目憑證。您可以在 Supabase Dashboard > Settings > API 中找到這些值。
 
 ## 🚀 配置步驟
 
@@ -70,4 +72,4 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhY
 
 ---
 
-**📝 注意：** 此配置基於 TLI Connect Supabase 項目 (krkpmnlxklfhcijqpgdo) 設置。
+**📝 注意：** 請確保使用您自己的 Supabase 項目憑證，切勿在版本控制中提交真實的 API keys。
