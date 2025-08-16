@@ -305,8 +305,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // 切換當前活動角色
   const switchRole = (role: string) => {
     if (!user || !user.roles.includes(role as RoleType)) return;
-    // 如果角色被鎖定，不允許切換
-    if (isRoleLocked) return;
+    // 如果角色被鎖定且不是同一個角色，不允許切換
+    if (isRoleLocked && lockedRole !== role) return;
     setCurrentRole(role);
     localStorage.setItem('currentRole', role);
   };

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import { FiUser, FiLock, FiEye, FiEyeOff, FiLoader } from 'react-icons/fi';
@@ -26,7 +26,7 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   
-  const { login, isAuthenticated, hasRole, loading, setRoleLock, switchRole, user } = useAuth();
+  const { login, loading, setRoleLock, switchRole } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -52,8 +52,8 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
           if (result.user.roles.length === 1) {
             setRoleLock(requiredRole);
           }
-          // 直接跳轉，不需要延遲
-          router.push(redirectPath);
+          // 使用 window.location.href 進行完整的頁面重新加載
+          window.location.href = redirectPath;
         } else {
           // 沒有該角色權限，跳轉到通用登入頁面
           alert(`您的帳號沒有${roleDisplayName}權限，將跳轉到通用登入頁面`);
