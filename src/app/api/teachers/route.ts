@@ -40,7 +40,7 @@ const mockTeachers = [
   }
 ];
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     // For now, return mock data to test the dashboard
     // TODO: Fix Supabase connection and replace with real data
