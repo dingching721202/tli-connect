@@ -374,7 +374,7 @@ const Calendar: React.FC<CalendarProps> = ({
 
       {/* Legend (US05, US06) */}
       <div className="p-4 bg-gray-50 border-t border-gray-200">
-        <div className="flex flex-wrap items-center gap-4 text-xs text-white">
+        <div className="flex flex-wrap items-center gap-4 text-xs text-gray-700">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
             <span>今日</span>

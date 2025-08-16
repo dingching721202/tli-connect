@@ -10,7 +10,6 @@
 import { memberCardPlanStore } from '@/lib/memberCardPlanStore'
 import { MemberCardPlan } from '@/data/member_card_plans'
 import { MemberCard, memberCards } from '@/data/member_cards'
-import { getCourseTemplates, getPublishedCourseTemplates } from '@/data/courseTemplateUtils'
 
 class UnifiedMemberCardPlanService {
   private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode
@@ -165,15 +164,41 @@ class UnifiedMemberCardPlanService {
   async getAvailableCourses() {
     if (!this.useLegacyMode) {
       try {
-        // TODO: Implement Supabase available courses query
-        return this.legacyGetAvailableCourses()
+        // Supabase implementation: Get active course templates
+        const { createClient } = await import('@supabase/supabase-js')
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+        const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        const supabase = createClient(supabaseUrl, supabaseKey)
+
+        const { data: templates, error } = await supabase
+          .from('course_templates')
+          .select('id, name, description, category, level')
+          .eq('is_active', true)
+          .order('name')
+
+        if (error) {
+          throw error
+        }
+
+        // Transform to match expected course data format
+        const coursesData = templates.map(template => ({
+          id: template.id,
+          title: template.name,
+          language: this.getLanguageFromCategory(template.category),
+          level: template.level,
+          category: template.category,
+          description: template.description
+        }))
+
+        return coursesData
       } catch (error) {
-        console.error('Supabase getAvailableCourses failed, falling back to legacy:', error)
-        this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
+        console.error('Supabase getAvailableCourses failed:', error)
+        throw error
       }
     }
 
-    return this.legacyGetAvailableCourses()
+    // Legacy mode is disabled, always use Supabase
+    throw new Error('Legacy mode is disabled for getAvailableCourses')
   }
 
   /**
@@ -191,6 +216,25 @@ class UnifiedMemberCardPlanService {
     }
 
     return this.legacyResetToDefault()
+  }
+
+  // ===== Helper methods =====
+
+  private getLanguageFromCategory(category: string): string {
+    const languageMap: Record<string, string> = {
+      '中文': 'chinese',
+      '英文': 'english', 
+      '語言學習': 'chinese',
+      '商務英語': 'english',
+      '證照考試': 'english',
+      '日文': 'japanese',
+      '韓文': 'korean',
+      '文化': 'chinese',
+      '商業': 'english',
+      '師資': 'chinese',
+      '其它': 'chinese'
+    };
+    return languageMap[category] || 'chinese';
   }
 
   // ===== Legacy implementations =====
@@ -243,68 +287,6 @@ class UnifiedMemberCardPlanService {
     return [...memberCards]
   }
 
-  private async legacyGetAvailableCourses() {
-    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-    await delay(150)
-    
-    // This mimics the logic from MemberCardPlanManagement component
-    const getLanguageFromCategory = (category: string) => {
-      const languageMap: Record<string, string> = {
-        '中文': 'chinese',
-        '英文': 'english',
-        '日文': 'japanese',
-        '韓文': 'korean',
-        '文化': 'chinese',
-        '商業': 'english',
-        '師資': 'chinese',
-        '其它': 'chinese'
-      };
-      return languageMap[category] || 'chinese';
-    };
-
-    try {
-      const templates = getCourseTemplates();
-      const schedules = getPublishedCourseTemplates();
-      
-      const coursesData: unknown[] = [];
-      
-      // 1. Process templates with schedules
-      schedules.forEach(schedule => {
-        const template = templates.find(t => t.id === (schedule as unknown as Record<string, unknown>).templateId);
-        if (template && template.status === 'published') {
-          coursesData.push({
-            id: `${template.id}_${(schedule as unknown as Record<string, unknown>).id}`,
-            title: (schedule as unknown as Record<string, unknown>).seriesName ? `${template.title} - ${(schedule as unknown as Record<string, unknown>).seriesName}` : template.title,
-            language: getLanguageFromCategory(template.category),
-            level: template.level,
-            category: template.category,
-            description: template.description
-          });
-        }
-      });
-      
-      // 2. Process published templates without schedules
-      const publishedTemplates = templates.filter(t => t.status === 'published');
-      publishedTemplates.forEach(template => {
-        const hasSchedule = schedules.some(s => (s as unknown as Record<string, unknown>).templateId === template.id);
-        if (!hasSchedule) {
-          coursesData.push({
-            id: template.id,
-            title: template.title,
-            language: getLanguageFromCategory(template.category),
-            level: template.level,
-            category: template.category,
-            description: template.description
-          });
-        }
-      });
-      
-      return coursesData;
-    } catch (error) {
-      console.error('Error loading available courses:', error);
-      return [];
-    }
-  }
 
   private async legacyResetToDefault(): Promise<void> {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
