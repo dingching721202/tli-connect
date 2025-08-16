@@ -189,9 +189,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (response.ok && data.success && data.user_id && data.jwt) {
         // 獲取完整用戶資料
+        console.log('🔍 AuthContext login - 嘗試獲取用戶資料，user_id:', data.user_id);
         const userData = await authService.getUser(data.user_id);
+        console.log('📋 AuthContext login - 獲取到的用戶資料:', userData);
+        
         if (userData) {
           const userWithMembership = await loadUserWithMembership(userData);
+          console.log('✅ AuthContext login - 用戶登入成功:', userWithMembership);
           setUser(userWithMembership);
           
           // 不自動設置角色，讓用戶手動選擇或由特定頁面設置
@@ -201,7 +205,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           localStorage.setItem('jwt', data.jwt);
           
           return { success: true, user: userWithMembership };
+        } else {
+          console.error('❌ AuthContext login - 無法獲取用戶資料，user_id:', data.user_id);
         }
+      } else {
+        console.error('❌ AuthContext login - API 回應失敗:', { response: response.ok, data });
       }
       
       // 處理特定錯誤狀態碼

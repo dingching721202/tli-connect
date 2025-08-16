@@ -38,7 +38,9 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
     setIsLoading(true);
 
     try {
+      console.log('🔐 RoleLogin - 開始登入，email:', email, 'requiredRole:', requiredRole);
       const result = await login(email, password);
+      console.log('📋 RoleLogin - 登入結果:', result);
       
       if (result.success && result.user) {
         // 保存登入來源頁面
