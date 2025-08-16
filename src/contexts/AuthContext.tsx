@@ -68,69 +68,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isRoleLocked, setIsRoleLocked] = useState(false);
   const [lockedRole, setLockedRole] = useState<string | null>(null);
 
-  // 從 localStorage 載入用戶會話
+  // 初始化載入狀態（移除自動登錄功能）
   useEffect(() => {
-    const loadUserSession = async () => {
-      try {
-        const savedUserId = localStorage.getItem('userId');
-        const savedJwt = localStorage.getItem('jwt');
-        
-        if (savedUserId && savedJwt) {
-          const userData = await authService.getUser(parseInt(savedUserId));
-          if (userData) {
-            const userWithMembership = await loadUserWithMembership(userData);
-            setUser(userWithMembership);
-            
-            // 檢查是否有角色鎖定 - 只有單一角色用戶才能被鎖定
-            const savedIsRoleLocked = localStorage.getItem('isRoleLocked') === 'true';
-            const savedLockedRole = localStorage.getItem('lockedRole');
-            
-            console.log('AuthContext 角色檢查:', {
-              userRoles: userWithMembership.roles,
-              roleCount: userWithMembership.roles.length,
-              savedIsRoleLocked,
-              savedLockedRole
-            });
-            
-            if (userWithMembership.roles.length === 1 && savedIsRoleLocked && savedLockedRole && userWithMembership.roles.includes(savedLockedRole as RoleType)) {
-              // 只有單一角色用戶才恢復角色鎖定狀態
-              console.log('設置角色鎖定 - 單一角色用戶');
-              setIsRoleLocked(true);
-              setLockedRole(savedLockedRole);
-              setCurrentRole(savedLockedRole);
-            } else {
-              // 多角色用戶或未鎖定用戶：清除鎖定狀態
-              if (userWithMembership.roles.length > 1) {
-                console.log('清除角色鎖定 - 多角色用戶');
-                setIsRoleLocked(false);
-                setLockedRole(null);
-                localStorage.removeItem('lockedRole');
-                localStorage.removeItem('isRoleLocked');
-              }
-              
-              // 設置當前角色：從 localStorage 讀取或使用第一個角色
-              const savedCurrentRole = localStorage.getItem('currentRole');
-              if (savedCurrentRole && userWithMembership.roles.includes(savedCurrentRole as RoleType)) {
-                setCurrentRole(savedCurrentRole);
-                console.log('使用已保存的角色:', savedCurrentRole);
-              } else if (userWithMembership.roles.length > 0) {
-                setCurrentRole(userWithMembership.roles[0]);
-                localStorage.setItem('currentRole', userWithMembership.roles[0]);
-                console.log('使用第一個角色:', userWithMembership.roles[0]);
-              }
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error loading user session:', error);
-        localStorage.removeItem('userId');
-        localStorage.removeItem('jwt');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadUserSession();
+    // 直接設置載入完成，不自動從 localStorage 載入用戶會話
+    setLoading(false);
   }, []);
 
   // 載入用戶會員資料和角色
@@ -296,27 +237,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setIsRoleLocked(false);
     setLockedRole(null);
     
-    // 清除所有localStorage數據
+    // 清除用戶相關的 localStorage 數據
     localStorage.removeItem('userId');
     localStorage.removeItem('jwt');
     localStorage.removeItem('currentRole');
     localStorage.removeItem('lockedRole');
     localStorage.removeItem('isRoleLocked');
-    localStorage.removeItem('users');
-    localStorage.removeItem('userRoles');
-    localStorage.removeItem('userMemberCards');
-    localStorage.removeItem('classAppointments');
-    // 清除企業相關數據
-    localStorage.removeItem('companies');
-    localStorage.removeItem('corporateSubscriptions');
-    localStorage.removeItem('corporateMembers');
-    // 清除登入來源記錄
     localStorage.removeItem('loginSource');
     
-    // 強制重新載入頁面並回到原始登入頁面
-    setTimeout(() => {
-      window.location.href = loginSource;
-    }, 100);
+    // 跳轉到登入頁面，不重新載入整個頁面
+    window.location.href = loginSource;
   };
 
   const updateProfile = (updates: Partial<User>) => {
