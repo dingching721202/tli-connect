@@ -2,7 +2,9 @@ import { supabase } from '../client'
 import { QueryResult, QueryListResult, PaginationOptions, PaginatedResponse } from '../types'
 
 export abstract class BaseSupabaseService {
-  protected client = supabase
+  protected get client() {
+    return supabase
+  }
 
   /**
    * Generic method to handle paginated queries

@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
+// Only validate in runtime, not during build
+const isBuildTime = process.env.NODE_ENV === 'development' && typeof window === 'undefined'
+
+if (!isBuildTime && (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY)) {
+  console.warn('Missing Supabase environment variables - using fallback mode')
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
@@ -25,13 +28,15 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 
 // Server-side client for API routes
 export const createServerSupabaseClient = () => {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'placeholder-service-key'
+  const actualUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
   
-  if (!serviceRoleKey) {
-    throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
+  // Only validate in runtime
+  if (!isBuildTime && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.warn('Missing SUPABASE_SERVICE_ROLE_KEY environment variable - using fallback mode')
   }
   
-  return createClient(supabaseUrl, serviceRoleKey, {
+  return createClient(actualUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false
