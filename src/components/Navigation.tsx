@@ -12,7 +12,7 @@ const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isRoleSelectorOpen, setIsRoleSelectorOpen] = useState(false);
   const roleSelectorRef = useRef<HTMLDivElement>(null);
-  const { user, logout, isAuthenticated, currentRole, switchRole, availableRoles, isRoleLocked, lockedRole } = useAuth();
+  const { user, logout, isAuthenticated, currentRole, switchRole, availableRoles, isRoleLocked } = useAuth();
 
   const router = useRouter();
   const pathname = usePathname();
@@ -207,12 +207,12 @@ const Navigation: React.FC = () => {
                   onClick={() => handleNavigation(getRolePath('/profile'))}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  title={`查看個人資料 - ${user?.name} (${currentRole})`}
+                  title={`查看個人資料 - ${user?.name || 'User'} (${currentRole})`}
                 >
                   <Image
                     className="h-8 w-8 rounded-full object-cover flex-shrink-0"
                     src={user?.avatar || 'https://www.gravatar.com/avatar/?d=mp&s=32'}
-                    alt={user?.name}
+                    alt={user?.name || 'User Avatar'}
                     width={32}
                     height={32}
                   />
@@ -369,7 +369,7 @@ const Navigation: React.FC = () => {
                       height={40}
                     />
                     <div>
-                      <div className="text-base font-medium text-gray-900">{user?.name}</div>
+                      <div className="text-base font-medium text-gray-900">{user?.name || 'User'}</div>
                       {currentRole && (
                         <div className="text-sm text-gray-500">{getRoleDisplayName(currentRole)}</div>
                       )}
