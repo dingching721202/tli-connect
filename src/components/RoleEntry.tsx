@@ -91,7 +91,7 @@ const RoleEntry: React.FC<RoleEntryProps> = ({ requiredRole, children }) => {
   return (
     <div className="main-layout">
       <Navigation />
-      <main className="page-container">
+      <main className="page-container pt-20">
         {children}
       </main>
     </div>

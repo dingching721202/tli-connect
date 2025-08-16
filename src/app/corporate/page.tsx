@@ -725,6 +725,39 @@ export default function CorporatePage() {
           gap: '12px',
           zIndex: 10
         }}>
+          <Link 
+            href="/membership" 
+            aria-label="Pricing"
+            style={{
+              background: 'linear-gradient(90deg, #009FB6, #027AB9)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '999px',
+              padding: '10px 18px',
+              fontSize: '14px',
+              fontWeight: '700',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '36px',
+              minWidth: '80px',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 6px 14px rgba(2,122,185,.18)',
+              transition: 'all 0.25s ease-in-out',
+              boxSizing: 'border-box'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 8px 18px rgba(2,122,185,.24)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 6px 14px rgba(2,122,185,.18)';
+            }}
+          >
+            Pricing
+          </Link>
           <button 
             onClick={scrollToContact} 
             aria-label="Free Consultation"

@@ -1,51 +1,19 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useRouter, usePathname } from 'next/navigation';
 import Image from 'next/image';
-import { FiMenu, FiX, FiUser, FiLogOut, FiBook, FiUsers, FiSettings, FiBookOpen, FiUserPlus, FiShare2, FiBriefcase, FiClock, FiCalendar, FiUserCheck, FiPlay, FiChevronDown, FiVideo, FiActivity } from 'react-icons/fi';
+import { FiMenu, FiX, FiUser, FiLogOut, FiBook, FiUsers, FiSettings, FiBookOpen, FiUserPlus, FiShare2, FiBriefcase, FiClock, FiCalendar, FiUserCheck } from 'react-icons/fi';
 import { useAuth } from '@/contexts/AuthContext';
 import SafeIcon from './common/SafeIcon';
 
 const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isVideoCoursesOpen, setIsVideoCoursesOpen] = useState(false);
-  const [isOnlineGroupClassesOpen, setIsOnlineGroupClassesOpen] = useState(false);
-  const [isEventsOpen, setIsEventsOpen] = useState(false);
   const [isRoleSelectorOpen, setIsRoleSelectorOpen] = useState(false);
   const roleSelectorRef = useRef<HTMLDivElement>(null);
   const { user, logout, isAuthenticated, currentRole, switchRole, availableRoles, isRoleLocked, lockedRole } = useAuth();
 
-  // 調試角色選擇器狀態
-  useEffect(() => {
-    if (user) {
-      console.log('Navigation 角色選擇器狀態:', {
-        availableRoles,
-        availableRolesLength: availableRoles?.length,
-        isRoleLocked,
-        currentRole,
-        shouldShowSelector: (availableRoles?.length || 0) > 1 && !isRoleLocked
-      });
-    }
-  }, [user, availableRoles, isRoleLocked, currentRole]);
-
-  // 點擊外部關閉角色選擇器
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (roleSelectorRef.current && !roleSelectorRef.current.contains(event.target as Node)) {
-        setIsRoleSelectorOpen(false);
-      }
-    };
-
-    if (isRoleSelectorOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isRoleSelectorOpen]);
   const router = useRouter();
   const pathname = usePathname();
 
@@ -53,10 +21,8 @@ const Navigation: React.FC = () => {
   const handleRoleSwitch = (role: string) => {
     if (!availableRoles.includes(role) || isRoleLocked) return;
     
-    // 切換角色
     switchRole(role);
     
-    // 根據角色跳轉到對應的首頁
     const rolePathMap: Record<string, string> = {
       'STUDENT': '/student',
       'TEACHER': '/teacher',
@@ -72,106 +38,44 @@ const Navigation: React.FC = () => {
     }
   };
 
-  const videoCourseCategories = [
-    { name: '中文', href: '/video-courses/chinese' },
-    { name: '外文', href: '/video-courses/foreign-language' },
-    { name: '文化', href: '/video-courses/culture' },
-    { name: '商業', href: '/video-courses/business' },
-    { name: '師培', href: '/video-courses/teacher-training' },
+  // 根據角色動態生成路徑
+  const getRolePath = (basePath: string) => {
+    if (!currentRole) return basePath;
+    const rolePathMap: Record<string, string> = {
+      'STUDENT': '/student',
+      'TEACHER': '/teacher', 
+      'CORPORATE_CONTACT': '/corporate_contact',
+      'AGENT': '/agent',
+      'STAFF': '/staff',
+      'ADMIN': '/admin'
+    };
+    return `${rolePathMap[currentRole]}${basePath}`;
+  };
+
+  // 左側導航項目 - 功能相關
+  const leftNavigationItems = [
+    { name: '儀表板', href: getRolePath(''), icon: FiUser, roles: ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'STAFF', 'ADMIN'] },
+    { name: '課程預約', href: getRolePath('/booking'), icon: FiBook, roles: ['STUDENT'] },
+    { name: '會員管理', href: getRolePath('/member-management'), icon: FiUsers, roles: ['STAFF', 'ADMIN'] },
+    { name: '教師管理', href: getRolePath('/teacher-management'), icon: FiUserCheck, roles: ['STAFF', 'ADMIN'] },
+    { name: '請假管理', href: getRolePath('/leave-management'), icon: FiClock, roles: ['STAFF', 'ADMIN'] },
+    { name: '會員方案', href: '/membership', icon: FiShare2, roles: ['guest'] },
+    { name: '我的預約', href: getRolePath('/my-bookings'), icon: FiCalendar, roles: ['STUDENT', 'TEACHER'] },
+    { name: '課程管理', href: getRolePath('/course-management'), icon: FiBookOpen, roles: ['STAFF', 'ADMIN'] },
+    { name: '會員卡方案管理', href: getRolePath('/member-card-plan-management'), icon: FiSettings, roles: ['STAFF', 'ADMIN'] },
+    { name: '諮詢管理', href: getRolePath('/consultation-management'), icon: FiBriefcase, roles: ['STAFF', 'ADMIN'] },
+    { name: '代理管理', href: getRolePath('/agent-management'), icon: FiUserPlus, roles: ['STAFF', 'ADMIN'] },
+    { name: '帳號管理', href: getRolePath('/account-management'), icon: FiUsers, roles: ['ADMIN'] },
+    { name: '企業管理', href: getRolePath('/corporate-management'), icon: FiBriefcase, roles: ['CORPORATE_CONTACT'] },
+    { name: '系統設定', href: getRolePath('/system-settings'), icon: FiSettings, roles: ['STAFF', 'ADMIN'] },
   ];
 
-  const onlineGroupClassCategories = [
-    { name: '中文', href: '/online-group-classes/chinese' },
-    { name: '外文', href: '/online-group-classes/foreign-language' },
-    { name: '文化', href: '/online-group-classes/culture' },
-    { name: '商業', href: '/online-group-classes/business' },
-    { name: '師培', href: '/online-group-classes/teacher-training' },
-  ];
-
-  const eventCategories = [
-    { name: '中文', href: '/events/chinese' },
-    { name: '外文', href: '/events/foreign-language' },
-    { name: '文化', href: '/events/culture' },
-    { name: '商業', href: '/events/business' },
-    { name: '師培', href: '/events/teacher-training' },
-  ];
-
-  const navigationItems = [
-    { name: '儀表板', href: '/dashboard', icon: FiUser, roles: ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'STAFF', 'ADMIN'] },
-    { name: '課程預約', href: '/booking', icon: FiBook, roles: ['STUDENT'] },
-    { name: '會員管理', href: '/member-management', icon: FiUsers, roles: ['STAFF', 'ADMIN'] },
-    { name: '教師管理', href: '/teacher-management', icon: FiUserCheck, roles: ['STAFF', 'ADMIN'] },
-    { name: '請假管理', href: '/leave-management', icon: FiClock, roles: ['STAFF', 'ADMIN'] },
-    { name: '會員方案', href: '/membership', icon: FiShare2, roles: ['guest', 'STUDENT'] },
-    { name: '我的預約', href: '/my-bookings', icon: FiCalendar, roles: ['STUDENT', 'TEACHER'] },
-    { name: '課程管理', href: '/course-management', icon: FiBookOpen, roles: ['STAFF', 'ADMIN'] },
-    { name: '會員卡方案管理', href: '/member-card-plan-management', icon: FiSettings, roles: ['STAFF', 'ADMIN'] },
-    { name: '諮詢管理', href: '/consultation-management', icon: FiBriefcase, roles: ['STAFF', 'ADMIN'] },
-    { name: '代理管理', href: '/agent-management', icon: FiUserPlus, roles: ['STAFF', 'ADMIN'] },
-    { name: '帳號管理', href: '/account-management', icon: FiUsers, roles: ['ADMIN'] },
-    { name: '企業管理', href: '/corporate-management', icon: FiBriefcase, roles: ['CORPORATE_CONTACT'] },
-    { name: '系統設定', href: '/system-settings', icon: FiSettings, roles: ['STAFF', 'ADMIN'] },
+  // 右側導航項目 - 推薦及用戶相關
+  const rightNavigationItems = [
+    { name: '推薦', href: getRolePath('/referral'), icon: FiShare2, roles: ['STUDENT', 'TEACHER', 'CORPORATE_CONTACT', 'AGENT', 'STAFF', 'ADMIN'] },
   ];
 
   const handleNavigation = (href: string) => {
-    // 特殊處理：儀表板導向當前角色的首頁
-    if (href === '/dashboard' && currentRole) {
-      const rolePathMap = {
-        'STUDENT': '/student',
-        'TEACHER': '/teacher',
-        'STAFF': '/staff',
-        'ADMIN': '/admin',
-        'AGENT': '/agent',
-        'CORPORATE_CONTACT': '/corporate_contact'
-      };
-      
-      const rolePath = rolePathMap[currentRole as keyof typeof rolePathMap];
-      if (rolePath) {
-        router.push(rolePath);
-        setIsMenuOpen(false);
-        return;
-      }
-    }
-
-    // 如果角色被鎖定，將功能頁面導向對應角色的子頁面
-    if (isRoleLocked && lockedRole) {
-      const rolePathMap = {
-        'STUDENT': 'student',
-        'TEACHER': 'teacher',
-        'STAFF': 'staff',
-        'ADMIN': 'admin',
-        'AGENT': 'agent',
-        'CORPORATE_CONTACT': 'corporate_contact'
-      };
-      
-      const rolePath = rolePathMap[lockedRole as keyof typeof rolePathMap];
-      
-      if (rolePath) {
-        // 將功能頁面路徑轉換為角色子頁面路徑
-        const functionPages = [
-          '/dashboard', '/booking', '/my-bookings', '/membership', '/profile',
-          '/video-courses', '/online-group-classes', '/events', '/referral',
-          '/member-management', '/teacher-management', '/leave-management',
-          '/course-management', '/member-card-plan-management', '/consultation-management',
-          '/agent-management', '/account-management', '/system-settings',
-          '/corporate-management', '/payment-result'
-        ];
-        
-        // 檢查是否為功能頁面（包括子路由）
-        const isFunctionPage = functionPages.some(page => href.startsWith(page));
-        
-        if (isFunctionPage) {
-          // 移除開頭的 / 並加上角色前綴
-          const cleanPath = href.startsWith('/') ? href.substring(1) : href;
-          const roleSpecificPath = `/${rolePath}/${cleanPath}`;
-          router.push(roleSpecificPath);
-          setIsMenuOpen(false);
-          return;
-        }
-      }
-    }
-    
-    // 非角色鎖定模式或非功能頁面，使用原始路徑
     router.push(href);
     setIsMenuOpen(false);
   };
@@ -183,224 +87,76 @@ const Navigation: React.FC = () => {
 
   const isActive = (href: string) => pathname === href;
 
-  const canAccess = (roles: string[]) => {
-    if (roles.includes('all')) return true;
-    if (!user) return roles.includes('guest');
-    
-    // 只檢查當前角色，不檢查所有角色
-    if (currentRole && roles.includes(currentRole)) return true;
-    
-    return false;
+  const canAccess = (allowedRoles: string[]) => {
+    if (!isAuthenticated) {
+      return allowedRoles.includes('guest');
+    }
+    // 只檢查當前切換的角色，而不是用戶的所有角色
+    return currentRole ? allowedRoles.includes(currentRole) : false;
+  };
+
+  // Click outside handler for role selector
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (roleSelectorRef.current && !roleSelectorRef.current.contains(event.target as Node)) {
+        setIsRoleSelectorOpen(false);
+      }
+    };
+
+    if (isRoleSelectorOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isRoleSelectorOpen]);
+
+  const getUserDisplayName = () => {
+    if (!user) return '';
+    const maxLength = 10;
+    return user.name.length > maxLength ? `${user.name.substring(0, maxLength)}...` : user.name;
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    const roleNames: Record<string, string> = {
+      'STUDENT': '學員',
+      'TEACHER': '教師',
+      'STAFF': '職員',
+      'ADMIN': '管理員',
+      'AGENT': '代理',
+      'CORPORATE_CONTACT': '企業窗口'
+    };
+    return roleNames[role] || role;
   };
 
   return (
-    <nav className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center h-14 xl:h-16">
+    <nav className="bg-white shadow-sm border-b border-gray-200 fixed top-0 left-0 right-0 z-50">
+      <div className="w-full pl-2 pr-2 sm:pl-4 sm:pr-4 lg:pl-4 lg:pr-4">
+        <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="flex-shrink-0 cursor-pointer"
-            onClick={() => handleNavigation('/')}
-          >
-            <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              TLI Connect
-            </h1>
-          </motion.div>
+          <div className="flex-shrink-0 flex items-center">
+            <Image
+              className="h-6 w-auto cursor-pointer"
+              src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
+              alt="TLI Connect"
+              width={90}
+              height={24}
+              onClick={() => router.push('/')}
+              priority
+            />
+          </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex flex-1 justify-between px-4 xl:px-8">
-            <div className="flex items-center space-x-0.5 xl:space-x-1">
-              {/* Video Courses Dropdown - Only for STUDENT */}
-              {canAccess(['STUDENT']) && (
-                <div className="relative"
-                  onMouseEnter={() => setIsVideoCoursesOpen(true)}
-                  onMouseLeave={() => setIsVideoCoursesOpen(false)}
-                >
-                  <motion.button
-                    className={`
-                      flex items-center space-x-1 px-2.5 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
-                      ${pathname.startsWith('/video-courses')
-                        ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                      }
-                    `}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    title="影音課程"
-                  >
-                    <SafeIcon icon={FiPlay} size={14} />
-                    <span className="text-sm">影音課程</span>
-                    <SafeIcon icon={FiChevronDown} size={12} className={`transition-transform duration-200 ${isVideoCoursesOpen ? 'rotate-180' : ''}`} />
-                  </motion.button>
-
-                  {/* Dropdown Menu */}
-                  <AnimatePresence>
-                    {isVideoCoursesOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                      >
-                        <motion.button
-                          onClick={() => handleNavigation('/video-courses')}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
-                          whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
-                        >
-                          所有課程
-                        </motion.button>
-                        <div className="border-t border-gray-100 my-1"></div>
-                        {videoCourseCategories.map((category) => (
-                          <motion.button
-                            key={category.name}
-                            onClick={() => handleNavigation(category.href)}
-                            className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                              isActive(category.href)
-                                ? 'bg-blue-50 text-blue-600'
-                                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                            }`}
-                            whileHover={{ backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
-                          >
-                            {category.name}
-                          </motion.button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {/* Online Group Classes Dropdown - Only for STUDENT */}
-              {canAccess(['STUDENT']) && (
-                <div className="relative"
-                  onMouseEnter={() => setIsOnlineGroupClassesOpen(true)}
-                  onMouseLeave={() => setIsOnlineGroupClassesOpen(false)}
-                >
-                  <motion.button
-                    className={`
-                      flex items-center space-x-1 px-2.5 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
-                      ${pathname.startsWith('/online-group-classes')
-                        ? 'text-green-600 bg-green-50'
-                        : 'text-gray-700 hover:text-green-600 hover:bg-gray-50'
-                      }
-                    `}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    title="線上團課"
-                  >
-                    <SafeIcon icon={FiVideo} size={14} />
-                    <span className="text-sm">線上團課</span>
-                    <SafeIcon icon={FiChevronDown} size={12} className={`transition-transform duration-200 ${isOnlineGroupClassesOpen ? 'rotate-180' : ''}`} />
-                  </motion.button>
-
-                  {/* Dropdown Menu */}
-                  <AnimatePresence>
-                    {isOnlineGroupClassesOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                      >
-                        <motion.button
-                          onClick={() => handleNavigation('/online-group-classes')}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 transition-colors"
-                          whileHover={{ backgroundColor: 'rgba(34, 197, 94, 0.05)' }}
-                        >
-                          所有課程
-                        </motion.button>
-                        <div className="border-t border-gray-100 my-1"></div>
-                        {onlineGroupClassCategories.map((category) => (
-                          <motion.button
-                            key={category.name}
-                            onClick={() => handleNavigation(category.href)}
-                            className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                              isActive(category.href)
-                                ? 'bg-green-50 text-green-600'
-                                : 'text-gray-700 hover:bg-green-50 hover:text-green-600'
-                            }`}
-                            whileHover={{ backgroundColor: 'rgba(34, 197, 94, 0.05)' }}
-                          >
-                            {category.name}
-                          </motion.button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {/* Events Dropdown - Only for STUDENT */}
-              {canAccess(['STUDENT']) && (
-                <div className="relative"
-                  onMouseEnter={() => setIsEventsOpen(true)}
-                  onMouseLeave={() => setIsEventsOpen(false)}
-                >
-                  <motion.button
-                    className={`
-                      flex items-center space-x-1 px-2.5 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
-                      ${pathname.startsWith('/events')
-                        ? 'text-orange-600 bg-orange-50'
-                        : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50'
-                      }
-                    `}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    title="活動"
-                  >
-                    <SafeIcon icon={FiActivity} size={14} />
-                    <span className="text-sm">活動</span>
-                    <SafeIcon icon={FiChevronDown} size={12} className={`transition-transform duration-200 ${isEventsOpen ? 'rotate-180' : ''}`} />
-                  </motion.button>
-
-                  {/* Dropdown Menu */}
-                  <AnimatePresence>
-                    {isEventsOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        transition={{ duration: 0.2 }}
-                        className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50"
-                      >
-                        <motion.button
-                          onClick={() => handleNavigation('/events')}
-                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-orange-600 transition-colors"
-                          whileHover={{ backgroundColor: 'rgba(251, 146, 60, 0.05)' }}
-                        >
-                          所有活動
-                        </motion.button>
-                        <div className="border-t border-gray-100 my-1"></div>
-                        {eventCategories.map((category) => (
-                          <motion.button
-                            key={category.name}
-                            onClick={() => handleNavigation(category.href)}
-                            className={`w-full text-left px-4 py-2 text-sm transition-colors ${
-                              isActive(category.href)
-                                ? 'bg-orange-50 text-orange-600'
-                                : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
-                            }`}
-                            whileHover={{ backgroundColor: 'rgba(251, 146, 60, 0.05)' }}
-                          >
-                            {category.name}
-                          </motion.button>
-                        ))}
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-
-              {navigationItems.filter(item => canAccess(item.roles)).map((item) => (
+          <div className="hidden lg:flex lg:items-center lg:space-x-1 flex-1 justify-between">
+            {/* Left Navigation Items */}
+            <div className="flex items-center space-x-1">
+              {leftNavigationItems.filter(item => canAccess(item.roles)).map((item) => (
                 <motion.button
                   key={item.name}
                   onClick={() => handleNavigation(item.href)}
                   className={`
-                    flex items-center space-x-1 px-2.5 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
+                    flex items-center space-x-1 px-2 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
                     ${isActive(item.href)
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
@@ -415,291 +171,15 @@ const Navigation: React.FC = () => {
                 </motion.button>
               ))}
             </div>
-
-            {/* Right Side Menu - 推薦 + 用戶菜單 */}
+            
+            {/* Right Navigation Items */}
             <div className="flex items-center space-x-1">
-              {isAuthenticated ? (
-                <>
-                {/* 推薦系統按鈕 - 響應式設計 */}
-                <motion.button
-                  onClick={() => handleNavigation('/referral')}
-                  className={`flex-shrink-0 flex items-center justify-center px-2.5 py-2 xl:space-x-1 text-sm font-medium rounded transition-colors ${
-                    isActive('/referral')
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-                  }`}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  title="推薦系統"
-                >
-                  <SafeIcon icon={FiShare2} size={16} />
-                  <span className="text-sm hidden xl:inline ml-1.5">推薦</span>
-                </motion.button>
-                
-                {/* 用戶頭像和信息 - 正常設計 */}
-                <motion.div 
-                  className="flex-shrink-0 flex items-center cursor-pointer hover:bg-gray-50 rounded px-3 py-2 transition-colors"
-                  onClick={() => handleNavigation('/profile')}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  title={`查看個人資料 - ${user?.name} (${currentRole})`}
-                >
-                  <Image
-                    className="h-8 w-8 rounded-full object-cover"
-                    src={user?.avatar || 'https://www.gravatar.com/avatar/?d=mp&s=32'}
-                    alt={user?.name || 'User'}
-                    width={32}
-                    height={32}
-                  />
-                  <div className="ml-3 hidden lg:block">
-                    <div className="text-sm font-medium text-gray-900 truncate max-w-24">{user?.name}</div>
-                    <div className="text-xs text-gray-500 capitalize truncate max-w-24">{currentRole}</div>
-                  </div>
-                </motion.div>
-                
-                {/* 角色選擇器 - 正常設計 */}
-                <div className="relative flex-shrink-0" ref={roleSelectorRef}>
-                  <motion.button
-                    onClick={() => {
-                      if (availableRoles.length > 1 && !isRoleLocked) {
-                        setIsRoleSelectorOpen(!isRoleSelectorOpen);
-                      }
-                    }}
-                    className={`flex items-center justify-center px-2 py-2 text-sm font-medium transition-colors rounded ${
-                      availableRoles.length > 1 && !isRoleLocked
-                        ? 'text-gray-600 hover:text-blue-600 hover:bg-blue-50 cursor-pointer' 
-                        : 'text-gray-300 cursor-default'
-                    }`}
-                    whileHover={availableRoles.length > 1 && !isRoleLocked ? { scale: 1.1 } : {}}
-                    whileTap={availableRoles.length > 1 && !isRoleLocked ? { scale: 0.95 } : {}}
-                    title={isRoleLocked ? "角色已鎖定" : availableRoles.length > 1 ? "切換角色" : "當前角色"}
-                  >
-                    <SafeIcon 
-                      icon={FiChevronDown} 
-                      size={16} 
-                      className={`transition-transform duration-200 ${isRoleSelectorOpen ? 'rotate-180' : ''} ${
-                        availableRoles.length > 1 && !isRoleLocked ? '' : 'opacity-30'
-                      }`}
-                    />
-                  </motion.button>
-                  
-                  <AnimatePresence>
-                    {isRoleSelectorOpen && availableRoles.length > 1 && !isRoleLocked && (
-                      <motion.div
-                        initial={{ opacity: 0, scaleY: 0.8, y: -5 }}
-                        animate={{ opacity: 1, scaleY: 1, y: 0 }}
-                        exit={{ opacity: 0, scaleY: 0.8, y: -5 }}
-                        transition={{ duration: 0.15, ease: "easeOut" }}
-                        className="absolute right-0 top-full mt-1 w-32 bg-white rounded-md shadow-md ring-1 ring-black ring-opacity-5 z-50 origin-top"
-                      >
-                        <div className="py-1">
-                          {availableRoles.map((role) => (
-                            <motion.button
-                              key={role}
-                              onClick={() => {
-                                handleRoleSwitch(role);
-                                setIsRoleSelectorOpen(false);
-                              }}
-                              className={`block w-full text-left px-3 py-2 text-sm hover:bg-gray-50 transition-colors truncate ${
-                                currentRole === role 
-                                  ? 'bg-blue-50 text-blue-600 font-medium' 
-                                  : 'text-gray-700'
-                              }`}
-                              whileHover={{ backgroundColor: "rgb(249 250 251)" }}
-                              whileTap={{ scale: 0.98 }}
-                            >
-                              <span className="truncate">{role}</span>
-                              {currentRole === role && (
-                                <span className="ml-2 text-blue-500 text-xs">●</span>
-                              )}
-                            </motion.button>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-                
-                {/* 登出按鈕 - 正常設計 */}
-                <motion.button
-                  onClick={handleLogout}
-                  className="flex-shrink-0 flex items-center justify-center px-2 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  title="登出"
-                >
-                  <SafeIcon icon={FiLogOut} size={16} />
-                </motion.button>
-                </>) : (
-              <motion.button
-                onClick={() => handleNavigation('/login')}
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors text-sm font-medium flex items-center space-x-1.5"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <SafeIcon icon={FiUser} size={16} />
-                <span className="text-sm">登入</span>
-              </motion.button>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile menu button - 小巧設計 */}
-          <div className="lg:hidden">
-            <motion.button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="p-1.5 rounded text-gray-700 hover:text-blue-600 hover:bg-gray-50 transition-colors"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-            >
-              <SafeIcon icon={isMenuOpen ? FiX : FiMenu} size={20} />
-            </motion.button>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Navigation Menu */}
-      <AnimatePresence>
-        {isMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-t border-gray-200"
-          >
-            <div className="px-2 pt-2 pb-3 space-y-1">
-              {/* Mobile Video Courses - Only for STUDENT */}
-              {canAccess(['STUDENT']) && (
-                <div className="space-y-1">
-                  <motion.button
-                    onClick={() => handleNavigation('/video-courses')}
-                    className={`
-                      w-full flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors
-                      ${pathname.startsWith('/video-courses')
-                        ? 'text-blue-600 bg-blue-50'
-                        : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
-                      }
-                    `}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <SafeIcon icon={FiPlay} size={18} />
-                    <span>影音課程</span>
-                  </motion.button>
-                  
-                  {/* Mobile Video Course Categories */}
-                  <div className="pl-6 space-y-1">
-                    {videoCourseCategories.map((category) => (
-                      <motion.button
-                        key={category.name}
-                        onClick={() => handleNavigation(category.href)}
-                        className={`
-                          w-full flex items-center space-x-3 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
-                          ${isActive(category.href)
-                            ? 'text-blue-600 bg-blue-50'
-                            : 'text-gray-600 hover:text-blue-600 hover:bg-gray-50'
-                          }
-                        `}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <span>{category.name}</span>
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Mobile Online Group Classes - Only for STUDENT */}
-              {canAccess(['STUDENT']) && (
-                <div className="space-y-1">
-                  <motion.button
-                    onClick={() => handleNavigation('/online-group-classes')}
-                    className={`
-                      w-full flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors
-                      ${pathname.startsWith('/online-group-classes')
-                        ? 'text-green-600 bg-green-50'
-                        : 'text-gray-700 hover:text-green-600 hover:bg-gray-50'
-                      }
-                    `}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <SafeIcon icon={FiVideo} size={18} />
-                    <span>線上團課</span>
-                  </motion.button>
-                  
-                  {/* Mobile Online Group Class Categories */}
-                  <div className="pl-6 space-y-1">
-                    {onlineGroupClassCategories.map((category) => (
-                      <motion.button
-                        key={category.name}
-                        onClick={() => handleNavigation(category.href)}
-                        className={`
-                          w-full flex items-center space-x-3 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
-                          ${isActive(category.href)
-                            ? 'text-green-600 bg-green-50'
-                            : 'text-gray-600 hover:text-green-600 hover:bg-gray-50'
-                          }
-                        `}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <span>{category.name}</span>
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Mobile Events - Only for STUDENT */}
-              {canAccess(['STUDENT']) && (
-                <div className="space-y-1">
-                  <motion.button
-                    onClick={() => handleNavigation('/events')}
-                    className={`
-                      w-full flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors
-                      ${pathname.startsWith('/events')
-                        ? 'text-orange-600 bg-orange-50'
-                        : 'text-gray-700 hover:text-orange-600 hover:bg-gray-50'
-                      }
-                    `}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <SafeIcon icon={FiActivity} size={18} />
-                    <span>活動</span>
-                  </motion.button>
-                  
-                  {/* Mobile Event Categories */}
-                  <div className="pl-6 space-y-1">
-                    {eventCategories.map((category) => (
-                      <motion.button
-                        key={category.name}
-                        onClick={() => handleNavigation(category.href)}
-                        className={`
-                          w-full flex items-center space-x-3 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
-                          ${isActive(category.href)
-                            ? 'text-orange-600 bg-orange-50'
-                            : 'text-gray-600 hover:text-orange-600 hover:bg-gray-50'
-                          }
-                        `}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <span>{category.name}</span>
-                      </motion.button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {navigationItems.filter(item => canAccess(item.roles)).map((item) => (
+              {rightNavigationItems.filter(item => canAccess(item.roles)).map((item) => (
                 <motion.button
                   key={item.name}
                   onClick={() => handleNavigation(item.href)}
                   className={`
-                    w-full flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors
+                    flex items-center space-x-1 px-2 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap
                     ${isActive(item.href)
                       ? 'text-blue-600 bg-blue-50'
                       : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
@@ -707,112 +187,243 @@ const Navigation: React.FC = () => {
                   `}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
+                  title={item.name}
                 >
-                  <SafeIcon icon={item.icon} size={18} />
-                  <span>{item.name}</span>
+                  <SafeIcon icon={item.icon} size={14} />
+                  <span className="text-sm">{item.name}</span>
                 </motion.button>
               ))}
+            </div>
+          </div>
 
-              {/* Mobile User Section */}
-              <div className="border-t border-gray-200 pt-4 mt-4">
-                {isAuthenticated ? (
-                  <div className="space-y-3">
-                    {/* Mobile Referral Button */}
-                    <motion.button
-                      onClick={() => handleNavigation('/referral')}
-                      className={`w-full flex items-center space-x-3 px-3 py-2 text-base font-medium rounded-md transition-colors ${
-                        isActive('/referral')
-                          ? 'text-blue-600 bg-blue-50'
-                          : 'text-gray-700 hover:text-blue-600 hover:bg-blue-50'
-                      }`}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <SafeIcon icon={FiShare2} size={18} />
-                      <span>推薦系統</span>
-                    </motion.button>
-                    
-                    <motion.div 
-                      className="flex items-center space-x-3 px-3 py-2 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors"
-                      onClick={() => handleNavigation('/profile')}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      title="查看個人資料"
-                    >
-                      <Image
-                        className="h-10 w-10 rounded-full object-cover flex-shrink-0"
-                        src={user?.avatar || 'https://www.gravatar.com/avatar/?d=mp&s=40'}
-                        alt={user?.name || 'User'}
-                        width={40}
-                        height={40}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="font-medium text-gray-900 truncate">{user?.name}</div>
-                        <div className="text-sm text-gray-500 capitalize truncate w-20">{currentRole}</div>
-                      </div>
-                    </motion.div>
-                    
-                    {/* 手機版角色選擇器 - 固定佈局 */}
-                    <div className="space-y-2 px-3">
-                      <div className="text-sm font-medium text-gray-700 h-5 flex items-center">
-                        {isRoleLocked ? '當前角色（已鎖定）：' : availableRoles.length > 1 ? '切換視角：' : '當前角色：'}
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 min-h-[2.5rem]">
-                        {availableRoles.map((role) => (
-                          <motion.button
-                            key={role}
-                            onClick={() => {
-                              if (availableRoles.length > 1 && !isRoleLocked) {
-                                handleRoleSwitch(role);
-                              }
-                            }}
-                            className={`px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-center h-10 ${
-                              currentRole === role 
-                                ? 'bg-blue-600 text-white font-medium' 
-                                : availableRoles.length > 1 && !isRoleLocked
-                                  ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 cursor-pointer'
-                                  : 'bg-gray-100 text-gray-400 cursor-default'
-                            }`}
-                            whileHover={availableRoles.length > 1 && !isRoleLocked ? { scale: 1.02 } : {}}
-                            whileTap={availableRoles.length > 1 && !isRoleLocked ? { scale: 0.98 } : {}}
-                          >
-                            <span className="truncate">{role}</span>
-                          </motion.button>
-                        ))}
-                        {/* 如果只有一個角色，填充第二個位置以保持佈局 */}
-                        {availableRoles.length === 1 && (
-                          <div className="bg-gray-50 rounded-md h-10 opacity-30"></div>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <motion.button
-                      onClick={handleLogout}
-                      className="w-full flex items-center space-x-3 px-3 py-2 text-base font-medium text-gray-700 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <SafeIcon icon={FiLogOut} size={18} />
-                      <span>登出</span>
-                    </motion.button>
+          {/* Right Side Menu */}
+          <div className="flex items-center space-x-1">
+            {isAuthenticated ? (
+              <>
+                
+                {/* User Profile */}
+                <motion.div 
+                  className="flex-shrink-0 flex items-center cursor-pointer hover:bg-gray-50 rounded px-3 py-2 transition-colors"
+                  onClick={() => handleNavigation(getRolePath('/profile'))}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title={`查看個人資料 - ${user?.name} (${currentRole})`}
+                >
+                  <Image
+                    className="h-8 w-8 rounded-full object-cover flex-shrink-0"
+                    src={user?.avatar || 'https://www.gravatar.com/avatar/?d=mp&s=32'}
+                    alt={user?.name}
+                    width={32}
+                    height={32}
+                  />
+                  <div className="ml-2 hidden sm:block">
+                    <div className="text-sm font-medium text-gray-900">{getUserDisplayName()}</div>
+                    {currentRole && (
+                      <div className="text-xs text-gray-500">{getRoleDisplayName(currentRole)}</div>
+                    )}
                   </div>
-                ) : (
+                </motion.div>
+
+                {/* Role Selector */}
+                {availableRoles.length > 1 && !isRoleLocked && (
+                  <div className="relative" ref={roleSelectorRef}>
+                    <motion.button
+                      onClick={() => setIsRoleSelectorOpen(!isRoleSelectorOpen)}
+                      className="flex items-center text-sm text-gray-500 hover:text-gray-700 px-2 py-1 rounded hover:bg-gray-50 transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      title="切換角色"
+                    >
+                      <SafeIcon icon={FiUser} size={16} />
+                    </motion.button>
+
+                    {isRoleSelectorOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-200 z-50"
+                      >
+                        <div className="py-1">
+                          {availableRoles.map((role) => (
+                            <button
+                              key={role}
+                              onClick={() => {
+                                handleRoleSwitch(role);
+                                setIsRoleSelectorOpen(false);
+                              }}
+                              className={`block w-full text-left px-4 py-2 text-sm transition-colors ${
+                                role === currentRole
+                                  ? 'bg-blue-50 text-blue-600'
+                                  : 'text-gray-700 hover:bg-gray-50'
+                              }`}
+                            >
+                              {getRoleDisplayName(role)}
+                            </button>
+                          ))}
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
+                )}
+
+                {/* Logout Button */}
+                <motion.button
+                  onClick={handleLogout}
+                  className="flex items-center text-sm text-gray-500 hover:text-red-600 px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="登出"
+                >
+                  <SafeIcon icon={FiLogOut} size={16} />
+                </motion.button>
+              </>
+            ) : (
+              /* Login Button for guests */
+              <motion.button
+                onClick={() => handleNavigation('/login')}
+                className="flex items-center space-x-1 px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <SafeIcon icon={FiUser} size={16} />
+                <span>登入</span>
+              </motion.button>
+            )}
+
+            {/* Mobile menu button */}
+            <motion.button
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              className="lg:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <SafeIcon icon={isMenuOpen ? FiX : FiMenu} size={24} />
+            </motion.button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Menu */}
+      {isMenuOpen && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: 'auto' }}
+          exit={{ opacity: 0, height: 0 }}
+          className="lg:hidden border-t border-gray-200 bg-white"
+        >
+          <div className="px-4 py-3 space-y-1">
+            {/* Mobile Navigation Items */}
+            {leftNavigationItems.filter(item => canAccess(item.roles)).map((item) => (
+              <motion.button
+                key={item.name}
+                onClick={() => handleNavigation(item.href)}
+                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  isActive(item.href)
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <SafeIcon icon={item.icon} size={18} />
+                <span>{item.name}</span>
+              </motion.button>
+            ))}
+            
+            {/* Mobile Right Navigation Items */}
+            {rightNavigationItems.filter(item => canAccess(item.roles)).map((item) => (
+              <motion.button
+                key={item.name}
+                onClick={() => handleNavigation(item.href)}
+                className={`w-full flex items-center space-x-3 px-3 py-2 rounded-md text-base font-medium transition-colors ${
+                  isActive(item.href)
+                    ? 'text-blue-600 bg-blue-50'
+                    : 'text-gray-700 hover:text-blue-600 hover:bg-gray-50'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <SafeIcon icon={item.icon} size={18} />
+                <span>{item.name}</span>
+              </motion.button>
+            ))}
+
+            {/* Mobile User Section */}
+            <div className="border-t border-gray-200 pt-4 mt-4">
+              {isAuthenticated ? (
+                <div className="space-y-3">
+                  
+                  <motion.div 
+                    className="flex items-center space-x-3 px-3 py-2 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors"
+                    onClick={() => handleNavigation(getRolePath('/profile'))}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    title="查看個人資料"
+                  >
+                    <Image
+                      className="h-10 w-10 rounded-full object-cover flex-shrink-0"
+                      src={user?.avatar || 'https://www.gravatar.com/avatar/?d=mp&s=40'}
+                      alt={user?.name || 'User'}
+                      width={40}
+                      height={40}
+                    />
+                    <div>
+                      <div className="text-base font-medium text-gray-900">{user?.name}</div>
+                      {currentRole && (
+                        <div className="text-sm text-gray-500">{getRoleDisplayName(currentRole)}</div>
+                      )}
+                    </div>
+                  </motion.div>
+
+                  {/* Mobile Role Selector */}
+                  {availableRoles.length > 1 && !isRoleLocked && (
+                    <div className="space-y-1">
+                      <div className="text-sm font-medium text-gray-900 px-3">切換角色</div>
+                      {availableRoles.map((role) => (
+                        <button
+                          key={role}
+                          onClick={() => {
+                            handleRoleSwitch(role);
+                            setIsMenuOpen(false);
+                          }}
+                          className={`w-full text-left px-6 py-2 text-sm transition-colors ${
+                            role === currentRole
+                              ? 'bg-blue-50 text-blue-600'
+                              : 'text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          {getRoleDisplayName(role)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   <motion.button
-                    onClick={() => handleNavigation('/login')}
-                    className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors text-base font-medium"
+                    onClick={handleLogout}
+                    className="w-full flex items-center space-x-3 px-3 py-2 text-base font-medium text-red-600 hover:text-red-800 hover:bg-red-50 rounded-md transition-colors"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    <SafeIcon icon={FiUser} size={18} />
-                    <span>登入</span>
+                    <SafeIcon icon={FiLogOut} size={18} />
+                    <span>登出</span>
                   </motion.button>
-                )}
-              </div>
+                </div>
+              ) : (
+                <motion.button
+                  onClick={() => handleNavigation('/login')}
+                  className="w-full flex items-center space-x-3 px-3 py-2 text-base font-medium text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-md transition-colors"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <SafeIcon icon={FiUser} size={18} />
+                  <span>登入</span>
+                </motion.button>
+              )}
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+          </div>
+        </motion.div>
+      )}
     </nav>
   );
 };

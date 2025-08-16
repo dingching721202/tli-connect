@@ -1212,7 +1212,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg sm:text-xl font-semibold text-gray-900">會員管理儀表板</h2>
             <Link 
-              href="/corporate-management"
+              href="/corporate_contact/corporate-management"
               className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center space-x-1"
             >
               <span>查看詳細</span>

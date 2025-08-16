@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
+import Link from 'next/link';
 import { FiCheck, FiStar, FiClock, FiUsers, FiShoppingCart, FiCalendar, FiDollarSign } from 'react-icons/fi';
-import Navigation from '@/components/Navigation';
 import SafeIcon from '@/components/common/SafeIcon';
 import PurchaseModal from '@/components/PurchaseModal';
 import RegisterModal from '@/components/RegisterModal';
@@ -306,23 +307,159 @@ const MembershipPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navigation />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">載入中...</p>
+      <>
+        {/* Header Styles */}
+        <style jsx global>{`
+          .site-header{position:fixed; top:0; left:0; right:0; height:72px; background:#fff; z-index:9998; display:flex; align-items:center; justify-content:space-between; padding:0 100px}
+          .brand-logo{display:inline-block; width:200px}
+          .brand-logo img{width:100%; height:auto}
+          .header-actions{display:flex; align-items:center; gap:12px}
+        `}</style>
+
+        {/* Header */}
+        <header className="site-header">
+          <Link href="/" className="brand-logo" aria-label="Taipei Language Institute Logo">
+            <Image 
+              src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
+              alt="Taipei Language Institute logo"
+              width={200}
+              height={72}
+              priority
+              style={{height: 'auto', maxHeight: '40px'}}
+            />
+          </Link>
+          <div className="header-actions">
+            <Link href="/" style={{background: 'linear-gradient(90deg, #009FB6, #027AB9)', color: '#FFFFFF', border: 'none', borderRadius: '999px', padding: '10px 18px', fontSize: '14px', fontWeight: '700', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '36px', minWidth: '80px'}}>
+              Back to Home
+            </Link>
+            <Link href="/student/login" style={{background: 'linear-gradient(90deg, #009FB6, #027AB9)', color: '#FFFFFF', border: 'none', borderRadius: '999px', padding: '10px 18px', fontSize: '14px', fontWeight: '700', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: '36px', minWidth: '80px'}}>
+              Login
+            </Link>
+          </div>
+        </header>
+
+        <div style={{height: '72px'}}></div>
+        <div className="min-h-screen bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">載入中...</p>
+            </div>
           </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="main-layout">
-      <Navigation />
-      
-      <div className="page-container py-8">
+    <>
+      {/* Header Styles */}
+      <style jsx global>{`
+        /* Header */
+        :root { --header-padding: 100px; }
+        @media (max-width: 960px) { :root { --header-padding: 24px; } }
+        @media (max-width: 600px) { :root { --header-padding: 16px; } }
+        .site-header{position:fixed; top:0; left:0; right:0; height:72px; background:#fff; z-index:9998; display:flex; align-items:center; justify-content:space-between; padding:0 var(--header-padding)}
+        .brand-logo{display:inline-block; width:200px}
+        .brand-logo img{width:100%; height:auto}
+        @media (max-width:767px){.brand-logo img{height:30px}}
+        
+        /* Header actions */
+        .header-actions{display:flex; align-items:center; gap:12px}
+        @media (max-width:600px){.header-actions{gap:8px}}
+      `}</style>
+
+      {/* Header */}
+      <header className="site-header">
+        <Link href="/" className="brand-logo" aria-label="Taipei Language Institute Logo">
+          <Image 
+            src="https://drive.google.com/thumbnail?id=1-eMGYDEmR20U0q9CurC0Z49jW6aTUcgO&sz=w400"
+            alt="Taipei Language Institute logo"
+            width={200}
+            height={72}
+            priority
+            style={{
+              height: 'auto',
+              maxHeight: '40px'
+            }}
+          />
+        </Link>
+
+        <div className="header-actions">
+          <Link 
+            href="/" 
+            aria-label="Back to Home"
+            style={{
+              background: 'linear-gradient(90deg, #009FB6, #027AB9)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '999px',
+              padding: '10px 18px',
+              fontSize: '14px',
+              fontWeight: '700',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '36px',
+              minWidth: '80px',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 6px 14px rgba(2,122,185,.18)',
+              transition: 'all 0.25s ease-in-out',
+              boxSizing: 'border-box'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 8px 18px rgba(2,122,185,.24)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 6px 14px rgba(2,122,185,.18)';
+            }}
+          >
+            Back to Home
+          </Link>
+          <Link 
+            href="/student/login" 
+            aria-label="Login"
+            style={{
+              background: 'linear-gradient(90deg, #009FB6, #027AB9)',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: '999px',
+              padding: '10px 18px',
+              fontSize: '14px',
+              fontWeight: '700',
+              textDecoration: 'none',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: '36px',
+              minWidth: '80px',
+              whiteSpace: 'nowrap',
+              boxShadow: '0 6px 14px rgba(2,122,185,.18)',
+              transition: 'all 0.25s ease-in-out',
+              boxSizing: 'border-box'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'scale(1.02)';
+              e.currentTarget.style.boxShadow = '0 8px 18px rgba(2,122,185,.24)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 6px 14px rgba(2,122,185,.18)';
+            }}
+          >
+            Login
+          </Link>
+        </div>
+      </header>
+
+      {/* Spacer to compensate fixed header */}
+      <div style={{height: '72px'}}></div>
+
+      <div className="main-layout">        
+        <div className="page-container py-8">
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">選擇您的會員方案</h1>
@@ -525,7 +662,8 @@ const MembershipPage: React.FC = () => {
         isOpen={showCorporateForm}
         onClose={handleCloseCorporateForm}
       />
-    </div>
+      </div>
+    </>
   );
 };
 
