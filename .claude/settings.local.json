@@ -56,7 +56,9 @@
       "Bash(rg:*)",
       "Bash(git checkout:*)",
       "Bash(start http://localhost:3000/admin/dashboard)",
-      "Bash(del \"D:\\Project\\tli-connect\\src\\app\\test-dashboard\\page.tsx\")"
+      "Bash(del \"D:\\Project\\tli-connect\\src\\app\\test-dashboard\\page.tsx\")",
+      "Bash(start http://localhost:3000/admin/member-card-plan-management)",
+      "Bash(start http://localhost:3007/admin/member-card-plan-management)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
