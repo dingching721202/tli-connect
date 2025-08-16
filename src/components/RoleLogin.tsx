@@ -30,18 +30,7 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
   const router = useRouter();
   const pathname = usePathname();
 
-  // 如果已登入且有權限，切換角色並跳轉
-  useEffect(() => {
-    if (!loading && isAuthenticated && hasRole(requiredRole)) {
-      switchRole(requiredRole);
-      // 只有單一角色的用戶才設置角色鎖定，多角色用戶保持可切換
-      if (user && user.roles.length === 1) {
-        setRoleLock(requiredRole);
-      }
-      // 直接跳轉，不需要延遲
-      router.push(redirectPath);
-    }
-  }, [isAuthenticated, hasRole, requiredRole, redirectPath, router, loading, setRoleLock, switchRole, user]);
+  // 移除自動跳轉邏輯，讓用戶手動登入
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

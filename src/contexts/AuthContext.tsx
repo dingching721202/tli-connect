@@ -143,11 +143,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           
           setUser(userWithMembership);
           
-          // 設置當前角色（使用第一個角色）
-          if (userWithMembership.roles.length > 0) {
-            setCurrentRole(userWithMembership.roles[0]);
-            localStorage.setItem('currentRole', userWithMembership.roles[0]);
-          }
+          // 不自動設置角色，讓用戶手動選擇或由特定頁面設置
           
           // 保存會話
           localStorage.setItem('userId', data.user_id.toString());
@@ -198,11 +194,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const userWithMembership = await loadUserWithMembership(userData);
           setUser(userWithMembership);
           
-          // 設置當前角色（使用第一個角色）
-          if (userWithMembership.roles.length > 0) {
-            setCurrentRole(userWithMembership.roles[0]);
-            localStorage.setItem('currentRole', userWithMembership.roles[0]);
-          }
+          // 不自動設置角色，讓用戶手動選擇或由特定頁面設置
           
           // 保存會話
           localStorage.setItem('userId', data.user_id.toString());

@@ -30,13 +30,9 @@ const RoleEntry: React.FC<RoleEntryProps> = ({ requiredRole, children }) => {
       return;
     }
 
-    // 用戶有此角色權限，只有單一角色用戶才鎖定到此角色
-    if (user && user.roles.length === 1) {
-      setRoleLock(requiredRole);
-      console.log('RoleEntry 設置角色鎖定 - 單一角色用戶:', requiredRole);
-    } else {
-      console.log('RoleEntry 跳過角色鎖定 - 多角色用戶，角色數量:', user?.roles.length);
-    }
+    // 用戶有此角色權限，但不自動設置角色鎖定
+    // 讓用戶手動選擇要使用的角色
+    console.log('RoleEntry 檢查通過 - 用戶有權限訪問此頁面:', requiredRole);
   }, [isAuthenticated, loading, hasRole, requiredRole, router, setRoleLock, user]);
 
   const getRoleLoginPath = (role: string) => {
