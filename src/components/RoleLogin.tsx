@@ -97,11 +97,12 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
   const getTestAccounts = () => {
     const testAccounts = [
       { email: 'admin@example.com', name: 'Admin User', roles: ['ADMIN'] },
-      { email: 'ops@example.com', name: 'Staff User', roles: ['STAFF'] }, 
-      { email: 'teacher@example.com', name: 'Teacher User', roles: ['TEACHER'] },
+      { email: 'staff@example.com', name: 'Olivia Kao', roles: ['STAFF'] }, 
+      { email: 'teacher@example.com', name: '王老師', roles: ['TEACHER'] },
       { email: 'alice@example.com', name: 'Alice Wang', roles: ['STUDENT'] },
-      { email: 'agent@example.com', name: 'Agent User', roles: ['AGENT'] },
-      { email: 'frank@taiwantech.com', name: 'Frank Liu', roles: ['CORPORATE_CONTACT'] }
+      { email: 'agent@example.com', name: '張代理', roles: ['AGENT'] },
+      { email: 'consultant@example.com', name: '王顧問', roles: ['AGENT'] },
+      { email: 'corporate_contact@example.com', name: 'Frank Liu', roles: ['CORPORATE_CONTACT'] }
     ];
 
     return testAccounts.filter(account => account.roles.includes(requiredRole));

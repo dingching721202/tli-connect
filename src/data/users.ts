@@ -64,7 +64,7 @@ export const users: User[] = [
   },
   {
     name: "Olivia Kao",
-    email: "olivia@example.com",
+    email: "staff@example.com",
     phone: "0900-999-000",
     password: "hashed_pw5",
     roles: ["STAFF"],
@@ -88,7 +88,7 @@ export const users: User[] = [
   },
   {
     name: "Frank Liu",
-    email: "frank@taiwantech.com",
+    email: "corporate_contact@example.com",
     phone: "0900-777-333",
     password: "password",
     roles: ["CORPORATE_CONTACT"],
@@ -113,7 +113,7 @@ export const users: User[] = [
   },
   {
     name: "張代理",
-    email: "agent1@example.com",
+    email: "agent@example.com",
     phone: "0912-345-678",
     password: "password",
     roles: ["AGENT", "TEACHER"],
@@ -125,7 +125,7 @@ export const users: User[] = [
   },
   {
     name: "王顧問",
-    email: "consultant1@example.com",
+    email: "consultant@example.com",
     phone: "0923-456-789",
     password: "password",
     roles: ["AGENT"],
