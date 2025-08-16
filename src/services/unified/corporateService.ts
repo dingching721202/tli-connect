@@ -235,6 +235,7 @@ class UnifiedCorporateService {
   /**
    * Get corporate subscription statistics
    */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async getCorporateSubscriptionStatistics(companyId?: string) {
     if (!this.useLegacyMode) {
       try {
