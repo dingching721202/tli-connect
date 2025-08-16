@@ -96,10 +96,10 @@ class UnifiedSystemSettingsService {
   private readonly STORAGE_KEY = 'systemSettings'
 
   constructor() {
-    // For now, we'll use legacy mode as Supabase system settings table may not be ready
-    this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
+    // 🎯 Phase 4.3: Supabase integration ACTIVE
+    this.useLegacyMode = false
     this.loadSettings()
-    console.log('🔧 Unified System Settings Service: Using Legacy mode')
+    console.log('🚀 Unified System Settings Service: Phase 4.3 - Supabase integration ACTIVE')
   }
 
   /**

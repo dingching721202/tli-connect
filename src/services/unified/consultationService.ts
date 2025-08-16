@@ -91,10 +91,10 @@ class UnifiedConsultationService {
   private readonly STORAGE_KEY = 'consultations'
 
   constructor() {
-    // For now, we'll use legacy mode as Supabase consultations table may not be ready
-    this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
+    // 🎯 Phase 4.3: Supabase integration ACTIVE
+    this.useLegacyMode = false
     this.loadConsultations()
-    console.log('🔧 Unified Consultation Service: Using Legacy mode')
+    console.log('🚀 Unified Consultation Service: Phase 4.3 - Supabase integration ACTIVE')
   }
 
   /**

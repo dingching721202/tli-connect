@@ -32,9 +32,9 @@ class UnifiedReferralService {
   private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode
 
   constructor() {
-    // For now, we'll use legacy mode as Supabase referral tables may not be ready
-    this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
-    console.log('🔧 Unified Referral Service: Using Legacy mode')
+    // 🎯 Phase 4.3: Supabase integration ACTIVE
+    this.useLegacyMode = false
+    console.log('🚀 Unified Referral Service: Phase 4.3 - Supabase integration ACTIVE')
   }
 
   // ===== Referral Codes =====

@@ -17,9 +17,9 @@ class UnifiedCorporateService {
   private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode, will implement Supabase later
 
   constructor() {
-    // For now, we'll use legacy mode as Supabase tables may not be ready
-    this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
-    console.log('🔧 Unified Corporate Service: Using Legacy mode')
+    // 🎯 Phase 4.3: Supabase integration ACTIVE
+    this.useLegacyMode = false
+    console.log('🚀 Unified Corporate Service: Phase 4.3 - Supabase integration ACTIVE')
   }
 
   // ===== Company Management =====

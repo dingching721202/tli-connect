@@ -16,9 +16,9 @@ class UnifiedMemberCardPlanService {
   private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode
 
   constructor() {
-    // For now, we'll use legacy mode as Supabase member card plans table may not be ready
-    this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
-    console.log('🔧 Unified Member Card Plan Service: Using Legacy mode')
+    // 🎯 Phase 4.3: Supabase integration ACTIVE
+    this.useLegacyMode = false
+    console.log('🚀 Unified Member Card Plan Service: Phase 4.3 - Supabase integration ACTIVE')
   }
 
   /**

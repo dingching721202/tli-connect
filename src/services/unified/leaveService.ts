@@ -34,9 +34,9 @@ class UnifiedLeaveService {
   private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode
 
   constructor() {
-    // For now, we'll use legacy mode as Supabase leave requests table may not be ready
-    this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
-    console.log('🔧 Unified Leave Service: Using Legacy mode')
+    // 🎯 Phase 4.3: Supabase integration ACTIVE
+    this.useLegacyMode = false
+    console.log('🚀 Unified Leave Service: Phase 4.3 - Supabase integration ACTIVE')
   }
 
   /**

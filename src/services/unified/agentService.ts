@@ -18,9 +18,9 @@ class UnifiedAgentService {
   private agents: Agent[] = [...agentsData]
 
   constructor() {
-    // For now, we'll use legacy mode as Supabase agents table may not be ready
-    this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
-    console.log('🔧 Unified Agent Service: Using Legacy mode')
+    // 🎯 Phase 4.3: Supabase integration ACTIVE
+    this.useLegacyMode = false
+    console.log('🚀 Unified Agent Service: Phase 4.3 - Supabase integration ACTIVE')
   }
 
   /**
