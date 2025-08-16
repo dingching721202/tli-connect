@@ -36,6 +36,11 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
     e.preventDefault();
     setError('');
     setIsLoading(true);
+    
+    console.log('🔥 表單提交被觸發！');
+    console.log('📧 Email:', email);
+    console.log('🔑 Password:', password ? '已輸入' : '空的');
+    console.log('👤 Required Role:', requiredRole);
 
     try {
       console.log('🔐 RoleLogin - 開始登入，email:', email, 'requiredRole:', requiredRole);
@@ -54,8 +59,14 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
           if (result.user.roles.length === 1) {
             setRoleLock(requiredRole);
           }
-          // 使用 window.location.href 進行完整的頁面重新加載
-          window.location.href = redirectPath;
+          // 確保狀態更新後再跳轉
+          console.log('✅ 登入成功，準備跳轉到:', redirectPath);
+          
+          // 短暫延遲確保狀態更新
+          setTimeout(() => {
+            console.log('🚀 執行跳轉');
+            router.replace(redirectPath);
+          }, 200);
         } else {
           // 沒有該角色權限，跳轉到通用登入頁面
           alert(`您的帳號沒有${roleDisplayName}權限，將跳轉到通用登入頁面`);

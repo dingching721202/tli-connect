@@ -15,9 +15,18 @@ const RoleEntry: React.FC<RoleEntryProps> = ({ requiredRole, children }) => {
   const router = useRouter();
 
   useEffect(() => {
-    if (loading) return;
+    console.log('🔍 RoleEntry 權限檢查 - loading:', loading, 'isAuthenticated:', isAuthenticated, 'requiredRole:', requiredRole);
+    console.log('👤 當前用戶:', user);
+    console.log('🎭 用戶角色:', user?.roles);
+    console.log('✅ hasRole result:', hasRole(requiredRole));
+    
+    if (loading) {
+      console.log('⏳ 還在載入中，等待...');
+      return;
+    }
 
     if (!isAuthenticated) {
+      console.log('❌ 未登入，跳轉到登入頁面');
       // 未登入，導向角色專用登入頁面
       const roleLoginPath = getRoleLoginPath(requiredRole);
       router.push(roleLoginPath);
@@ -25,6 +34,7 @@ const RoleEntry: React.FC<RoleEntryProps> = ({ requiredRole, children }) => {
     }
 
     if (!hasRole(requiredRole)) {
+      console.log('❌ 用戶沒有所需角色權限:', requiredRole);
       // 用戶沒有此角色權限，導向首頁
       router.push('/');
       return;
@@ -32,7 +42,7 @@ const RoleEntry: React.FC<RoleEntryProps> = ({ requiredRole, children }) => {
 
     // 用戶有此角色權限，但不自動設置角色鎖定
     // 讓用戶手動選擇要使用的角色
-    console.log('RoleEntry 檢查通過 - 用戶有權限訪問此頁面:', requiredRole);
+    console.log('✅ RoleEntry 檢查通過 - 用戶有權限訪問此頁面:', requiredRole);
   }, [isAuthenticated, loading, hasRole, requiredRole, router, setRoleLock, user]);
 
   const getRoleLoginPath = (role: string) => {
