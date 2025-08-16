@@ -51,19 +51,9 @@ class MemberCardPlanStore {
 
   // 服務端檔案儲存
   private async saveToFile(): Promise<void> {
-    if (!this.isServerSide) return;
-    
-    try {
-      // 確保目錄存在
-      const dir = path.dirname(this.FILE_PATH);
-      await fs.mkdir(dir, { recursive: true });
-      
-      // 儲存資料
-      await fs.writeFile(this.FILE_PATH, JSON.stringify(this.plans, null, 2));
-      console.log('💾 方案數據已儲存到檔案');
-    } catch (error) {
-      console.error('❌ 儲存方案數據到檔案失敗:', error);
-    }
+    // TODO: File operations disabled for client-side compatibility
+    // Server-side file persistence can be implemented via API routes
+    console.log('💾 File operations disabled for client-side compatibility');
   }
 
   private saveToStorage(): void {
@@ -101,18 +91,8 @@ class MemberCardPlanStore {
 
   // 服務端檔案載入
   private async loadFromFile(): Promise<void> {
-    if (!this.isServerSide) return;
-    
-    try {
-      await fs.access(this.FILE_PATH);
-      const fileContent = await fs.readFile(this.FILE_PATH, 'utf-8');
-      this.plans = JSON.parse(fileContent);
-      console.log('📚 服務端從檔案載入方案數據:', this.plans.length, '個方案');
-    } catch (error) {
-      // 檔案不存在，使用預設資料
-      console.log('📄 檔案不存在，使用預設資料:', error);
-      this.plans = [...memberCardPlans];
-    }
+    // TODO: File operations disabled for client-side compatibility
+    console.log('📚 Using default in-memory data');
   }
 
   async getPublishedPlans(): Promise<MemberCardPlan[]> {

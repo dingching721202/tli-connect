@@ -176,7 +176,7 @@ export class MembershipsService extends BaseSupabaseService {
 
       return { data, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -242,7 +242,7 @@ export class MembershipsService extends BaseSupabaseService {
 
       return { data, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -272,13 +272,13 @@ export class MembershipsService extends BaseSupabaseService {
         'membership',
         membershipId,
         'Membership updated',
-        updateData,
+        updateData as Record<string, unknown>,
         data.campus
       )
 
       return { data, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -325,7 +325,7 @@ export class MembershipsService extends BaseSupabaseService {
 
       return { data, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -426,7 +426,7 @@ export class MembershipsService extends BaseSupabaseService {
 
       return { data: stats, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 }

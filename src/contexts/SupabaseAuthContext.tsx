@@ -74,6 +74,82 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isRoleLocked, setIsRoleLocked] = useState(false);
   const [lockedRole, setLockedRole] = useState<Role | null>(null);
 
+  // Callback functions
+  const restoreRoleState = useCallback(async (authUser: AuthUser) => {
+    try {
+      // Check for role lock state (only for single-role users)
+      const savedIsRoleLocked = localStorage.getItem('isRoleLocked') === 'true';
+      const savedLockedRole = localStorage.getItem('lockedRole') as Role;
+      
+      if (authUser.roles.length === 1 && savedIsRoleLocked && savedLockedRole && authUser.roles.includes(savedLockedRole)) {
+        // Restore role lock for single-role users
+        setIsRoleLocked(true);
+        setLockedRole(savedLockedRole);
+        setCurrentRole(savedLockedRole);
+      } else {
+        // Clear role lock for multi-role users
+        if (authUser.roles.length > 1) {
+          clearRoleState();
+        }
+        
+        // Set current role from localStorage or use first role
+        const savedCurrentRole = localStorage.getItem('currentRole') as Role;
+        if (savedCurrentRole && authUser.roles.includes(savedCurrentRole)) {
+          setCurrentRole(savedCurrentRole);
+        } else if (authUser.roles.length > 0) {
+          setCurrentRole(authUser.roles[0]);
+          localStorage.setItem('currentRole', authUser.roles[0]);
+        }
+      }
+    } catch (error) {
+      console.error('Error restoring role state:', error);
+    }
+  }, []);
+
+  const loadUserProfile = useCallback(async (supabaseUser: SupabaseUser) => {
+    try {
+      // Get user profile with roles from database
+      const { data: userProfile, error } = await usersService.getUserById(supabaseUser.id);
+      
+      if (error || !userProfile) {
+        console.error('Error loading user profile:', error);
+        return;
+      }
+
+      // Get user roles
+      const { data: roles } = await usersService.getUserRoles(supabaseUser.id);
+      
+      const authUser: AuthUser = {
+        ...userProfile,
+        roles: roles || [],
+        permissions: [] // TODO: Implement permissions logic
+      };
+
+      setUser(authUser);
+      
+      // Handle role state restoration
+      await restoreRoleState(authUser);
+      
+      // Update last login
+      await usersService.updateLastLogin(supabaseUser.id);
+      
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    }
+  }, [restoreRoleState]);
+
+  const handleSessionChange = useCallback(async (session: Session | null) => {
+    setSession(session);
+
+    if (session?.user) {
+      await loadUserProfile(session.user);
+    } else {
+      setUser(null);
+      setCurrentRole(null);
+      clearRoleState();
+    }
+  }, [loadUserProfile]);
+
   // Initialize auth state
   useEffect(() => {
     let mounted = true;
@@ -118,81 +194,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       subscription?.unsubscribe();
     };
   }, [loadUserProfile, handleSessionChange]);
-
-  const handleSessionChange = useCallback(async (session: Session | null) => {
-    setSession(session);
-
-    if (session?.user) {
-      await loadUserProfile(session.user);
-    } else {
-      setUser(null);
-      setCurrentRole(null);
-      clearRoleState();
-    }
-  }, [loadUserProfile]);
-
-  const loadUserProfile = useCallback(async (supabaseUser: SupabaseUser) => {
-    try {
-      // Get user profile with roles from database
-      const { data: userProfile, error } = await usersService.getUserById(supabaseUser.id);
-      
-      if (error || !userProfile) {
-        console.error('Error loading user profile:', error);
-        return;
-      }
-
-      // Get user roles
-      const { data: roles } = await usersService.getUserRoles(supabaseUser.id);
-      
-      const authUser: AuthUser = {
-        ...userProfile,
-        roles: roles || [],
-        permissions: [] // TODO: Implement permissions logic
-      };
-
-      setUser(authUser);
-      
-      // Handle role state restoration
-      await restoreRoleState(authUser);
-      
-      // Update last login
-      await usersService.updateLastLogin(supabaseUser.id);
-      
-    } catch (error) {
-      console.error('Error loading user profile:', error);
-    }
-  }, [restoreRoleState]);
-
-  const restoreRoleState = useCallback(async (authUser: AuthUser) => {
-    try {
-      // Check for role lock state (only for single-role users)
-      const savedIsRoleLocked = localStorage.getItem('isRoleLocked') === 'true';
-      const savedLockedRole = localStorage.getItem('lockedRole') as Role;
-      
-      if (authUser.roles.length === 1 && savedIsRoleLocked && savedLockedRole && authUser.roles.includes(savedLockedRole)) {
-        // Restore role lock for single-role users
-        setIsRoleLocked(true);
-        setLockedRole(savedLockedRole);
-        setCurrentRole(savedLockedRole);
-      } else {
-        // Clear role lock for multi-role users
-        if (authUser.roles.length > 1) {
-          clearRoleState();
-        }
-        
-        // Set current role from localStorage or use first role
-        const savedCurrentRole = localStorage.getItem('currentRole') as Role;
-        if (savedCurrentRole && authUser.roles.includes(savedCurrentRole)) {
-          setCurrentRole(savedCurrentRole);
-        } else if (authUser.roles.length > 0) {
-          setCurrentRole(authUser.roles[0]);
-          localStorage.setItem('currentRole', authUser.roles[0]);
-        }
-      }
-    } catch (error) {
-      console.error('Error restoring role state:', error);
-    }
-  }, []);
 
   const clearRoleState = () => {
     setIsRoleLocked(false);
@@ -305,7 +306,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     try {
-      const { data, error } = await usersService.updateUser(user.id, updates);
+      // Transform updates to ensure null values become undefined
+      const transformedUpdates = {
+        ...updates,
+        phone: updates.phone ?? undefined,
+        avatar_url: updates.avatar_url ?? undefined
+      };
+      const { data, error } = await usersService.updateUser(user.id, transformedUpdates);
       
       if (error || !data) {
         return { success: false, error: error?.message || 'Update failed' };

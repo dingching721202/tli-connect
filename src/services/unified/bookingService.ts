@@ -19,8 +19,8 @@ import { classAppointments as classAppointmentsData } from '@/data/class_appoint
 
 class UnifiedBookingService {
   private useLegacyMode = false // Toggle for gradual migration
-  private classTimeslots: ClassTimeslot[] = [...classTimeslotsData] as ClassTimeslot[]
-  private classAppointments: ClassAppointment[] = [...classAppointmentsData] as ClassAppointment[]
+  private classTimeslots: ClassTimeslot[] = [...classTimeslotsData] as unknown as ClassTimeslot[]
+  private classAppointments: ClassAppointment[] = [...classAppointmentsData] as unknown as ClassAppointment[]
 
   constructor() {
     // Phase 4.3: Force Supabase mode activation
@@ -115,14 +115,14 @@ class UnifiedBookingService {
           }
 
           // Check 24-hour rule
-          const sessionDateTime = new Date(`${session.session_date}T${session.start_time}`)
+          const sessionDateTime = new Date(`${(session as Record<string, string>).session_date}T${(session as Record<string, string>).start_time}`)
           if (sessionDateTime <= twentyFourHoursLater) {
             failedBookings.push({ timeslot_id: timeslotId, reason: 'WITHIN_24H' })
             continue
           }
 
           // Check availability
-          if (session.available_spots <= 0) {
+          if ((session as Record<string, number>).available_spots <= 0) {
             failedBookings.push({ timeslot_id: timeslotId, reason: 'FULL' })
             continue
           }
@@ -138,7 +138,7 @@ class UnifiedBookingService {
           try {
             const enrollmentResult = await supabaseCoursesService.createEnrollment({
               user_id: userId.toString(),
-              session_id: session.id
+              session_id: (session as Record<string, string>).id
             })
 
             if (enrollmentResult.data) {
@@ -243,7 +243,7 @@ class UnifiedBookingService {
             user_id: parseInt(enrollment.user_id),
             status: enrollment.status === 'CONFIRMED' ? 'CONFIRMED' as const :
                    enrollment.status === 'CANCELLED' ? 'CANCELED' as const : 'CONFIRMED' as const,
-            booking_time: enrollment.enrolled_at || enrollment.created_at,
+            booking_time: enrollment.enrollment_date || enrollment.created_at,
             created_at: enrollment.created_at
           }))
 
@@ -277,7 +277,7 @@ class UnifiedBookingService {
             user_id: userId,
             status: enrollment.status === 'CONFIRMED' ? 'CONFIRMED' as const :
                    enrollment.status === 'CANCELLED' ? 'CANCELED' as const : 'CONFIRMED' as const,
-            booking_time: enrollment.enrolled_at || enrollment.created_at,
+            booking_time: enrollment.enrollment_date || enrollment.created_at,
             created_at: enrollment.created_at
           }))
         }
@@ -321,9 +321,9 @@ class UnifiedBookingService {
     if (session) {
       // Find corresponding available session data
       return availableSessions.find(as => 
-        as.session_date === session.date &&
-        as.start_time === session.startTime &&
-        as.course_name === session.courseTitle
+        (as as Record<string, string>).session_date === session.date &&
+        (as as Record<string, string>).start_time === session.startTime &&
+        (as as Record<string, string>).course_name === session.courseTitle
       )
     }
 

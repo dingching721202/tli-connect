@@ -465,13 +465,13 @@ class UnifiedCourseService {
   private async legacyGetFilteredBookableSessions(filters: Array<{ key: string; value: unknown; operator?: string }>) {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(150)
-    return getFilteredBookableSessions(filters)
+    return getFilteredBookableSessions(filters as never)
   }
 
   private async legacyGetSessionsByDate(date: string, filters: Array<{ key: string; value: unknown; operator?: string }> = []) {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(100)
-    return getSessionsByDate(date, filters)
+    return getSessionsByDate(date, filters as never)
   }
 
   private async legacyBookSession(sessionId: string, userId: string): Promise<boolean> {

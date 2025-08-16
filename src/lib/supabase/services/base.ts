@@ -15,22 +15,19 @@ export abstract class BaseSupabaseService {
     const from = (page - 1) * limit
     const to = from + limit - 1
 
-    // Add pagination and ordering
-    const paginatedQuery = (query as { 
-      range: (from: number, to: number) => unknown; 
-      order: (field: string, options: { ascending: boolean }) => unknown; 
-      select: (fields: string, options?: unknown) => unknown 
-    })
-      .range(from, to)
-      .order(orderBy, { ascending })
+    // Add pagination and ordering using type assertions
+    const queryObj = query as {
+      range: (from: number, to: number) => { order: (field: string, options: { ascending: boolean }) => { select: (fields: string, options?: unknown) => Promise<{ data: T[]; error: unknown }> } };
+      select: (fields: string, options?: unknown) => Promise<{ count: number }>;
+    };
 
     const [{ data, error }, { count: totalCount }] = await Promise.all([
-      paginatedQuery.select('*', { count: 'exact' }),
-      query.select('*', { count: 'exact', head: true })
+      queryObj.range(from, to).order(orderBy, { ascending }).select('*', { count: 'exact' }),
+      queryObj.select('*', { count: 'exact', head: true })
     ])
 
     if (error) {
-      throw new Error(`Database query failed: ${error.message}`)
+      throw new Error(`Database query failed: ${error instanceof Error ? error.message : String(error)}`)
     }
 
     const total = totalCount || 0
@@ -53,11 +50,11 @@ export abstract class BaseSupabaseService {
    * Generic method to handle single record queries
    */
   protected async singleQuery<T>(query: unknown): Promise<QueryResult<T>> {
-    const { data, error } = await query.single()
+    const { data, error } = await (query as { single: () => Promise<{ data: T | null; error: unknown }> }).single()
     
     return {
       data: data || null,
-      error: error ? new Error(error.message) : null
+      error: error ? new Error(error instanceof Error ? error.message : String(error)) : null
     }
   }
 
@@ -65,11 +62,11 @@ export abstract class BaseSupabaseService {
    * Generic method to handle list queries
    */
   protected async listQuery<T>(query: unknown): Promise<QueryListResult<T>> {
-    const { data, error, count } = await query
+    const { data, error, count } = await (query as Promise<{ data: T[]; error: unknown; count: number }>)
     
     return {
       data: data || [],
-      error: error ? new Error(error.message) : null,
+      error: error ? new Error(error instanceof Error ? error.message : String(error)) : null,
       count
     }
   }

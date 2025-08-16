@@ -1,134 +1,76 @@
 import { NextResponse } from 'next/server'
-import { ApiResponse, GetUserResponse, UpdateUserRequest, UpdateUserResponse, DeleteUserResponse } from '@/types/unified'
+import { ApiResponse } from '@/types'
 
 // GET /api/v1/users/[id] - Get specific user
 export async function GET() {
   try {
-    // const userId = params.id
-    
     // TODO: Implement user retrieval with Supabase
-    // - Fetch user from core_users
-    // - Include role information
+    // - Extract user ID from params
+    // - Query users table
     // - Apply RLS policies
-    // - Handle not found cases
     
-    const response: ApiResponse<GetUserResponse> = {
+    const response: ApiResponse = {
       success: true,
       data: {
-        user: {
-          id: userId,
-          email: '',
-          full_name: '',
-          avatar_url: null,
-          phone: null,
-          campus: 'TAIPEI',
-          is_active: true,
-          email_verified: false,
-          roles: [],
-          created_at: '',
-          updated_at: ''
-        }
-      },
-      message: 'User retrieved successfully'
+        message: 'User retrieval feature not yet implemented'
+      }
     }
     
     return NextResponse.json(response)
   } catch (error) {
-    const errorResponse: ApiResponse<null> = {
+    return NextResponse.json({
       success: false,
-      data: null,
-      error: {
-        code: 'USER_003',
-        message: 'Failed to retrieve user',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }
-    }
-    
-    return NextResponse.json(errorResponse, { status: 404 })
+      error: error instanceof Error ? error.message : 'Failed to retrieve user'
+    }, { status: 500 })
   }
 }
 
 // PUT /api/v1/users/[id] - Update user
 export async function PUT() {
   try {
-    // const userId = params.id
-    const body: UpdateUserRequest = await request.json()
-    
     // TODO: Implement user update with Supabase
-    // - Update core_users record
-    // - Handle role changes if provided
-    // - Apply validation rules
-    // - Log activity
+    // - Extract user ID from params
+    // - Validate input data
+    // - Update user record
     // - Apply RLS policies
     
-    const response: ApiResponse<UpdateUserResponse> = {
+    const response: ApiResponse = {
       success: true,
       data: {
-        user: {
-          id: userId,
-          email: body.email || '',
-          full_name: body.full_name || '',
-          avatar_url: body.avatar_url || null,
-          phone: body.phone || null,
-          campus: body.campus || 'TAIPEI',
-          is_active: body.is_active ?? true,
-          email_verified: false,
-          roles: [],
-          created_at: '',
-          updated_at: new Date().toISOString()
-        }
-      },
-      message: 'User updated successfully'
+        message: 'User update feature not yet implemented'
+      }
     }
     
     return NextResponse.json(response)
   } catch (error) {
-    const errorResponse: ApiResponse<null> = {
+    return NextResponse.json({
       success: false,
-      data: null,
-      error: {
-        code: 'USER_004',
-        message: 'Failed to update user',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }
-    }
-    
-    return NextResponse.json(errorResponse, { status: 400 })
+      error: error instanceof Error ? error.message : 'Failed to update user'
+    }, { status: 500 })
   }
 }
 
 // DELETE /api/v1/users/[id] - Delete user
 export async function DELETE() {
   try {
-    // const userId = params.id
-    
     // TODO: Implement user deletion with Supabase
-    // - Soft delete (set is_active = false) or hard delete
+    // - Extract user ID from params
+    // - Validate permissions
     // - Handle cascading deletions
-    // - Log activity
     // - Apply RLS policies
-    // - Check for dependencies (memberships, enrollments, etc.)
     
-    const response: ApiResponse<DeleteUserResponse> = {
+    const response: ApiResponse = {
       success: true,
       data: {
-        message: 'User deleted successfully'
-      },
-      message: 'User deleted successfully'
+        message: 'User deletion feature not yet implemented'
+      }
     }
     
     return NextResponse.json(response)
   } catch (error) {
-    const errorResponse: ApiResponse<null> = {
+    return NextResponse.json({
       success: false,
-      data: null,
-      error: {
-        code: 'USER_005',
-        message: 'Failed to delete user',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }
-    }
-    
-    return NextResponse.json(errorResponse, { status: 400 })
+      error: error instanceof Error ? error.message : 'Failed to delete user'
+    }, { status: 500 })
   }
 }

@@ -1,5 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ApiResponse, GetEnrollmentsRequest, GetEnrollmentsResponse, CreateEnrollmentRequest, CreateEnrollmentResponse } from '@/types/unified'
+import { ApiResponse } from '@/types/unified'
+
+// Temporary type definitions until proper types are exported
+type GetEnrollmentsRequest = {
+  page: number
+  limit: number
+}
+
+type GetEnrollmentsResponse = {
+  enrollments: unknown[]
+  total: number
+}
+
+type CreateEnrollmentRequest = {
+  user_id: number
+  course_id: number
+}
+
+type CreateEnrollmentResponse = {
+  enrollment_id: number
+}
 
 // GET /api/v1/enrollments - List course enrollments
 export async function GET(request: NextRequest) {
@@ -37,8 +57,7 @@ export async function GET(request: NextRequest) {
           total: 0,
           total_pages: 0
         }
-      },
-      message: 'Enrollments retrieved successfully'
+      }
     }
     
     return NextResponse.json(response)
@@ -88,8 +107,7 @@ export async function POST(request: NextRequest) {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         }
-      },
-      message: 'Enrollment created successfully'
+      }
     }
     
     return NextResponse.json(response, { status: 201 })

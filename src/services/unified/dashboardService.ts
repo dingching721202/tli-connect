@@ -16,6 +16,7 @@ import { hashString } from '@/utils/enrollmentUtils'
 
 // Legacy imports
 import { users as usersData } from '@/data/users'
+import { User } from '@/types'
 
 class UnifiedDashboardService {
   private useLegacyMode = false
@@ -328,7 +329,7 @@ class UnifiedDashboardService {
 
       // Get active memberships count
       const allMemberships = await memberCardService.getAllCards()
-      const activeMemberships = allMemberships.filter(m => m.status === 'ACTIVE').length
+      const activeMemberships = allMemberships.filter(m => m.status === 'activated').length
 
       // Get upcoming classes count
       const allBookings = await bookingService.getAllBookings()
@@ -344,8 +345,8 @@ class UnifiedDashboardService {
         activeMemberships,
         upcomingBookings,
         totalTeachers: teachers,
-        expiredMemberships: allMemberships.filter(m => m.status === 'EXPIRED').length,
-        pendingMemberships: allMemberships.filter(m => m.status === 'INACTIVE').length
+        expiredMemberships: allMemberships.filter(m => m.status === 'expired').length,
+        pendingMemberships: allMemberships.filter(m => m.status === 'inactive').length
       }
     } catch (error) {
       console.error('獲取Dashboard統計失敗:', error)

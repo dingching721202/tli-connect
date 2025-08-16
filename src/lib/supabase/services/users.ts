@@ -143,7 +143,7 @@ export class UsersService extends BaseSupabaseService {
 
       return { data, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -173,12 +173,12 @@ export class UsersService extends BaseSupabaseService {
         'user',
         userId,
         'User profile updated',
-        updateData
+        updateData as Record<string, unknown>
       )
 
       return { data, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -210,7 +210,7 @@ export class UsersService extends BaseSupabaseService {
 
       return { data: true, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -232,7 +232,7 @@ export class UsersService extends BaseSupabaseService {
       const roles = data?.map(r => r.role) || []
       return { data: roles, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -273,7 +273,7 @@ export class UsersService extends BaseSupabaseService {
 
       return { data: true, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 

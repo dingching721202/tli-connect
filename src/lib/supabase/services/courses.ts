@@ -140,7 +140,7 @@ export class CoursesService extends BaseSupabaseService {
 
       return { data, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -238,7 +238,7 @@ export class CoursesService extends BaseSupabaseService {
 
       return { data: sessionsWithAvailability, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -283,7 +283,7 @@ export class CoursesService extends BaseSupabaseService {
 
       return { data, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -382,18 +382,18 @@ export class CoursesService extends BaseSupabaseService {
       }
 
       // Transform data to flatten nested structure
-      const enrollments = data?.map((enrollment: unknown) => ({
+      const enrollments = data?.map((enrollment: Record<string, unknown>) => ({
         ...enrollment,
-        session_date: enrollment.course_sessions.session_date,
-        start_time: enrollment.course_sessions.start_time,
-        end_time: enrollment.course_sessions.end_time,
-        course_name: enrollment.course_sessions.course_schedules.course_templates.name,
-        teacher_name: enrollment.course_sessions.course_schedules.core_users.full_name
+        session_date: (enrollment as { course_sessions: { session_date: string } }).course_sessions.session_date,
+        start_time: (enrollment as { course_sessions: { start_time: string } }).course_sessions.start_time,
+        end_time: (enrollment as { course_sessions: { end_time: string } }).course_sessions.end_time,
+        course_name: (enrollment as { course_sessions: { course_schedules: { course_templates: { name: string } } } }).course_sessions.course_schedules.course_templates.name,
+        teacher_name: (enrollment as { course_sessions: { course_schedules: { core_users: { full_name: string } } } }).course_sessions.course_schedules.core_users.full_name
       })) || []
 
-      return { data: enrollments, error: null }
+      return { data: enrollments as (CourseEnrollment & { session_date: string; start_time: string; end_time: string; course_name: string; teacher_name: string })[], error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -473,7 +473,7 @@ export class CoursesService extends BaseSupabaseService {
 
       return { data, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -540,7 +540,7 @@ export class CoursesService extends BaseSupabaseService {
 
       return { data, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -573,7 +573,7 @@ export class CoursesService extends BaseSupabaseService {
 
       return { data, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -598,10 +598,10 @@ export class CoursesService extends BaseSupabaseService {
         throw error
       }
 
-      const categories = [...new Set(data?.map(item => item.category).filter(Boolean))] || []
+      const categories = [...new Set(data?.map(item => item.category).filter(Boolean) || [])]
       return { data: categories, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 
@@ -656,7 +656,7 @@ export class CoursesService extends BaseSupabaseService {
 
       return { data: stats, error: null }
     } catch (error: unknown) {
-      return { data: null, error: new Error(error.message) }
+      return { data: null, error: new Error(error instanceof Error ? error.message : String(error)) }
     }
   }
 }

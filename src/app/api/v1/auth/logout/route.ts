@@ -1,5 +1,10 @@
 import { NextResponse } from 'next/server'
-import { ApiResponse, LogoutResponse } from '@/types/unified'
+import { ApiResponse } from '@/types/unified'
+
+// Temporary type definition until LogoutResponse is properly exported
+type LogoutResponse = {
+  message: string
+}
 
 export async function POST() {
   try {

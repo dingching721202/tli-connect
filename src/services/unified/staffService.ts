@@ -185,8 +185,9 @@ class UnifiedStaffService {
       // Cancel related appointments
       const appointments = JSON.parse(localStorage.getItem('classAppointments') || '[]')
       const updatedAppointments = appointments.map((appointment: unknown) => {
-        if (appointment.class_timeslot_id === timeslotId) {
-          return { ...appointment, status: 'CANCELED', updated_at: new Date().toISOString() }
+        const appt = appointment as Record<string, unknown>
+        if (appt.class_timeslot_id === timeslotId) {
+          return { ...appt, status: 'CANCELED', updated_at: new Date().toISOString() }
         }
         return appointment
       })

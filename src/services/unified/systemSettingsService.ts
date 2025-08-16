@@ -238,7 +238,7 @@ class UnifiedSystemSettingsService {
       ...this.settings,
       [category]: {
         ...(this.settings[category] as Record<string, unknown>),
-        ...updates
+        ...(updates as Record<string, unknown>)
       }
     }
     

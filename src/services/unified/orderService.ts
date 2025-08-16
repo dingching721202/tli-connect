@@ -161,10 +161,11 @@ class UnifiedOrderService {
         user_id: orderData.user_id,
         plan_id: orderData.plan_id,
         amount: orderData.amount,
-        payment_method: orderData.payment_method || 'credit_card',
-        status: orderData.status || 'pending',
+        payment_method: (orderData.payment_method || 'CREDIT_CARD') as 'CREDIT_CARD' | 'BANK_TRANSFER' | 'PAYPAL' | 'LINE_PAY' | 'APPLE_PAY' | 'GOOGLE_PAY',
+        status: (orderData.status || 'CREATED') as 'CREATED' | 'COMPLETED' | 'CANCELED' | 'EXPIRED',
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 15 * 60 * 1000).toISOString() // 15 minutes from now
       }
 
       orders.push(newOrder)

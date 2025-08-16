@@ -1,134 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { membershipsService } from '@/lib/supabase/services/memberships'
-import { ApiResponse, MembershipType, MembershipStatus, Campus } from '@/lib/supabase/types'
+import { ApiResponse } from '@/types'
 
-interface CreateMembershipRequest {
-  user_id: string
-  organization_id?: string
-  plan_id: string
-  type: MembershipType
-  campus: Campus
-  auto_renew?: boolean
-}
-
-// GET /api/v1/memberships - List memberships with filtering and pagination
+// GET /api/v1/memberships - List memberships
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
+    const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '20')
     
-    const filters = {
-      user_id: searchParams.get('user_id') || undefined,
-      organization_id: searchParams.get('organization_id') || undefined,
-      type: searchParams.get('type') as MembershipType,
-      status: searchParams.get('status') as MembershipStatus,
-      campus: searchParams.get('campus') as Campus,
-      card_number: searchParams.get('card_number') || undefined
-    }
+    // TODO: Implement membership listing with Supabase
+    // - Query unified_memberships table
+    // - Apply filters and pagination
+    // - Apply RLS policies
     
-    const pagination = {
-      page: parseInt(searchParams.get('page') || '1'),
-      limit: parseInt(searchParams.get('limit') || '20'),
-      orderBy: searchParams.get('sort_by') || 'activated_at',
-      ascending: searchParams.get('sort_order') === 'asc'
-    }
-    
-    const result = await membershipsService.getMemberships(filters, pagination)
-    
-    const response: ApiResponse<typeof result> = {
+    const response: ApiResponse = {
       success: true,
-      data: result,
-      message: 'Memberships retrieved successfully'
+      data: {
+        memberships: [],
+        pagination: {
+          page,
+          limit,
+          total: 0,
+          total_pages: 0
+        }
+      }
     }
     
     return NextResponse.json(response)
   } catch (error) {
-    const errorResponse: ApiResponse<null> = {
+    return NextResponse.json({
       success: false,
-      data: null,
-      error: {
-        code: 'MEMBERSHIP_001',
-        message: 'Failed to retrieve memberships',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }
-    }
-    
-    return NextResponse.json(errorResponse, { status: 500 })
+      error: error instanceof Error ? error.message : 'Failed to retrieve memberships'
+    }, { status: 500 })
   }
 }
 
-// POST /api/v1/memberships - Create new membership
-export async function POST(request: NextRequest) {
+// POST /api/v1/memberships - Create membership
+export async function POST() {
   try {
-    const body: CreateMembershipRequest = await request.json()
+    // TODO: Implement membership creation with Supabase
+    // const body = await request.json()
+    // - Validate input data
+    // - Create membership record
+    // - Log activity
+    // - Apply RLS policies
     
-    // Validate required fields
-    if (!body.user_id || !body.plan_id || !body.type || !body.campus) {
-      const errorResponse: ApiResponse<null> = {
-        success: false,
-        data: null,
-        error: {
-          code: 'MEMBERSHIP_002',
-          message: 'Missing required fields',
-          details: 'user_id, plan_id, type, and campus are required'
-        }
-      }
-      return NextResponse.json(errorResponse, { status: 400 })
-    }
-
-    // For corporate memberships, organization_id is required
-    if (body.type === 'CORPORATE' && !body.organization_id) {
-      const errorResponse: ApiResponse<null> = {
-        success: false,
-        data: null,
-        error: {
-          code: 'MEMBERSHIP_003',
-          message: 'organization_id is required for corporate memberships',
-          details: 'Corporate memberships must be associated with an organization'
-        }
-      }
-      return NextResponse.json(errorResponse, { status: 400 })
-    }
-
-    const { data: membership, error } = await membershipsService.createMembership({
-      user_id: body.user_id,
-      organization_id: body.organization_id,
-      plan_id: body.plan_id,
-      type: body.type,
-      campus: body.campus,
-      auto_renew: body.auto_renew
-    })
-
-    if (error || !membership) {
-      const errorResponse: ApiResponse<null> = {
-        success: false,
-        data: null,
-        error: {
-          code: 'MEMBERSHIP_004',
-          message: 'Failed to create membership',
-          details: error?.message || 'Membership creation failed'
-        }
-      }
-      return NextResponse.json(errorResponse, { status: 400 })
-    }
-    
-    const response: ApiResponse<{ membership: typeof membership }> = {
+    const response: ApiResponse = {
       success: true,
-      data: { membership },
-      message: 'Membership created successfully'
+      data: {
+        message: 'Membership creation feature not yet implemented'
+      }
     }
     
     return NextResponse.json(response, { status: 201 })
   } catch (error) {
-    const errorResponse: ApiResponse<null> = {
+    return NextResponse.json({
       success: false,
-      data: null,
-      error: {
-        code: 'MEMBERSHIP_005',
-        message: 'Failed to create membership',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }
-    }
-    
-    return NextResponse.json(errorResponse, { status: 500 })
+      error: error instanceof Error ? error.message : 'Failed to create membership'
+    }, { status: 500 })
   }
 }

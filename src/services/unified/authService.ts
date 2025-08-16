@@ -8,7 +8,7 @@
  */
 
 import { authService as supabaseAuthService } from '@/lib/supabase/services'
-import { User, UserWithPassword, LoginResponse, UserRoleAssignment } from '@/types'
+import { User, UserWithPassword, LoginResponse, UserRoleAssignment, UserRole, Campus, UpdateUserRequest } from '@/types'
 import { jwtUtils } from '@/lib/jwt'
 
 // Legacy data imports for migration period
@@ -35,7 +35,7 @@ class UnifiedAuthService {
         if (result.success && result.user && result.session) {
           return {
             success: true,
-            user_id: result.user.id,
+            user_id: typeof result.user.id === 'string' ? undefined : result.user.id,
             jwt: result.session.access_token
           }
         } else {
@@ -65,7 +65,7 @@ class UnifiedAuthService {
         if (result.success && result.user && result.session) {
           return {
             success: true,
-            user_id: result.user.id,
+            user_id: typeof result.user.id === 'string' ? undefined : result.user.id,
             jwt: result.session.access_token
           }
         } else {
@@ -97,7 +97,7 @@ class UnifiedAuthService {
           // Convert Supabase user to legacy format for compatibility
           return {
             ...profile,
-            id: typeof id === 'number' ? parseInt(profile.id) : profile.id
+            id: typeof id === 'number' ? id : parseInt(profile.id.toString())
           } as User
         }
       } catch (error) {
@@ -121,7 +121,7 @@ class UnifiedAuthService {
         const userIdStr = typeof userId === 'number' ? userId.toString() : userId
         const result = await supabaseAuthService.getUserRoles(userIdStr)
         
-        if (result.success) {
+        if (result.success && result.data) {
           // Convert to legacy format
           const activeRoles = result.data.map(role => ({
             id: Date.now(),
@@ -215,7 +215,7 @@ class UnifiedAuthService {
       try {
         const result = await supabaseAuthService.getAllUsersWithRoles()
         
-        if (result.success) {
+        if (result.success && result.data) {
           // Convert to legacy format for compatibility
           const usersWithRoles = result.data.map(user => ({
             ...user,
@@ -261,7 +261,7 @@ class UnifiedAuthService {
           campus: userData.campus
         }, adminIdStr)
         
-        if (result.success) {
+        if (result.success && result.data) {
           return { 
             success: true, 
             data: { 
@@ -285,20 +285,20 @@ class UnifiedAuthService {
   /**
    * Update user profile
    */
-  async updateUser(userData: UpdateUserRequest) {
+  async updateUser(userId: number | string, userData: UpdateUserRequest) {
     if (!this.useLegacyMode) {
       try {
-        const userIdStr = typeof userData.id === 'number' ? userData.id.toString() : userData.id
+        const userIdStr = typeof userId === 'number' ? userId.toString() : userId
         
         const result = await supabaseAuthService.updateUserProfile(userIdStr, {
           name: userData.name,
           phone: userData.phone,
           campus: userData.campus,
-          avatar_url: userData.avatar_url
+          avatar: userData.avatar
         })
         
         if (result.success) {
-          const updatedUser = await this.getUser(userData.id)
+          const updatedUser = await this.getUser(userId)
           return { success: true, data: updatedUser }
         } else {
           return { success: false, error: result.error }
@@ -310,7 +310,7 @@ class UnifiedAuthService {
     }
 
     // Legacy mode implementation
-    return this.legacyUpdateUser(userData)
+    return this.legacyUpdateUser({ ...userData, id: typeof userId === 'string' ? parseInt(userId) : userId } as UpdateUserRequest & { id: number })
   }
 
   /**
@@ -665,7 +665,7 @@ class UnifiedAuthService {
     }
   }
 
-  private async legacyUpdateUser(userData: UpdateUserRequest) {
+  private async legacyUpdateUser(userData: UpdateUserRequest & { id: number }) {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
     await delay(300)
     
@@ -685,12 +685,12 @@ class UnifiedAuthService {
       const timestamp = new Date().toISOString()
       users[userIndex] = {
         ...users[userIndex],
-        name: userData.name,
-        email: userData.email,
-        phone: userData.phone,
-        roles: userData.roles,
-        membership_status: userData.membership_status,
-        campus: userData.campus,
+        name: userData.name || users[userIndex].name,
+        email: userData.email || users[userIndex].email,
+        phone: userData.phone || users[userIndex].phone,
+        roles: userData.roles || users[userIndex].roles,
+        membership_status: userData.membership_status || users[userIndex].membership_status,
+        campus: userData.campus || users[userIndex].campus,
         updated_at: timestamp
       }
       

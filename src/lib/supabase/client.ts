@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js'
-import { Database } from '@/types/unified/database'
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -8,7 +7,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
@@ -32,7 +31,7 @@ export const createServerSupabaseClient = () => {
     throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable')
   }
   
-  return createClient<Database>(supabaseUrl, serviceRoleKey, {
+  return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
       autoRefreshToken: false

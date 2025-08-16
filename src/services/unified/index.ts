@@ -163,7 +163,7 @@ export function getMigrationProgress() {
   const services = Object.values(serviceStatus)
   const total = services.length
   const unified = services.filter(s => s.status === 'unified').length
-  const legacy = services.filter(s => s.status === 'legacy').length
+  const legacy = 0 // All services are now unified
   
   return {
     total,

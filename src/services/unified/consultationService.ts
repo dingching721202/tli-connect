@@ -391,7 +391,7 @@ class UnifiedConsultationService {
     // Update other fields
     Object.keys(updateData).forEach(key => {
       if (updateData[key as keyof typeof updateData] !== undefined) {
-        ;(consultation as Record<string, unknown>)[key] = updateData[key as keyof typeof updateData]
+        ;(consultation as unknown as Record<string, unknown>)[key] = updateData[key as keyof typeof updateData]
       }
     })
 

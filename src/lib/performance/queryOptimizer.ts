@@ -26,7 +26,7 @@ class QueryOptimizer {
     const cached = this.cache.get(key);
     if (cached && Date.now() - cached.timestamp < cached.expiresIn) {
       console.log(`🚀 Cache hit for key: ${key}`);
-      return cached.data;
+      return cached.data as T;
     }
 
     // 執行查詢

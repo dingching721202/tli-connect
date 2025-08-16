@@ -6,7 +6,8 @@ import SafeIcon from './common/SafeIcon';
 import { useAuth } from '@/contexts/AuthContext';
 import { users } from '@/data/users';
 import { User, UserRole } from '@/types';
-import { authService, memberCardService } from '@/services/dataService';
+import { authService } from '@/services/unified/authService';
+import { memberCardService } from '@/services/dataService';
 
 type RoleType = 'STUDENT' | 'TEACHER' | 'STAFF' | 'CORPORATE_CONTACT' | 'ADMIN' | 'AGENT';
 type MembershipStatusType = 'non_member' | 'inactive' | 'activated' | 'expired' | 'cancelled' | 'test';
@@ -164,7 +165,7 @@ const AccountManagement = () => {
     
     try {
       // 先更新用戶基本資訊
-      const userResponse = await authService.updateUser(selectedUser);
+      const userResponse = await authService.updateUser(selectedUser.id, selectedUser);
       
       if (userResponse.success) {
         // 更新用戶角色
@@ -193,10 +194,10 @@ const AccountManagement = () => {
           setSelectedRoles([]);
           alert('用戶資訊和角色更新成功！');
         } else {
-          alert('角色更新失敗：' + roleResponse.error);
+          alert('角色更新失敗：' + ('error' in roleResponse ? roleResponse.error : '未知錯誤'));
         }
       } else {
-        alert('用戶資訊更新失敗：' + userResponse.error);
+        alert('用戶資訊更新失敗：' + ('error' in userResponse ? userResponse.error : '未知錯誤'));
       }
     } catch (error) {
       console.error('更新用戶失敗:', error);

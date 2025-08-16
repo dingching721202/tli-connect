@@ -1,5 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { ApiResponse, GetCourseSessionsRequest, GetCourseSessionsResponse, CreateCourseSessionRequest, CreateCourseSessionResponse } from '@/types/unified'
+import { ApiResponse } from '@/types/unified'
+
+// Temporary type definitions until proper types are exported
+type GetCourseSessionsRequest = {
+  page: number
+  limit: number
+  course_id?: number
+  schedule_id?: string
+  teacher_id?: string
+  campus?: string | null
+  status?: string | null
+  date_from?: string
+  date_to?: string
+  sort_by?: string
+  sort_order?: string
+}
+
+type GetCourseSessionsResponse = {
+  sessions: unknown[]
+  total: number
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    total_pages: number
+  }
+}
+
+type CreateCourseSessionRequest = {
+  course_id: number
+  start_time: string
+  end_time: string
+  schedule_id: number
+  session_date: string
+  max_capacity: number
+  teacher_id: number
+  campus: string
+}
+
+type CreateCourseSessionResponse = {
+  session_id: number
+  session: {
+    id: string
+    schedule_id: number
+    session_date: string
+    start_time: string
+    end_time: string
+    max_capacity: number
+    booked_count: number
+    teacher_id: number
+    campus: string
+    status: string
+  }
+}
 
 // GET /api/v1/courses/sessions - List course sessions
 export async function GET(request: NextRequest) {
@@ -31,6 +84,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         sessions: [],
+        total: 0,
         pagination: {
           page: filters.page,
           limit: filters.limit,
@@ -73,6 +127,7 @@ export async function POST(request: NextRequest) {
     const response: ApiResponse<CreateCourseSessionResponse> = {
       success: true,
       data: {
+        session_id: 0,
         session: {
           id: '',
           schedule_id: body.schedule_id,
@@ -80,11 +135,10 @@ export async function POST(request: NextRequest) {
           start_time: body.start_time,
           end_time: body.end_time,
           status: 'SCHEDULED',
-          actual_capacity: 0,
-          notes: body.notes || null,
-          campus: body.campus,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          max_capacity: body.max_capacity,
+          booked_count: 0,
+          teacher_id: body.teacher_id,
+          campus: body.campus
         }
       }
     }

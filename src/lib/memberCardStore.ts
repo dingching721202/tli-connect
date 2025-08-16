@@ -1,7 +1,6 @@
 import { memberships } from '@/data/memberships';
 import { Membership } from '@/types/membership';
 import { memberCardPlans } from '@/data/member_card_plans';
-// 只在服務端使用 fs
 
 // localStorage 和檔案系統持久化儲存
 class MemberCardStore {
@@ -73,45 +72,14 @@ class MemberCardStore {
 
   // 服務端檔案載入
   private async loadFromFile(): Promise<void> {
-    if (typeof window !== 'undefined') return; // 客戶端不執行
-    
-    try {
-      // 使用 eval 避免 webpack 靜態分析
-      // 移除 fs 操作，使用 localStorage 持久化
-      const path = await eval('import("path")');
-      const filePath = path.join(process.cwd(), 'data', this.FILE_NAME);
-      
-      await fs.access(filePath);
-      const fileContent = await fs.readFile(filePath, 'utf-8');
-      this.userMemberCards = JSON.parse(fileContent);
-      console.log('👥 服務端從檔案載入用戶會員卡數據:', this.userMemberCards.length, '條記錄');
-    } catch (error) {
-      // 檔案不存在，使用預設資料
-      console.log('📄 檔案不存在，使用預設用戶會員卡資料:', error);
-      this.userMemberCards = [...memberships];
-    }
+    // TODO: File operations disabled for client-side compatibility
+    console.log('👥 Using default in-memory membership data');
   }
 
   // 服務端檔案儲存
   private async saveToFile(): Promise<void> {
-    if (typeof window !== 'undefined') return; // 客戶端不執行
-    
-    try {
-      // 使用 eval 避免 webpack 靜態分析
-      // 移除 fs 操作，使用 localStorage 持久化
-      const path = await eval('import("path")');
-      const filePath = path.join(process.cwd(), 'data', this.FILE_NAME);
-      
-      // 確保目錄存在
-      const dir = path.dirname(filePath);
-      await fs.mkdir(dir, { recursive: true });
-      
-      // 儲存資料
-      await fs.writeFile(filePath, JSON.stringify(this.userMemberCards, null, 2));
-      console.log('💾 用戶會員卡數據已儲存到檔案');
-    } catch (error) {
-      console.error('❌ 儲存用戶會員卡數據到檔案失敗:', error);
-    }
+    // TODO: File operations disabled for client-side compatibility
+    console.log('💾 File operations disabled for client-side compatibility');
   }
 
   private saveToStorage(): void {

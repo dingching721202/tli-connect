@@ -7,9 +7,10 @@
  * - Backwards compatibility with existing API
  */
 
-import { MemberCardPlan, memberCardPlanStore } from '@/lib/memberCardPlanStore'
+import { memberCardPlanStore } from '@/lib/memberCardPlanStore'
+import { MemberCardPlan } from '@/data/member_card_plans'
 import { MemberCard, memberCards } from '@/data/member_cards'
-import { getCourseTemplates } from '@/data/courseTemplateUtils'
+import { getCourseTemplates, getPublishedCourseTemplates } from '@/data/courseTemplateUtils'
 
 class UnifiedMemberCardPlanService {
   private useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED // Start with legacy mode
@@ -263,17 +264,17 @@ class UnifiedMemberCardPlanService {
 
     try {
       const templates = getCourseTemplates();
-      const schedules = getPublishedCourseSchedules();
+      const schedules = getPublishedCourseTemplates();
       
       const coursesData: unknown[] = [];
       
       // 1. Process templates with schedules
       schedules.forEach(schedule => {
-        const template = templates.find(t => t.id === schedule.templateId);
+        const template = templates.find(t => t.id === (schedule as unknown as Record<string, unknown>).templateId);
         if (template && template.status === 'published') {
           coursesData.push({
-            id: `${template.id}_${schedule.id}`,
-            title: schedule.seriesName ? `${template.title} - ${schedule.seriesName}` : template.title,
+            id: `${template.id}_${(schedule as unknown as Record<string, unknown>).id}`,
+            title: (schedule as unknown as Record<string, unknown>).seriesName ? `${template.title} - ${(schedule as unknown as Record<string, unknown>).seriesName}` : template.title,
             language: getLanguageFromCategory(template.category),
             level: template.level,
             category: template.category,
@@ -285,7 +286,7 @@ class UnifiedMemberCardPlanService {
       // 2. Process published templates without schedules
       const publishedTemplates = templates.filter(t => t.status === 'published');
       publishedTemplates.forEach(template => {
-        const hasSchedule = schedules.some(s => s.templateId === template.id);
+        const hasSchedule = schedules.some(s => (s as unknown as Record<string, unknown>).templateId === template.id);
         if (!hasSchedule) {
           coursesData.push({
             id: template.id,

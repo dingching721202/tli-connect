@@ -137,7 +137,7 @@ const MemberCardPlanManagement: React.FC = () => {
       const coursesData = await memberCardPlanService.getAvailableCourses();
       
       console.log('✅ 成功載入課程資料:', coursesData.length, '個課程');
-      setCourses(coursesData);
+      setCourses(coursesData as CourseData[]);
     } catch (error) {
       console.error('載入課程資料失敗:', error);
       setCourses([]);

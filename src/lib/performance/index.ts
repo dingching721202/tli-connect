@@ -123,7 +123,7 @@ export function trackPagePerformance(pageName: string) {
       TTFB: navigation.responseStart - navigation.requestStart,
       Download: navigation.responseEnd - navigation.responseStart,
       DOMParse: navigation.domContentLoadedEventEnd - navigation.domContentLoadedEventStart,
-      Total: navigation.loadEventEnd - navigation.navigationStart
+      Total: navigation.loadEventEnd - navigation.startTime
     };
 
     Object.entries(metrics).forEach(([key, value]) => {

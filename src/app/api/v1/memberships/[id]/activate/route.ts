@@ -1,14 +1,11 @@
 import { NextResponse } from 'next/server'
-import { ApiResponse, ActivateMembershipResponse } from '@/types/unified'
+import { ApiResponse } from '@/types'
 
 // POST /api/v1/memberships/[id]/activate - Activate membership
 export async function POST() {
   try {
-    // const membershipId = params.id
-    // const body: ActivateMembershipRequest = await request.json()
-    
     // TODO: Implement membership activation with Supabase
-    // - Verify membership exists and is in PURCHASED status
+    // - Verify membership exists and is in PURCHASED status  
     // - Calculate expires_at based on plan duration
     // - Update status to ACTIVATED
     // - Set activated_at timestamp
@@ -17,41 +14,20 @@ export async function POST() {
     // - Apply RLS policies
     // - Send activation notification
     
-    const response: ApiResponse<ActivateMembershipResponse> = {
+    const response: ApiResponse = {
       success: true,
       data: {
-        membership: {
-          id: membershipId,
-          user_id: '',
-          organization_id: null,
-          plan_id: '',
-          type: 'INDIVIDUAL',
-          status: 'ACTIVATED',
-          card_number: '',
-          purchased_at: '',
-          activated_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
-          auto_renew: false,
-          campus: 'TAIPEI',
-          created_at: '',
-          updated_at: new Date().toISOString()
-        }
-      },
-      message: 'Membership activated successfully'
+        message: 'Membership activation feature not yet implemented'
+      }
     }
     
     return NextResponse.json(response)
   } catch (error) {
-    const errorResponse: ApiResponse<null> = {
+    const errorResponse: ApiResponse = {
       success: false,
-      data: null,
-      error: {
-        code: 'MEMBERSHIP_003',
-        message: 'Failed to activate membership',
-        details: error instanceof Error ? error.message : 'Unknown error'
-      }
+      error: error instanceof Error ? error.message : 'Failed to activate membership'
     }
     
-    return NextResponse.json(errorResponse, { status: 400 })
+    return NextResponse.json(errorResponse, { status: 500 })
   }
 }

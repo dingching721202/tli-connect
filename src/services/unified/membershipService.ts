@@ -39,7 +39,7 @@ class UnifiedMembershipService {
 
             if (result.data) {
               // Convert Supabase format to legacy format
-              return result.data.map(this.convertSupabaseToLegacyFormat)
+              return result.data.map(membership => this.convertSupabaseToLegacyFormat(membership as unknown as unknown as Record<string, unknown>))
             }
           } catch (error) {
             console.error('Supabase getAllCards failed, falling back to legacy:', error)
@@ -73,7 +73,7 @@ class UnifiedMembershipService {
         const createData = {
           user_id: cardData.user_id.toString(),
           plan_id: cardData.plan_id.toString(),
-          type: 'individual' as const,
+          type: 'INDIVIDUAL' as const,
           campus: 'TAIPEI' as const, // Default campus
           auto_renew: false
         }
@@ -86,11 +86,11 @@ class UnifiedMembershipService {
             await supabaseMembershipsService.activateMembership(result.data.id)
             const activatedResult = await supabaseMembershipsService.getMembershipById(result.data.id)
             if (activatedResult.data) {
-              return this.convertSupabaseToLegacyFormat(activatedResult.data as Record<string, unknown>)
+              return this.convertSupabaseToLegacyFormat(activatedResult.data as unknown as unknown as Record<string, unknown>)
             }
           }
 
-          return this.convertSupabaseToLegacyFormat(result.data as Record<string, unknown>)
+          return this.convertSupabaseToLegacyFormat(result.data as unknown as unknown as Record<string, unknown>)
         }
       } catch (error) {
         console.error('Supabase createCard failed, falling back to legacy:', error)
@@ -132,7 +132,7 @@ class UnifiedMembershipService {
           if (result.data) {
             return { 
               success: true, 
-              data: this.convertSupabaseToLegacyFormat(result.data as Record<string, unknown>)
+              data: this.convertSupabaseToLegacyFormat(result.data as unknown as unknown as Record<string, unknown>)
             }
           }
         }
@@ -157,7 +157,7 @@ class UnifiedMembershipService {
         const result = await supabaseMembershipsService.getUserActiveMembership(userId.toString())
         
         if (result.data) {
-          return this.convertSupabaseToLegacyFormat(result.data as Record<string, unknown>)
+          return this.convertSupabaseToLegacyFormat(result.data as unknown as unknown as Record<string, unknown>)
         }
         
         return null
@@ -182,7 +182,7 @@ class UnifiedMembershipService {
         if (result.data) {
           const inactiveMembership = result.data.find(m => m.status === 'PURCHASED')
           if (inactiveMembership) {
-            return this.convertSupabaseToLegacyFormat(inactiveMembership as Record<string, unknown>)
+            return this.convertSupabaseToLegacyFormat(inactiveMembership as unknown as unknown as Record<string, unknown>)
           }
         }
         
@@ -206,7 +206,7 @@ class UnifiedMembershipService {
         const result = await supabaseMembershipsService.getUserMemberships(userId.toString())
         
         if (result.data) {
-          return result.data.map(m => this.convertSupabaseToLegacyFormat(m as Record<string, unknown>))
+          return result.data.map(m => this.convertSupabaseToLegacyFormat(m as unknown as unknown as Record<string, unknown>))
         }
         
         return []
@@ -243,7 +243,7 @@ class UnifiedMembershipService {
                 status: 'EXPIRED'
               })
               
-              expiredMemberships.push(this.convertSupabaseToLegacyFormat(membership as Record<string, unknown>))
+              expiredMemberships.push(this.convertSupabaseToLegacyFormat(membership as unknown as unknown as Record<string, unknown>))
             }
           }
 
@@ -418,7 +418,7 @@ class UnifiedMembershipService {
             return false
           })
 
-          return expiringMemberships.map(m => this.convertSupabaseToLegacyFormat(m as Record<string, unknown>))
+          return expiringMemberships.map(m => this.convertSupabaseToLegacyFormat(m as unknown as Record<string, unknown>))
         }
 
         return []
@@ -437,22 +437,24 @@ class UnifiedMembershipService {
    */
   private convertSupabaseToLegacyFormat(membership: Record<string, unknown>): Membership {
     return {
-      id: parseInt(membership.id),
-      created_at: membership.created_at,
-      member_card_id: parseInt(membership.card_number?.slice(-6) || membership.id),
-      duration_in_days: 365, // Default duration
-      start_time: membership.activated_at || null,
-      expire_time: membership.expires_at || null,
-      activated: membership.status === 'ACTIVATED',
-      activate_expire_time: membership.activation_deadline || '',
-      user_id: parseInt(membership.user_id),
-      status: membership.status === 'PURCHASED' ? 'INACTIVE' as const :
-              membership.status === 'ACTIVATED' ? 'ACTIVE' as const :
-              'EXPIRED' as const,
-      plan_id: parseInt(membership.plan_id),
-      user_email: membership.user_email || '',
-      user_name: membership.user_name || '',
-      order_id: membership.order_id ? parseInt(membership.order_id) : undefined
+      id: parseInt(membership.id as string),
+      user_id: parseInt(membership.user_id as string),
+      user_name: (membership.user_name as string) || '',
+      user_email: (membership.user_email as string) || '',
+      membership_type: 'individual' as const,
+      member_card_id: parseInt((membership.card_number as string)?.slice(-6) || (membership.id as string)),
+      plan_id: parseInt(membership.plan_id as string),
+      order_id: membership.order_id ? parseInt(membership.order_id as string) : undefined,
+      status: membership.status === 'PURCHASED' ? 'inactive' as const :
+              membership.status === 'ACTIVATED' ? 'activated' as const :
+              'expired' as const,
+      purchase_date: membership.purchased_at as string,
+      activation_date: membership.activated_at as string,
+      expiry_date: membership.expires_at as string,
+      activation_deadline: (membership.activation_deadline as string) || '',
+      duration_days: 365, // Default duration
+      created_at: membership.created_at as string,
+      updated_at: (membership.updated_at as string) || membership.created_at as string
     }
   }
 
