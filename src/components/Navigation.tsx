@@ -91,12 +91,12 @@ const Navigation: React.FC = () => {
     if (!isAuthenticated) {
       return allowedRoles.includes('guest');
     }
-    // 如果有設置當前角色，只檢查當前角色
-    if (currentRole) {
-      return allowedRoles.includes(currentRole);
+    // 嚴格模式：只檢查當前選中的角色
+    // 如果沒有設置當前角色，則不顯示任何角色相關功能
+    if (!currentRole) {
+      return false;
     }
-    // 如果沒有設置當前角色，檢查用戶的所有角色
-    return allowedRoles.some(role => user?.roles.includes(role as 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN'));
+    return allowedRoles.includes(currentRole);
   };
 
   // Click outside handler for role selector

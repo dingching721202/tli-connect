@@ -68,10 +68,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isRoleLocked, setIsRoleLocked] = useState(false);
   const [lockedRole, setLockedRole] = useState<string | null>(null);
 
-  // 初始化載入狀態（移除自動登錄功能）
+  // 初始化載入狀態
   useEffect(() => {
-    // 直接設置載入完成，不自動從 localStorage 載入用戶會話
-    setLoading(false);
+    const initializeAuth = async () => {
+      try {
+        // 檢查是否有保存的會話
+        const userId = localStorage.getItem('userId');
+        const jwt = localStorage.getItem('jwt');
+        const savedRole = localStorage.getItem('currentRole');
+        
+        if (userId && jwt) {
+          console.log('🔄 發現保存的會話，嘗試恢復用戶狀態');
+          
+          // 恢復用戶資料
+          const userData = await authService.getUser(parseInt(userId));
+          if (userData) {
+            const userWithMembership = await loadUserWithMembership(userData);
+            setUser(userWithMembership);
+            
+            // 恢復當前角色
+            if (savedRole && userWithMembership.roles.includes(savedRole as any)) {
+              setCurrentRole(savedRole);
+              console.log('✅ 已恢復用戶會話和角色:', savedRole);
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ 恢復會話失敗:', error);
+        // 清除無效的會話資料
+        localStorage.removeItem('userId');
+        localStorage.removeItem('jwt');
+        localStorage.removeItem('currentRole');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    initializeAuth();
   }, []);
 
   // 載入用戶會員資料和角色

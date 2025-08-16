@@ -53,20 +53,23 @@ const RoleLogin: React.FC<RoleLoginProps> = ({
         
         // 檢查是否有所需角色
         if (result.user.roles.includes(requiredRole)) {
+          console.log('✅ 用戶有所需角色權限:', requiredRole);
+          
           // 登入成功且有權限，先切換角色
           switchRole(requiredRole);
+          console.log('🎭 已切換到角色:', requiredRole);
+          
           // 只有單一角色的用戶才設置角色鎖定，多角色用戶保持可切換
           if (result.user.roles.length === 1) {
             setRoleLock(requiredRole);
+            console.log('🔒 已設置角色鎖定（單一角色用戶）');
+          } else {
+            console.log('🔓 多角色用戶，不設置角色鎖定');
           }
-          // 確保狀態更新後再跳轉
-          console.log('✅ 登入成功，準備跳轉到:', redirectPath);
           
-          // 短暫延遲確保狀態更新
-          setTimeout(() => {
-            console.log('🚀 執行跳轉');
-            router.replace(redirectPath);
-          }, 200);
+          // 使用 window.location.href 確保完整的頁面重新載入，避免狀態同步問題
+          console.log('🚀 執行跳轉到:', redirectPath);
+          window.location.href = redirectPath;
         } else {
           // 沒有該角色權限，跳轉到通用登入頁面
           alert(`您的帳號沒有${roleDisplayName}權限，將跳轉到通用登入頁面`);
