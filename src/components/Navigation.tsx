@@ -96,7 +96,7 @@ const Navigation: React.FC = () => {
       return allowedRoles.includes(currentRole);
     }
     // 如果沒有設置當前角色，檢查用戶的所有角色
-    return allowedRoles.some(role => user?.roles.includes(role as any));
+    return allowedRoles.some(role => user?.roles.includes(role as 'STUDENT' | 'TEACHER' | 'CORPORATE_CONTACT' | 'AGENT' | 'STAFF' | 'ADMIN'));
   };
 
   // Click outside handler for role selector
