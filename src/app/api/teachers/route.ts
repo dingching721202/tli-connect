@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 
 // Temporary mock data for testing while we fix Supabase connection
 const mockTeachers = [
