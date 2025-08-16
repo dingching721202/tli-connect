@@ -1,10 +1,10 @@
 import RoleEntry from '@/components/RoleEntry';
-import Dashboard from '@/components/Dashboard';
+import AdminDashboard from '@/components/AdminDashboard';
 
 export default function AdminDashboardPage() {
   return (
     <RoleEntry requiredRole="ADMIN">
-      <Dashboard />
+      <AdminDashboard />
     </RoleEntry>
   );
 }

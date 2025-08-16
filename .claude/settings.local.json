@@ -54,7 +54,9 @@
       "mcp__supabase__search_docs",
       "WebFetch(domain:supabase.com)",
       "Bash(rg:*)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(start http://localhost:3000/admin/dashboard)",
+      "Bash(del \"D:\\Project\\tli-connect\\src\\app\\test-dashboard\\page.tsx\")"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
