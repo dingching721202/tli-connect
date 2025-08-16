@@ -5,20 +5,42 @@ import { ApiResponse } from '@/types/unified'
 type GetEnrollmentsRequest = {
   page: number
   limit: number
+  user_id?: string
+  session_id?: string
+  schedule_id?: string
+  campus?: '羅斯福校' | '士林校' | '台中校' | '高雄校' | '總部' | null
+  status?: 'CONFIRMED' | 'WAITLISTED' | 'CANCELLED' | 'COMPLETED' | 'NO_SHOW' | null
+  date_from?: string
+  date_to?: string
+  sort_by?: 'enrollment_date' | 'session_date' | 'status'
+  sort_order?: 'asc' | 'desc'
 }
 
 type GetEnrollmentsResponse = {
   enrollments: unknown[]
   total: number
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    total_pages: number
+  }
 }
 
 type CreateEnrollmentRequest = {
   user_id: number
-  course_id: number
+  session_id: string
 }
 
 type CreateEnrollmentResponse = {
-  enrollment_id: number
+  enrollment: {
+    id: string
+    user_id: number
+    session_id: string
+    status: string
+    enrolled_at: string
+    created_at: string
+  }
 }
 
 // GET /api/v1/enrollments - List course enrollments
@@ -51,6 +73,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         enrollments: [],
+        total: 0,
         pagination: {
           page: filters.page,
           limit: filters.limit,
@@ -99,13 +122,9 @@ export async function POST(request: NextRequest) {
           id: '',
           user_id: body.user_id,
           session_id: body.session_id,
-          enrollment_date: new Date().toISOString(),
           status: 'CONFIRMED',
-          attended: null,
-          feedback: null,
-          rating: null,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          enrolled_at: new Date().toISOString(),
+          created_at: new Date().toISOString()
         }
       }
     }

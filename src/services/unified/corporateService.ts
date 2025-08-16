@@ -239,14 +239,14 @@ class UnifiedCorporateService {
     if (!this.useLegacyMode) {
       try {
         // TODO: Implement Supabase corporate subscription statistics
-        return this.legacyGetCorporateSubscriptionStatistics(companyId)
+        return this.legacyGetCorporateSubscriptionStatistics()
       } catch (error) {
         console.error('Supabase getCorporateSubscriptionStatistics failed, falling back to legacy:', error)
         this.useLegacyMode = false // 🎯 Phase 4.3: Supabase mode ENABLED
       }
     }
 
-    return this.legacyGetCorporateSubscriptionStatistics(companyId)
+    return this.legacyGetCorporateSubscriptionStatistics()
   }
 
   // ===== Corporate Member Management =====
@@ -495,7 +495,7 @@ class UnifiedCorporateService {
     return corporateSubscriptionStore.updateSubscription(id, updates)
   }
 
-  private async legacyGetCorporateSubscriptionStatistics(companyId?: string) {
+  private async legacyGetCorporateSubscriptionStatistics() {
     return corporateSubscriptionStore.getSubscriptionStatistics()
   }
 

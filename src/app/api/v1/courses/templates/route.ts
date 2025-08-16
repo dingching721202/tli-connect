@@ -25,24 +25,26 @@ type GetCourseTemplatesResponse = {
   }
 }
 
+
 type CreateCourseTemplateRequest = {
   title: string
   description: string
+  category?: string
+  level?: string
+  session_duration_minutes?: number
+  max_capacity?: number
 }
 
 type CreateCourseTemplateResponse = {
-  template_id: number
   template: {
     id: string
     name: string
     description: string | null
-    level: string
-    category: string
-    capacity: number
-    duration: number
-    course_type: string
-    status: string
-    campus: string
+    level: string | null
+    category: string | null
+    duration_minutes: number
+    max_capacity: number
+    is_active: boolean
     created_at: string
     updated_at: string
   }
@@ -104,7 +106,7 @@ export async function GET(request: NextRequest) {
 // POST /api/v1/courses/templates - Create new course template
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json() as any // Temporarily bypass TypeScript checking for placeholder API
+    const body = await request.json() as CreateCourseTemplateRequest
     
     // TODO: Implement course template creation with Supabase
     // - Validate required fields
@@ -121,8 +123,8 @@ export async function POST(request: NextRequest) {
           description: body.description || null,
           category: body.category || null,
           level: body.level || null,
-          duration_minutes: body.session_duration_minutes,
-          max_capacity: body.max_capacity,
+          duration_minutes: body.session_duration_minutes || 60,
+          max_capacity: body.max_capacity || 20,
           is_active: true,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
