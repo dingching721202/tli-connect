@@ -428,20 +428,21 @@ export class AuthService extends BaseSupabaseService {
   async getAllUsersWithRoles() {
     try {
       const { data: users, error: usersError } = await this.client
-        .from('users')
-        .select(`
-          *,
-          user_roles!inner(role)
-        `)
+        .from('users_with_roles')
+        .select('*')
 
       if (usersError) {
         throw new Error(usersError.message)
       }
 
       // Transform data to match expected format
+      // Assuming users_with_roles table already has roles field as an array
       const usersWithRoles = (users || []).map(user => ({
         ...user,
-        roles: user.user_roles?.map((ur: { role: string }) => ur.role) || ['STUDENT']
+        // If roles field exists as array, use it; if it exists as separate user_roles field, transform it; otherwise default to STUDENT
+        roles: user.roles || 
+               (user.user_roles?.map((ur: { role: string }) => ur.role)) || 
+               ['STUDENT']
       }))
 
       return { success: true, data: usersWithRoles }
